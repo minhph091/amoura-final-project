@@ -8,7 +8,7 @@
 		<version>3.4.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.datingapp</groupId>
+	<groupId>com.amoura</groupId>
 	<artifactId>amoura</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Amoura Dating App</name>
