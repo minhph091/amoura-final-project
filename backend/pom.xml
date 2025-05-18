@@ -29,7 +29,6 @@
 	<properties>
 		<java.version>17</java.version>
 		<jsonwebtoken.version>0.11.5</jsonwebtoken.version>
-		<springdoc.version>1.6.15</springdoc.version>
 	</properties>
 	<dependencies>
 		<!-- Spring Boot Core -->
@@ -98,8 +97,8 @@
 		<!-- 5. API Documentation -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-			<version>${springdoc.version}</version>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.5.0</version>
 		</dependency>
 
 		<!-- 6. Utilities -->
@@ -146,7 +145,7 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
-		<!-- 11. Template Engine cho email -->
+		<!-- 11. Template Engine for email -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
