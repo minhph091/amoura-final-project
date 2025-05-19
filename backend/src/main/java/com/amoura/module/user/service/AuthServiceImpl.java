@@ -1,4 +1,5 @@
 package com.amoura.module.user.service;
+
 import com.amoura.common.exception.ApiException;
 import com.amoura.infrastructure.security.JwtTokenProvider;
 import com.amoura.module.user.domain.LoginHistory;
@@ -8,6 +9,7 @@ import com.amoura.module.user.dto.LoginRequest;
 import com.amoura.module.user.dto.UserDTO;
 import com.amoura.module.user.repository.LoginHistoryRepository;
 import com.amoura.module.user.repository.UserRepository;
+import com.amoura.infrastructure.security.SecurityConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,47 +40,51 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
 
     @Override
-    @Transactional
     public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
-        User user;
-        boolean loginSuccess = false;
+        // Đầu tiên xác thực người dùng (không sử dụng @Transactional)
+        User user = authenticateUser(loginRequest);
 
+        return finalizeLogin(user, request);
+    }
+
+    private User authenticateUser(LoginRequest loginRequest) {
+        if (loginRequest == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Login request is required", "LOGIN_REQUEST_REQUIRED");
+        }
+
+        switch (loginRequest.getLoginType()) {
+            case "EMAIL_PASSWORD":
+                return authenticateWithEmailPassword(loginRequest.getEmail(), loginRequest.getPassword());
+            case "PHONE_PASSWORD":
+                return authenticateWithPhonePassword(loginRequest.getPhoneNumber(), loginRequest.getPassword());
+            case "EMAIL_OTP":
+                return authenticateWithEmailOtp(loginRequest.getEmail(), loginRequest.getOtpCode());
+            default:
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                        "Unsupported login type: " + loginRequest.getLoginType(), "INVALID_LOGIN_TYPE");
+        }
+    }
+
+
+    @Transactional
+    protected AuthResponse finalizeLogin(User user, HttpServletRequest request) {
         try {
-            switch (loginRequest.getLoginType()) {
-                case "EMAIL_PASSWORD":
-                    user = authenticateWithEmailPassword(loginRequest.getEmail(), loginRequest.getPassword());
-                    loginSuccess = true;
-                    break;
-
-                case "PHONE_PASSWORD":
-                    user = authenticateWithPhonePassword(loginRequest.getPhoneNumber(), loginRequest.getPassword());
-                    loginSuccess = true;
-                    break;
-
-                case "EMAIL_OTP":
-                    user = authenticateWithEmailOtp(loginRequest.getEmail(), loginRequest.getOtpCode());
-                    loginSuccess = true;
-                    break;
-
-                default:
-                    throw new ApiException(HttpStatus.BAD_REQUEST,
-                            "Unsupported login type: " + loginRequest.getLoginType(), "INVALID_LOGIN_TYPE");
-            }
-
-            // Update last login time
+            // Cập nhật thời gian đăng nhập cuối
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
 
-            // Save login history
+            // Lưu lịch sử đăng nhập
             saveLoginHistory(user, request, true);
 
-            // Generate JWT tokens
+            // Tạo token JWT
             String accessToken = jwtTokenProvider.createToken(
                     user.getEmail(),
                     user.getAuthorities(),
                     user.getId()
             );
             String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+
+            // Cập nhật refresh token
             userService.updateRefreshToken(user.getId(), refreshToken);
 
             return AuthResponse.builder()
@@ -84,27 +92,95 @@ public class AuthServiceImpl implements AuthService {
                     .refreshToken(refreshToken)
                     .user(mapToUserDTO(user))
                     .build();
-
         } catch (Exception e) {
-            log.error("Failed login attempt: {}", loginRequest.getLoginType(), e);
-
-            String email = loginRequest.getEmail();
-            String phone = loginRequest.getPhoneNumber();
-
-            if (email != null) {
-                Optional<User> userOpt = userRepository.findByEmail(email);
-                userOpt.ifPresent(u -> saveLoginHistory(u, request, false));
-            } else if (phone != null) {
-                Optional<User> userOpt = userRepository.findByPhoneNumber(phone);
-                userOpt.ifPresent(u -> saveLoginHistory(u, request, false));
-            }
-
-            if (e instanceof ApiException) {
-                throw e;
-            }
-
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials", "INVALID_CREDENTIALS");
+            log.error("Error finalizing login for user {}: {}", user.getEmail(), e.getMessage(), e);
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Could not complete login process", "LOGIN_ERROR");
         }
+    }
+
+    private User authenticateWithEmailPassword(String email, String password) {
+        if (email == null || email.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Email is required", "EMAIL_REQUIRED");
+        }
+
+        if (password == null || password.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Password is required", "PASSWORD_REQUIRED");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
+
+        try {
+            // Tạo token xác thực
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(email, password);
+
+
+            Authentication authentication = authenticationManager.authenticate(authenticationToken);
+
+            // Lưu vào SecurityContext nếu xác thực thành công
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            return user;
+        } catch (BadCredentialsException e) {
+            log.error("Invalid credentials for email: {}", email);
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials", "INVALID_CREDENTIALS");
+        } catch (Exception e) {
+            log.error("Authentication error for email {}: {}", email, e.getMessage(), e);
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication failed", "AUTHENTICATION_FAILED");
+        }
+    }
+
+    private User authenticateWithPhonePassword(String phoneNumber, String password) {
+        if (phoneNumber == null || phoneNumber.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Phone number is required", "PHONE_REQUIRED");
+        }
+
+        if (password == null || password.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Password is required", "PASSWORD_REQUIRED");
+        }
+
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
+
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getEmail(), password)
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return user;
+        } catch (BadCredentialsException e) {
+            log.error("Invalid credentials for phone: {}", phoneNumber);
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials", "INVALID_CREDENTIALS");
+        } catch (Exception e) {
+            log.error("Authentication error for phone {}: {}", phoneNumber, e.getMessage(), e);
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication failed", "AUTHENTICATION_FAILED");
+        }
+    }
+
+    private User authenticateWithEmailOtp(String email, String otpCode) {
+        if (email == null || email.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Email is required", "EMAIL_REQUIRED");
+        }
+
+        if (otpCode == null || otpCode.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "OTP code is required", "OTP_REQUIRED");
+        }
+
+        // Tìm user theo email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
+
+        // Xác thực OTP
+        boolean isValid = otpService.verifyOtp(email, otpCode, "LOGIN");
+        if (!isValid) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Invalid or expired OTP", "INVALID_OTP");
+        }
+
+        return user;
     }
 
     @Override
@@ -172,7 +248,6 @@ public class AuthServiceImpl implements AuthService {
             }
         } catch (Exception e) {
             log.error("Error during logout: {}", e.getMessage());
-
         }
     }
 
@@ -182,90 +257,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public void requestLoginOtp(String email) {
         if (!userRepository.existsByEmail(email)) {
-
             log.info("Login OTP requested for non-existent email: {}", email);
             return;
         }
 
-
         otpService.generateAndSendOtp(email, "LOGIN");
-
         log.info("Login OTP sent to: {}", email);
-    }
-
-
-    private User authenticateWithEmailPassword(String email, String password) {
-
-        if (email == null || email.isEmpty()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Email is required", "EMAIL_REQUIRED");
-        }
-
-
-        if (password == null || password.isEmpty()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Password is required", "PASSWORD_REQUIRED");
-        }
-
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
-    }
-
-
-    private User authenticateWithPhonePassword(String phoneNumber, String password) {
-        if (phoneNumber == null || phoneNumber.isEmpty()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Phone number is required", "PHONE_REQUIRED");
-        }
-
-        if (password == null || password.isEmpty()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Password is required", "PASSWORD_REQUIRED");
-        }
-
-        User user = userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
-
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getEmail(), password)
-            );
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            return user;
-        } catch (BadCredentialsException e) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials", "INVALID_CREDENTIALS");
-        }
-    }
-
-
-    private User authenticateWithEmailOtp(String email, String otpCode) {
-        if (email == null || email.isEmpty()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Email is required", "EMAIL_REQUIRED");
-        }
-
-        if (otpCode == null || otpCode.isEmpty()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "OTP code is required", "OTP_REQUIRED");
-        }
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
-
-        boolean isValid = otpService.verifyOtp(email, otpCode, "LOGIN");
-
-        if (!isValid) {
-            throw new ApiException(HttpStatus.BAD_REQUEST,
-                    "Invalid or expired OTP", "INVALID_OTP");
-        }
-
-        return user;
     }
 
     private void saveLoginHistory(User user, HttpServletRequest request, boolean successful) {
