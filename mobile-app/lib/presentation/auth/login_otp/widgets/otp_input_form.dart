@@ -100,7 +100,6 @@ class _OtpInputFormState extends State<OtpInputForm> {
               "Didn't receive code? Resend",
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
-                decoration: TextDecoration.underline,
               ),
             ),
           ),

@@ -66,7 +66,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        "amoura",
+                        "Amoura",
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.primary,

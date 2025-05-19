@@ -57,7 +57,7 @@ class LoginWithEmailOtpView extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        "amoura",
+                        "Amoura",
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.primary,
