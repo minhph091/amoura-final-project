@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Verification for Amoura</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .otp-code {
+            background-color: #f5f5f5;
+            font-size: 24px;
+            text-align: center;
+            padding: 15px;
+            margin: 20px 0;
+            letter-spacing: 5px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Login Verification</h1>
+    </div>
+
+    <p>Hello,</p>
+
+    <p>You are trying to log in to your Amoura account. Please use the following verification code to complete your login:</p>
+
+    <div class="otp-code" th:text="${otp}">123456</div>
+
+    <p>This code will expire in <span th:text="${expiresInMinutes}">5</span> minutes.</p>
+
+    <p>If you didn't attempt to log in, please secure your account by changing your password immediately.</p>
+
+    <p>Best regards,<br>The Amoura Team</p>
+
+    <div class="footer">
+        <p>This is an automated message, please do not reply to this email.</p>
+    </div>
+</div>
+</body>
+</html>
