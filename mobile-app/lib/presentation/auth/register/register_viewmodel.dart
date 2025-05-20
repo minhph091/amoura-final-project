@@ -1,6 +1,6 @@
-// lib/presentation/auth/register/register_viewmodel.dart
-
 import 'package:flutter/material.dart';
+import '../../../data/remote/register_api.dart';
+import '../../../core/api/api_client.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();
@@ -13,14 +13,19 @@ class RegisterViewModel extends ChangeNotifier {
   bool obscureConfirm = true;
   bool showOtp = false;
   bool isLoading = false;
+  String? errorMessage;
+  String? sessionToken; // Thêm để lưu sessionToken từ API
 
   // OTP
   List<TextEditingController> otpControllers;
   List<FocusNode> otpFocusNodes;
   final int otpLength;
 
+  final RegisterApi _registerApi;
+
   RegisterViewModel({this.otpLength = 6})
-      : otpControllers = List.generate(6, (_) => TextEditingController()),
+      : _registerApi = RegisterApi(ApiClient()),
+        otpControllers = List.generate(6, (_) => TextEditingController()),
         otpFocusNodes = List.generate(6, (_) => FocusNode());
 
   void toggleObscurePassword() {
@@ -33,19 +38,36 @@ class RegisterViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Khi nhấn nút đăng ký
-  void onRegister() {
+  // Khởi tạo đăng ký
+  Future<void> initiateRegistration() async {
     if (formKey.currentState?.validate() ?? false) {
-      showOtp = true;
+      isLoading = true;
+      errorMessage = null;
       notifyListeners();
-      // Để backend xử lý gửi OTP
-    }
-  }
-
-  void onVerifyOtp() {
-    final otp = otpControllers.map((c) => c.text).join();
-    if (otp.length == otpLength) {
-      // Để backend xác thực OTP
+      try {
+        final response = await _registerApi.initiateRegistration(
+          email: emailController.text.trim(),
+          phoneNumber: phoneController.text.trim(),
+          password: passwordController.text,
+        );
+        if (response['status'] == 'INITIATED') {
+          sessionToken = response['sessionToken']; // Lưu sessionToken
+          showOtp = true; // Chuyển sang giao diện OTP
+        } else {
+          throw Exception(response['message'] ?? 'Registration failed');
+        }
+      } catch (e) {
+        if (e.toString().contains('REGISTRATION_IN_PROGRESS')) {
+          errorMessage = 'A registration is already in progress. Please check your email for the OTP or try again later.';
+        } else if (e.toString().contains('EMAIL_ALREADY_EXISTS')) {
+          errorMessage = 'This email is already registered. Please use a different email.';
+        } else {
+          errorMessage = 'Failed to initiate registration: $e';
+        }
+      } finally {
+        isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
