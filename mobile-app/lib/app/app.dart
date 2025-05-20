@@ -1,20 +1,22 @@
-// lib/app/app.dart
-
 import 'package:flutter/material.dart';
-import '../config/theme/app_theme.dart';
-import 'routes/app_pages.dart';
+import '../../presentation/auth/register/register_view.dart';
+import '../../presentation/home/home_view.dart';
 
-class AmouraApp extends StatelessWidget {
-  const AmouraApp({super.key});
+class AppPages {
+  static const initial = '/register';
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "Amoura",
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      initialRoute: AppPages.initial,
-      onGenerateRoute: AppPages.generateRoute,
-    );
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/register':
+        return MaterialPageRoute(builder: (_) => const RegisterView());
+      case '/home':
+        return MaterialPageRoute(builder: (_) => const HomeView());
+      default:
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(child: Text('Page not found')),
+          ),
+        );
+    }
   }
 }
