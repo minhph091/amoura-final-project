@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+/// Shows a custom alert dialog with a title, content, and optional icon.
 Future<bool?> showAppAlertDialog({
   required BuildContext context,
   required String title,

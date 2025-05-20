@@ -1,11 +1,12 @@
+// lib/presentation/auth/forgot_password/forgot_password_form.dart
+
 import 'package:flutter/material.dart';
-import '../login_otp/widgets/email_input_form.dart';
-import '../login_otp/widgets/otp_input_form.dart';
+import 'widgets/forgot_email_form.dart';
+import '../../shared/widgets/otp_input_form.dart';
 import '../../../config/theme/app_colors.dart';
 
 class ForgotPasswordView extends StatefulWidget {
-  final String email;
-  const ForgotPasswordView({Key? key, required this.email}) : super(key: key);
+  const ForgotPasswordView({Key? key, required email}) : super(key: key);
 
   @override
   State<ForgotPasswordView> createState() => _ForgotPasswordViewState();
@@ -23,8 +24,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       end: Alignment.bottomRight,
       colors: [
         AppColors.darkBackground,
-        AppColors.darkSecondary.withValues(alpha: 0.90),
-        AppColors.darkPrimary.withValues(alpha: 0.82),
+        AppColors.darkSecondary.withOpacity(0.90),
+        AppColors.darkPrimary.withOpacity(0.82),
       ],
     )
         : LinearGradient(
@@ -32,8 +33,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       end: Alignment.bottomRight,
       colors: [
         AppColors.background,
-        AppColors.primary.withValues(alpha: 0.13),
-        AppColors.secondary.withValues(alpha: 0.06),
+        AppColors.primary.withOpacity(0.13),
+        AppColors.secondary.withOpacity(0.06),
       ],
     );
   }
@@ -61,23 +62,12 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                     children: [
                       Image.asset(
                         'assets/icons/light_amoura.png',
-                        width: 44,
-                        height: 44,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "Amoura",
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                          letterSpacing: 1.5,
-                        ),
+                        width: 66,
+                        height: 66,
                       ),
                     ],
                   ),
                   const SizedBox(height: 22),
-                  Icon(Icons.lock_reset_rounded, size: 54, color: theme.colorScheme.primary),
-                  const SizedBox(height: 16),
                   Text(
                     "Forgot Password",
                     style: theme.textTheme.headlineMedium?.copyWith(
@@ -91,7 +81,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                         ? "Enter the 6-digit code sent to your email."
                         : "Enter your email to receive a password reset code.",
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.95),
+                      color: theme.colorScheme.onSurface.withOpacity(0.95),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -109,7 +99,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     child: !hasSentEmail
-                        ? EmailInputForm(
+                        ? ForgotEmailForm(
                       key: const ValueKey('email-form'),
                       onSend: (val) => setState(() {
                         email = val;

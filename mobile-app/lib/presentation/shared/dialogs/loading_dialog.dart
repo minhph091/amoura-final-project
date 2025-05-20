@@ -3,7 +3,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-// Shows a beautiful loading dialog with optional message.
 // Call [hideLoadingDialog] to close it.
 Future<void> showLoadingDialog(
     BuildContext context, {

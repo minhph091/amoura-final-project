@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+// A widget that displays a user's avatar with an optional online/offline indicator.
 class UserAvatar extends StatelessWidget {
   final String? imageUrl;
   final String? name;

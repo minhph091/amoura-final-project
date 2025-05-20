@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'app_button.dart';
 
+// A widget that displays an empty state with a message and an optional action button.
 class EmptyState extends StatelessWidget {
   final String message;
   final String? actionText;

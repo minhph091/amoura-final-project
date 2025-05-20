@@ -52,21 +52,12 @@ class LoginWithEmailOtpView extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/icons/light_amoura.png',
-                        width: 44,
-                        height: 44,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "Amoura",
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                          letterSpacing: 1.5,
-                        ),
+                        width: 66,
+                        height: 66,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 22),
                   Text(
                     "Sign in with Email OTP",
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(

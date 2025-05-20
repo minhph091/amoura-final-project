@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+// This widget displays a loading indicator with an optional message.
 class LoadingIndicator extends StatefulWidget {
   final String? message;
 

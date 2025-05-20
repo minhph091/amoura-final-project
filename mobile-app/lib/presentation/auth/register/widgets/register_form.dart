@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_text_field.dart';
-import '../../login_otp/widgets/otp_input_form.dart';
+import '../../../shared/widgets/otp_input_form.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});

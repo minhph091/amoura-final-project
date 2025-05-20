@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'network_image.dart';
 
+// A widget that displays a full-screen photo viewer with zoom and pan capabilities.
 class PhotoViewer extends StatelessWidget {
   final String imageUrl;
   final String? heroTag;

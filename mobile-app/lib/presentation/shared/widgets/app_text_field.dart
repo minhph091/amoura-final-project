@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+// Mở rộng Color để thêm thuộc tính alpha
 class AppTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? labelText;

@@ -1,4 +1,4 @@
-// lib/presentation/auth/login/widget/social_login_button.dart
+// lib/presentation/auth/login/widgets/social_login_button.dart
 
 import 'package:flutter/material.dart';
 
@@ -16,7 +16,7 @@ class SocialLoginButtons extends StatelessWidget {
           children: [
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.g_mobiledata, size: 32, color: Colors.red),
+              icon: const Icon(Icons.g_mobiledata, size: 34, color: Colors.red),
               tooltip: 'Sign in with Google',
             ),
             IconButton(

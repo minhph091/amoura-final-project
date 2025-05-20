@@ -55,21 +55,12 @@ class LoginView extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/icons/light_amoura.png',
-                        width: 44,
-                        height: 44,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "Amoura",
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                          letterSpacing: 1.5,
-                        ),
+                        width: 66,
+                        height: 66,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 22),
                   Text(
                     "Sign in to find your love",
                     style: Theme.of(context).textTheme.bodyLarge,
@@ -81,7 +72,7 @@ class LoginView extends StatelessWidget {
                   const SizedBox(height: 18),
                   // Social login buttons
                   const SocialLoginButtons(),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

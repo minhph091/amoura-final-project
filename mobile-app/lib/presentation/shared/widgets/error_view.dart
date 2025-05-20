@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+// A widget that displays an error message with an optional retry button.
 class ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+/// A widget that displays a network image with error handling and loading state.
 class NetworkImageWidget extends StatelessWidget {
   final String? imageUrl;
   final double width;

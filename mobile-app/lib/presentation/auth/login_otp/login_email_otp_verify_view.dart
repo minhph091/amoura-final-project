@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
-import 'widgets/otp_input_form.dart';
+import '../../shared/widgets/otp_input_form.dart';
 
 class LoginEmailOtpVerifyView extends StatelessWidget {
   final String email;
@@ -53,21 +53,12 @@ class LoginEmailOtpVerifyView extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/icons/light_amoura.png',
-                        width: 44,
-                        height: 44,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "Amoura",
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                          letterSpacing: 1.5,
-                        ),
+                        width: 66,
+                        height: 66,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 22),
                   Text(
                     "OTP Verification",
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(

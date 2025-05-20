@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+// This widget is a customizable button that can be used throughout the app.
 class AppButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
