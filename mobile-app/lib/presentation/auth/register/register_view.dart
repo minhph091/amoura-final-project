@@ -1,5 +1,3 @@
-// lib/presentation/auth/register/register_view.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'widgets/register_form.dart';
