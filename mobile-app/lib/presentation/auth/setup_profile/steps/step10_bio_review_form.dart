@@ -2,12 +2,11 @@
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../../shared/widgets/app_text_field.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/photo_viewer.dart';
-import '../setup_profile_viewmodel.dart';
+import '../../../shared/widgets/app_text_field.dart'; // Reusable text field widget
+import '../../../shared/widgets/app_button.dart'; // Reusable button widget
+import '../../../shared/widgets/photo_viewer.dart'; // Widget for viewing photos
+import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
 
 class Step10BioReviewForm extends StatefulWidget {
   const Step10BioReviewForm({super.key});
@@ -17,8 +16,8 @@ class Step10BioReviewForm extends StatefulWidget {
 }
 
 class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
-  final _formKey = GlobalKey<FormState>();
-  List<String> uploadedImages = []; // TODO: Replace with provider
+  final _formKey = GlobalKey<FormState>(); // Key for form validation
+  List<String> uploadedImages = []; // List to store uploaded image paths (placeholder)
 
   @override
   Widget build(BuildContext context) {
@@ -27,38 +26,29 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
     final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Primary title using headlineLarge from AppTheme
             Text(
-              "Profile Setup",
-              style: theme.textTheme.displayMedium?.copyWith(
-                fontFamily: GoogleFonts.playfairDisplay().fontFamily,
+              "Your Bio & Photos",
+              style: theme.textTheme.headlineLarge?.copyWith(
                 color: colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 6), // Spacing between title and description
+            // Secondary description using bodyLarge from AppTheme
             Text(
-              "Step 10: Bio & Photos",
-              style: theme.textTheme.displayLarge?.copyWith(
-                fontFamily: GoogleFonts.playfairDisplay().fontFamily,
-                color: colorScheme.primary,
-                fontSize: 28,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Write a short introduction about yourself and upload additional photos.",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontFamily: GoogleFonts.lato().fontFamily,
+              "Write a short introduction and upload additional photos.",
+              style: theme.textTheme.bodyLarge?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.7),
-                fontStyle: FontStyle.italic,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 18), // Spacing before bio field
+            // Bio input field
             AppTextField(
               labelText: "Your Bio",
               hintText: "Tell us about yourself...",
@@ -74,19 +64,21 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                 return null;
               },
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 22), // Spacing before photo section
+            // Photo upload label
             Text(
               "Your Photos",
               style: theme.textTheme.headlineMedium?.copyWith(
-                fontFamily: GoogleFonts.lato().fontFamily,
                 color: colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 10), // Spacing before photo upload area
+            // Photo upload area with existing photos and add button
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
+                // Display uploaded photos
                 ...uploadedImages.map((imgPath) => Stack(
                   alignment: Alignment.topRight,
                   children: [
@@ -108,6 +100,7 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                         ),
                       ),
                     ),
+                    // Button to remove photo
                     GestureDetector(
                       onTap: () => setState(() => uploadedImages.remove(imgPath)),
                       child: Container(
@@ -130,9 +123,10 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                     ),
                   ],
                 )),
+                // Add photo button
                 GestureDetector(
                   onTap: () {
-                    // TODO: image picker + permission
+                    // TODO: Implement image picker + permission
                   },
                   child: DottedBorder(
                     options: RoundedRectDottedBorderOptions(
@@ -155,7 +149,8 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 32), // Spacing before button
+            // Finish button to complete setup
             Row(
               children: [
                 Expanded(

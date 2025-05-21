@@ -1,15 +1,13 @@
 // lib/presentation/auth/setup_profile/steps/step7_job_education_form.dart
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/text_styles.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../setup_profile_viewmodel.dart';
+import '../../../shared/widgets/app_button.dart'; // Reusable button widget
+import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
 
 class Step7JobEducationForm extends StatefulWidget {
   const Step7JobEducationForm({super.key});
+
   @override
   State<Step7JobEducationForm> createState() => _Step7JobEducationFormState();
 }
@@ -21,53 +19,38 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // TODO: Replace with API
-    final jobIndustries = [
-      {'id': 1, 'name': 'IT'},
-      {'id': 2, 'name': 'Education'},
-      {'id': 3, 'name': 'Medical'},
-      {'id': 4, 'name': 'Other'},
-    ];
-    final educationLevels = [
-      {'id': 1, 'name': 'High School'},
-      {'id': 2, 'name': 'Bachelor'},
-      {'id': 3, 'name': 'Master'},
-      {'id': 4, 'name': 'PhD'},
-    ];
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Primary title using headlineLarge from AppTheme
           Text(
-            "Career & Education",
-            style: AppTextStyles.heading2.copyWith(
-              fontFamily: GoogleFonts.playfairDisplay().fontFamily,
+            "Your Job & Education",
+            style: theme.textTheme.headlineLarge?.copyWith(
               color: colorScheme.primary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 6), // Spacing between title and description
+          // Secondary description using bodyLarge from AppTheme
           Text(
-            "Tell us about your work and education.",
-            style: AppTextStyles.body.copyWith(
-              fontFamily: GoogleFonts.lato().fontFamily,
-              color: colorScheme.onSurface.withAlpha(179),
-              fontStyle: FontStyle.italic,
+            "Tell us about your career and education.",
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          Container(
+          const SizedBox(height: 24), // Spacing before form fields
+          // Dropdown for job industry selection
+          SizedBox(
             width: double.infinity,
             child: DropdownButtonFormField<int>(
               decoration: InputDecoration(
                 label: Text(
                   "Job Industry",
-                  style: TextStyle(
-                    fontFamily: GoogleFonts.playfairDisplay().fontFamily,
-                    color: colorScheme.onSurface.withAlpha(179),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
                 prefixIcon: Icon(Icons.work_outline, color: colorScheme.primary),
@@ -80,40 +63,23 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
                   borderSide: BorderSide(color: colorScheme.primary, width: 2),
                 ),
                 filled: true,
-                fillColor: colorScheme.brightness == Brightness.light
-                    ? AppColors.background
-                    : AppColors.darkBackground,
+                fillColor: theme.inputDecorationTheme.fillColor,
               ),
               value: vm.jobIndustryId,
-              items: jobIndustries.map((e) => DropdownMenuItem<int>(
-                value: e['id'] as int,
-                child: Row(
-                  children: [
-                    Icon(Icons.work, color: colorScheme.primary.withAlpha(153), size: 20),
-                    const SizedBox(width: 7),
-                    Text(
-                      e['name'] as String,
-                      style: AppTextStyles.body.copyWith(
-                        fontFamily: GoogleFonts.lato().fontFamily,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              )).toList(),
+              items: const [], // Placeholder for job industry options (from backend)
               onChanged: (val) => setState(() => vm.jobIndustryId = val),
             ),
           ),
-          const SizedBox(height: 18),
-          Container(
+          const SizedBox(height: 18), // Spacing between dropdowns
+          // Dropdown for education level selection
+          SizedBox(
             width: double.infinity,
             child: DropdownButtonFormField<int>(
               decoration: InputDecoration(
                 label: Text(
                   "Education Level",
-                  style: TextStyle(
-                    fontFamily: GoogleFonts.playfairDisplay().fontFamily,
-                    color: colorScheme.onSurface.withAlpha(179),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
                 prefixIcon: Icon(Icons.school, color: colorScheme.primary),
@@ -126,37 +92,20 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
                   borderSide: BorderSide(color: colorScheme.primary, width: 2),
                 ),
                 filled: true,
-                fillColor: colorScheme.brightness == Brightness.light
-                    ? AppColors.background
-                    : AppColors.darkBackground,
+                fillColor: theme.inputDecorationTheme.fillColor,
               ),
               value: vm.educationLevelId,
-              items: educationLevels.map((e) => DropdownMenuItem<int>(
-                value: e['id'] as int,
-                child: Row(
-                  children: [
-                    Icon(Icons.school, color: colorScheme.primary.withAlpha(153), size: 20),
-                    const SizedBox(width: 7),
-                    Text(
-                      e['name'] as String,
-                      style: AppTextStyles.body.copyWith(
-                        fontFamily: GoogleFonts.lato().fontFamily,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              )).toList(),
+              items: const [], // Placeholder for education level options (from backend)
               onChanged: (val) => setState(() => vm.educationLevelId = val),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 18), // Spacing before switch
+          // Switch for dropout status
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(
               'I have dropped out / not completed the curriculum',
-              style: AppTextStyles.body.copyWith(
-                fontFamily: GoogleFonts.lato().fontFamily,
+              style: theme.textTheme.bodyLarge?.copyWith(
                 color: colorScheme.onSurface,
               ),
               textAlign: TextAlign.left,
@@ -169,14 +118,15 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
               inactiveTrackColor: colorScheme.onSurface.withAlpha(51),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 24), // Spacing before button
+          // Next button to proceed to the next step
           Row(
             children: [
               Expanded(
                 child: AppButton(
                   text: "Next",
                   onPressed: () => vm.nextStep(),
-                  useThemeGradient: true, // Sử dụng gradient từ theme
+                  useThemeGradient: true,
                 ),
               ),
             ],

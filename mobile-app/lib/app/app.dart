@@ -1,3 +1,5 @@
+// lib/app/app.dart
+
 import 'package:flutter/material.dart';
 import '../config/theme/app_theme.dart';
 import 'routes/app_pages.dart';

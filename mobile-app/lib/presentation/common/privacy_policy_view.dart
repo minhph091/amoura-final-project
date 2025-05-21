@@ -61,10 +61,10 @@ class _PrivacyPolicyViewState extends State<PrivacyPolicyView> with SingleTicker
               child: Text(
                 'AMOURA PRIVACY POLICY',
                 style: textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                  color: colorScheme.primary,
-                  letterSpacing: 1.2
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    color: colorScheme.primary,
+                    letterSpacing: 1.2
                 ),
                 textAlign: TextAlign.center,
               ),

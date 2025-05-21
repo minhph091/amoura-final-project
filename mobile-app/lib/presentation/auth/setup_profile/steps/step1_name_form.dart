@@ -2,13 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:amoura/core/utils/validation_util.dart';
-
-import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_theme.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_text_field.dart';
-import '../setup_profile_viewmodel.dart';
+import '../../../../core/utils/validation_util.dart'; // Utility for form validation
+import '../../../shared/widgets/app_button.dart'; // Reusable button widget
+import '../../../shared/widgets/app_text_field.dart'; // Reusable text field widget
+import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
 
 class Step1NameForm extends StatefulWidget {
   const Step1NameForm({super.key});
@@ -18,13 +15,14 @@ class Step1NameForm extends StatefulWidget {
 }
 
 class _Step1NameFormState extends State<Step1NameForm> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _firstNameCtrl;
-  late TextEditingController _lastNameCtrl;
+  final _formKey = GlobalKey<FormState>(); // Key for form validation
+  late TextEditingController _firstNameCtrl; // Controller for first name input
+  late TextEditingController _lastNameCtrl; // Controller for last name input
 
   @override
   void initState() {
     super.initState();
+    // Initialize controllers with existing values from ViewModel
     final vm = context.read<SetupProfileViewModel>();
     _firstNameCtrl = TextEditingController(text: vm.firstName ?? "");
     _lastNameCtrl = TextEditingController(text: vm.lastName ?? "");
@@ -32,6 +30,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
 
   @override
   void dispose() {
+    // Dispose controllers to free resources
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     super.dispose();
@@ -44,92 +43,74 @@ class _Step1NameFormState extends State<Step1NameForm> {
     final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Align(
-              alignment: Alignment.center,
-              child: Text(
-                "Your Name",
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontFamily: AppTheme.lightTheme.textTheme.displayMedium?.fontFamily,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-
-            // Subtitle căn giữa
-            Align(
-              alignment: Alignment.center,
-              child: Text(
-                "Your name will be visible to other users.",
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                  fontStyle: FontStyle.italic,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+            // Primary title using headlineLarge from AppTheme
             Text(
-              "Fields marked * are required.",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade700,
+              "Your Name",
+              style: theme.textTheme.headlineLarge?.copyWith(
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 6), // Spacing between title and description
+            // Secondary description using bodyLarge from AppTheme
+            Text(
+              "This name will be visible to everyone.",
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 8), // Spacing between description and note
+            // Italicized note for required fields using labelLarge from AppTheme
+            Text(
+              "Fields marked with * are required.",
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
                 fontStyle: FontStyle.italic,
               ),
             ),
-            const SizedBox(height: 18),
-            // First Name Field
+            const SizedBox(height: 24), // Spacing before form fields
+            // First name input field
             AppTextField(
               controller: _firstNameCtrl,
               labelText: "First Name *",
               prefixIcon: Icons.person,
               prefixIconColor: colorScheme.primary,
               maxLength: 50,
-              validator: ValidationUtil().validateFirstName,
-              onSaved: (v) => vm.firstName = v?.trim(),
+              validator: ValidationUtil().validateFirstName, // Validate first name
+              onSaved: (v) => vm.firstName = v?.trim(), // Save trimmed value to ViewModel
               style: theme.textTheme.bodyLarge,
             ),
-            const SizedBox(height: 18),
-
-            // Last Name Field
+            const SizedBox(height: 18), // Spacing between fields
+            // Last name input field
             AppTextField(
               controller: _lastNameCtrl,
               labelText: "Last Name *",
               prefixIcon: Icons.badge,
               prefixIconColor: colorScheme.primary,
               maxLength: 50,
-              validator: ValidationUtil().validateLastName,
-              onSaved: (v) => vm.lastName = v?.trim(),
+              validator: ValidationUtil().validateLastName, // Validate last name
+              onSaved: (v) => vm.lastName = v?.trim(), // Save trimmed value to ViewModel
               style: theme.textTheme.bodyLarge,
             ),
-            const SizedBox(height: 28),
-
-            // Next Button
+            const SizedBox(height: 28), // Spacing before button
+            // Next button to proceed to the next step
             AppButton(
               text: "Next",
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  FocusScope.of(context).unfocus();
-                  _formKey.currentState!.save();
-                  vm.nextStep();
+                  FocusScope.of(context).unfocus(); // Hide keyboard
+                  _formKey.currentState!.save(); // Save form data
+                  vm.nextStep(); // Move to next step
                 }
               },
               width: double.infinity,
               height: 52,
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.secondary,
-                ],
-              ),
+              useThemeGradient: true,
               textStyle: theme.textTheme.labelLarge?.copyWith(
                 color: colorScheme.onPrimary,
               ),

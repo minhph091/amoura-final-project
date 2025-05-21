@@ -1,4 +1,5 @@
 // Dependency injection setup (for services, repositories, etc.)
-// Backend/API dev sẽ bổ sung code khởi tạo DI.
-void setupInjection() {
+
+Future<void> configureDependencies() async {
+  // TODO: Register your dependencies here, e.g. using get_it or injectable
 }

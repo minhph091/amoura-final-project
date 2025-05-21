@@ -2,10 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_theme.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../setup_profile_viewmodel.dart';
+import '../../../shared/widgets/app_button.dart'; // Reusable button widget
+import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
 
 class Step8LifestyleForm extends StatefulWidget {
   const Step8LifestyleForm({super.key});
@@ -19,166 +17,112 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: true);
     final theme = Theme.of(context);
-
-    // Dummy data (không API)
-    final drinks = [
-      {'id': 1, 'name': 'Never'},
-      {'id': 2, 'name': 'Sometimes'},
-      {'id': 3, 'name': 'Often'},
-    ];
-    final smokes = [
-      {'id': 1, 'name': 'No'},
-      {'id': 2, 'name': 'Occasionally'},
-      {'id': 3, 'name': 'Regularly'},
-    ];
-    final pets = [
-      {'id': 1, 'name': 'Dog', 'icon': Icons.pets},
-      {'id': 2, 'name': 'Cat', 'icon': Icons.pets},
-      {'id': 3, 'name': 'Bird', 'icon': Icons.pets},
-      {'id': 4, 'name': 'Others', 'icon': Icons.pets},
-    ];
+    final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Primary title using headlineLarge from AppTheme
           Text(
-            "Lifestyle",
-            style: theme.textTheme.displayMedium?.copyWith(
-              fontFamily: AppTheme.lightTheme.textTheme.displayMedium?.fontFamily,
-              color: AppColors.secondary,
-              fontWeight: FontWeight.bold,
-              fontSize: 28,
-              letterSpacing: 1.05,
+            "Your Lifestyle",
+            style: theme.textTheme.headlineLarge?.copyWith(
+              color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 6), // Spacing between title and description
+          // Secondary description using bodyLarge from AppTheme
           Text(
-            "Tell us about your lifestyle and your pets.",
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.label,
-              fontStyle: FontStyle.italic,
-              fontSize: 15,
+            "Tell us about your lifestyle and pets.",
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
-          const SizedBox(height: 26),
-
-          // Drink
+          const SizedBox(height: 24), // Spacing before form fields
+          // Drinking status selection label
           Text(
             "Do you drink?",
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontFamily: AppTheme.lightTheme.textTheme.displayLarge?.fontFamily,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+              color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8), // Spacing before dropdown
+          // Dropdown for drinking status
           DropdownButtonFormField<int>(
             decoration: InputDecoration(
-              label: const Text("Select"),
-              prefixIcon: const Icon(Icons.local_bar, color: Colors.green),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              label: Text(
+                "Select",
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              prefixIcon: Icon(Icons.local_bar, color: colorScheme.primary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.outline),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
+              ),
               filled: true,
               fillColor: theme.inputDecorationTheme.fillColor,
             ),
             value: vm.drinkStatusId,
-            items: drinks.map((e) => DropdownMenuItem<int>(
-              value: e['id'] as int,
-              child: Row(
-                children: [
-                  Icon(Icons.local_bar, color: AppColors.secondary, size: 20),
-                  const SizedBox(width: 10),
-                  Text(e['name'] as String, style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            )).toList(),
+            items: const [], // Placeholder for drinking status options (from backend)
             onChanged: (val) => setState(() => vm.drinkStatusId = val),
           ),
-          const SizedBox(height: 18),
-
-          // Smoke
+          const SizedBox(height: 18), // Spacing before smoking status
+          // Smoking status selection label
           Text(
             "Do you smoke?",
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontFamily: AppTheme.lightTheme.textTheme.displayLarge?.fontFamily,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+              color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8), // Spacing before dropdown
+          // Dropdown for smoking status
           DropdownButtonFormField<int>(
             decoration: InputDecoration(
-              label: const Text("Select"),
-              prefixIcon: const Icon(Icons.smoking_rooms, color: Colors.red),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              label: Text(
+                "Select",
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              prefixIcon: Icon(Icons.smoking_rooms, color: colorScheme.primary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.outline),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
+              ),
               filled: true,
               fillColor: theme.inputDecorationTheme.fillColor,
             ),
             value: vm.smokeStatusId,
-            items: smokes.map((e) => DropdownMenuItem<int>(
-              value: e['id'] as int,
-              child: Row(
-                children: [
-                  Icon(Icons.smoking_rooms, color: AppColors.secondary, size: 20),
-                  const SizedBox(width: 10),
-                  Text(e['name'] as String, style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            )).toList(),
+            items: const [], // Placeholder for smoking status options (from backend)
             onChanged: (val) => setState(() => vm.smokeStatusId = val),
           ),
-          const SizedBox(height: 18),
-
-          // Pets
+          const SizedBox(height: 18), // Spacing before pet selection
+          // Pet selection label
           Text(
             "Do you have pets?",
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontFamily: AppTheme.lightTheme.textTheme.displayLarge?.fontFamily,
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+              color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 8), // Spacing before pet options
+          // Placeholder for pet selection (to be implemented)
           Wrap(
             spacing: 12,
-            children: pets.map((p) {
-              final isSelected = vm.selectedPetIds?.contains(p['id']) ?? false;
-              return ChoiceChip(
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(p['icon'] as IconData?, color: isSelected ? Colors.white : AppColors.primary, size: 18),
-                    const SizedBox(width: 4),
-                    Text(p['name'] as String),
-                  ],
-                ),
-                selected: isSelected,
-                selectedColor: AppColors.primary,
-                onSelected: (val) {
-                  setState(() {
-                    if (val) {
-                      vm.selectedPetIds = (vm.selectedPetIds ?? [])..add(p['id'] as int);
-                    } else {
-                      vm.selectedPetIds?.remove(p['id'] as int);
-                    }
-                  });
-                },
-                backgroundColor: AppColors.primary.withOpacity(0.08),
-                labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                  color: isSelected ? Colors.white : AppColors.primary,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              );
-            }).toList(),
+            children: const [],
           ),
-          const SizedBox(height: 30),
-
-          // Button dùng AppButton
+          const SizedBox(height: 30), // Spacing before button
+          // Next button to proceed to the next step
           AppButton(
             text: "Next",
             onPressed: () => vm.nextStep(),

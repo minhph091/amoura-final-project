@@ -1,18 +1,18 @@
 // lib/presentation/auth/setup_profile/setup_profile_viewmodel.dart
 
 import 'package:flutter/material.dart';
-import '../../../core/utils/validation_util.dart';
+import '../../../core/utils/validation_util.dart'; // Utility for form validation
 
 class SetupProfileViewModel extends ChangeNotifier {
-  int currentStep = 0;
-  final int totalSteps = 10;
-  final PageController pageController = PageController();
+  int currentStep = 0; // Current step in the setup process
+  final int totalSteps = 10; // Total number of steps
+  final PageController pageController = PageController(); // Controller for PageView navigation
 
-  // Step 1 - Bắt buộc
+  // Step 1 - Required
   String? firstName;
   String? lastName;
 
-  // Step 2 - Bắt buộc
+  // Step 2 - Required
   DateTime? dateOfBirth;
   String? sex;
 
@@ -42,7 +42,7 @@ class SetupProfileViewModel extends ChangeNotifier {
   int? smokeStatusId;
   List<int>? selectedPetIds;
 
-  // Step 9 - Bắt buộc
+  // Step 9 - Required
   List<int>? selectedInterestIds;
   List<int>? selectedLanguageIds;
   bool? interestedInNewLanguage;
@@ -51,18 +51,19 @@ class SetupProfileViewModel extends ChangeNotifier {
   String? bio;
   List<String> galleryPhotos = [];
 
-  bool get showSkip => !_isStepRequired(currentStep);
+  bool get showSkip => !_isStepRequired(currentStep); // Determine if skip button should be shown
 
-  /// Các bước bắt buộc: Step 0 (Tên), Step 1 (Giới tính, Ngày sinh), Step 8 (Sở thích)
+  /// Required steps: Step 0 (Name), Step 1 (Gender, Birthday), Step 9 (Interests)
   bool _isStepRequired(int step) => [0, 1, 8].contains(step);
 
   void onSkip() {
-    // TODO: Show skip dialog, then nextStep if confirm
+    // TODO: Show skip dialog, then call nextStep if confirmed
   }
 
   void nextStep() {
     if (currentStep < totalSteps - 1) {
       currentStep++;
+      // Animate to the next page with a smooth transition
       pageController.animateToPage(
         currentStep,
         duration: const Duration(milliseconds: 400),
@@ -75,6 +76,7 @@ class SetupProfileViewModel extends ChangeNotifier {
   void prevStep() {
     if (currentStep > 0) {
       currentStep--;
+      // Animate to the previous page with a smooth transition
       pageController.animateToPage(
         currentStep,
         duration: const Duration(milliseconds: 400),
@@ -84,7 +86,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     }
   }
 
-  // Validation cho từng bước
+  // Validation methods for each required step
 
   String? validateStep0() {
     final firstError = ValidationUtil().validateFirstName(firstName);
@@ -108,7 +110,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     return null;
   }
 
-  /// Tổng hợp kiểm tra toàn bộ các bước bắt buộc
+  /// Validate the current step if it's required
   String? validateCurrentStep() {
     switch (currentStep) {
       case 0:
@@ -122,25 +124,25 @@ class SetupProfileViewModel extends ChangeNotifier {
     }
   }
 
-  // Helper cho step 3
+  // Helper for step 3: Set orientation
   void setOrientation(int id) {
     orientationId = id;
     notifyListeners();
   }
 
-  // Helper cho step 5
+  // Helper for step 5: Set location preference
   void setLocationPreference(int value) {
     locationPreference = value;
     notifyListeners();
   }
 
-  // Helper cho step 7
+  // Helper for step 7: Set dropout status
   void setDropOut(bool value) {
     dropOut = value;
     notifyListeners();
   }
 
-  // Helper cho step 10
+  // Helpers for step 10: Manage gallery photos
   void addGalleryPhoto(String path) {
     galleryPhotos.add(path);
     notifyListeners();
@@ -153,7 +155,7 @@ class SetupProfileViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    pageController.dispose();
+    pageController.dispose(); // Dispose PageController to free resources
     super.dispose();
   }
 }

@@ -1,10 +1,9 @@
 // lib/presentation/auth/setup_profile/steps/step9_interests_languages_form.dart
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../setup_profile_viewmodel.dart';
+import '../../../shared/widgets/app_button.dart'; // Reusable button widget
+import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
 
 class Step9InterestsLanguagesForm extends StatefulWidget {
   const Step9InterestsLanguagesForm({super.key});
@@ -20,128 +19,76 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // TODO: fetch from API
-    final languages = [
-      {'id': 1, 'name': 'English'},
-      {'id': 2, 'name': 'Vietnamese'},
-      {'id': 3, 'name': 'Japanese'},
-      {'id': 4, 'name': 'Spanish'},
-    ];
-    final interests = List.generate(20, (i) => {'id': i + 1, 'name': 'Interest ${i + 1}'});
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Primary title using headlineLarge from AppTheme
           Text(
-            "Profile Setup",
-            style: theme.textTheme.displayMedium?.copyWith(
-              fontFamily: GoogleFonts.playfairDisplay().fontFamily,
+            "Your Interests & Languages",
+            style: theme.textTheme.headlineLarge?.copyWith(
               color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 6), // Spacing between title and description
+          // Secondary description using bodyLarge from AppTheme
           Text(
-            "Step 9: Interests & Languages *",
-            style: theme.textTheme.displayLarge?.copyWith(
-              fontFamily: GoogleFonts.playfairDisplay().fontFamily,
-              color: colorScheme.primary,
-              fontSize: 28,
+            "This helps us match you with like-minded people.",
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 8), // Spacing between description and note
+          // Italicized note for required fields using labelLarge from AppTheme
           Text(
-            "Select at least one interest to help us match you. Fields marked * are required.",
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: GoogleFonts.lato().fontFamily,
+            "Fields marked with * are required.",
+            style: theme.textTheme.labelLarge?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.7),
               fontStyle: FontStyle.italic,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 18), // Spacing before language selection
+          // Language selection label
           Text(
             "Languages you speak",
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontFamily: GoogleFonts.lato().fontFamily,
               color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 8), // Spacing before language options
+          // Placeholder for language selection (to be implemented)
           Wrap(
             spacing: 10,
-            children: languages.map((lang) {
-              final selected = vm.selectedLanguageIds?.contains(lang['id']) ?? false;
-              return FilterChip(
-                label: Text(
-                  lang['name'] as String,
-                  style: TextStyle(fontFamily: GoogleFonts.lato().fontFamily),
-                ),
-                selected: selected,
-                onSelected: (val) {
-                  setState(() {
-                    if (val) {
-                      vm.selectedLanguageIds = (vm.selectedLanguageIds ?? [])..add(lang['id'] as int);
-                    } else {
-                      vm.selectedLanguageIds?.remove(lang['id'] as int);
-                    }
-                  });
-                },
-                selectedColor: colorScheme.primary.withValues(alpha: 0.3),
-                labelStyle: TextStyle(
-                  color: selected ? colorScheme.primary : colorScheme.onSurface,
-                  fontFamily: GoogleFonts.lato().fontFamily,
-                ),
-              );
-            }).toList(),
+            children: const [],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 12), // Spacing before checkbox
+          // Checkbox for interest in learning new languages
           CheckboxListTile(
             title: Text(
               "Interested in learning new languages?",
-              style: TextStyle(fontFamily: GoogleFonts.lato().fontFamily),
+              style: theme.textTheme.bodyLarge,
             ),
             value: vm.interestedInNewLanguage ?? false,
             onChanged: (val) => setState(() => vm.interestedInNewLanguage = val ?? false),
             activeColor: colorScheme.primary,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 16), // Spacing before interest selection
+          // Interest selection label
           Text(
             "Your Interests *",
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontFamily: GoogleFonts.lato().fontFamily,
               color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 8), // Spacing before interest options
+          // Placeholder for interest selection (to be implemented)
           Wrap(
             spacing: 8,
-            children: interests.map((interest) {
-              final selected = vm.selectedInterestIds?.contains(interest['id']) ?? false;
-              return FilterChip(
-                label: Text(
-                  interest['name'] as String,
-                  style: TextStyle(fontFamily: GoogleFonts.lato().fontFamily),
-                ),
-                selected: selected,
-                onSelected: (val) {
-                  setState(() {
-                    if (val) {
-                      vm.selectedInterestIds = (vm.selectedInterestIds ?? [])..add(interest['id'] as int);
-                    } else {
-                      vm.selectedInterestIds?.remove(interest['id'] as int);
-                    }
-                  });
-                },
-                selectedColor: colorScheme.primary.withValues(alpha: 0.3),
-                labelStyle: TextStyle(
-                  color: selected ? colorScheme.primary : colorScheme.onSurface,
-                  fontFamily: GoogleFonts.lato().fontFamily,
-                ),
-              );
-            }).toList(),
+            children: const [],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 24), // Spacing before button
+          // Next button to proceed to the next step
           Row(
             children: [
               Expanded(

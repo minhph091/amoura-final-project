@@ -2,13 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../config/theme/app_colors.dart';
-import '../../../../config/theme/app_theme.dart';
-import '../../../../presentation/shared/widgets/app_button.dart';
-import '../setup_profile_viewmodel.dart';
+import '../../../shared/widgets/app_button.dart'; // Reusable button widget
+import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
 
 class Step6AppearanceForm extends StatefulWidget {
   const Step6AppearanceForm({super.key});
+
   @override
   State<Step6AppearanceForm> createState() => _Step6AppearanceFormState();
 }
@@ -17,128 +16,101 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: true);
-
-    final bodyTypes = [
-      {'id': 1, 'name': 'Slim'},
-      {'id': 2, 'name': 'Average'},
-      {'id': 3, 'name': 'Muscular'},
-      {'id': 4, 'name': 'Curvy'},
-      {'id': 5, 'name': 'Unknown'},
-    ];
-
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              "Appearance",
-              style: theme.textTheme.displayMedium?.copyWith(
-                fontFamily: AppTheme.lightTheme.textTheme.displayMedium?.fontFamily,
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.1,
-              ),
+          // Primary title using headlineLarge from AppTheme
+          Text(
+            "Your Appearance",
+            style: theme.textTheme.headlineLarge?.copyWith(
+              color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 6),
-
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              "Let others know more about your look.",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-                fontStyle: FontStyle.italic,
-                fontSize: 15,
-              ),
+          const SizedBox(height: 6), // Spacing between title and description
+          // Secondary description using bodyLarge from AppTheme
+          Text(
+            "Let others know more about your look.",
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Label "Body Type" giữ canh trái (hợp lý hơn)
+          const SizedBox(height: 24), // Spacing before form fields
+          // Body type selection label
           Text(
             "Body Type",
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontFamily: AppTheme.lightTheme.textTheme.displayLarge?.fontFamily,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: AppColors.secondary,
+              color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 8), // Spacing before dropdown
+          // Dropdown for body type selection
           DropdownButtonFormField<int>(
             decoration: InputDecoration(
-              label: const Text("Select body type"),
-              prefixIcon: const Icon(Icons.accessibility, color: AppColors.secondary),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              label: Text(
+                "Select body type",
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              prefixIcon: Icon(Icons.accessibility, color: colorScheme.primary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.7)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
+              ),
               filled: true,
               fillColor: theme.inputDecorationTheme.fillColor,
             ),
             value: vm.bodyTypeId,
-            items: bodyTypes.map((e) =>
-                DropdownMenuItem<int>(
-                  value: e['id'] as int,
-                  child: Row(
-                    children: [
-                      Icon(Icons.accessibility_new, color: AppColors.secondary, size: 20),
-                      const SizedBox(width: 10),
-                      Text(e['name'] as String, style: theme.textTheme.bodyMedium),
-                    ],
-                  ),
-                ),
-            ).toList(),
+            items: const [], // Placeholder for body type options (from backend)
             onChanged: (val) => setState(() => vm.bodyTypeId = val),
           ),
-          const SizedBox(height: 20),
-
-          // Label "Height (cm)" giữ canh trái (hợp lý hơn)
+          const SizedBox(height: 20), // Spacing before height slider
+          // Height selection label
           Text(
             "Height (cm)",
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontFamily: AppTheme.lightTheme.textTheme.displayLarge?.fontFamily,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: AppColors.secondary,
+              color: colorScheme.primary,
             ),
           ),
+          // Slider for height selection
           Slider(
             value: (vm.height ?? 170).toDouble(),
             min: 100,
             max: 220,
             divisions: 120,
             label: "${vm.height ?? 170} cm",
-            activeColor: AppColors.primary,
+            activeColor: colorScheme.primary,
+            inactiveColor: colorScheme.onSurface.withOpacity(0.3),
             onChanged: (val) => setState(() => vm.height = val.round()),
           ),
+          // Display selected height
           Center(
             child: Text(
               "${vm.height ?? 170} cm",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.primary,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 28), // Spacing before button
+          // Next button to proceed to the next step
           AppButton(
             text: "Next",
             width: double.infinity,
-            onPressed: () {
-              vm.nextStep();
-            },
+            onPressed: () => vm.nextStep(),
             height: 52,
-            gradient: LinearGradient(colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
-            ]),
-            textStyle: Theme.of(context).textTheme.labelLarge,
+            useThemeGradient: true,
           ),
         ],
       ),

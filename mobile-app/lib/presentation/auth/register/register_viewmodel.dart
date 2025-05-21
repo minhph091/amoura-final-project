@@ -53,7 +53,7 @@ class RegisterViewModel extends ChangeNotifier {
 
   String? validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) return 'Please confirm password';
-    if (value != passwordController.text) return 'Passwords do not matches';
+    if (value != passwordController.text) return 'Passwords do not match';
     return null;
   }
 
