@@ -53,4 +53,6 @@ public class RegistrationSession {
 
     @Column(nullable = false)
     private LocalDateTime expiresAt;
+    @Column(name = "last_otp_sent_at")
+    private LocalDateTime lastOtpSentAt;
 }

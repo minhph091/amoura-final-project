@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -39,6 +40,9 @@ public class RegistrationService {
 
     @Value("${app.registration.session-timeout}")
     private long sessionTimeoutMs;
+
+    @Value("${app.otp.resend-cooldown-seconds:60}")
+    private long otpResendCooldownSeconds;
 
     @Transactional
     public RegistrationResponse initiateRegistration(InitiateRegistrationRequest request) {
@@ -62,6 +66,7 @@ public class RegistrationService {
 
         // Tạo phiên đăng ký
         String sessionToken = UUID.randomUUID().toString();
+        LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = LocalDateTime.now().plusNanos(sessionTimeoutMs * 1000000);
 
         RegistrationSession session = RegistrationSession.builder()
@@ -70,11 +75,11 @@ public class RegistrationService {
                 .phoneNumber(request.getPhoneNumber())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .status("INITIATED")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(now)
+                .updatedAt(now)
                 .expiresAt(expiresAt)
+                .lastOtpSentAt(now) // ghi lại thời gian gửi otp
                 .build();
-
         registrationSessionRepository.save(session);
 
         // Tạo và gửi OTP
@@ -88,6 +93,43 @@ public class RegistrationService {
                 .expiresIn(ChronoUnit.SECONDS.between(LocalDateTime.now(), expiresAt))
                 .build();
     }
+
+
+    @Transactional
+    public ResendOtpResponse resendOtp(ResendOtpRequest request) {
+        RegistrationSession session = getValidSession(request.getSessionToken());
+
+        if (!"INITIATED".equals(session.getStatus()) && !"VERIFIED".equals(session.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Cannot resend OTP for the current session state.",
+                    "INVALID_SESSION_STATE_FOR_RESEND");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (session.getLastOtpSentAt() != null) {
+            LocalDateTime nextResendAllowedAt = session.getLastOtpSentAt().plusSeconds(otpResendCooldownSeconds);
+            if (now.isBefore(nextResendAllowedAt)) {
+                long secondsRemaining = ChronoUnit.SECONDS.between(now, nextResendAllowedAt);
+                throw new ApiException(HttpStatus.TOO_MANY_REQUESTS,
+                        "Please wait " + secondsRemaining + " seconds before requesting a new OTP.",
+                        "OTP_RESEND_RATE_LIMITED");
+            }
+        }
+
+        otpService.generateAndSendOtp(session.getEmail(), "REGISTRATION");
+
+        session.setLastOtpSentAt(now);
+        session.setUpdatedAt(now);
+        registrationSessionRepository.save(session);
+
+        log.info("OTP resent for session token: {}", request.getSessionToken());
+
+        return ResendOtpResponse.builder()
+                .message("A new OTP has been sent to your email.")
+                .nextResendAvailableInSeconds(otpResendCooldownSeconds)
+                .build();
+    }
+
 
     @Transactional
     public RegistrationResponse verifyOtp(VerifyOtpRequest request) {
