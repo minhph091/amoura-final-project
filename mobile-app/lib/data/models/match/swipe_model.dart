@@ -1,4 +1,4 @@
-// lib/data/models/match/swipe_model.dart
+// lib/data/models/matches/swipe_model.dart
 
 // Model swipe (Vuốt thích/không thích)
 class SwipeModel {

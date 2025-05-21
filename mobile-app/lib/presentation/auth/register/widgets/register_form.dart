@@ -76,7 +76,6 @@ class RegisterForm extends StatelessWidget {
           AppButton(
             text: "Register",
             icon: Icons.person_add_alt_1,
-            isLoading: viewModel.isLoading,
             loading: SizedBox(
               width: 24,
               height: 24,

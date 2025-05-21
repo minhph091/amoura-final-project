@@ -20,6 +20,7 @@ dependencies:
   shimmer: ^3.0.0
   photo_view: ^0.15.0
   flutter_svg: ^2.1.0
+  dotted_border: ^3.0.1
   flutter_localizations:
     sdk: flutter
 

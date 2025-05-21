@@ -1,4 +1,4 @@
-// lib/data/models/match/match_model.dart
+// lib/data/models/matches/match_model.dart
 
 // Model ghép đôi (Match)
 class MatchModel {
@@ -19,7 +19,7 @@ class MatchModel {
   });
 }
 
-// Enum trạng thái match
+// Enum trạng thái matches
 enum MatchStatus { active, unmatched }
 
 MatchStatus matchStatusFromString(String value) {

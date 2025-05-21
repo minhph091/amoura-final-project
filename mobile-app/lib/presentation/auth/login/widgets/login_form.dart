@@ -108,7 +108,6 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
             AppButton(
               text: "Sign In",
               icon: Icons.login,
-              isLoading: _loading,
               onPressed: _onLogin,
             ),
           ],

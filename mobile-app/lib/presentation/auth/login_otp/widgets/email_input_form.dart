@@ -67,7 +67,6 @@ class _EmailInputFormState extends State<EmailInputForm> with SingleTickerProvid
             AppButton(
               text: "Send OTP",
               icon: Icons.send,
-              isLoading: _loading,
               onPressed: _onSubmit,
             ),
           ],

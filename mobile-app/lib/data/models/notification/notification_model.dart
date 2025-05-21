@@ -32,7 +32,7 @@ NotificationType notificationTypeFromString(String value) {
   switch (value) {
     case 'message':
       return NotificationType.message;
-    case 'match':
+    case 'matches':
       return NotificationType.match;
     case 'marketing':
       return NotificationType.marketing;

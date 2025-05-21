@@ -7,7 +7,6 @@ class AppButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isOutline;
-  final bool isLoading;
   final IconData? icon;
   final Color? color;
   final OutlinedBorder? shape;
@@ -28,7 +27,6 @@ class AppButton extends StatelessWidget {
     required this.text,
     this.onPressed,
     this.isOutline = false,
-    this.isLoading = false,
     this.icon,
     this.color,
     this.shape,
@@ -49,13 +47,11 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Determine disabled state
-    final bool _isDisabled = isDisabled || isLoading || onPressed == null;
-
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
     // Compute effective gradient
-    final Gradient? effectiveGradient = _isDisabled
+    final Gradient? effectiveGradient = isDisabled
         ? LinearGradient(
         colors: [
           colorScheme.onSurface.withAlpha(20),
@@ -75,7 +71,7 @@ class AppButton extends StatelessWidget {
             : null);
 
     // Compute effective text color
-    final Color effectiveTextColor = _isDisabled
+    final Color effectiveTextColor = isDisabled
         ? colorScheme.onSurface.withAlpha(97)
         : textColor ??
         (effectiveGradient != null
@@ -111,16 +107,7 @@ class AppButton extends StatelessWidget {
         const EdgeInsets.symmetric(horizontal: 24, vertical: 12.0);
 
     // Button content
-    Widget buttonContent = isLoading
-        ? SizedBox(
-      width: 22,
-      height: 22,
-      child: CircularProgressIndicator(
-        strokeWidth: 2,
-        valueColor: AlwaysStoppedAnimation<Color>(effectiveTextColor),
-      ),
-    )
-        : Text(
+    Widget buttonContent = Text(
       text,
       style: effectiveTextStyleWithColor,
       textAlign: TextAlign.center,
@@ -154,7 +141,7 @@ class AppButton extends StatelessWidget {
               Directionality.of(context))
               : BorderRadius.circular(height ?? 52 / 2),
           boxShadow: [
-            if (effectiveElevation > 0 && !_isDisabled)
+            if (effectiveElevation > 0 && !isDisabled)
               BoxShadow(
                 color: colorScheme.primary.withAlpha(25),
                 spreadRadius: 0.4,
@@ -164,7 +151,7 @@ class AppButton extends StatelessWidget {
           ],
         ),
         child: ElevatedButton(
-          onPressed: _isDisabled ? null : onPressed,
+          onPressed: isDisabled ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
@@ -195,7 +182,7 @@ class AppButton extends StatelessWidget {
         width: width,
         height: height ?? 52,
         child: OutlinedButton(
-          onPressed: _isDisabled ? null : onPressed,
+          onPressed: isDisabled ? null : onPressed,
           style: OutlinedButton.styleFrom(
             backgroundColor: color ?? Colors.transparent,
             shape: effectiveShape,
@@ -224,7 +211,7 @@ class AppButton extends StatelessWidget {
       width: width,
       height: height ?? 52,
       child: ElevatedButton(
-        onPressed: _isDisabled ? null : onPressed,
+        onPressed: isDisabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color ?? colorScheme.primary,
           shape: effectiveShape,

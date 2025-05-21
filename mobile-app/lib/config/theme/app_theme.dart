@@ -1,7 +1,11 @@
 // lib/config/theme/app_theme.dart
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
+
+final String _bodyFontFamily = GoogleFonts.lato().fontFamily!;
+final String _displayFontFamily = GoogleFonts.playfairDisplay().fontFamily!;
 
 class AppTheme {
   // Light theme
@@ -9,7 +13,7 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: AppColors.primary,
     scaffoldBackgroundColor: AppColors.background,
-    fontFamily: 'Roboto',
+    fontFamily: _bodyFontFamily,
     colorScheme: const ColorScheme.light(
       primary: AppColors.primary,
       secondary: AppColors.secondary,
@@ -18,11 +22,25 @@ class AppTheme {
       onSurface: AppColors.text,
       onSecondary: AppColors.label,
     ),
-    textTheme: const TextTheme(
+    textTheme: TextTheme(
+      displayLarge: GoogleFonts.dancingScript(
+        textStyle: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.text),
+      ),
+      displayMedium: GoogleFonts.dancingScript(
+        textStyle: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600, color: AppColors.text),
+      ),
+      bodyLarge: GoogleFonts.playfairDisplay(
+        textStyle: const TextStyle(fontSize: 16, color: AppColors.text),
+      ),
+      bodyMedium: GoogleFonts.playfairDisplay(
+        textStyle: const TextStyle(fontSize: 16, color: AppColors.text),
+      ),
+      labelLarge: GoogleFonts.playfairDisplay(
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.label),
+      ),
       headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.text),
       headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.text),
-      bodyLarge: TextStyle(fontSize: 16, color: AppColors.text),
-      labelLarge: TextStyle(fontSize: 14, color: AppColors.label),
+
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -64,7 +82,7 @@ class AppTheme {
     brightness: Brightness.dark,
     primaryColor: AppColors.darkPrimary,
     scaffoldBackgroundColor: AppColors.darkBackground,
-    fontFamily: 'Roboto',
+    fontFamily: _bodyFontFamily,
     colorScheme: const ColorScheme.dark(
       primary: AppColors.darkPrimary,
       secondary: AppColors.darkSecondary,
@@ -73,11 +91,24 @@ class AppTheme {
       onSurface: AppColors.darkText,
       onSecondary: AppColors.darkLabel,
     ),
-    textTheme: const TextTheme(
+    textTheme: TextTheme(
+      displayLarge: GoogleFonts.dancingScript(
+        textStyle: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.darkText),
+      ),
+      displayMedium: GoogleFonts.dancingScript(
+        textStyle: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600, color: AppColors.darkText),
+      ),
+      bodyLarge: GoogleFonts.playfairDisplay(
+        textStyle: const TextStyle(fontSize: 16, color: AppColors.darkText),
+      ),
+      bodyMedium: GoogleFonts.playfairDisplay(
+        textStyle: const TextStyle(fontSize: 16, color: AppColors.darkText),
+      ),
+      labelLarge: GoogleFonts.playfairDisplay(
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.darkLabel),
+      ),
       headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.darkText),
       headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.darkText),
-      bodyLarge: TextStyle(fontSize: 16, color: AppColors.darkText),
-      labelLarge: TextStyle(fontSize: 14, color: AppColors.darkLabel),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,

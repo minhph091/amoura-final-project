@@ -102,7 +102,7 @@ class _PrivacyPolicyViewState extends State<PrivacyPolicyView> with SingleTicker
             _buildParagraph(
                 'We may share information about you as follows or as otherwise described in this Privacy Policy:',
                 textTheme, colorScheme),
-            _buildListItem('With other users when you interact on the Service, such as when you match or chat;', textTheme, colorScheme),
+            _buildListItem('With other users when you interact on the Service, such as when you matches or chat;', textTheme, colorScheme),
             _buildListItem('With vendors, consultants, and other service providers who need access to such information to perform work on our behalf;', textTheme, colorScheme),
             _buildListItem('To comply with any applicable law, regulation, legal process, or governmental request as required;', textTheme, colorScheme),
             const SizedBox(height: 30),

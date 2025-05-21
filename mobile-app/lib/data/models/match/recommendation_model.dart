@@ -1,4 +1,4 @@
-// lib/data/models/match/recommendation_model.dart
+// lib/data/models/matches/recommendation_model.dart
 
 // Model đề xuất ghép đôi (Recommendation)
 class RecommendationModel {
