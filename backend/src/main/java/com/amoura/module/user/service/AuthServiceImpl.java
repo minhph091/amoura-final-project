@@ -206,7 +206,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Kiểm tra trạng thái tài khoản
-        if (!user.getStatus().equals("ACTIVE")) {
+        if (!user.getStatus().equalsIgnoreCase("ACTIVE")) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Account is not active", "ACCOUNT_NOT_ACTIVE");
         }
 
