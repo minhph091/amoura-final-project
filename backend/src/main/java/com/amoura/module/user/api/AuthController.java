@@ -32,6 +32,12 @@ public class AuthController {
         return ResponseEntity.ok(registrationService.initiateRegistration(request));
     }
 
+    @PostMapping("/register/resend-otp")
+    public ResponseEntity<ResendOtpResponse> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        ResendOtpResponse response = registrationService.resendOtp(request);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/register/verify-otp")
     @Operation(summary = "Verify OTP for registration")
     public ResponseEntity<RegistrationResponse> verifyOtp(

@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -206,7 +207,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Kiểm tra trạng thái tài khoản
-        if (!user.getStatus().equals("ACTIVE")) {
+        if (!user.getStatus().equalsIgnoreCase("ACTIVE")) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Account is not active", "ACCOUNT_NOT_ACTIVE");
         }
 
