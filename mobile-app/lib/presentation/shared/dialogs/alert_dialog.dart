@@ -2,71 +2,40 @@
 
 import 'package:flutter/material.dart';
 
-/// Shows a custom alert dialog with a title, content, and optional icon.
-Future<bool?> showAppAlertDialog({
+Future<void> showAppAlertDialog({
   required BuildContext context,
   required String title,
   required String content,
-  IconData? icon,
-  String confirmText = "OK",
-  String? cancelText,
+  String buttonText = "OK",
   VoidCallback? onConfirm,
-  VoidCallback? onCancel,
+  IconData icon = Icons.info_rounded,
   Color? iconColor,
 }) {
-  final theme = Theme.of(context);
-  return showDialog<bool>(
+  return showDialog<void>(
     context: context,
-    barrierDismissible: cancelText != null,
     builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-      contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      title: Column(
-        mainAxisSize: MainAxisSize.min,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
         children: [
-          if (icon != null)
-            CircleAvatar(
-              backgroundColor: (iconColor ?? theme.colorScheme.primary).withOpacity(0.12),
-              radius: 28,
-              child: Icon(icon, size: 36, color: iconColor ?? theme.colorScheme.primary),
-            ),
-          if (icon != null) const SizedBox(height: 12),
-          Text(
-            title,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
+          Icon(icon, color: iconColor ?? Theme.of(context).colorScheme.primary, size: 28),
+          const SizedBox(width: 8),
+          Expanded(child: Text(title)),
         ],
       ),
-      content: Text(
-        content,
-        style: theme.textTheme.bodyMedium,
-        textAlign: TextAlign.center,
-      ),
-      actionsAlignment: MainAxisAlignment.center,
+      content: Text(content),
       actions: [
-        if (cancelText != null)
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop(false);
-              onCancel?.call();
-            },
-            child: Text(cancelText, style: TextStyle(color: theme.colorScheme.secondary)),
-          ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
           onPressed: () {
-            Navigator.of(ctx).pop(true);
+            Navigator.of(ctx).pop();
             onConfirm?.call();
           },
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-          child: Text(confirmText),
+          child: Text(buttonText),
         ),
       ],
     ),

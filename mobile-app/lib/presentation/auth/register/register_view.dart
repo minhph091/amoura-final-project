@@ -1,7 +1,10 @@
+// lib/presentation/auth/register/register_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'widgets/register_form.dart';
 import 'register_viewmodel.dart';
+import 'widgets/register_form.dart';
+import '../../../core/constants/asset_path.dart';
 import '../../../config/theme/app_colors.dart';
 
 class RegisterView extends StatelessWidget {
@@ -11,23 +14,23 @@ class RegisterView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark
         ? LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.darkBackground,
-              AppColors.darkSecondary.withValues(alpha: 0.90),
-              AppColors.darkPrimary.withValues(alpha: 0.82),
-            ],
-          )
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        AppColors.darkBackground,
+        AppColors.darkSecondary.withValues(alpha: 0.90),
+        AppColors.darkPrimary.withValues(alpha: 0.82),
+      ],
+    )
         : LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.background,
-              AppColors.primary.withValues(alpha: 0.13),
-              AppColors.secondary.withValues(alpha: 0.06),
-            ],
-          );
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        AppColors.background,
+        AppColors.primary.withValues(alpha: 0.13),
+        AppColors.secondary.withValues(alpha: 0.06),
+      ],
+    );
   }
 
   @override
@@ -50,20 +53,21 @@ class RegisterView extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              'assets/icons/light_amoura.png',
-                              width: 66,
-                              height: 66,
-                            ),
-                          ],
+                        Hero(
+                          tag: "amoura_logo",
+                          child: Image.asset(
+                            AssetPath.logo,
+                            width: 70,
+                            height: 70,
+                          ),
                         ),
                         const SizedBox(height: 22),
                         Text(
-                          "Create your amoura account",
-                          style: Theme.of(context).textTheme.bodyLarge,
+                          "Create your Amoura account",
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),

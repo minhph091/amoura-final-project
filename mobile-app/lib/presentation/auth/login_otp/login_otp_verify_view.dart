@@ -1,12 +1,13 @@
-// lib/presentation/auth/login_otp/login_email_otp_verify_view.dart
+// lib/presentation/auth/login_otp/login_otp_verify_view.dart
 
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../core/constants/asset_path.dart';
 import '../../shared/widgets/otp_input_form.dart';
 
-class LoginEmailOtpVerifyView extends StatelessWidget {
+class LoginOtpVerifyView extends StatelessWidget {
   final String email;
-  const LoginEmailOtpVerifyView({super.key, required this.email});
+  const LoginOtpVerifyView({super.key, required this.email});
 
   LinearGradient _getBackgroundGradient(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -33,6 +34,7 @@ class LoginEmailOtpVerifyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -47,47 +49,43 @@ class LoginEmailOtpVerifyView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo + app name
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/icons/light_amoura.png',
-                        width: 66,
-                        height: 66,
-                      ),
-                    ],
+                  Hero(
+                    tag: "amoura_logo",
+                    child: Image.asset(
+                      AssetPath.logo,
+                      width: 70,
+                      height: 70,
+                    ),
                   ),
                   const SizedBox(height: 22),
                   Text(
                     "OTP Verification",
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     "Enter the 6-digit code sent to your email.",
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: theme.textTheme.bodyLarge,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 18),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       email,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Otp input form
                   OtpInputForm(
                     otpLength: 6,
                     onSubmit: (otp) {
@@ -101,8 +99,8 @@ class LoginEmailOtpVerifyView extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     "Didn't receive the code? Check your spam or resend.",
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.secondary,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.secondary,
                     ),
                     textAlign: TextAlign.center,
                   ),

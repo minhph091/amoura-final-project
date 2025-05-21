@@ -1,6 +1,7 @@
 // lib/app/routes/app_pages.dart
 
 import 'package:flutter/material.dart';
+import '../../presentation/auth/setup_profile/setup_profile_view.dart';
 import '../../presentation/splash/splash_view.dart';
 import '../../presentation/welcome/welcome_view.dart';
 import '../../presentation/auth/login/login_view.dart';
@@ -8,8 +9,8 @@ import '../../presentation/common/terms_of_service_view.dart';
 import '../../presentation/common/privacy_policy_view.dart';
 import '../../presentation/auth/register/register_view.dart';
 import '../../presentation/auth/forgot_password/forgot_password_view.dart';
-import '../../presentation/auth/login_otp/login_with_email_otp_view.dart';
-import '../../presentation/auth/login_otp/login_email_otp_verify_view.dart';
+import '../../presentation/auth/login_otp/login_otp_view.dart';
+import '../../presentation/auth/login_otp/login_otp_verify_view.dart';
 import '../../presentation/home/home_view.dart';
 import 'app_routes.dart';
 
@@ -39,13 +40,13 @@ class AppPages {
           },
         );
       case AppRoutes.loginWithEmailOtp:
-        return MaterialPageRoute(builder: (_) => const LoginWithEmailOtpView());
+        return MaterialPageRoute(builder: (_) => const LoginOtpView());
     // Đăng nhập OTP: nhập mã OTP
       case AppRoutes.loginEmailOtpVerify:
         final args = settings.arguments as Map<String, dynamic>?;
         final email = args?['email'] ?? '';
         return MaterialPageRoute(
-          builder: (_) => LoginEmailOtpVerifyView(email: email),
+          builder: (_) => LoginOtpVerifyView(email: email),
         );
     // Quên mật khẩu: nhập mã OTP
       case AppRoutes.forgotPasswordOtpVerify:
@@ -54,6 +55,8 @@ class AppPages {
         return MaterialPageRoute(
           builder: (_) => ForgotPasswordView(email: email),
         );
+      case AppRoutes.setupProfile:
+        return MaterialPageRoute(builder: (_) => const SetupProfileView());
       case AppRoutes.home:
         return MaterialPageRoute(builder: (_) => const HomeView());
       default:

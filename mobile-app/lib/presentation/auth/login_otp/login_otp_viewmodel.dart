@@ -1,8 +1,8 @@
-// lib/presentation/auth/login_otp/login_with_email_otp_viewmodel.dart
+// lib/presentation/auth/login_otp/login_otp_viewmodel.dart
 
 import 'package:flutter/material.dart';
 
-class LoginWithEmailOtpViewModel extends ChangeNotifier {
+class LoginOtpViewModel extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
 

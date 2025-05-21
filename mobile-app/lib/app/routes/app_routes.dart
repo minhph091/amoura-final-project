@@ -16,5 +16,7 @@ class AppRoutes {
   // Forgot password with OTP flow
   static const String forgotPasswordOtpVerify = '/forgot-password-otp-verify';
 
+  static const String setupProfile = '/setup-profile';
+
   static const String home = '/home';
 }

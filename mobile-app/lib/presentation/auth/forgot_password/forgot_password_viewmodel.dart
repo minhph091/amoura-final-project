@@ -6,44 +6,73 @@ class ForgotPasswordViewModel extends ChangeNotifier {
   final emailFormKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
 
-  // OTP
-  List<TextEditingController> otpControllers;
-  List<FocusNode> otpFocusNodes;
-  final int otpLength;
-
   bool hasSentEmail = false;
   String? sentEmail;
+  bool isLoading = false;
+  String? errorMessage;
 
-  ForgotPasswordViewModel({this.otpLength = 6})
-      : otpControllers = List.generate(6, (_) => TextEditingController()),
-        otpFocusNodes = List.generate(6, (_) => FocusNode());
+  final int otpLength;
+  String _otp = '';
 
-  // Gửi email lấy mã
-  void onSendEmail() {
+  ForgotPasswordViewModel({this.otpLength = 6});
+
+  void onSendEmail() async {
     if (emailFormKey.currentState?.validate() ?? false) {
       sentEmail = emailController.text.trim();
       hasSentEmail = true;
+      isLoading = true;
+      errorMessage = null;
       notifyListeners();
-      // Để backend xử lý gửi OTP
+      // Gọi backend gửi OTP (để backend code)
+      // Khi xong:
+      isLoading = false;
+      notifyListeners();
     }
   }
 
-  void onVerifyOtp() {
-    final otp = otpControllers.map((c) => c.text).join();
-    if (otp.length == otpLength) {
-      // Để backend xác thực OTP
+  void onOtpChanged(String otp) {
+    _otp = otp;
+    notifyListeners();
+  }
+
+  void onVerifyOtp(void Function() onSuccess) async {
+    if (_otp.length == otpLength) {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+      // Gọi backend xác thực OTP (để backend code)
+      // Nếu thành công:
+      onSuccess();
+      // Nếu lỗi:
+      // errorMessage = "Invalid OTP";
+      isLoading = false;
+      notifyListeners();
     }
+  }
+
+  void onResendOtp() async {
+    if (sentEmail != null) {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+      // Gọi backend gửi lại OTP (để backend code)
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void reset() {
+    emailController.clear();
+    hasSentEmail = false;
+    sentEmail = null;
+    errorMessage = null;
+    _otp = '';
+    notifyListeners();
   }
 
   @override
   void dispose() {
     emailController.dispose();
-    for (final ctl in otpControllers) {
-      ctl.dispose();
-    }
-    for (final f in otpFocusNodes) {
-      f.dispose();
-    }
     super.dispose();
   }
 }

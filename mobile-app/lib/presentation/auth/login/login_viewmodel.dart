@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 
 class LoginViewModel extends ChangeNotifier {
-  // Trạng thái form
   final formKey = GlobalKey<FormState>();
   final accountController = TextEditingController();
   final passwordController = TextEditingController();
@@ -16,10 +15,16 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Hàm gọi khi nhấn nút login (chỉ validate form)
-  void onLoginPressed() {
+  void onLoginPressed(void Function()? onSuccess, void Function(String error)? onError) async {
     if (formKey.currentState?.validate() ?? false) {
-      // Để backend xử lý submit
+      isLoading = true;
+      notifyListeners();
+      // Xử lý call API login ở đây (để backend code)
+      await Future.delayed(const Duration(seconds: 1));
+      // onSuccess?.call();
+      // onError?.call("Sai tài khoản/mật khẩu");
+      isLoading = false;
+      notifyListeners();
     }
   }
 

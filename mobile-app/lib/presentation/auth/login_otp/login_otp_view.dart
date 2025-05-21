@@ -1,11 +1,12 @@
-// lib/presentation/auth/login_otp/login_with_email_otp_view.dart
+// lib/presentation/auth/login_otp/login_otp_verify_view.dart
 
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../core/constants/asset_path.dart';
 import 'widgets/email_input_form.dart';
 
-class LoginWithEmailOtpView extends StatelessWidget {
-  const LoginWithEmailOtpView({super.key});
+class LoginOtpView extends StatelessWidget {
+  const LoginOtpView({super.key});
 
   LinearGradient _getBackgroundGradient(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -32,6 +33,7 @@ class LoginWithEmailOtpView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -46,41 +48,38 @@ class LoginWithEmailOtpView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo + app name giống login
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/icons/light_amoura.png',
-                        width: 66,
-                        height: 66,
-                      ),
-                    ],
+                  Hero(
+                    tag: "amoura_logo",
+                    child: Image.asset(
+                      AssetPath.logo,
+                      width: 70,
+                      height: 70,
+                    ),
                   ),
                   const SizedBox(height: 22),
                   Text(
                     "Sign in with Email OTP",
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: theme.colorScheme.primary,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "Enter your email to receive a one-time login code.",
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: theme.textTheme.bodyLarge,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor.withValues(alpha: 0.94),
+                      color: theme.cardColor.withValues(alpha: 0.94),
                       borderRadius: BorderRadius.circular(22),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.06),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),

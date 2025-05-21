@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../core/constants/asset_path.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -70,7 +71,6 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Container(
@@ -95,7 +95,7 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Logo + hiệu ứng glow/shadow
+                // Logo + hiệu ứng glow/shadow + Hero
                 Hero(
                   tag: 'app_logo',
                   child: Container(
@@ -108,19 +108,21 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
                           spreadRadius: 10,
                         ),
                         BoxShadow(
-                          color: (isDark ? AppColors.darkSecondary : AppColors.secondary).withValues(alpha: 0.20),
+                          color: (isDark ? AppColors.darkSecondary : AppColors.secondary)
+                              .withValues(alpha: 0.20),
                           blurRadius: 18,
                           spreadRadius: 2,
                         ),
                         BoxShadow(
-                          color: (isDark ? AppColors.darkPrimary : AppColors.primary).withValues(alpha: 0.17),
+                          color: (isDark ? AppColors.darkPrimary : AppColors.primary)
+                              .withValues(alpha: 0.17),
                           blurRadius: 10,
                           spreadRadius: 1,
                         ),
                       ],
                     ),
                     child: Image.asset(
-                      'assets/icons/light_amoura.png',
+                      AssetPath.logo,
                       width: 96,
                       height: 96,
                     ),
@@ -137,13 +139,16 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
                     letterSpacing: 2.1,
                     shadows: [
                       Shadow(
-                          blurRadius: 12,
-                          color: Colors.black.withValues(alpha: 0.32),
-                          offset: const Offset(0, 3)),
+                        blurRadius: 12,
+                        color: Colors.black.withValues(alpha: 0.32),
+                        offset: const Offset(0, 3),
+                      ),
                       Shadow(
-                          blurRadius: 6,
-                          color: (isDark ? AppColors.darkPrimary : AppColors.primary).withValues(alpha: 0.13),
-                          offset: const Offset(0, 2)),
+                        blurRadius: 6,
+                        color: (isDark ? AppColors.darkPrimary : AppColors.primary)
+                            .withValues(alpha: 0.13),
+                        offset: const Offset(0, 2),
+                      ),
                     ],
                   ),
                 ),
@@ -155,7 +160,7 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
                     fontSize: 18,
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.88)
-                        : const Color(0xFF43DDE6), // Xanh nhẹ cho light mode
+                        : const Color(0xFF43DDE6),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                     shadows: [

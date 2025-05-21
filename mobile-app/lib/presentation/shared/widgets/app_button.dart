@@ -21,6 +21,7 @@ class AppButton extends StatelessWidget {
   final bool useThemeGradient;
   final bool isDisabled;
   final BorderSide? borderSide;
+  final Widget? loading;
 
   const AppButton({
     super.key,
@@ -41,6 +42,7 @@ class AppButton extends StatelessWidget {
     this.useThemeGradient = false,
     this.isDisabled = false,
     this.borderSide,
+    this.loading,
   });
 
 

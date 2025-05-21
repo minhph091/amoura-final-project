@@ -2,18 +2,26 @@
 
 import 'package:flutter/material.dart';
 
-// Widget dialog xác nhận chung cho toàn app
 Future<bool?> showConfirmDialog({
   required BuildContext context,
   required String title,
   required String content,
   String confirmText = "Confirm",
   String cancelText = "Cancel",
+  IconData icon = Icons.help_rounded,
+  Color? iconColor,
 }) {
   return showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(title),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(icon, color: iconColor ?? Theme.of(context).colorScheme.primary, size: 28),
+          const SizedBox(width: 8),
+          Expanded(child: Text(title)),
+        ],
+      ),
       content: Text(content),
       actions: [
         TextButton(
@@ -21,6 +29,12 @@ Future<bool?> showConfirmDialog({
           child: Text(cancelText),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
           onPressed: () => Navigator.of(ctx).pop(true),
           child: Text(confirmText),
         ),

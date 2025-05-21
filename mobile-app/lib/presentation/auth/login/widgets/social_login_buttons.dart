@@ -3,7 +3,10 @@
 import 'package:flutter/material.dart';
 
 class SocialLoginButtons extends StatelessWidget {
-  const SocialLoginButtons({super.key});
+  final VoidCallback? onGoogle;
+  final VoidCallback? onFacebook;
+
+  const SocialLoginButtons({super.key, this.onGoogle, this.onFacebook});
 
   @override
   Widget build(BuildContext context) {
@@ -14,15 +17,55 @@ class SocialLoginButtons extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.g_mobiledata, size: 34, color: Colors.red),
-              tooltip: 'Sign in with Google',
+            Tooltip(
+              message: 'Sign in with Google',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(32),
+                onTap: onGoogle,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.shade50,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withValues(alpha: 0.10),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    'assets/logos/google_logo.png',
+                    width: 32, height: 32,
+                  ),
+                ),
+              ),
             ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.facebook, size: 32, color: Colors.blue),
-              tooltip: 'Sign in with Facebook',
+            const SizedBox(width: 24),
+            Tooltip(
+              message: 'Sign in with Facebook',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(32),
+                onTap: onFacebook,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue.shade50,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withValues(alpha: 0.10),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    'assets/logos/facebook_logo.png',
+                    width: 38, height: 38,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

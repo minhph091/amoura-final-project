@@ -1,99 +1,45 @@
 // lib/presentation/shared/widgets/photo_viewer.dart
 
 import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
-import 'network_image.dart';
 
-// A widget that displays a full-screen photo viewer with zoom and pan capabilities.
-class PhotoViewer extends StatelessWidget {
+void showPhotoViewer(BuildContext context, String imageUrl, {String? tag, Color backgroundColor = Colors.black}) {
+  Navigator.of(context).push(
+    PageRouteBuilder(
+      pageBuilder: (_, __, ___) => _PhotoViewer(imageUrl: imageUrl, tag: tag, backgroundColor: backgroundColor),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        var tween = Tween(begin: 0.8, end: 1.0).chain(CurveTween(curve: Curves.easeOut));
+        return ScaleTransition(
+          scale: animation.drive(tween),
+          child: child,
+        );
+      },
+      opaque: false,
+      barrierColor: backgroundColor.withValues(alpha: 0.98),
+    ),
+  );
+}
+
+class _PhotoViewer extends StatelessWidget {
   final String imageUrl;
-  final String? heroTag;
-  final String? description;
+  final String? tag;
+  final Color backgroundColor;
 
-  const PhotoViewer({
-    super.key,
-    required this.imageUrl,
-    this.heroTag,
-    this.description,
-  });
+  const _PhotoViewer({required this.imageUrl, this.tag, required this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          GestureDetector(
-            onVerticalDragEnd: (details) {
-              if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
-                Navigator.of(context).maybePop();
-              }
-            },
-            child: Center(
-              child: heroTag != null
-                  ? Hero(
-                tag: heroTag!,
-                child: _buildPhotoView(context),
-              )
-                  : _buildPhotoView(context),
+      backgroundColor: backgroundColor,
+      body: GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: Center(
+          child: Hero(
+            tag: tag ?? imageUrl,
+            child: InteractiveViewer(
+              child: Image.network(imageUrl, fit: BoxFit.contain),
             ),
           ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 12,
-            left: 12,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 28),
-              onPressed: () => Navigator.of(context).maybePop(),
-              tooltip: 'Close',
-            ),
-          ),
-          if (description != null)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 32,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  description!,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black54,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPhotoView(BuildContext context) {
-    return PhotoView(
-      imageProvider: NetworkImage(imageUrl),
-      backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-      minScale: PhotoViewComputedScale.contained,
-      maxScale: PhotoViewComputedScale.covered * 2.5,
-      loadingBuilder: (context, event) => NetworkImageWidget(
-        imageUrl: imageUrl,
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        fit: BoxFit.contain,
-      ),
-      errorBuilder: (context, error, stackTrace) => NetworkImageWidget(
-        imageUrl: imageUrl,
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        fit: BoxFit.contain,
+        ),
       ),
     );
   }

@@ -26,6 +26,7 @@ class AppTextField extends StatelessWidget {
   final bool autofocus;
   final AutovalidateMode? autovalidateMode;
   final int? maxLength;
+  final String? errorText;
 
   // Các props override màu
   final Color? fillColor;
@@ -75,6 +76,7 @@ class AppTextField extends StatelessWidget {
     this.errorBorderColor,
     this.cursorColor,
     this.contentPadding,
+    this.errorText,
   });
 
   @override

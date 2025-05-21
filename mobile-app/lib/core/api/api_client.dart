@@ -1,4 +1,5 @@
-// TODO Implement this library.
+// lib/core/api/api_client.dart
+
 import 'package:dio/dio.dart';
 
 class ApiClient {
@@ -6,9 +7,9 @@ class ApiClient {
 
   ApiClient()
       : dio = Dio(BaseOptions(
-          baseUrl: 'http://192.168.100.201:8080/api',
+          baseUrl: 'http://10.0.2.2:8080/api',
           connectTimeout: Duration(seconds: 10),
-          receiveTimeout: Duration(seconds: 10),
+          receiveTimeout: Duration(seconds: 50),
           headers: {
             'Content-Type': 'application/json',
           },

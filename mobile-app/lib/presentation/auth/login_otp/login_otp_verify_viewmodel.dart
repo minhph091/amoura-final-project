@@ -1,13 +1,13 @@
-// lib/presentation/auth/login_otp/login_email_otp_verify_viewmodel.dart
+// lib/presentation/auth/login_otp/login_otp_verify_viewmodel.dart
 
 import 'package:flutter/material.dart';
 
-class LoginEmailOtpVerifyViewModel extends ChangeNotifier {
+class LoginOtpVerifyViewModel extends ChangeNotifier {
   List<TextEditingController> otpControllers;
   List<FocusNode> otpFocusNodes;
   final int otpLength;
 
-  LoginEmailOtpVerifyViewModel({this.otpLength = 6})
+  LoginOtpVerifyViewModel({this.otpLength = 6})
       : otpControllers = List.generate(6, (_) => TextEditingController()),
         otpFocusNodes = List.generate(6, (_) => FocusNode());
 

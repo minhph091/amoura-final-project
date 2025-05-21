@@ -1,125 +1,76 @@
 // lib/presentation/shared/widgets/user_avatar.dart
 
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
+import '../../../core/constants/asset_path.dart';
 
-// A widget that displays a user's avatar with an optional online/offline indicator.
 class UserAvatar extends StatelessWidget {
   final String? imageUrl;
-  final String? name;
-  final double size;
-  final double borderWidth;
-  final Color? borderColor;
-  final bool isOnline;
-  final Color? onlineColor;
-  final Color? offlineColor;
-  final TextStyle? initialsStyle;
+  final bool isVip;
+  final double radius;
+  final bool showFrame;
+  final Color? frameColor;
+  final double frameWidth;
 
   const UserAvatar({
     super.key,
     this.imageUrl,
-    this.name,
-    this.size = 56,
-    this.borderWidth = 2.5,
-    this.borderColor,
-    this.isOnline = false,
-    this.onlineColor,
-    this.offlineColor,
-    this.initialsStyle,
+    this.isVip = false,
+    this.radius = 32,
+    this.showFrame = true,
+    this.frameColor,
+    this.frameWidth = 3,
   });
-
-  String getInitials() {
-    if (name == null || name!.isEmpty) return '';
-    final parts = name!.trim().split(RegExp(r'\s+'));
-    if (parts.length == 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final borderClr = borderColor ?? theme.colorScheme.primary.withOpacity(0.7);
-    final onlineClr = onlineColor ?? Colors.greenAccent;
-    final offlineClr = offlineColor ?? Colors.grey;
-    final initials = getInitials();
+    final borderColor = frameColor ??
+        (isVip ? Colors.amber.shade700 : Colors.transparent);
 
     return Stack(
+      alignment: Alignment.bottomRight,
       children: [
         Container(
-          width: size,
-          height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
+            border: showFrame
+                ? Border.all(color: borderColor, width: frameWidth)
+                : null,
             boxShadow: [
-              BoxShadow(
-                color: theme.shadowColor.withOpacity(0.12),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
+              if (isVip)
+                BoxShadow(
+                  color: Colors.amber.withValues(alpha: 0.25),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
             ],
-            border: Border.all(
-              color: borderClr,
-              width: borderWidth,
-            ),
           ),
-          child: ClipOval(
-            child: imageUrl != null && imageUrl!.isNotEmpty
-                ? Image.network(
-              imageUrl!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return Shimmer.fromColors(
-                  baseColor: theme.colorScheme.surfaceVariant,
-                  highlightColor: theme.colorScheme.surface,
-                  child: Container(
-                    width: size,
-                    height: size,
-                    color: theme.colorScheme.surfaceVariant,
+          child: CircleAvatar(
+            radius: radius,
+            backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+                ? NetworkImage(imageUrl!)
+                : const AssetImage(AssetPath.defaultAvatar) as ImageProvider,
+          ),
+        ),
+        if (isVip)
+          Positioned(
+            bottom: 4,
+            right: 4,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.amber.shade700,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.amber.shade100,
+                    blurRadius: 6,
                   ),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) => _buildInitials(theme, initials),
-            )
-                : _buildInitials(theme, initials),
-          ),
-        ),
-        Positioned(
-          bottom: 4,
-          right: 4,
-          child: Container(
-            width: size * 0.22,
-            height: size * 0.22,
-            decoration: BoxDecoration(
-              color: isOnline ? onlineClr : offlineClr,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: theme.scaffoldBackgroundColor,
-                width: size * 0.07,
+                ],
               ),
+              padding: const EdgeInsets.all(4),
+              child: const Icon(Icons.star, color: Colors.white, size: 16),
             ),
           ),
-        ),
       ],
-    );
-  }
-
-  Widget _buildInitials(ThemeData theme, String initials) {
-    return Container(
-      color: theme.colorScheme.surfaceVariant,
-      alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: initialsStyle ??
-            TextStyle(
-              fontSize: size * 0.42,
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-              letterSpacing: 1.2,
-            ),
-      ),
     );
   }
 }
