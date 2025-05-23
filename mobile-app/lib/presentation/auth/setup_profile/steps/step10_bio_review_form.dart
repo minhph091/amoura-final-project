@@ -1,12 +1,13 @@
 // lib/presentation/auth/setup_profile/steps/step10_bio_review_form.dart
+// Form widget for collecting the user's bio and additional photos.
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../shared/widgets/app_text_field.dart'; // Reusable text field widget
-import '../../../shared/widgets/app_button.dart'; // Reusable button widget
-import '../../../shared/widgets/photo_viewer.dart'; // Widget for viewing photos
-import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
+import '../../../shared/widgets/app_text_field.dart';
+import '../widgets/setup_profile_button.dart';
+import '../../../shared/widgets/photo_viewer.dart';
+import '../setup_profile_viewmodel.dart';
 
 class Step10BioReviewForm extends StatefulWidget {
   const Step10BioReviewForm({super.key});
@@ -16,43 +17,46 @@ class Step10BioReviewForm extends StatefulWidget {
 }
 
 class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
-  final _formKey = GlobalKey<FormState>(); // Key for form validation
-  List<String> uploadedImages = []; // List to store uploaded image paths (placeholder)
+  final _formKey = GlobalKey<FormState>();
+  List<String> uploadedImages = [];
 
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Primary title using headlineLarge from AppTheme
             Text(
               "Your Bio & Photos",
               style: theme.textTheme.headlineLarge?.copyWith(
-                color: colorScheme.primary,
+                color: const Color(0xFFD81B60),
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 6), // Spacing between title and description
-            // Secondary description using bodyLarge from AppTheme
+            const SizedBox(height: 6),
             Text(
               "Write a short introduction and upload additional photos.",
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
+                color: const Color(0xFFAB47BC),
+                fontStyle: FontStyle.italic,
               ),
             ),
-            const SizedBox(height: 18), // Spacing before bio field
-            // Bio input field
+            const SizedBox(height: 18),
             AppTextField(
               labelText: "Your Bio",
+              labelStyle: theme.textTheme.titleMedium?.copyWith(
+                color: const Color(0xFFBA68C8),
+                fontWeight: FontWeight.w600,
+              ),
               hintText: "Tell us about yourself...",
               prefixIcon: Icons.edit_note,
+              prefixIconColor: const Color(0xFFD81B60),
               maxLines: 5,
               maxLength: 1000,
               initialValue: vm.bio,
@@ -63,22 +67,23 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                 }
                 return null;
               },
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: const Color(0xFF424242),
+              ),
             ),
-            const SizedBox(height: 22), // Spacing before photo section
-            // Photo upload label
+            const SizedBox(height: 22),
             Text(
               "Your Photos",
               style: theme.textTheme.headlineMedium?.copyWith(
-                color: colorScheme.primary,
+                color: const Color(0xFFBA68C8),
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 10), // Spacing before photo upload area
-            // Photo upload area with existing photos and add button
+            const SizedBox(height: 10),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
-                // Display uploaded photos
                 ...uploadedImages.map((imgPath) => Stack(
                   alignment: Alignment.topRight,
                   children: [
@@ -94,54 +99,52 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                           errorBuilder: (context, error, stackTrace) => Container(
                             width: 80,
                             height: 80,
-                            color: colorScheme.onSurface.withValues(alpha: 0.1),
+                            color: const Color(0xFFBA68C8).withAlpha(20),
                             child: const Icon(Icons.broken_image, size: 32),
                           ),
                         ),
                       ),
                     ),
-                    // Button to remove photo
                     GestureDetector(
                       onTap: () => setState(() => uploadedImages.remove(imgPath)),
                       child: Container(
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
                               blurRadius: 2,
-                              color: colorScheme.onSurface.withValues(alpha: 0.3),
+                              color: Color(0xFF424242),
                             ),
                           ],
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.close,
-                          color: colorScheme.error,
+                          color: Color(0xFFD81B60),
                           size: 18,
                         ),
                       ),
                     ),
                   ],
                 )),
-                // Add photo button
                 GestureDetector(
                   onTap: () {
                     // TODO: Implement image picker + permission
                   },
                   child: DottedBorder(
-                    options: RoundedRectDottedBorderOptions(
-                      radius: const Radius.circular(10),
-                      dashPattern: const [6, 3],
+                    options: const RoundedRectDottedBorderOptions(
+                      radius: Radius.circular(10),
+                      dashPattern: [6, 3],
                       strokeWidth: 2,
-                      color: colorScheme.primary,
+                      color: Color(0xFFD81B60),
                     ),
                     child: Container(
                       width: 80,
                       height: 80,
                       alignment: Alignment.center,
-                      child: Icon(
+                      child: const Icon(
                         Icons.add_a_photo_rounded,
-                        color: colorScheme.primary.withValues(alpha: 0.6),
+                        color: Color(0xFFD81B60),
                         size: 32,
                       ),
                     ),
@@ -149,23 +152,22 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                 ),
               ],
             ),
-            const SizedBox(height: 32), // Spacing before button
-            // Finish button to complete setup
+            const SizedBox(height: 32),
             Row(
               children: [
                 Expanded(
-                  child: AppButton(
+                  child: SetupProfileButton(  // Already correct, no changes needed
                     text: "Finish",
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
-                        // TODO: Submit profile to backend
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Profile setup complete!")),
                         );
                       }
                     },
-                    useThemeGradient: true,
+                    width: double.infinity,
+                    height: 52,
                   ),
                 ),
               ],

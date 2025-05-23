@@ -9,10 +9,10 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
-  dio: ^5.3.3
-  provider: ^6.0.5
   flutter:
     sdk: flutter
+  dio: ^5.3.3
+  provider: ^6.0.5
   cupertino_icons: ^1.0.8
   flutter_animate: ^4.5.2
   google_fonts: ^6.2.1
@@ -22,6 +22,12 @@ dependencies:
   flutter_svg: ^2.1.0
   dotted_border: ^3.0.1
   flutter_iconly: ^1.0.2
+  country_icons: ^3.0.0
+  flaticon: ^0.0.1
+  material_symbols_icons: ^4.2815.0
+  cached_network_image: ^3.3.1
+  flutter_spinkit: ^5.2.1
+
   flutter_localizations:
     sdk: flutter
 

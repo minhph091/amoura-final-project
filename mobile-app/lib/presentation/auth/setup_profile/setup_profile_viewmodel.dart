@@ -1,12 +1,13 @@
 // lib/presentation/auth/setup_profile/setup_profile_viewmodel.dart
+// ViewModel to manage the state and navigation logic for the setup profile flow.
 
 import 'package:flutter/material.dart';
-import '../../../core/utils/validation_util.dart'; // Utility for form validation
+import '../../../core/utils/validation_util.dart';
 
 class SetupProfileViewModel extends ChangeNotifier {
-  int currentStep = 0; // Current step in the setup process
-  final int totalSteps = 10; // Total number of steps
-  final PageController pageController = PageController(); // Controller for PageView navigation
+  int currentStep = 0;
+  final int totalSteps = 10;
+  final PageController pageController = PageController();
 
   // Step 1 - Required
   String? firstName;
@@ -17,7 +18,7 @@ class SetupProfileViewModel extends ChangeNotifier {
   String? sex;
 
   // Step 3
-  int? orientationId;
+  String? orientation;
 
   // Step 4
   String? avatarPath;
@@ -29,18 +30,17 @@ class SetupProfileViewModel extends ChangeNotifier {
   int? locationPreference;
 
   // Step 6
-  int? bodyTypeId;
+  String? bodyType;
   int? height;
 
   // Step 7
-  int? jobIndustryId;
-  int? educationLevelId;
+  String? jobIndustry;
+  String? educationLevel;
   bool? dropOut;
 
   // Step 8
-  int? drinkStatusId;
-  int? smokeStatusId;
-  List<int>? selectedPetIds;
+  String? drinkStatus;
+  String? smokeStatus;
   List<String>? selectedPets;
 
   // Step 9 - Required
@@ -52,32 +52,29 @@ class SetupProfileViewModel extends ChangeNotifier {
   String? bio;
   List<String> galleryPhotos = [];
 
-  bool get showSkip => !_isStepRequired(currentStep); // Determine if skip button should be shown
+  bool get showSkip => !_isStepRequired(currentStep);
 
-  /// Required steps: Step 0 (Name), Step 1 (Gender, Birthday), Step 9 (Interests)
+  // Check if the current step is required.
   bool _isStepRequired(int step) => [0, 1, 8].contains(step);
 
+  // Handle the skip action for non-required steps.
   void onSkip() {
     // TODO: Show skip dialog, then call nextStep if confirmed
   }
 
+  // Navigate to the next step.
   void nextStep() {
     if (currentStep < totalSteps - 1) {
       currentStep++;
-      // Animate to the next page with a smooth transition
-      pageController.animateToPage(
-        currentStep,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.ease,
-      );
+      pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
       notifyListeners();
     }
   }
 
+  // Navigate to the previous step.
   void prevStep() {
     if (currentStep > 0) {
       currentStep--;
-      // Animate to the previous page with a smooth transition
       pageController.animateToPage(
         currentStep,
         duration: const Duration(milliseconds: 400),
@@ -87,8 +84,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     }
   }
 
-  // Validation methods for each required step
-
+  // Validate Step 0 (Name).
   String? validateStep0() {
     final firstError = ValidationUtil().validateFirstName(firstName);
     if (firstError != null) return firstError;
@@ -97,6 +93,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     return null;
   }
 
+  // Validate Step 1 (Date of Birth and Gender).
   String? validateStep1() {
     if (sex == null || sex!.trim().isEmpty) return 'Please select your gender.';
     final dobError = ValidationUtil().validateBirthday(dateOfBirth);
@@ -104,6 +101,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     return null;
   }
 
+  // Validate Step 8 (Interests).
   String? validateStep8() {
     if (selectedInterestIds == null || selectedInterestIds!.isEmpty) {
       return 'Please select at least one interest.';
@@ -111,7 +109,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     return null;
   }
 
-  /// Validate the current step if it's required
+  // Validate the current step based on its requirements.
   String? validateCurrentStep() {
     switch (currentStep) {
       case 0:
@@ -125,30 +123,25 @@ class SetupProfileViewModel extends ChangeNotifier {
     }
   }
 
-  // Helper for step 3: Set orientation
-  void setOrientation(int id) {
-    orientationId = id;
-    notifyListeners();
-  }
-
-  // Helper for step 5: Set location preference
+  // Update the location preference value.
   void setLocationPreference(int value) {
     locationPreference = value;
     notifyListeners();
   }
 
-  // Helper for step 7: Set dropout status
+  // Update the dropout status.
   void setDropOut(bool value) {
     dropOut = value;
     notifyListeners();
   }
 
-  // Helpers for step 10: Manage gallery photos
+  // Add a photo to the gallery.
   void addGalleryPhoto(String path) {
     galleryPhotos.add(path);
     notifyListeners();
   }
 
+  // Remove a photo from the gallery.
   void removeGalleryPhoto(String path) {
     galleryPhotos.remove(path);
     notifyListeners();
@@ -156,7 +149,7 @@ class SetupProfileViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    pageController.dispose(); // Dispose PageController to free resources
+    pageController.dispose();
     super.dispose();
   }
 }

@@ -1,10 +1,11 @@
 // lib/presentation/auth/setup_profile/steps/step4_avatar_cover_form.dart
+// Form widget for uploading the user's avatar and cover photo.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../shared/widgets/user_avatar.dart'; // Reusable avatar widget
-import '../../../shared/widgets/app_button.dart'; // Reusable button widget
-import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
+import '../../../shared/widgets/user_avatar.dart';
+import '../widgets/setup_profile_button.dart';
+import '../setup_profile_viewmodel.dart';
 
 class Step4AvatarCoverForm extends StatelessWidget {
   const Step4AvatarCoverForm({super.key});
@@ -13,33 +14,30 @@ class Step4AvatarCoverForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: true);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Primary title using headlineLarge from AppTheme
           Text(
             "Your Avatar & Cover Photo",
             style: theme.textTheme.headlineLarge?.copyWith(
-              color: colorScheme.primary,
+              color: const Color(0xFFD81B60),
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 6), // Spacing between title and description
-          // Secondary description using bodyLarge from AppTheme
+          const SizedBox(height: 6),
           Text(
             "These photos will help others recognize you.",
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onSurface.withValues(alpha: 0.7),
+              color: const Color(0xFFAB47BC),
+              fontStyle: FontStyle.italic,
             ),
           ),
-          const SizedBox(height: 24), // Spacing before photo upload fields
-          // Row for avatar and cover photo upload
+          const SizedBox(height: 24),
           Row(
             children: [
-              // Avatar upload section
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -53,15 +51,15 @@ class Step4AvatarCoverForm extends StatelessWidget {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: colorScheme.primary.withAlpha(20),
+                            color: const Color(0xFFD81B60).withAlpha(20),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: colorScheme.primary,
+                              color: const Color(0xFFD81B60),
                               width: 2,
                             ),
                           ),
                           child: vm.avatarPath == null
-                              ? const Center(child: Icon(Icons.camera_alt, size: 48))
+                              ? const Center(child: Icon(Icons.camera_alt, size: 48, color: Color(0xFFD81B60)))
                               : ClipRRect(
                             borderRadius: BorderRadius.circular(16),
                             child: UserAvatar(imageUrl: vm.avatarPath, radius: 42),
@@ -69,24 +67,27 @@ class Step4AvatarCoverForm extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6), // Spacing between photo and label
-                    // Avatar label
+                    const SizedBox(height: 6),
                     Text(
                       "Avatar",
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: const Color(0xFFBA68C8),
+                        fontWeight: FontWeight.w600,
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    // Avatar description
                     Text(
                       "Your main profile photo",
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFFAB47BC),
+                        fontStyle: FontStyle.italic,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 18), // Spacing between avatar and cover photo
-              // Cover photo upload section
+              const SizedBox(width: 18),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -100,15 +101,15 @@ class Step4AvatarCoverForm extends StatelessWidget {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: colorScheme.secondary.withAlpha(25),
+                            color: const Color(0xFF8E24AA).withAlpha(25),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: colorScheme.secondary,
+                              color: const Color(0xFF8E24AA),
                               width: 2,
                             ),
                           ),
                           child: vm.coverPath == null
-                              ? const Center(child: Icon(Icons.image, size: 48))
+                              ? const Center(child: Icon(Icons.image, size: 48, color: Color(0xFF8E24AA)))
                               : ClipRRect(
                             borderRadius: BorderRadius.circular(16),
                             child: Image.network(vm.coverPath!, fit: BoxFit.cover),
@@ -116,17 +117,21 @@ class Step4AvatarCoverForm extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6), // Spacing between photo and label
-                    // Cover photo label
+                    const SizedBox(height: 6),
                     Text(
                       "Cover Photo",
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: const Color(0xFFBA68C8),
+                        fontWeight: FontWeight.w600,
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    // Cover photo description
                     Text(
                       "Large background photo",
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFFAB47BC),
+                        fontStyle: FontStyle.italic,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -134,20 +139,14 @@ class Step4AvatarCoverForm extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 28), // Spacing before button
-          // Next button to proceed to the next step
-          AppButton(
+          const SizedBox(height: 28),
+          SetupProfileButton(
             text: "Next",
-            width: double.infinity,
             onPressed: () {
               vm.nextStep();
             },
+            width: double.infinity,
             height: 52,
-            gradient: LinearGradient(colors: [
-              colorScheme.primary,
-              colorScheme.secondary,
-            ]),
-            textStyle: theme.textTheme.labelLarge,
           ),
         ],
       ),

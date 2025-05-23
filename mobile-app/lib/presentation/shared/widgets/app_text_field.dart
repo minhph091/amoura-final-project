@@ -40,6 +40,7 @@ class AppTextField extends StatelessWidget {
   final Color? errorBorderColor;
   final Color? cursorColor;
   final EdgeInsetsGeometry? contentPadding;
+  final TextStyle? labelStyle;
 
   const AppTextField({
     super.key,
@@ -69,6 +70,7 @@ class AppTextField extends StatelessWidget {
     this.textColor,
     this.hintColor,
     this.labelColor,
+    this.labelStyle,
     this.floatingLabelColor,
     this.prefixIconColor,
     this.enabledBorderColor,
@@ -111,9 +113,10 @@ class AppTextField extends StatelessWidget {
         TextStyle(color: hintColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.5));
 
     // Style label
-    final TextStyle effectiveLabelStyle = theme.inputDecorationTheme.labelStyle?.copyWith(
-      color: labelColor ?? theme.inputDecorationTheme.labelStyle?.color ?? theme.colorScheme.onSurface.withValues(alpha: 0.7),
-    ) ??
+    final TextStyle effectiveLabelStyle = labelStyle ??
+        theme.inputDecorationTheme.labelStyle?.copyWith(
+          color: labelColor ?? theme.inputDecorationTheme.labelStyle?.color ?? theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        ) ??
         TextStyle(color: labelColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.7));
 
     // Style floating label (focus)

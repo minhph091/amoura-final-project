@@ -1,14 +1,17 @@
 // lib/presentation/auth/setup_profile/steps/step2_dob_gender_form.dart
+// Form widget for collecting the user's date of birth and gender.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/date_util.dart';
 import '../../../../core/utils/validation_util.dart';
-import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/shake_widget.dart';
+import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/profile_option_selector.dart';
+import '../../../../core/constants/profile/sex_constants.dart';
 import '../setup_profile_viewmodel.dart';
 
-// Form for collecting user's date of birth and gender during profile setup.
 class Step2DobGenderForm extends StatefulWidget {
   const Step2DobGenderForm({super.key});
 
@@ -17,61 +20,43 @@ class Step2DobGenderForm extends StatefulWidget {
 }
 
 class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
-  // Key for form validation.
   final _formKey = GlobalKey<FormState>();
-
-  // Controller for date of birth input field.
   late TextEditingController _dobController;
+  bool _dobError = false;
+  bool _genderError = false;
 
+  late SetupProfileViewModel _viewModel;
+
+  // Initialize the date of birth controller with existing data.
   @override
   void initState() {
     super.initState();
-    // Initialize controller with existing date from ViewModel
-    final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+    _viewModel = Provider.of<SetupProfileViewModel>(context, listen: false);
     _dobController = TextEditingController(
-      text: vm.dateOfBirth == null ? "" : DateUtil.formatDDMMYYYY(vm.dateOfBirth!),
+      text: _viewModel.dateOfBirth == null ? '' : DateUtil.formatDDMMYYYY(_viewModel.dateOfBirth!),
     );
   }
 
-  @override
-  void dispose() {
-    _dobController.dispose();
-    super.dispose();
+  // Validate form inputs and update error states.
+  void _validateAndSave() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      setState(() {
+        _dobError = ValidationUtil().validateBirthday(_viewModel.dateOfBirth) != null;
+        _genderError = _viewModel.sex == null || _viewModel.sex!.isEmpty;
+      });
+    } else {
+      setState(() {
+        _dobError = ValidationUtil().validateBirthday(_viewModel.dateOfBirth) != null;
+        _genderError = _viewModel.sex == null || _viewModel.sex!.isEmpty;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    // Define gender options with appropriate icons and colors
-    final genders = [
-      {
-        'label': 'Male',
-        'icon': Icons.male,
-        'value': 'male',
-        'color': Colors.blue
-      },
-      {
-        'label': 'Female',
-        'icon': Icons.female,
-        'value': 'female',
-        'color': Colors.pinkAccent
-      },
-      {
-        'label': 'Non-binary',
-        'icon': Icons.people_outline,
-        'value': 'non-binary',
-        'color': Colors.purpleAccent
-      },
-      {
-        'label': 'Prefer not to say',
-        'icon': Icons.help_outline,
-        'value': 'prefer_not_to_say',
-        'color': Colors.grey.shade700
-      },
-    ];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
@@ -80,137 +65,104 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title section
             Text(
-              "Your Birthday & Gender",
+              'Your Birthday & Gender',
               style: theme.textTheme.headlineLarge?.copyWith(
-                color: colorScheme.primary,
+                color: const Color(0xFFD81B60),
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              "This helps us personalize your dating experience.",
+              'This helps us personalize your dating experience.',
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
+                color: const Color(0xFFAB47BC),
+                fontStyle: FontStyle.italic,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              "Fields marked with * are required.",
+              'Fields marked with * are required.',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
+                color: const Color(0xFFAB47BC),
                 fontStyle: FontStyle.italic,
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Date of birth picker
-            GestureDetector(
-              onTap: () async {
-                FocusScope.of(context).unfocus();
-                final now = DateTime.now();
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: vm.dateOfBirth ?? DateTime(now.year - 20),
-                  firstDate: DateTime(now.year - 120),
-                  lastDate: DateTime(now.year - 18),
-                );
-                if (picked != null) {
-                  setState(() {
-                    vm.dateOfBirth = picked;
-                    _dobController.text = DateUtil.formatDDMMYYYY(picked);
-                  });
-                }
-              },
-              child: AbsorbPointer(
-                child: AppTextField(
-                  labelText: "Birthday *",
-                  prefixIcon: Icons.cake_rounded,
-                  prefixIconColor: theme.colorScheme.primary,
-                  controller: _dobController,
-                  validator: (v) => ValidationUtil().validateBirthday(vm.dateOfBirth),
+            ShakeWidget(
+              shake: _dobError,
+              child: GestureDetector(
+                onTap: () async {
+                  FocusScope.of(context).unfocus();
+                  final now = DateTime.now();
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: vm.dateOfBirth ?? DateTime(now.year - 20),
+                    firstDate: DateTime(now.year - 120),
+                    lastDate: DateTime(now.year - 18),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      vm.dateOfBirth = picked;
+                      _dobController.text = DateUtil.formatDDMMYYYY(picked);
+                    });
+                  }
+                },
+                child: AbsorbPointer(
+                  child: AppTextField(
+                    labelText: 'Birthday *',
+                    labelStyle: theme.textTheme.titleMedium?.copyWith(
+                      color: const Color(0xFFBA68C8),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    prefixIcon: Icons.cake_rounded,
+                    prefixIconColor: const Color(0xFFD81B60),
+                    controller: _dobController,
+                    validator: (v) => ValidationUtil().validateBirthday(vm.dateOfBirth),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: const Color(0xFF424242),
+                    ),
+                  ),
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Gender selection section
-            Text(
-              "Gender *",
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Gender chip options with horizontal scrolling
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: genders.map((gender) {
-                  final isSelected = vm.sex == gender['value'];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 12.0),
-                    child: ChoiceChip(
-                      label: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            gender['icon'] as IconData,
-                            color: isSelected ? Colors.white : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(gender['label'] as String),
-                        ],
-                      ),
-                      selected: isSelected,
-                      selectedColor: gender['color'] as Color,
-                      onSelected: (_) => setState(() => vm.sex = gender['value'] as String),
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      backgroundColor: Colors.grey.shade200,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Next button
-            AppButton(
-              text: "Next",
-              onPressed: () {
-                if (_formKey.currentState?.validate() ?? false) {
-                  // Ensure gender is selected
-                  if (vm.sex == null || vm.sex!.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please select your gender")),
-                    );
-                    return;
+            ShakeWidget(
+              shake: _genderError,
+              child: ProfileOptionSelector(
+                options: sexOptions,
+                selectedValue: vm.sex,
+                onChanged: (value, selected) {
+                  if (selected) {
+                    setState(() {
+                      vm.sex = value;
+                      _genderError = false;
+                    });
                   }
+                },
+                labelText: 'Gender *',
+                labelStyle: theme.textTheme.titleMedium?.copyWith(
+                  color: const Color(0xFFBA68C8),
+                  fontWeight: FontWeight.w600,
+                ),
+                scrollable: false,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SetupProfileButton(
+              text: 'Next',
+              onPressed: () {
+                _validateAndSave();
+                if (!_dobError && !_genderError) {
                   vm.nextStep();
+                } else if (_genderError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please select your gender')),
+                  );
                 }
               },
               width: double.infinity,
               height: 52,
-              gradient: LinearGradient(
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.secondary,
-                ],
-              ),
-              textStyle: theme.textTheme.labelLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
             ),
           ],
         ),
