@@ -17,7 +17,6 @@ class EmailInputForm extends StatefulWidget {
 class _EmailInputFormState extends State<EmailInputForm> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailCtl = TextEditingController();
-  bool _loading = false;
   late AnimationController _animController;
 
   @override
@@ -38,10 +37,8 @@ class _EmailInputFormState extends State<EmailInputForm> with SingleTickerProvid
 
   void _onSubmit() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _loading = true);
       await Future.delayed(const Duration(milliseconds: 500));
       widget.onSend(_emailCtl.text.trim());
-      setState(() => _loading = false);
     }
   }
 
@@ -60,7 +57,7 @@ class _EmailInputFormState extends State<EmailInputForm> with SingleTickerProvid
               keyboardType: TextInputType.emailAddress,
               prefixIcon: Icons.email_outlined,
               prefixIconColor: Theme.of(context).colorScheme.primary,
-              validator: (v) => ValidationUtil.validateEmail(v),
+              validator: (v) => ValidationUtil().validateEmail(v),
               errorText: null,
             ),
             const SizedBox(height: 24),

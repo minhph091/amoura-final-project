@@ -1,19 +1,21 @@
-// lib/presentation/auth/forgot_password/widgets/forgot_email_form.dart
+// lib/presentation/auth/reset_password/widgets/reset_email_form.dart
 
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../../core/utils/validation_util.dart';
 
-class ForgotEmailForm extends StatefulWidget {
+// Form for requesting password reset via email
+class ResetEmailForm extends StatefulWidget {
+  // Callback function when email is submitted
   final void Function(String email) onSend;
 
-  const ForgotEmailForm({super.key, required this.onSend});
+  const ResetEmailForm({super.key, required this.onSend});
 
   @override
-  State<ForgotEmailForm> createState() => _ForgotEmailFormState();
+  State<ResetEmailForm> createState() => _ResetEmailFormState();
 }
 
-class _ForgotEmailFormState extends State<ForgotEmailForm> with SingleTickerProviderStateMixin {
+class _ResetEmailFormState extends State<ResetEmailForm> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   late AnimationController _shakeController;
@@ -36,6 +38,7 @@ class _ForgotEmailFormState extends State<ForgotEmailForm> with SingleTickerProv
     super.dispose();
   }
 
+  // Validate and submit email for password reset
   void _onSubmit() {
     if (_formKey.currentState?.validate() == true) {
       widget.onSend(_emailController.text.trim());
@@ -56,6 +59,7 @@ class _ForgotEmailFormState extends State<ForgotEmailForm> with SingleTickerProv
         key: _formKey,
         child: Column(
           children: [
+            // Email Input Field
             AppTextField(
               labelText: "Email",
               hintText: "Enter your email",
@@ -64,9 +68,13 @@ class _ForgotEmailFormState extends State<ForgotEmailForm> with SingleTickerProv
               prefixIcon: Icons.email_outlined,
               prefixIconColor: Theme.of(context).colorScheme.primary,
               onChanged: (_) => setState(() {}),
-              errorText: ValidationUtil.validateEmail(_emailController.text),
+              validator: (value) {
+                return ValidationUtil().validateEmail(value ?? '');
+                },
             ),
             const SizedBox(height: 16),
+
+            // Submit Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

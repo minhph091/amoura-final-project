@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../presentation/auth/login/login_view.dart';
 import '../../presentation/auth/setup_profile/setup_profile_view.dart';
-import '../../presentation/auth/forgot_password/forgot_password_view.dart';
+import '../../presentation/auth/reset_password/reset_password_view.dart';
 import '../../presentation/auth/register/register_view.dart';
 import '../../presentation/auth/login_otp/login_otp_view.dart';
 import '../../presentation/auth/login_otp/login_otp_verify_view.dart';
@@ -34,7 +34,7 @@ class AppPages {
         final args = settings.arguments as Map<String, dynamic>?;
         final email = args?['email'] ?? '';
         return MaterialPageRoute(
-          builder: (_) => ForgotPasswordView(email: email),
+          builder: (_) => ResetPasswordView(email: email),
         );
       case AppRoutes.loginWithEmailOtp:
         return MaterialPageRoute(builder: (_) => const LoginOtpView());
@@ -48,7 +48,7 @@ class AppPages {
         final args = settings.arguments as Map<String, dynamic>?;
         final email = args?['email'] ?? '';
         return MaterialPageRoute(
-          builder: (_) => ForgotPasswordView(email: email),
+          builder: (_) => ResetPasswordView(email: email),
         );
       case AppRoutes.setupProfile:
         return MaterialPageRoute(builder: (_) => const SetupProfileView());

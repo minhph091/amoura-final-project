@@ -30,33 +30,6 @@ class RegisterViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Please enter your email';
-    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
-    if (!emailRegex.hasMatch(value.trim())) return 'Invalid email format';
-    return null;
-  }
-
-  String? validatePhone(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Please enter your phone number';
-    if (!RegExp(r"^[0-9]{8,15}$").hasMatch(value.trim())) return "Invalid phone number";
-    return null;
-  }
-
-  String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter password';
-    if (value.length < 8) {
-      return 'Password must be at least 8 characters';
-    }
-    return null;
-  }
-
-  String? validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) return 'Please confirm password';
-    if (value != passwordController.text) return 'Passwords do not match';
-    return null;
-  }
-
   Future<void> initiateRegistration() async {
     if (formKey.currentState?.validate() ?? false) {
       isLoading = true;

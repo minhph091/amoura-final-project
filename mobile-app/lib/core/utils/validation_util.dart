@@ -21,31 +21,6 @@ class ValidationUtil {
   // Common Input Validators
   //=============================
 
-  static String? validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Email is required!';
-    if (!isEmail(value)) return 'Invalid email format!';
-    return null;
-  }
-
-  static String? validatePhone(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Phone number is required!';
-    if (!isPhoneNumber(value)) return 'Invalid phone number!';
-    return null;
-  }
-
-  static String? validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Password is required!';
-    if (!isPasswordValid(value)) {
-      return 'Password must be at least 8 characters, including uppercase, lowercase, number & special character!';
-    }
-    return null;
-  }
-
-  static String? validateConfirmPassword(String? password, String? confirm) {
-    if (confirm == null || confirm.trim().isEmpty) return 'Please confirm your password!';
-    if (password != confirm) return 'Passwords do not match!';
-    return null;
-  }
 
   static String? validateOtp(String? value) {
     if (value == null || value.trim().isEmpty) return 'OTP is required!';
@@ -99,6 +74,33 @@ class ValidationUtil {
 
   String? validateBio(String? value) {
     if (value != null && value.length > 1000) return 'Bio must be less than 1000 characters.';
+    return null;
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Please enter your email';
+    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+    if (!emailRegex.hasMatch(value.trim())) return 'Invalid email format';
+    return null;
+  }
+
+  String? validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Please enter your phone number';
+    if (!RegExp(r"^[0-9]{8,15}$").hasMatch(value.trim())) return "Invalid phone number";
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) return 'Please enter password';
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    return null;
+  }
+
+  String? validateConfirmPassword(String? value, String? password) {
+    if (value == null || value.isEmpty) return 'Please confirm password';
+    if (value != password) return 'Passwords do not match';
     return null;
   }
 }

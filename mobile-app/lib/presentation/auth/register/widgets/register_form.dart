@@ -1,5 +1,6 @@
 // lib/presentation/auth/register/widgets/register_form.dart
 
+import 'package:amoura/core/utils/validation_util.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -42,7 +43,7 @@ class RegisterForm extends StatelessWidget {
             keyboardType: TextInputType.phone,
             prefixIcon: Icons.phone_outlined,
             prefixIconColor: Theme.of(context).colorScheme.primary,
-            validator: viewModel.validatePhone,
+            validator: ValidationUtil().validatePhone,
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -56,7 +57,7 @@ class RegisterForm extends StatelessWidget {
               icon: Icon(viewModel.obscurePassword ? Icons.visibility_off : Icons.visibility),
               onPressed: viewModel.toggleObscurePassword,
             ),
-            validator: viewModel.validatePassword,
+            validator: ValidationUtil().validatePassword,
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -70,7 +71,10 @@ class RegisterForm extends StatelessWidget {
               icon: Icon(viewModel.obscureConfirm ? Icons.visibility_off : Icons.visibility),
               onPressed: viewModel.toggleObscureConfirm,
             ),
-            validator: viewModel.validateConfirmPassword,
+            validator: (value) => ValidationUtil().validateConfirmPassword(
+              value,
+              viewModel.passwordController.text,
+            ),
           ),
           const SizedBox(height: 22),
           AppButton(

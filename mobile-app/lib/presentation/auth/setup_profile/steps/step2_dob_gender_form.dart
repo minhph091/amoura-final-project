@@ -2,12 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/utils/date_util.dart'; // Utility for date formatting
-import '../../../../core/utils/validation_util.dart'; // Utility for form validation
-import '../../../shared/widgets/app_button.dart'; // Reusable button widget
-import '../../../shared/widgets/app_text_field.dart'; // Reusable text field widget
-import '../setup_profile_viewmodel.dart'; // ViewModel for managing setup profile state
+import '../../../../core/utils/date_util.dart';
+import '../../../../core/utils/validation_util.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
+import '../setup_profile_viewmodel.dart';
 
+// Form for collecting user's date of birth and gender during profile setup.
 class Step2DobGenderForm extends StatefulWidget {
   const Step2DobGenderForm({super.key});
 
@@ -16,13 +17,16 @@ class Step2DobGenderForm extends StatefulWidget {
 }
 
 class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
-  final _formKey = GlobalKey<FormState>(); // Key for form validation
-  late TextEditingController _dobController; // Controller for date of birth input
+  // Key for form validation.
+  final _formKey = GlobalKey<FormState>();
+
+  // Controller for date of birth input field.
+  late TextEditingController _dobController;
 
   @override
   void initState() {
     super.initState();
-    // Initialize controller with existing date of birth from ViewModel
+    // Initialize controller with existing date from ViewModel
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
     _dobController = TextEditingController(
       text: vm.dateOfBirth == null ? "" : DateUtil.formatDDMMYYYY(vm.dateOfBirth!),
@@ -31,7 +35,6 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
 
   @override
   void dispose() {
-    // Dispose controller to free resources
     _dobController.dispose();
     super.dispose();
   }
@@ -42,36 +45,56 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // List of gender options
+    // Define gender options with appropriate icons and colors
     final genders = [
-      {'label': 'Male', 'icon': Icons.male, 'value': 'male'},
-      {'label': 'Female', 'icon': Icons.female, 'value': 'female'},
+      {
+        'label': 'Male',
+        'icon': Icons.male,
+        'value': 'male',
+        'color': Colors.blue
+      },
+      {
+        'label': 'Female',
+        'icon': Icons.female,
+        'value': 'female',
+        'color': Colors.pinkAccent
+      },
+      {
+        'label': 'Non-binary',
+        'icon': Icons.people_outline,
+        'value': 'non-binary',
+        'color': Colors.purpleAccent
+      },
+      {
+        'label': 'Prefer not to say',
+        'icon': Icons.help_outline,
+        'value': 'prefer_not_to_say',
+        'color': Colors.grey.shade700
+      },
     ];
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Primary title using headlineLarge from AppTheme
+            // Title section
             Text(
               "Your Birthday & Gender",
               style: theme.textTheme.headlineLarge?.copyWith(
                 color: colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 6), // Spacing between title and description
-            // Secondary description using bodyLarge from AppTheme
+            const SizedBox(height: 6),
             Text(
               "This helps us personalize your dating experience.",
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
-            const SizedBox(height: 8), // Spacing between description and note
-            // Italicized note for required fields using labelLarge from AppTheme
+            const SizedBox(height: 8),
             Text(
               "Fields marked with * are required.",
               style: theme.textTheme.labelLarge?.copyWith(
@@ -79,11 +102,13 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                 fontStyle: FontStyle.italic,
               ),
             ),
-            const SizedBox(height: 24), // Spacing before form fields
-            // Date of birth input field with date picker
+
+            const SizedBox(height: 24),
+
+            // Date of birth picker
             GestureDetector(
               onTap: () async {
-                FocusScope.of(context).unfocus(); // Hide keyboard
+                FocusScope.of(context).unfocus();
                 final now = DateTime.now();
                 final picked = await showDatePicker(
                   context: context,
@@ -104,12 +129,14 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                   prefixIcon: Icons.cake_rounded,
                   prefixIconColor: theme.colorScheme.primary,
                   controller: _dobController,
-                  validator: (v) => ValidationUtil().validateBirthday(vm.dateOfBirth), // Validate birthday
+                  validator: (v) => ValidationUtil().validateBirthday(vm.dateOfBirth),
                 ),
               ),
             ),
-            const SizedBox(height: 24), // Spacing before gender selection
-            // Gender selection label
+
+            const SizedBox(height: 24),
+
+            // Gender selection section
             Text(
               "Gender *",
               style: theme.textTheme.titleMedium?.copyWith(
@@ -117,16 +144,14 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 4), // Spacing before gender chips
-            // Horizontal scrollable gender selection
+            const SizedBox(height: 12),
+
+            // Gender chip options with horizontal scrolling
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: genders.map((g) {
-                  final isSelected = vm.sex == g['value'];
-                  final isMale = g['value'] == 'male';
-                  final selectedColor = isMale ? Colors.blue : Colors.pinkAccent;
+                children: genders.map((gender) {
+                  final isSelected = vm.sex == gender['value'];
                   return Padding(
                     padding: const EdgeInsets.only(right: 12.0),
                     child: ChoiceChip(
@@ -134,33 +159,44 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            g['icon'] as IconData,
+                            gender['icon'] as IconData,
                             color: isSelected ? Colors.white : Colors.grey,
+                            size: 20,
                           ),
-                          const SizedBox(width: 6), // Spacing between icon and label
-                          Text(g['label'] as String),
+                          const SizedBox(width: 6),
+                          Text(gender['label'] as String),
                         ],
                       ),
                       selected: isSelected,
-                      selectedColor: selectedColor, // Color based on gender
-                      onSelected: (_) => setState(() => vm.sex = g['value'] as String),
+                      selectedColor: gender['color'] as Color,
+                      onSelected: (_) => setState(() => vm.sex = gender['value'] as String),
                       labelStyle: TextStyle(
                         color: isSelected ? Colors.white : Colors.black87,
                         fontWeight: FontWeight.bold,
                       ),
                       backgroundColor: Colors.grey.shade200,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                   );
                 }).toList(),
               ),
             ),
-            const SizedBox(height: 28), // Spacing before button
-            // Next button to proceed to the next step
+
+            const SizedBox(height: 32),
+
+            // Next button
             AppButton(
               text: "Next",
               onPressed: () {
                 if (_formKey.currentState?.validate() ?? false) {
-                  vm.nextStep(); // Move to next step
+                  // Ensure gender is selected
+                  if (vm.sex == null || vm.sex!.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please select your gender")),
+                    );
+                    return;
+                  }
+                  vm.nextStep();
                 }
               },
               width: double.infinity,
@@ -171,7 +207,10 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                   theme.colorScheme.secondary,
                 ],
               ),
-              textStyle: theme.textTheme.labelLarge,
+              textStyle: theme.textTheme.labelLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),

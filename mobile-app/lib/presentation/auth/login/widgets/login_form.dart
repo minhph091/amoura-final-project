@@ -19,7 +19,6 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
   final TextEditingController _accountCtl = TextEditingController();
   final TextEditingController _passwordCtl = TextEditingController();
   bool _obscurePwd = true;
-  bool _loading = false;
 
   late AnimationController _animController;
 
@@ -42,10 +41,8 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
 
   void _onLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _loading = true);
       await Future.delayed(const Duration(milliseconds: 600));
       widget.onLogin?.call(_accountCtl.text.trim(), _passwordCtl.text);
-      setState(() => _loading = false);
     }
   }
 
@@ -65,12 +62,15 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
               prefixIcon: Icons.person_outline,
               prefixIconColor: Theme.of(context).colorScheme.primary,
               errorText: null,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Please enter email or phone';
-                if (!ValidationUtil.isEmail(v) && !ValidationUtil.isPhoneNumber(v)) {
-                  return 'Invalid email or phone';
+              validator: (value) {
+                final emailError = ValidationUtil().validateEmail(value);
+                final phoneError = ValidationUtil().validatePhone(value);
+                // If either validation passes (returns null), the input is valid
+                if (emailError == null || phoneError == null) {
+                  return null;
                 }
-                return null;
+                // Both validations failed, return a descriptive error
+                return "Please enter a valid email or phone number";
               },
             ),
             const SizedBox(height: 16),
@@ -86,13 +86,7 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
                 onPressed: () => setState(() => _obscurePwd = !_obscurePwd),
               ),
               errorText: null,
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Please enter password';
-                if (!ValidationUtil.isPasswordValid(v)) {
-                  return 'Password must be at least 8 chars, có chữ HOA, thường, số, ký tự đặc biệt';
-                }
-                return null;
-              },
+              validator: ValidationUtil().validatePassword,
             ),
             const SizedBox(height: 12),
             Align(

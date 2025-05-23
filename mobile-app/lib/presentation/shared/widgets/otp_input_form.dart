@@ -1,11 +1,20 @@
 // lib/presentation/shared/widgets/otp_input_form.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+// Form for entering OTP verification code
 class OtpInputForm extends StatefulWidget {
+  // Number of digits in OTP code
   final int otpLength;
+
+  // Callback function when OTP is submitted
   final void Function(String otp) onSubmit;
+
+  // Whether resend option should be available
   final bool resendAvailable;
+
+  // Callback function for resending OTP
   final VoidCallback? onResend;
 
   const OtpInputForm({
@@ -35,8 +44,8 @@ class _OtpInputFormState extends State<OtpInputForm> {
 
   @override
   void dispose() {
-    for (var ctl in _controllers) {
-      ctl.dispose();
+    for (var controller in _controllers) {
+      controller.dispose();
     }
     for (var node in _focusNodes) {
       node.dispose();
@@ -44,17 +53,28 @@ class _OtpInputFormState extends State<OtpInputForm> {
     super.dispose();
   }
 
+  // Handle changes to individual OTP digits and manage focus
   void _onDigitChanged(int index, String value) {
-    if (value.length > 1) value = value.substring(value.length - 1);
+    // Only allow digits
+    if (value.isNotEmpty && !RegExp(r'^[0-9]$').hasMatch(value)) {
+      _controllers[index].clear();
+      return;
+    }
+
     setState(() => _otpDigits[index] = value);
+
+    // Auto-advance focus
     if (value.isNotEmpty && index < widget.otpLength - 1) {
       FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
     }
+
+    // Move focus back on delete
     if (value.isEmpty && index > 0) {
       FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
     }
   }
 
+  // Submit complete OTP code
   void _submit() {
     final otp = _otpDigits.join();
     if (otp.length == widget.otpLength) {
@@ -66,7 +86,7 @@ class _OtpInputFormState extends State<OtpInputForm> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Các ô nhập OTP
+        // OTP input fields
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(widget.otpLength, (i) {
@@ -84,6 +104,9 @@ class _OtpInputFormState extends State<OtpInputForm> {
                   counterText: '',
                   filled: true,
                 ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
                 onChanged: (v) => _onDigitChanged(i, v),
                 onSubmitted: (v) {
                   if (i == widget.otpLength - 1) _submit();
@@ -92,6 +115,8 @@ class _OtpInputFormState extends State<OtpInputForm> {
             );
           }),
         ),
+
+        // Resend option
         if (widget.resendAvailable && widget.onResend != null) ...[
           const SizedBox(height: 18),
           GestureDetector(
@@ -105,6 +130,8 @@ class _OtpInputFormState extends State<OtpInputForm> {
           ),
         ],
         const SizedBox(height: 24),
+
+        // Verify button
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(

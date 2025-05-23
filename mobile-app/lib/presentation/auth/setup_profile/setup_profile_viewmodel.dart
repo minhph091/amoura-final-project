@@ -41,10 +41,11 @@ class SetupProfileViewModel extends ChangeNotifier {
   int? drinkStatusId;
   int? smokeStatusId;
   List<int>? selectedPetIds;
+  List<String>? selectedPets;
 
   // Step 9 - Required
-  List<int>? selectedInterestIds;
-  List<int>? selectedLanguageIds;
+  List<String>? selectedInterestIds;
+  List<String>? selectedLanguageIds;
   bool? interestedInNewLanguage;
 
   // Step 10

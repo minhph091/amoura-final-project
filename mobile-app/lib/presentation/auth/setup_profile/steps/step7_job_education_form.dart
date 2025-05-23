@@ -13,6 +13,30 @@ class Step7JobEducationForm extends StatefulWidget {
 }
 
 class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
+  // Hardcoded job industry options with corresponding icons
+  final Map<String, IconData> _jobIndustries = {
+    'creative': Icons.brush,
+    'education': Icons.school,
+    'engineering': Icons.build,
+    'finance': Icons.account_balance,
+    'healthcare': Icons.local_hospital,
+    'hospitality': Icons.local_dining,
+    'it': Icons.computer,
+    'legal/gov': Icons.gavel,
+    'no occupation': Icons.work_off,
+    'other': Icons.category,
+    'skilled labor': Icons.construction,
+  };
+
+  // Hardcoded education level options with corresponding icons
+  final Map<String, IconData> _educationLevels = {
+    "bachelor's degree": Icons.school_outlined,
+    'college': Icons.account_balance_outlined,
+    'high school': Icons.book_outlined,
+    "master's degree": Icons.school,
+    'phd': Icons.star,
+  };
+
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
@@ -20,7 +44,7 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
     final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10), // Padding for form content
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -32,7 +56,7 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 6), // Spacing between title and description
+          const SizedBox(height: 6),
           // Secondary description using bodyLarge from AppTheme
           Text(
             "Tell us about your career and education.",
@@ -41,11 +65,11 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24), // Spacing before form fields
+          const SizedBox(height: 24),
           // Dropdown for job industry selection
           SizedBox(
             width: double.infinity,
-            child: DropdownButtonFormField<int>(
+            child: DropdownButtonFormField<String>(
               decoration: InputDecoration(
                 label: Text(
                   "Job Industry",
@@ -65,16 +89,33 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
                 filled: true,
                 fillColor: theme.inputDecorationTheme.fillColor,
               ),
-              value: vm.jobIndustryId,
-              items: const [], // Placeholder for job industry options (from backend)
-              onChanged: (val) => setState(() => vm.jobIndustryId = val),
+              value: vm.jobIndustryId != null ? _jobIndustries.keys.elementAt(vm.jobIndustryId!) : null,
+              items: _jobIndustries.entries.map((entry) {
+                return DropdownMenuItem<String>(
+                  value: entry.key,
+                  child: Row(
+                    children: [
+                      Icon(entry.value, size: 20, color: colorScheme.onSurface),
+                      const SizedBox(width: 8),
+                      Text(
+                        entry.key,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (val) {
+                final index = _jobIndustries.keys.toList().indexOf(val!);
+                setState(() => vm.jobIndustryId = index);
+              },
             ),
           ),
-          const SizedBox(height: 18), // Spacing between dropdowns
+          const SizedBox(height: 18),
           // Dropdown for education level selection
           SizedBox(
             width: double.infinity,
-            child: DropdownButtonFormField<int>(
+            child: DropdownButtonFormField<String>(
               decoration: InputDecoration(
                 label: Text(
                   "Education Level",
@@ -94,12 +135,29 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
                 filled: true,
                 fillColor: theme.inputDecorationTheme.fillColor,
               ),
-              value: vm.educationLevelId,
-              items: const [], // Placeholder for education level options (from backend)
-              onChanged: (val) => setState(() => vm.educationLevelId = val),
+              value: vm.educationLevelId != null ? _educationLevels.keys.elementAt(vm.educationLevelId!) : null,
+              items: _educationLevels.entries.map((entry) {
+                return DropdownMenuItem<String>(
+                  value: entry.key,
+                  child: Row(
+                    children: [
+                      Icon(entry.value, size: 20, color: colorScheme.onSurface),
+                      const SizedBox(width: 8),
+                      Text(
+                        entry.key,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (val) {
+                final index = _educationLevels.keys.toList().indexOf(val!);
+                setState(() => vm.educationLevelId = index);
+              },
             ),
           ),
-          const SizedBox(height: 18), // Spacing before switch
+          const SizedBox(height: 18),
           // Switch for dropout status
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -118,7 +176,7 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
               inactiveTrackColor: colorScheme.onSurface.withAlpha(51),
             ),
           ),
-          const SizedBox(height: 24), // Spacing before button
+          const SizedBox(height: 24),
           // Next button to proceed to the next step
           Row(
             children: [
