@@ -1,0 +1,2 @@
+D:/amoura-final-project/mobile-app/android/app/.cxx/Debug/2d6l4e55/x86/CMakeFiles/edit_cache.dir
+D:/amoura-final-project/mobile-app/android/app/.cxx/Debug/2d6l4e55/x86/CMakeFiles/rebuild_cache.dir
