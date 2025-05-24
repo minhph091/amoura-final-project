@@ -1,16 +1,16 @@
 // lib/app/routes/app_pages.dart
-
 import 'package:flutter/material.dart';
 import '../../presentation/auth/login/login_view.dart';
 import '../../presentation/auth/setup_profile/setup_profile_view.dart';
 import '../../presentation/auth/reset_password/reset_password_view.dart';
 import '../../presentation/auth/register/register_view.dart';
 import '../../presentation/auth/login_otp/login_otp_view.dart';
-import '../../presentation/auth/login_otp/login_otp_verify_view.dart';
+import '../../presentation/auth/login_otp/login_otp_verify_view.dart'; // Chỉ import từ đây
 import '../../presentation/common/terms_of_service_view.dart';
 import '../../presentation/common/privacy_policy_view.dart';
 import '../../presentation/splash/splash_view.dart';
 import '../../presentation/welcome/welcome_view.dart';
+import '../../presentation/main_navigator/main_navigator_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -51,9 +51,47 @@ class AppPages {
           builder: (_) => ResetPasswordView(email: email),
         );
       case AppRoutes.setupProfile:
-        return MaterialPageRoute(builder: (_) => const SetupProfileView());
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => const SetupProfileView(),
+          settings: RouteSettings(arguments: args),
+        );
+      case AppRoutes.home:
+        return MaterialPageRoute(builder: (_) => const MainNavigatorView());
       default:
         return MaterialPageRoute(builder: (_) => const SplashView());
+    }
+  }
+}
+
+class AppRoutes {
+  static const String splash = '/';
+  static const String welcome = '/welcome';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
+  static const String termsOfService = '/terms-of-service';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String loginWithEmailOtp = '/login-with-email-otp';
+  static const String loginEmailOtpVerify = '/login-email-otp-verify';
+  static const String forgotPasswordOtpVerify = '/forgot-password-otp-verify';
+  static const String setupProfile = '/setup-profile';
+  static const String home = '/home';
+}
+
+enum Environment { dev, staging, prod }
+
+class EnvironmentConfig {
+  static Environment current = Environment.dev;
+
+  static String get baseUrl {
+    switch (current) {
+      case Environment.dev:
+        return 'http://10.0.2.2:8080/api';
+      case Environment.staging:
+        return 'https://staging.api.amoura.com';
+      case Environment.prod:
+        return 'https://api.amoura.com';
     }
   }
 }
