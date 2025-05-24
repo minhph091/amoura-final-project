@@ -22,8 +22,11 @@ class SetupProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final sessionToken = args?['sessionToken'] as String?;
+
     return ChangeNotifierProvider(
-      create: (_) => SetupProfileViewModel(),
+      create: (_) => SetupProfileViewModel(sessionToken: sessionToken),
       child: Consumer<SetupProfileViewModel>(
         builder: (context, vm, child) {
           return SetupProfileGradientBg(
@@ -39,23 +42,23 @@ class SetupProfileView extends StatelessWidget {
                           Text(
                             'Setup Profile',
                             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFFEC407A), // Distinct color for "Setup Profile"
-                            ),
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFFEC407A),
+                                ),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             '(${vm.currentStep + 1}/10)',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: const Color(0xFF8E24AA),
-                              fontWeight: FontWeight.bold,
-                            ),
+                                  color: const Color(0xFF8E24AA),
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                           const Spacer(),
                           if (vm.showSkip)
                             TextButton(
                               onPressed: () {
-                                vm.onSkip();
+                                vm.skipStep(context: context);
                               },
                               child: const Text(
                                 'Skip',
@@ -115,7 +118,6 @@ class SetupProfileView extends StatelessWidget {
   }
 }
 
-// Widget to display the progress stepper for the setup profile flow.
 class _StepperProgress extends StatelessWidget {
   final int totalSteps;
   final int currentStep;

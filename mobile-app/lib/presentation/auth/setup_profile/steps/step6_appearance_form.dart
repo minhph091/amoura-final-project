@@ -1,6 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step6_appearance_form.dart
-// Form widget for collecting the user's appearance details, such as body type and height.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/setup_profile_button.dart';
@@ -47,7 +45,11 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
             selectedValue: vm.bodyType,
             onChanged: (value, selected) {
               if (selected) {
-                setState(() => vm.bodyType = value);
+                setState(() {
+                  final index = bodyTypeOptions.indexWhere((option) => option['value'] == value);
+                  vm.bodyTypeId = index; // Cập nhật bodyTypeId
+                  vm.bodyType = value; // Cập nhật bodyType
+                });
               }
             },
             labelText: 'Body Type',
@@ -90,7 +92,7 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
           const SizedBox(height: 28),
           SetupProfileButton(
             text: 'Next',
-            onPressed: () => vm.nextStep(),
+            onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
           ),

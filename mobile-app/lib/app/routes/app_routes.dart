@@ -1,4 +1,3 @@
-// lib/app/routes/app_routes.dart
 class AppRoutes {
   static const String splash = '/';
   static const String welcome = '/welcome';

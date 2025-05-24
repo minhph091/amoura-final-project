@@ -1,6 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step2_dob_gender_form.dart
-// Form widget for collecting the user's date of birth and gender.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/date_util.dart';
@@ -27,7 +25,6 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
 
   late SetupProfileViewModel _viewModel;
 
-  // Initialize the date of birth controller with existing data.
   @override
   void initState() {
     super.initState();
@@ -37,7 +34,12 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
     );
   }
 
-  // Validate form inputs and update error states.
+  @override
+  void dispose() {
+    _dobController.dispose();
+    super.dispose();
+  }
+
   void _validateAndSave() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -154,7 +156,14 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
               onPressed: () {
                 _validateAndSave();
                 if (!_dobError && !_genderError) {
-                  vm.nextStep();
+                  final error = vm.validateStep1();
+                  if (error == null) {
+                    vm.nextStep(context: context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(error)),
+                    );
+                  }
                 } else if (_genderError) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Please select your gender')),

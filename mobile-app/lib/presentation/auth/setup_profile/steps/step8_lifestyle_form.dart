@@ -1,6 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step8_lifestyle_form.dart
-// Form widget for collecting the user's lifestyle preferences, such as drinking, smoking, and pets.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/setup_profile_button.dart';
@@ -48,7 +46,11 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
             selectedValue: vm.drinkStatus,
             onChanged: (value, selected) {
               if (selected) {
-                setState(() => vm.drinkStatus = value);
+                setState(() {
+                  final index = drinkOptions.indexWhere((option) => option['value'] == value);
+                  vm.drinkStatusId = index; // Cập nhật drinkStatusId
+                  vm.drinkStatus = value; // Cập nhật drinkStatus
+                });
               }
             },
             labelText: 'Do you drink?',
@@ -64,7 +66,11 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
             selectedValue: vm.smokeStatus,
             onChanged: (value, selected) {
               if (selected) {
-                setState(() => vm.smokeStatus = value);
+                setState(() {
+                  final index = smokeOptions.indexWhere((option) => option['value'] == value);
+                  vm.smokeStatusId = index; // Cập nhật smokeStatusId
+                  vm.smokeStatus = value; // Cập nhật smokeStatus
+                });
               }
             },
             labelText: 'Do you smoke?',
@@ -94,12 +100,12 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
               fontWeight: FontWeight.w600,
             ),
             isMultiSelect: true,
-            scrollable: false, // Vertical layout
+            scrollable: false,
           ),
           const SizedBox(height: 30),
           SetupProfileButton(
             text: 'Next',
-            onPressed: () => vm.nextStep(),
+            onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
           ),

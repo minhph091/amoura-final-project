@@ -1,112 +1,105 @@
-// lib/presentation/auth/reset_password/reset_password_viewmodel.dart
-
 import 'package:flutter/material.dart';
+import '../../../data/remote/auth_service.dart';
 
-// ViewModel for the forgot password flow that manages state and business logic
 class ResetPasswordViewmodel extends ChangeNotifier {
   final emailFormKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  // Form state
   bool hasSentEmail = false;
   bool hasVerifiedOtp = false;
   String? sentEmail;
   bool isLoading = false;
   String? errorMessage;
+  String? _storedOtp;
 
-  // OTP handling
   final int otpLength;
-  String _otp = '';
+  final AuthService _authService = AuthService();
 
-  ResetPasswordViewmodel({this.otpLength = 6});
-
-  // Handle sending email for password reset
-  void onSendEmail() async {
-    if (emailFormKey.currentState?.validate() ?? false) {
-      sentEmail = emailController.text.trim();
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
-
-      // API call would happen here
-      // The API would handle setting hasSentEmail = true when successful
-
-      // For now, just end loading state without changing screens:
-      isLoading = false;
-      notifyListeners();
+  ResetPasswordViewmodel({this.otpLength = 6, String? email}) {
+    if (email != null) {
+      emailController.text = email;
     }
   }
 
-  // Update OTP value as user types
-  void onOtpChanged(String otp) {
-    _otp = otp;
-    notifyListeners();
-  }
-
-  // Verify OTP code entered by user
-  void onVerifyOtp() async {
-    if (_otp.length == otpLength) {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
-
-      // API call would happen here
-      // The API would handle setting hasVerifiedOtp = true when successful
-
-      // For now, just end loading state without changing screens:
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Handle password reset submission
-  void onResetPassword() async {
-    // Validate password match
-    if (passwordController.text != confirmPasswordController.text) {
-      errorMessage = "Passwords do not match";
-      notifyListeners();
-      return;
-    }
-
+  Future<void> onSendEmail(String email) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
-
-    // API call would happen here
-    // The API would handle navigation on success
-
-    // For now, just end loading state without navigating:
-    isLoading = false;
-    notifyListeners();
+    try {
+      await _authService.requestPasswordReset(email: email);
+      sentEmail = email;
+      hasSentEmail = true;
+    } on ApiException catch (e) {
+      errorMessage = e.message;
+    } catch (e) {
+      errorMessage = 'Unable to send password reset request. Please try again.';
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
-  // Request a new OTP code
-  void onResendOtp() async {
+  void onVerifyOtp(String otp) {
+    if (otp.length == otpLength) {
+      _storedOtp = otp;
+      hasVerifiedOtp = true;
+      errorMessage = null;
+      notifyListeners();
+    } else {
+      errorMessage = 'Please enter a valid OTP';
+      notifyListeners();
+    }
+  }
+
+  Future<bool> resetPassword(String newPassword) async {
+    if (sentEmail == null || _storedOtp == null) {
+      errorMessage = 'Invalid state. Please start over.';
+      notifyListeners();
+      return false;
+    }
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      await _authService.resetPassword(
+        email: sentEmail!,
+        otpCode: _storedOtp!,
+        newPassword: newPassword,
+      );
+      return true;
+    } on ApiException catch (e) {
+      errorMessage = e.message;
+      hasVerifiedOtp = false; // Quay lại bước nhập OTP
+      return false;
+    } catch (e) {
+      errorMessage = 'Failed to reset password. Please try again.';
+      hasVerifiedOtp = false; // Quay lại bước nhập OTP
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> onResendOtp() async {
     if (sentEmail != null) {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
-
-      // API call would happen here
-
-      isLoading = false;
-      notifyListeners();
+      try {
+        await _authService.requestPasswordReset(email: sentEmail!);
+        errorMessage = 'A new OTP has been sent to your email';
+      } on ApiException catch (e) {
+        errorMessage = e.message;
+      } catch (e) {
+        errorMessage = 'Unable to resend OTP. Please try again.';
+      } finally {
+        isLoading = false;
+        notifyListeners();
+      }
     }
-  }
-
-  // Reset all form state
-  void reset() {
-    emailController.clear();
-    passwordController.clear();
-    confirmPasswordController.clear();
-    hasSentEmail = false;
-    hasVerifiedOtp = false;
-    sentEmail = null;
-    errorMessage = null;
-    _otp = '';
-    notifyListeners();
   }
 
   @override

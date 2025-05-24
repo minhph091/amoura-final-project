@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step10_bio_review_form.dart
-// Form widget for collecting the user's bio and additional photos.
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +23,9 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
     final theme = Theme.of(context);
+
+    // Đồng bộ uploadedImages với galleryPhotos từ viewModel
+    uploadedImages = vm.galleryPhotos;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
@@ -85,51 +87,62 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
               runSpacing: 10,
               children: [
                 ...uploadedImages.map((imgPath) => Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    GestureDetector(
-                      onTap: () => showPhotoViewer(context, imgPath, tag: imgPath),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          imgPath,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            width: 80,
-                            height: 80,
-                            color: const Color(0xFFBA68C8).withAlpha(20),
-                            child: const Icon(Icons.broken_image, size: 32),
+                      alignment: Alignment.topRight,
+                      children: [
+                        GestureDetector(
+                          onTap: () => showPhotoViewer(context, imgPath, tag: imgPath),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              imgPath,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: 80,
+                                height: 80,
+                                color: const Color(0xFFBA68C8).withAlpha(20),
+                                child: const Icon(Icons.broken_image, size: 32),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => setState(() => uploadedImages.remove(imgPath)),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 2,
-                              color: Color(0xFF424242),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              uploadedImages.remove(imgPath);
+                              vm.removeGalleryPhoto(imgPath);
+                            });
+                          },
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  blurRadius: 2,
+                                  color: Color(0xFF424242),
+                                ),
+                              ],
                             ),
-                          ],
+                            child: const Icon(
+                              Icons.close,
+                              color: Color(0xFFD81B60),
+                              size: 18,
+                            ),
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Color(0xFFD81B60),
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                )),
+                      ],
+                    )),
                 GestureDetector(
                   onTap: () {
                     // TODO: Implement image picker + permission
+                    // Giả lập thêm ảnh vào galleryPhotos
+                    final newImage = "https://example.com/new_image.jpg";
+                    setState(() {
+                      uploadedImages.add(newImage);
+                      vm.addGalleryPhoto(newImage);
+                    });
                   },
                   child: DottedBorder(
                     options: const RoundedRectDottedBorderOptions(
@@ -156,11 +169,12 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
             Row(
               children: [
                 Expanded(
-                  child: SetupProfileButton(  // Already correct, no changes needed
+                  child: SetupProfileButton(
                     text: "Finish",
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
+                        vm.nextStep(context: context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Profile setup complete!")),
                         );

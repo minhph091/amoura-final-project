@@ -1,6 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step1_name_form.dart
-// Form widget for collecting the user's first and last name in the profile setup process.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/validation_util.dart';
@@ -23,7 +21,6 @@ class _Step1NameFormState extends State<Step1NameForm> {
   bool _firstNameError = false;
   bool _lastNameError = false;
 
-  // Initialize controllers with existing data from the view model.
   @override
   void initState() {
     super.initState();
@@ -32,7 +29,6 @@ class _Step1NameFormState extends State<Step1NameForm> {
     _lastNameCtrl = TextEditingController(text: vm.lastName ?? "");
   }
 
-  // Dispose controllers to prevent memory leaks.
   @override
   void dispose() {
     _firstNameCtrl.dispose();
@@ -40,7 +36,6 @@ class _Step1NameFormState extends State<Step1NameForm> {
     super.dispose();
   }
 
-  // Validate form inputs and save data to the view model.
   void _validateAndSave() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -71,7 +66,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
             Text(
               "Your Name",
               style: theme.textTheme.headlineLarge?.copyWith(
-                color: const Color(0xFFD81B60), // Deep pink for step titles
+                color: const Color(0xFFD81B60),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -79,7 +74,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
             Text(
               "This name will be visible to everyone.",
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFFAB47BC), // Lighter purple for descriptions
+                color: const Color(0xFFAB47BC),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -98,7 +93,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
                 controller: _firstNameCtrl,
                 labelText: "First Name *",
                 labelStyle: theme.textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFFBA68C8), // Muted purple for field labels
+                  color: const Color(0xFFBA68C8),
                   fontWeight: FontWeight.w600,
                 ),
                 prefixIcon: Icons.person,
@@ -107,7 +102,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
                 validator: (v) => ValidationUtil().validateFirstName(v),
                 onSaved: (v) => vm.firstName = v?.trim(),
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF424242), // Dark gray for input text
+                  color: const Color(0xFF424242),
                 ),
               ),
             ),
@@ -138,7 +133,14 @@ class _Step1NameFormState extends State<Step1NameForm> {
                 _validateAndSave();
                 if (!_firstNameError && !_lastNameError) {
                   FocusScope.of(context).unfocus();
-                  vm.nextStep();
+                  final error = vm.validateStep0();
+                  if (error == null) {
+                    vm.nextStep(context: context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(error)),
+                    );
+                  }
                 }
               },
               width: double.infinity,

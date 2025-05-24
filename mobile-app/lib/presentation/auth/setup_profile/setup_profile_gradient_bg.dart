@@ -5,19 +5,12 @@ import 'package:flutter/material.dart';
 import 'setup_profile_viewmodel.dart';
 import 'package:provider/provider.dart';
 
-// Function to calculate gradient colors based on the current step.
 List<Color> _getGradientForStep(int currentStep, int totalSteps) {
-  // Base colors for the pink-to-purple gradient, starting light.
-  const pinkStart = Color(0xFFFFE1F0); // Light pink
-  const purpleEnd = Color(0xFFE1D0FF); // Light purple
-
-  // Calculate interpolation factor based on step progress.
+  const pinkStart = Color(0xFFFFE1F0);
+  const purpleEnd = Color(0xFFE1D0FF);
   double factor = currentStep / (totalSteps - 1);
-
-  // Interpolate between start and end colors to make background lighter as steps progress.
   final startColor = Color.lerp(pinkStart, purpleEnd, factor) ?? pinkStart;
   final endColor = Color.lerp(purpleEnd, pinkStart, factor) ?? purpleEnd;
-
   return [startColor, endColor];
 }
 

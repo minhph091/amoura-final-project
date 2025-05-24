@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step4_avatar_cover_form.dart
-// Form widget for uploading the user's avatar and cover photo.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -61,9 +60,9 @@ class Step4AvatarCoverForm extends StatelessWidget {
                           child: vm.avatarPath == null
                               ? const Center(child: Icon(Icons.camera_alt, size: 48, color: Color(0xFFD81B60)))
                               : ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: UserAvatar(imageUrl: vm.avatarPath, radius: 42),
-                          ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: UserAvatar(imageUrl: vm.avatarPath, radius: 42),
+                                ),
                         ),
                       ),
                     ),
@@ -111,9 +110,9 @@ class Step4AvatarCoverForm extends StatelessWidget {
                           child: vm.coverPath == null
                               ? const Center(child: Icon(Icons.image, size: 48, color: Color(0xFF8E24AA)))
                               : ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.network(vm.coverPath!, fit: BoxFit.cover),
-                          ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(vm.coverPath!, fit: BoxFit.cover),
+                                ),
                         ),
                       ),
                     ),
@@ -142,9 +141,7 @@ class Step4AvatarCoverForm extends StatelessWidget {
           const SizedBox(height: 28),
           SetupProfileButton(
             text: "Next",
-            onPressed: () {
-              vm.nextStep();
-            },
+            onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
           ),

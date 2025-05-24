@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step3_orientation_form.dart
-// Form widget for collecting the user's orientation preference.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -55,7 +54,11 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> {
             selectedValue: vm.orientation,
             onChanged: (value, selected) {
               if (selected) {
-                setState(() => vm.orientation = value);
+                setState(() {
+                  final index = orientationOptions.indexWhere((option) => option['value'] == value);
+                  vm.orientationId = index; // Cập nhật orientationId
+                  vm.orientation = value; // Cập nhật orientation
+                });
               }
             },
             labelText: 'Orientation',
@@ -63,12 +66,14 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> {
               color: const Color(0xFFBA68C8),
               fontWeight: FontWeight.w600,
             ),
-            scrollable: false, // Vertical layout
+            scrollable: false,
           ),
           const SizedBox(height: 32),
           SetupProfileButton(
             text: 'Next',
-            onPressed: vm.orientation != null ? vm.nextStep : null,
+            onPressed: vm.orientation != null
+                ? () => vm.nextStep(context: context)
+                : null,
             width: double.infinity,
             height: 52,
           ),

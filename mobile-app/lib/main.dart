@@ -7,7 +7,6 @@ import 'config/environment.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Environment.init();
   await configureDependencies();
   runApp(const AmouraApp());
 }

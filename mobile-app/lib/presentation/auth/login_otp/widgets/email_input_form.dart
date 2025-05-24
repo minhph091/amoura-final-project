@@ -1,22 +1,19 @@
 // lib/presentation/auth/login_otp/widgets/email_input_form.dart
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_text_field.dart';
-import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../login_otp_viewmodel.dart';
+import '../../../../core/utils/validation_util.dart';
 
 class EmailInputForm extends StatefulWidget {
-  final void Function(String email) onSend;
-
-  const EmailInputForm({super.key, required this.onSend});
+  const EmailInputForm({super.key});
 
   @override
   State<EmailInputForm> createState() => _EmailInputFormState();
 }
 
 class _EmailInputFormState extends State<EmailInputForm> with SingleTickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailCtl = TextEditingController();
   late AnimationController _animController;
 
   @override
@@ -30,41 +27,41 @@ class _EmailInputFormState extends State<EmailInputForm> with SingleTickerProvid
 
   @override
   void dispose() {
-    _emailCtl.dispose();
     _animController.dispose();
     super.dispose();
   }
 
-  void _onSubmit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      widget.onSend(_emailCtl.text.trim());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<LoginOtpViewModel>(context);
     return FadeTransition(
       opacity: _animController,
       child: Form(
-        key: _formKey,
+        key: viewModel.formKey,
         child: Column(
           children: [
             AppTextField(
-              controller: _emailCtl,
+              controller: viewModel.emailController,
               labelText: "Email",
               hintText: "Enter your email",
               keyboardType: TextInputType.emailAddress,
               prefixIcon: Icons.email_outlined,
               prefixIconColor: Theme.of(context).colorScheme.primary,
-              validator: (v) => ValidationUtil().validateEmail(v),
-              errorText: null,
+              validator: ValidationUtil.validateEmail, // Sửa từ ValidationUtil().validateEmail
             ),
             const SizedBox(height: 24),
             AppButton(
               text: "Send OTP",
               icon: Icons.send,
-              onPressed: _onSubmit,
+              onPressed: viewModel.isLoading ? null : () => viewModel.onSendOtp(
+                onSuccess: (email) => Navigator.of(context).pushNamed(
+                  '/login-email-otp-verify',
+                  arguments: {'email': email},
+                ),
+                onError: (error) => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(error)),
+                ),
+              ),
             ),
           ],
         ),

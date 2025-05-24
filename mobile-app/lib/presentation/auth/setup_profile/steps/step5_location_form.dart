@@ -118,9 +118,7 @@ class Step5LocationForm extends StatelessWidget {
               const SizedBox(height: 28),
               SetupProfileButton(
                 text: "Next",
-                onPressed: () {
-                  vm.nextStep();
-                },
+                onPressed: () => vm.nextStep(context: context),
                 width: double.infinity,
                 height: 52,
               ),
@@ -136,7 +134,6 @@ class Step5LocationForm extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () async {
-          // Show a permission dialog
           final result = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
@@ -158,12 +155,10 @@ class Step5LocationForm extends StatelessWidget {
           );
 
           if (result == true) {
-            // Permission granted - API call would be handled by someone else
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Requesting your location...")),
             );
           } else {
-            // Permission denied
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Location permission denied")),
             );
@@ -174,7 +169,7 @@ class Step5LocationForm extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFFD81B60).withAlpha(38), // 15% opacity
+            color: const Color(0xFFD81B60).withAlpha(38),
           ),
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 1.0, end: 1.2),

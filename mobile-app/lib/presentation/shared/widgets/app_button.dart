@@ -1,8 +1,5 @@
-// lib/presentation/shared/widgets/app_button.dart
-
 import 'package:flutter/material.dart';
 
-// This widget is a customizable button that can be used throughout the app.
 class AppButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
@@ -20,6 +17,7 @@ class AppButton extends StatelessWidget {
   final bool useThemeGradient;
   final bool isDisabled;
   final BorderSide? borderSide;
+  final bool isLoading;  // Thêm tham số
   final Widget? loading;
 
   const AppButton({
@@ -40,47 +38,43 @@ class AppButton extends StatelessWidget {
     this.useThemeGradient = false,
     this.isDisabled = false,
     this.borderSide,
+    this.isLoading = false,  // Giá trị mặc định
     this.loading,
   });
 
-
   @override
   Widget build(BuildContext context) {
-    // Determine disabled state
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
-    // Compute effective gradient
     final Gradient? effectiveGradient = isDisabled
         ? LinearGradient(
-        colors: [
-          colorScheme.onSurface.withAlpha(20),
-          colorScheme.onSurface.withAlpha(13)
-        ],
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight)
-        : gradient ??
-        (useThemeGradient
-            ? LinearGradient(
             colors: [
-              colorScheme.primary,
-              colorScheme.secondary
+              colorScheme.onSurface.withAlpha(20),
+              colorScheme.onSurface.withAlpha(13)
             ],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight)
-            : null);
+        : gradient ??
+            (useThemeGradient
+                ? LinearGradient(
+                    colors: [
+                      colorScheme.primary,
+                      colorScheme.secondary
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight)
+                : null);
 
-    // Compute effective text color
     final Color effectiveTextColor = isDisabled
         ? colorScheme.onSurface.withAlpha(97)
         : textColor ??
-        (effectiveGradient != null
-            ? Colors.white
-            : (isOutline
-            ? (color ?? colorScheme.primary)
-            : Colors.white));
+            (effectiveGradient != null
+                ? Colors.white
+                : (isOutline
+                    ? (color ?? colorScheme.primary)
+                    : Colors.white));
 
-    // Text style
     final TextStyle buttonTextStyle = textStyle ??
         theme.textTheme.labelLarge?.copyWith(
             fontSize: 16, fontWeight: FontWeight.bold) ??
@@ -89,34 +83,31 @@ class AppButton extends StatelessWidget {
     final TextStyle effectiveTextStyleWithColor = buttonTextStyle.copyWith(
         color: effectiveTextColor);
 
-    // Shape
     final OutlinedBorder effectiveShape =
         shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(
             height != null ? (height! / 2) : 26));
 
-    // Elevation
     final double effectiveElevation = elevation ??
         (effectiveGradient != null
             ? 4.0
             : (isOutline
-            ? 0
-            : 2.0));
+                ? 0
+                : 2.0));
 
-    // Padding
     final EdgeInsetsGeometry effectivePadding = padding ??
         const EdgeInsets.symmetric(horizontal: 24, vertical: 12.0);
 
-    // Button content
-    Widget buttonContent = Text(
-      text,
-      style: effectiveTextStyleWithColor,
-      textAlign: TextAlign.center,
-      overflow: TextOverflow.ellipsis,
-      maxLines: 1,
-    );
+    Widget buttonContent = isLoading
+        ? loading ?? const CircularProgressIndicator(color: Colors.white)
+        : Text(
+            text,
+            style: effectiveTextStyleWithColor,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          );
 
-    // Add icon if present
-    if (icon != null) {
+    if (icon != null && !isLoading) {
       buttonContent = Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -129,7 +120,6 @@ class AppButton extends StatelessWidget {
       );
     }
 
-    // Gradient button
     if (effectiveGradient != null && !isOutline && borderSide == null) {
       return Container(
         width: width,
@@ -138,7 +128,7 @@ class AppButton extends StatelessWidget {
           gradient: effectiveGradient,
           borderRadius: (effectiveShape is RoundedRectangleBorder)
               ? (effectiveShape.borderRadius as BorderRadius?)?.resolve(
-              Directionality.of(context))
+                  Directionality.of(context))
               : BorderRadius.circular(height ?? 52 / 2),
           boxShadow: [
             if (effectiveElevation > 0 && !isDisabled)
@@ -151,7 +141,7 @@ class AppButton extends StatelessWidget {
           ],
         ),
         child: ElevatedButton(
-          onPressed: isDisabled ? null : onPressed,
+          onPressed: isDisabled || isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
@@ -165,10 +155,10 @@ class AppButton extends StatelessWidget {
             disabledBackgroundColor: Colors.transparent,
           ).copyWith(
             overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                  (states) =>
-              states.contains(WidgetState.pressed)
-                  ? Colors.white.withAlpha(25)
-                  : null,
+              (states) =>
+                  states.contains(WidgetState.pressed)
+                      ? Colors.white.withAlpha(25)
+                      : null,
             ),
           ),
           child: buttonContent,
@@ -176,13 +166,12 @@ class AppButton extends StatelessWidget {
       );
     }
 
-    // Outline or borderSide
     if (isOutline || borderSide != null) {
       return SizedBox(
         width: width,
         height: height ?? 52,
         child: OutlinedButton(
-          onPressed: isDisabled ? null : onPressed,
+          onPressed: isDisabled || isLoading ? null : onPressed,
           style: OutlinedButton.styleFrom(
             backgroundColor: color ?? Colors.transparent,
             shape: effectiveShape,
@@ -195,10 +184,10 @@ class AppButton extends StatelessWidget {
             textStyle: effectiveTextStyleWithColor,
           ).copyWith(
             overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                  (states) =>
-              states.contains(WidgetState.pressed)
-                  ? (color ?? colorScheme.primary).withAlpha(20)
-                  : null,
+              (states) =>
+                  states.contains(WidgetState.pressed)
+                      ? (color ?? colorScheme.primary).withAlpha(20)
+                      : null,
             ),
           ),
           child: buttonContent,
@@ -206,12 +195,11 @@ class AppButton extends StatelessWidget {
       );
     }
 
-    // Default elevated button
     return SizedBox(
       width: width,
       height: height ?? 52,
       child: ElevatedButton(
-        onPressed: isDisabled ? null : onPressed,
+        onPressed: isDisabled || isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color ?? colorScheme.primary,
           shape: effectiveShape,
@@ -225,10 +213,10 @@ class AppButton extends StatelessWidget {
           disabledBackgroundColor: colorScheme.onSurface.withAlpha(25),
         ).copyWith(
           overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                (states) =>
-            states.contains(WidgetState.pressed)
-                ? effectiveTextColor.withAlpha(20)
-                : null,
+            (states) =>
+                states.contains(WidgetState.pressed)
+                    ? effectiveTextColor.withAlpha(20)
+                    : null,
           ),
         ),
         child: buttonContent,

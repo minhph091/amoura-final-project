@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step7_job_education_form.dart
-// Form widget for collecting the user's job and education details.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +49,11 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
             selectedValue: vm.jobIndustry,
             onChanged: (value, selected) {
               if (selected) {
-                setState(() => vm.jobIndustry = value);
+                setState(() {
+                  final index = jobOptions.indexWhere((option) => option['value'] == value);
+                  vm.jobIndustryId = index; // Cập nhật jobIndustryId
+                  vm.jobIndustry = value; // Cập nhật jobIndustry
+                });
               }
             },
             labelText: 'Job Industry',
@@ -66,7 +69,11 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
             selectedValue: vm.educationLevel,
             onChanged: (value, selected) {
               if (selected) {
-                setState(() => vm.educationLevel = value);
+                setState(() {
+                  final index = educationOptions.indexWhere((option) => option['value'] == value);
+                  vm.educationLevelId = index; // Cập nhật educationLevelId
+                  vm.educationLevel = value; // Cập nhật educationLevel
+                });
               }
             },
             labelText: 'Education Level',
@@ -102,7 +109,7 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
               Expanded(
                 child: SetupProfileButton(
                   text: 'Next',
-                  onPressed: () => vm.nextStep(),
+                  onPressed: () => vm.nextStep(context: context),
                   width: double.infinity,
                   height: 52,
                 ),

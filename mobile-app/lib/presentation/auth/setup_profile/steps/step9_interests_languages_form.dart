@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step9_interests_languages_form.dart
-// Form widget for collecting the user's interests and languages.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -121,13 +120,14 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
                 child: SetupProfileButton(
                   text: 'Next',
                   onPressed: () {
-                    if (vm.selectedInterestIds == null || vm.selectedInterestIds!.isEmpty) {
+                    final error = vm.validateStep8();
+                    if (error == null) {
+                      vm.nextStep(context: context);
+                    } else {
                       setState(() => _interestError = true);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please select at least one interest.')),
+                        SnackBar(content: Text(error)),
                       );
-                    } else {
-                      vm.nextStep();
                     }
                   },
                   width: double.infinity,

@@ -1,45 +1,61 @@
 // lib/presentation/shared/widgets/otp_input_form.dart
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../../../../config/theme/app_colors.dart';
 
-// Form for entering OTP verification code
 class OtpInputForm extends StatefulWidget {
-  // Number of digits in OTP code
   final int otpLength;
-
-  // Callback function when OTP is submitted
-  final void Function(String otp) onSubmit;
-
-  // Whether resend option should be available
+  final Function(String) onSubmit;
   final bool resendAvailable;
-
-  // Callback function for resending OTP
   final VoidCallback? onResend;
+  final int? remainingSeconds;
+  final String? errorMessage;
 
   const OtpInputForm({
-    super.key,
+    Key? key,
     this.otpLength = 6,
     required this.onSubmit,
     this.resendAvailable = false,
     this.onResend,
-  });
+    this.remainingSeconds,
+    this.errorMessage,
+  }) : super(key: key);
 
   @override
-  State<OtpInputForm> createState() => _OtpInputFormState();
+  _OtpInputFormState createState() => _OtpInputFormState();
 }
 
 class _OtpInputFormState extends State<OtpInputForm> {
-  late List<TextEditingController> _controllers;
-  late List<FocusNode> _focusNodes;
   late List<String> _otpDigits;
+  late List<FocusNode> _focusNodes;
+  late List<TextEditingController> _controllers;
 
   @override
   void initState() {
     super.initState();
-    _controllers = List.generate(widget.otpLength, (_) => TextEditingController());
+    _otpDigits = List.filled(widget.otpLength, '');
     _focusNodes = List.generate(widget.otpLength, (_) => FocusNode());
-    _otpDigits = List.generate(widget.otpLength, (_) => '');
+    _controllers = List.generate(widget.otpLength, (_) => TextEditingController());
+  }
+
+  void _onDigitChanged(int index, String value) {
+    if (value.length > 1) value = value.substring(value.length - 1);
+    setState(() {
+      _otpDigits[index] = value.trim();
+      _controllers[index].text = value.trim();
+    });
+    print('Digit $index changed to: $value');
+
+    if (value.isNotEmpty && index < widget.otpLength - 1) {
+      FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+    } else if (value.isEmpty && index > 0) {
+      FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
+    }
+
+    final otp = _otpDigits.join();
+    if (otp.length == widget.otpLength && otp.trim().isNotEmpty) {
+      print('Submitting OTP: $otp');
+      widget.onSubmit(otp);
+    }
   }
 
   @override
@@ -53,93 +69,73 @@ class _OtpInputFormState extends State<OtpInputForm> {
     super.dispose();
   }
 
-  // Handle changes to individual OTP digits and manage focus
-  void _onDigitChanged(int index, String value) {
-    // Only allow digits
-    if (value.isNotEmpty && !RegExp(r'^[0-9]$').hasMatch(value)) {
-      _controllers[index].clear();
-      return;
-    }
-
-    setState(() => _otpDigits[index] = value);
-
-    // Auto-advance focus
-    if (value.isNotEmpty && index < widget.otpLength - 1) {
-      FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
-    }
-
-    // Move focus back on delete
-    if (value.isEmpty && index > 0) {
-      FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
-    }
-  }
-
-  // Submit complete OTP code
-  void _submit() {
-    final otp = _otpDigits.join();
-    if (otp.length == widget.otpLength) {
-      widget.onSubmit(otp);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Column(
       children: [
-        // OTP input fields
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(widget.otpLength, (i) {
-            return Container(
-              width: 44,
-              margin: const EdgeInsets.symmetric(horizontal: 6),
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(widget.otpLength, (index) {
+            return SizedBox(
+              width: 50,
               child: TextField(
-                controller: _controllers[i],
-                focusNode: _focusNodes[i],
+                controller: _controllers[index],
+                focusNode: _focusNodes[index],
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 maxLength: 1,
-                style: Theme.of(context).textTheme.headlineMedium,
-                decoration: const InputDecoration(
+                style: theme.textTheme.titleMedium,
+                decoration: InputDecoration(
                   counterText: '',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
+                  fillColor: theme.colorScheme.surface,
                 ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
-                onChanged: (v) => _onDigitChanged(i, v),
-                onSubmitted: (v) {
-                  if (i == widget.otpLength - 1) _submit();
-                },
+                onChanged: (value) => _onDigitChanged(index, value),
               ),
             );
           }),
         ),
-
-        // Resend option
-        if (widget.resendAvailable && widget.onResend != null) ...[
-          const SizedBox(height: 18),
-          GestureDetector(
-            onTap: widget.onResend,
+        const SizedBox(height: 20),
+        // Hiển thị bộ đếm ngược hoặc nút Resend OTP
+        if (widget.remainingSeconds != null && !widget.resendAvailable)
+          Text(
+            'Resend OTP in ${widget.remainingSeconds}s',
+            style: TextStyle(
+              color: colorScheme.onSurface.withOpacity(0.6),
+              fontSize: 14,
+            ),
+          )
+        else if (widget.resendAvailable)
+          TextButton(
+            onPressed: widget.onResend,
             child: Text(
-              "Didn't receive code? Resend",
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
+              'Resend OTP',
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
-        ],
-        const SizedBox(height: 24),
-
-        // Verify button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _otpDigits.join().length == widget.otpLength ? _submit : null,
-            icon: const Icon(Icons.lock_open),
-            label: const Text("Verify"),
+        // Hiển thị thông báo lỗi hoặc thành công
+        if (widget.errorMessage != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            widget.errorMessage!,
+            style: TextStyle(
+              color: widget.errorMessage!.contains('A new OTP has been sent')
+                  ? colorScheme.primary
+                  : colorScheme.error,
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
+        ],
       ],
     );
   }
