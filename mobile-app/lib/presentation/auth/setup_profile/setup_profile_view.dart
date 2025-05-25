@@ -36,11 +36,36 @@ class SetupProfileView extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
                       child: Row(
                         children: [
+                          // Back button (visible after the first step)
+                          if (vm.currentStep > 0)
+                            TextButton(
+                              onPressed: () {
+                                vm.prevStep();
+                                // Placeholder for API call (to be implemented by others)
+                                // Example: await apiService.saveProgress();
+                              },
+                              child: const Text(
+                                'Back',
+                                style: TextStyle(
+                                  color: Color(0xFFD81B60),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ).animate(
+                              onPlay: (controller) => controller.repeat(reverse: true),
+                            ).scale(
+                              duration: const Duration(milliseconds: 800),
+                              begin: const Offset(1.0, 1.0),
+                              end: const Offset(1.05, 1.05),
+                              curve: Curves.easeInOut,
+                            ),
+                          // Setup Profile title and step indicator
                           Text(
                             'Setup Profile',
                             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFFEC407A), // Distinct color for "Setup Profile"
+                              color: const Color(0xFFEC407A),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -52,10 +77,13 @@ class SetupProfileView extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
+                          // Skip button (visible for non-required steps)
                           if (vm.showSkip)
                             TextButton(
                               onPressed: () {
                                 vm.onSkip();
+                                // Placeholder for API call (to be implemented by others)
+                                // Example: await apiService.skipStep();
                               },
                               child: const Text(
                                 'Skip',
