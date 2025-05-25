@@ -1,73 +1,118 @@
 // lib/screens/common/cookie_policy_view.dart
+
 import 'package:flutter/material.dart';
 
-class CookiePolicyView extends StatelessWidget {
+class CookiePolicyView extends StatefulWidget {
   const CookiePolicyView({super.key});
 
   @override
+  State<CookiePolicyView> createState() => _CookiePolicyViewState();
+}
+
+class _CookiePolicyViewState extends State<CookiePolicyView> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeInTitle;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 1000),
+        vsync: this);
+    _fadeInTitle = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final TextTheme textTheme = theme.textTheme;
-    final ColorScheme colorScheme = theme.colorScheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chính Sách Cookie'),
+        title: const Text('Cookie Policy'),
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w400,
+          color: colorScheme.onSurface,
+          fontSize: 18,
+        ),
         backgroundColor: colorScheme.surface,
         elevation: 1,
+        centerTitle: true,
       ),
       backgroundColor: colorScheme.surface,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'CHÍNH SÁCH COOKIE CỦA AMOURA',
-              style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary),
+            FadeTransition(
+              opacity: _fadeInTitle,
+              child: Text(
+                'AMOURA COOKIE POLICY',
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: colorScheme.primary,
+                  letterSpacing: 1.2,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Cập nhật lần cuối: Ngày 1 tháng 8 năm 2023', // Ví dụ
-              style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.6)),
+              'Last updated: May 19, 2025',
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                fontStyle: FontStyle.italic,
+              ),
             ),
-            const SizedBox(height: 20),
-            _buildSectionTitle('1. Cookie là gì?', textTheme, colorScheme),
+            const SizedBox(height: 22),
+            _buildSectionTitle('1. What Are Cookies?', textTheme, colorScheme),
             _buildParagraph(
-                'Cookie là các tệp văn bản nhỏ được đặt trên thiết bị của bạn (máy tính, điện thoại, máy tính bảng) khi bạn truy cập trang web hoặc sử dụng ứng dụng. '
-                    'Chúng được sử dụng rộng rãi để làm cho trang web hoạt động hoặc hoạt động hiệu quả hơn, cũng như để cung cấp thông tin cho chủ sở hữu trang web.',
+                'Cookies are small text files placed on your device (computer, phone, tablet) when you visit a website or use an application. '
+                    'They are widely used to make websites work or work more efficiently, as well as to provide information to the website owner.',
                 textTheme, colorScheme),
             const SizedBox(height: 16),
-            _buildSectionTitle('2. Amoura sử dụng Cookie như thế nào?', textTheme, colorScheme),
+            _buildSectionTitle('2. How Amoura Uses Cookies', textTheme, colorScheme),
             _buildParagraph(
-                'Chúng tôi sử dụng cookie và các công nghệ theo dõi tương tự (như web beacons và pixel) cho các mục đích sau:',
+                'We use cookies and similar tracking technologies (such as web beacons and pixels) for the following purposes:',
                 textTheme, colorScheme),
-            _buildBulletPoint('Để vận hành Dịch vụ của chúng tôi: Cookie cần thiết cho phép bạn điều hướng trang web và sử dụng các tính năng của chúng tôi.', textTheme, colorScheme),
-            _buildBulletPoint('Để cải thiện hiệu suất: Cookie giúp chúng tôi hiểu cách bạn sử dụng Dịch vụ để chúng tôi có thể cải thiện trải nghiệm của bạn.', textTheme, colorScheme),
-            _buildBulletPoint('Để cung cấp các tính năng cá nhân hóa: Cookie giúp chúng tôi ghi nhớ các tùy chọn của bạn và cung cấp nội dung phù hợp.', textTheme, colorScheme),
-            _buildBulletPoint('Để phân tích và nghiên cứu: Cookie giúp chúng tôi thu thập thông tin về cách bạn tương tác với Dịch vụ, bao gồm các trang bạn truy cập và các liên kết bạn nhấp vào.', textTheme, colorScheme),
-            _buildBulletPoint('Để quảng cáo: Chúng tôi có thể sử dụng cookie để hiển thị quảng cáo phù hợp với sở thích của bạn.', textTheme, colorScheme),
+            _buildListItem('To operate our Services: Essential cookies enable you to navigate the website and use our features.', textTheme, colorScheme),
+            _buildListItem('To improve performance: Cookies help us understand how you use our Services to improve your experience.', textTheme, colorScheme),
+            _buildListItem('To provide personalized features: Cookies help us remember your preferences and deliver relevant content.', textTheme, colorScheme),
+            _buildListItem('To analyze and research: Cookies help us collect information about how you interact with our Services, including the pages you visit and the links you click.', textTheme, colorScheme),
+            _buildListItem('For advertising: We may use cookies to display ads that are relevant to your interests.', textTheme, colorScheme),
             const SizedBox(height: 16),
-            _buildSectionTitle('3. Các loại Cookie chúng tôi sử dụng', textTheme, colorScheme),
-            _buildBulletPoint('Cookie bắt buộc: Những cookie này rất cần thiết để bạn có thể di chuyển xung quanh trang web và sử dụng các tính năng của nó.', textTheme, colorScheme),
-            _buildBulletPoint('Cookie hiệu suất: Những cookie này thu thập thông tin về cách bạn sử dụng một trang web, ví dụ: những trang bạn truy cập thường xuyên nhất.', textTheme, colorScheme),
-            _buildBulletPoint('Cookie chức năng: Những cookie này cho phép trang web ghi nhớ các lựa chọn bạn thực hiện (như tên người dùng, ngôn ngữ hoặc khu vực của bạn) và cung cấp các tính năng nâng cao, cá nhân hóa hơn.', textTheme, colorScheme),
-            _buildBulletPoint('Cookie quảng cáo/định hướng: Những cookie này được sử dụng để cung cấp quảng cáo phù hợp hơn với bạn và sở thích của bạn.', textTheme, colorScheme),
+            _buildSectionTitle('3. Types of Cookies We Use', textTheme, colorScheme),
+            _buildListItem('Essential Cookies: These cookies are necessary for you to move around the website and use its features.', textTheme, colorScheme),
+            _buildListItem('Performance Cookies: These cookies collect information about how you use a website, such as the pages you visit most often.', textTheme, colorScheme),
+            _buildListItem('Functional Cookies: These cookies allow the website to remember choices you make (such as your username, language, or region) and provide enhanced, personalized features.', textTheme, colorScheme),
+            _buildListItem('Advertising/Targeting Cookies: These cookies are used to deliver ads more relevant to you and your interests.', textTheme, colorScheme),
             const SizedBox(height: 16),
-            _buildSectionTitle('4. Quản lý cài đặt Cookie của bạn', textTheme, colorScheme),
+            _buildSectionTitle('4. Managing Your Cookie Settings', textTheme, colorScheme),
             _buildParagraph(
-                'Hầu hết các trình duyệt web đều cho phép bạn quản lý cookie thông qua cài đặt trình duyệt. Tuy nhiên, nếu bạn hạn chế khả năng của các trang web để đặt cookie, bạn có thể làm giảm trải nghiệm người dùng tổng thể của mình. '
-                    'Bạn có thể tìm hiểu thêm về cách quản lý cookie trên trình duyệt của mình qua các liên kết sau (ví dụ): Chrome, Firefox, Safari, Edge.',
+                'Most web browsers allow you to manage cookies through your browser settings. However, restricting websites from setting cookies may reduce your overall user experience. '
+                    'You can learn more about managing cookies on your browser via the following links (e.g.): Chrome, Firefox, Safari, Edge.',
                 textTheme, colorScheme),
             const SizedBox(height: 30),
             Center(
               child: Text(
-                'Để biết thêm thông tin về Chính sách quyền riêng tư của chúng tôi, vui lòng truy cập mục liên quan.',
-                style: textTheme.titleMedium?.copyWith(fontStyle: FontStyle.italic, color: colorScheme.secondary),
-                textAlign: TextAlign.center,
+                'For more information about our Privacy Policy, please visit the relevant section.',
+                style: textTheme.titleMedium?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: colorScheme.secondary,
+                ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -79,7 +124,10 @@ class CookiePolicyView extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8.0, bottom: 6.0),
       child: Text(
         title,
-        style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onBackground.withOpacity(0.85)),
+        style: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface.withValues(alpha: 0.85),
+        ),
       ),
     );
   }
@@ -89,27 +137,29 @@ class CookiePolicyView extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Text(
         text,
-        style: textTheme.bodyLarge?.copyWith(height: 1.5, color: colorScheme.onSurface.withOpacity(0.75)),
+        style: textTheme.bodyLarge?.copyWith(
+          height: 1.5,
+          color: colorScheme.onSurface.withValues(alpha: 0.75),
+        ),
         textAlign: TextAlign.justify,
       ),
     );
   }
 
-  Widget _buildBulletPoint(String text, TextTheme textTheme, ColorScheme colorScheme) {
+  Widget _buildListItem(String text, TextTheme textTheme, ColorScheme colorScheme) {
     return Padding(
-      padding: const EdgeInsets.only(left: 15.0, bottom: 5.0),
+      padding: const EdgeInsets.only(left: 16.0, bottom: 8.0, top: 2.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '• ',
-            style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface.withOpacity(0.75)),
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+            child: Icon(Icons.circle, size: 7, color: colorScheme.onSurface.withValues(alpha: 0.6)),
           ),
           Expanded(
             child: Text(
               text,
-              style: textTheme.bodyLarge?.copyWith(height: 1.5, color: colorScheme.onSurface.withOpacity(0.75)),
-              textAlign: TextAlign.justify,
+              style: textTheme.bodyLarge?.copyWith(height: 1.5, color: colorScheme.onSurface.withValues(alpha: 0.75)),
             ),
           ),
         ],

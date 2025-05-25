@@ -16,7 +16,6 @@ class _PrivacyPolicyViewState extends State<PrivacyPolicyView> with SingleTicker
   @override
   void initState() {
     super.initState();
-    // Hiệu ứng fadeIn cho title lớn
     _controller = AnimationController(
         duration: const Duration(milliseconds: 1000),
         vsync: this);

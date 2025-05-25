@@ -1,91 +1,137 @@
 // lib/screens/common/help_center_view.dart
+
 import 'package:flutter/material.dart';
 
-class HelpCenterView extends StatelessWidget {
+class HelpCenterView extends StatefulWidget {
   const HelpCenterView({super.key});
 
   @override
+  State<HelpCenterView> createState() => _HelpCenterViewState();
+}
+
+class _HelpCenterViewState extends State<HelpCenterView> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeInTitle;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 1000),
+        vsync: this);
+    _fadeInTitle = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final TextTheme textTheme = theme.textTheme;
-    final ColorScheme colorScheme = theme.colorScheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trung Tâm Trợ Giúp & FAQ'),
+        title: const Text('Help Center & FAQ'),
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w400,
+          color: colorScheme.onSurface,
+          fontSize: 18,
+        ),
         backgroundColor: colorScheme.surface,
         elevation: 1,
+        centerTitle: true,
       ),
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'CHÀO MỪNG ĐẾN VỚI TRUNG TÂM TRỢ GIÚP AMOURA',
-              style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary),
+            FadeTransition(
+              opacity: _fadeInTitle,
+              child: Text(
+                'WELCOME TO AMOURA HELP CENTER',
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: colorScheme.primary,
+                  letterSpacing: 1.2,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Tìm câu trả lời cho các câu hỏi thường gặp của bạn và nhận hỗ trợ từ đội ngũ của chúng tôi.',
-              style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.6)),
+              'Find answers to your frequently asked questions and get support from our team.',
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                fontStyle: FontStyle.italic,
+              ),
             ),
             const SizedBox(height: 20),
-            _buildSectionTitle('CÂU HỎI THƯỜNG GẶP (FAQ)', textTheme, colorScheme),
+            _buildSectionTitle('FREQUENTLY ASKED QUESTIONS (FAQ)', textTheme, colorScheme),
             _buildFAQItem(
-              question: 'Làm thế nào để tạo tài khoản Amoura?',
-              answer: 'Bạn có thể tạo tài khoản Amoura bằng cách tải ứng dụng từ App Store hoặc Google Play, sau đó làm theo hướng dẫn đăng ký trên màn hình.',
+              question: 'How do I create an Amoura account?',
+              answer: 'You can create an Amoura account by downloading the app from the App Store or Google Play, then following the registration instructions on the screen.',
               textTheme: textTheme,
               colorScheme: colorScheme,
             ),
             _buildFAQItem(
-              question: 'Tôi quên mật khẩu, phải làm sao?',
-              answer: 'Trên màn hình đăng nhập, chọn "Quên mật khẩu?" và làm theo hướng dẫn để đặt lại mật khẩu của bạn qua email hoặc số điện thoại đã đăng ký.',
+              question: 'I forgot my password, what should I do?',
+              answer: 'On the login screen, select "Forgot Password?" and follow the instructions to reset your password via your registered email or phone number.',
               textTheme: textTheme,
               colorScheme: colorScheme,
             ),
             _buildFAQItem(
-              question: 'Làm thế nào để cập nhật thông tin cá nhân?',
-              answer: 'Truy cập "Hồ sơ của bạn" từ phần cài đặt ứng dụng. Tại đây bạn có thể chỉnh sửa ảnh, giới thiệu bản thân, sở thích và các thông tin khác.',
+              question: 'How do I update my personal information?',
+              answer: 'Go to "Your Profile" from the app settings. Here you can edit your photos, bio, interests, and other information.',
               textTheme: textTheme,
               colorScheme: colorScheme,
             ),
             _buildFAQItem(
-              question: 'Làm thế nào để báo cáo một người dùng?',
-              answer: 'Nếu bạn gặp phải hành vi không phù hợp, bạn có thể báo cáo người dùng đó bằng cách truy cập hồ sơ của họ và chọn tùy chọn "Báo cáo người dùng". Chúng tôi sẽ xem xét báo cáo của bạn một cách nghiêm túc.',
+              question: 'How do I report a user?',
+              answer: 'If you encounter inappropriate behavior, you can report the user by visiting their profile and selecting the "Report User" option. We will review your report seriously.',
               textTheme: textTheme,
               colorScheme: colorScheme,
             ),
             _buildFAQItem(
-              question: 'Làm thế nào để xóa tài khoản Amoura?',
-              answer: 'Bạn có thể xóa tài khoản của mình vĩnh viễn trong phần "Cài đặt & Tài khoản" -> "Quản lý dữ liệu". Vui lòng lưu ý rằng hành động này không thể hoàn tác.',
+              question: 'How do I delete my Amoura account?',
+              answer: 'You can permanently delete your account under "Settings & Account" -> "Manage Data". Please note that this action cannot be undone.',
               textTheme: textTheme,
               colorScheme: colorScheme,
             ),
             const SizedBox(height: 20),
-            _buildSectionTitle('LIÊN HỆ CHÚNG TÔI', textTheme, colorScheme),
+            _buildSectionTitle('CONTACT US', textTheme, colorScheme),
             _buildParagraph(
-                'Nếu bạn không tìm thấy câu trả lời cho câu hỏi của mình ở đây hoặc cần hỗ trợ thêm, vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi.',
+                'If you cannot find the answer to your question here or need further assistance, please contact our support team.',
                 textTheme, colorScheme),
             const SizedBox(height: 10),
             Text(
-              'Email: support@amoura.com', // Thay thế bằng email hỗ trợ thực tế
-              style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface.withOpacity(0.75)),
+              'Email: support@amoura.com', // Replace with actual support email
+              style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.75)),
             ),
             Text(
-              'Giờ làm việc: Thứ Hai - Thứ Sáu, 9:00 AM - 5:00 PM (GMT+7)',
-              style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface.withOpacity(0.75)),
+              'Working Hours: Monday - Friday, 9:00 AM - 5:00 PM (GMT+7)',
+              style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.75)),
             ),
             const SizedBox(height: 30),
             Center(
               child: Text(
-                'Amoura Team luôn sẵn sàng hỗ trợ bạn!',
-                style: textTheme.titleMedium?.copyWith(fontStyle: FontStyle.italic, color: colorScheme.secondary),
+                'The Amoura Team is always here to help you!',
+                style: textTheme.titleMedium?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: colorScheme.secondary,
+                ),
                 textAlign: TextAlign.center,
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -97,7 +143,10 @@ class HelpCenterView extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8.0, bottom: 6.0),
       child: Text(
         title,
-        style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onBackground.withOpacity(0.85)),
+        style: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface.withValues(alpha: 0.85),
+        ),
       ),
     );
   }
@@ -107,7 +156,10 @@ class HelpCenterView extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Text(
         text,
-        style: textTheme.bodyLarge?.copyWith(height: 1.5, color: colorScheme.onSurface.withOpacity(0.75)),
+        style: textTheme.bodyLarge?.copyWith(
+          height: 1.5,
+          color: colorScheme.onSurface.withValues(alpha: 0.75),
+        ),
         textAlign: TextAlign.justify,
       ),
     );
@@ -122,14 +174,20 @@ class HelpCenterView extends StatelessWidget {
     return ExpansionTile(
       title: Text(
         question,
-        style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500, color: colorScheme.onBackground),
+        style: textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+          color: colorScheme.onSurface,
+        ),
       ),
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 10.0),
           child: Text(
             answer,
-            style: textTheme.bodyLarge?.copyWith(height: 1.5, color: colorScheme.onSurface.withOpacity(0.75)),
+            style: textTheme.bodyLarge?.copyWith(
+              height: 1.5,
+              color: colorScheme.onSurface.withValues(alpha: 0.75),
+            ),
             textAlign: TextAlign.justify,
           ),
         ),
