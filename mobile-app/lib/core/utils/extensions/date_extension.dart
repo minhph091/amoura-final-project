@@ -1,8 +1,8 @@
 // lib/core/utils/extensions/date_extension.dart
 
-// Hàm mở rộng cho DateTime
+// This extension adds a method to format DateTime objects into a specific string format.
 extension DateExtension on DateTime {
-  /// Format date thành chuỗi "dd/MM/yyyy"
+  // Converts the DateTime to a string in the format "DD/MM/YYYY".
   String toDDMMYYYY() =>
       "${day.toString().padLeft(2, '0')}/${month.toString().padLeft(2, '0')}/$year";
 }

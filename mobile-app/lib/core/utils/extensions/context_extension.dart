@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-// Hàm mở rộng cho BuildContext để hiển thị SnackBar
+// An extension on [BuildContext] to simplify showing SnackBars.
 extension ContextExtension on BuildContext {
   void showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(this).showSnackBar(

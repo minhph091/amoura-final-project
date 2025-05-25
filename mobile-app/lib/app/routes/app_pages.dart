@@ -9,6 +9,8 @@ import '../../presentation/auth/login_otp/login_otp_view.dart';
 import '../../presentation/auth/login_otp/login_otp_verify_view.dart';
 import '../../presentation/common/terms_of_service_view.dart';
 import '../../presentation/common/privacy_policy_view.dart';
+import '../../presentation/discovery/discovery_view.dart';
+import '../../presentation/main_navigator/main_navigator_view.dart';
 import '../../presentation/splash/splash_view.dart';
 import '../../presentation/welcome/welcome_view.dart';
 import 'app_routes.dart';
@@ -52,6 +54,11 @@ class AppPages {
         );
       case AppRoutes.setupProfile:
         return MaterialPageRoute(builder: (_) => const SetupProfileView());
+        case AppRoutes.mainNavigator:
+        return MaterialPageRoute(builder: (_) => const MainNavigatorView());
+      case AppRoutes.discovery:
+        return MaterialPageRoute(builder: (_) => const DiscoveryView());
+
       default:
         return MaterialPageRoute(builder: (_) => const SplashView());
     }

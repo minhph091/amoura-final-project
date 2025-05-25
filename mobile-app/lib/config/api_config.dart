@@ -1,3 +1,5 @@
+// This file contains the API endpoint configurations for the application.
+
 class ApiConfig {
   static const String register = '/auth/register';
   static const String login = '/auth/login';

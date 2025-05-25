@@ -9,12 +9,13 @@ class AppRoutes {
   static const String termsOfService = '/terms-of-service';
   static const String privacyPolicy = '/privacy-policy';
 
-  // Login with email OTP flow
   static const String loginWithEmailOtp = '/login-with-email-otp';
   static const String loginEmailOtpVerify = '/login-email-otp-verify';
-
-  // Forgot password with OTP flow
   static const String forgotPasswordOtpVerify = '/forgot-password-otp-verify';
 
   static const String setupProfile = '/setup-profile';
+
+  // Add these lines:
+  static const String mainNavigator = '/main';
+  static const String discovery = '/discovery';
 }
