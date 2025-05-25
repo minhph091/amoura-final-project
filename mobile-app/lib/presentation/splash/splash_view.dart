@@ -153,14 +153,13 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Slogan - nổi bật, màu xanh nhạt hoặc trắng, có shadow
                 Text(
                   'Your Journey to Love Starts Here',
                   style: TextStyle(
                     fontSize: 18,
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.88)
-                        : const Color(0xFF43DDE6),
+                        : const Color(0xFFCFFFFA),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                     shadows: [

@@ -47,17 +47,17 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
 
   final List<WelcomeSlide> _slides = const [
     WelcomeSlide(
-      imagePath: 'assets/images/welcome_find_your_match.png',
+      imagePath: AssetPath.onboardingFindMatch,
       title: 'Explore a World of Connections',
       subtitle: 'Find new friends, meaningful relationships, and more.',
     ),
     WelcomeSlide(
-      imagePath: 'assets/images/welcome_safe_secure.png',
+      imagePath: AssetPath.onboardingSafeSecure,
       title: 'Showcase Your Personality',
       subtitle: 'Create a unique profile, share your story and interests.',
     ),
     WelcomeSlide(
-      imagePath: 'assets/images/welcome_start_chatting.png',
+      imagePath: AssetPath.onboardingStartChatting,
       title: 'Start Your Journey of Love',
       subtitle: 'Amoura - Where genuine connections are built and love flourishes.',
       imageAlignment: Alignment.bottomCenter,
