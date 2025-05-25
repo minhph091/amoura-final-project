@@ -5,21 +5,21 @@ import 'package:flutter/material.dart';
 
 const List<Map<String, dynamic>> orientationOptions = [
   {
-    'label': 'Attracted to Men',
-    'value': 'men',
+    'label': 'Bisexual',
+    'value': 'bisexual',
+    'icon': Icons.transgender,
+    'color': Colors.purple,
+  },
+  {
+    'label': 'Homosexual',
+    'value': 'homosexual',
     'icon': Icons.male,
     'color': Colors.blue,
   },
   {
-    'label': 'Attracted to Women',
-    'value': 'women',
-    'icon': Icons.female,
+    'label': 'Straight',
+    'value': 'straight',
+    'icon': Icons.wc,
     'color': Colors.pinkAccent,
-  },
-  {
-    'label': 'Attracted to Both',
-    'value': 'both',
-    'icon': Icons.favorite,
-    'color': Colors.purple,
   },
 ];
