@@ -7,13 +7,12 @@ import 'drink_status_model.dart';
 import 'smoke_status_model.dart';
 import 'education_level_model.dart';
 
-// Model hồ sơ người dùng (Profile)
 class ProfileModel {
   final int userId;
   final DateTime? dateOfBirth;
   final int? height;
   final BodyTypeModel? bodyType;
-  final Sex sex;
+  final String? sex;
   final OrientationModel? orientation;
   final JobIndustryModel? jobIndustry;
   final DrinkStatusModel? drinkStatus;
@@ -21,7 +20,7 @@ class ProfileModel {
   final bool? interestedInNewLanguage;
   final EducationLevelModel? educationLevel;
   final bool? dropOut;
-  final int? locationPreference; // bán kính tìm kiếm
+  final int? locationPreference;
   final String? bio;
 
   ProfileModel({
@@ -29,7 +28,7 @@ class ProfileModel {
     this.dateOfBirth,
     this.height,
     this.bodyType,
-    required this.sex,
+    this.sex,
     this.orientation,
     this.jobIndustry,
     this.drinkStatus,
@@ -40,18 +39,4 @@ class ProfileModel {
     this.locationPreference,
     this.bio,
   });
-}
-
-// Enum giới tính
-enum Sex { male, female }
-
-Sex sexFromString(String value) {
-  switch (value) {
-    case 'male':
-      return Sex.male;
-    case 'female':
-      return Sex.female;
-    default:
-      return Sex.male;
-  }
 }
