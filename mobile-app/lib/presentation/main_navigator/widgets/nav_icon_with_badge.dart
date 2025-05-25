@@ -1,7 +1,6 @@
 // lib/presentation/main_navigator/widgets/nav_icon_with_badge.dart
 
 import 'package:flutter/material.dart';
-import 'gradient_icon.dart';
 
 class NavIconWithBadge extends StatelessWidget {
   final Widget icon;

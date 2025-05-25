@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
 
 class RegisterApi {

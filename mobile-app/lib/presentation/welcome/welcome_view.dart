@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme/app_colors.dart';
@@ -119,7 +118,7 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (BuildContext bc) {
         return const LoginOptionsBottomSheet();
       },
@@ -131,7 +130,6 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     const double buttonHeight = 56.0;
@@ -177,12 +175,12 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                     shadows: [
                       Shadow(
                         blurRadius: 8,
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         offset: const Offset(1, 2),
                       ),
                       Shadow(
                         blurRadius: 2,
-                        color: AppColors.primary.withOpacity(0.4),
+                        color: AppColors.primary.withValues(alpha: 0.4),
                         offset: const Offset(-0.5, -0.5),
                       ),
                     ],
@@ -204,12 +202,12 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                   padding: EdgeInsets.fromLTRB(screenWidth * 0.07, 28, screenWidth * 0.07, 15),
                   decoration: BoxDecoration(
                     color: theme.brightness == Brightness.light
-                        ? AppColors.surfaceLight.withOpacity(0.6)
-                        : colorScheme.surface.withOpacity(0.6),
+                        ? AppColors.surfaceLight.withValues(alpha: 0.6)
+                        : colorScheme.surface.withValues(alpha: 0.6),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         width: 1.0,
                       ),
                     ),
@@ -230,7 +228,7 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                                 text: 'SIGN IN',
                                 onPressed: () => _showLoginOptionsBottomSheet(context),
                                 gradient: LinearGradient(
-                                  colors: [AppColors.primary, AppColors.secondary.withOpacity(0.85)],
+                                  colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                 ),
@@ -253,11 +251,11 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                               AppButton(
                                 text: 'CREATE NEW ACCOUNT',
                                 onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                   side: BorderSide(
-                                    color: Colors.white.withOpacity(0.75),
+                                    color: Colors.white.withValues(alpha: 0.75),
                                     width: 1.6,
                                   ),
                                 ),
@@ -288,7 +286,7 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                           textAlign: TextAlign.center,
                           text: TextSpan(
                             style: textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withOpacity(0.75),
+                              color: Colors.white.withValues(alpha: 0.75),
                               height: 1.45,
                               fontSize: 11.5,
                             ),
