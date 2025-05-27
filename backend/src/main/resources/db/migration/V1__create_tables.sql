@@ -325,3 +325,11 @@ ALTER TABLE notifications
 
 ALTER TABLE transactions
     ADD CONSTRAINT chk_transaction_status CHECK (status IN ('success', 'failed'));
+
+ALTER TABLE photos
+    ADD CONSTRAINT chk_photo_type
+        CHECK (type IN (
+                        'AVATAR',
+                        'PROFILE_COVER',
+                        'HIGHLIGHT'
+            ));
