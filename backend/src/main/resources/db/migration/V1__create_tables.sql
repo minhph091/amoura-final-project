@@ -329,7 +329,7 @@ ALTER TABLE transactions
 ALTER TABLE photos
     ADD CONSTRAINT chk_photo_type
         CHECK (type IN (
-                        'AVATAR',
-                        'PROFILE_COVER',
-                        'HIGHLIGHT'
+                        'avatar',
+                        'profile_cover',
+                        'highlight'
             ));
