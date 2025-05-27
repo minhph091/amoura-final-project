@@ -306,7 +306,7 @@ ALTER TABLE users
     ADD CONSTRAINT chk_user_status CHECK (status IN ('active', 'inactive', 'suspend'));
 
 ALTER TABLE profiles
-    ADD CONSTRAINT chk_sex CHECK (sex IN ('male', 'female'));
+    ADD CONSTRAINT chk_sex CHECK (sex IN ('male', 'female','non-binary','prefer not to say'));
 
 ALTER TABLE matches
     ADD CONSTRAINT chk_match_status CHECK (status IN ('active', 'unmatched'));
