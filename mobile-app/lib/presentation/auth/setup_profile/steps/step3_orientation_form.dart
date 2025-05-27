@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step3_orientation_form.dart
-// Form widget for collecting the user's orientation preference.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +6,7 @@ import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/orientation_constants.dart';
 import '../setup_profile_viewmodel.dart';
+import '../theme/setup_profile_theme.dart';
 
 class Step3OrientationForm extends StatefulWidget {
   const Step3OrientationForm({super.key});
@@ -19,36 +19,17 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: true);
-    final theme = Theme.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Your Orientation',
-            style: theme.textTheme.headlineLarge?.copyWith(
-              color: const Color(0xFFD81B60),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('Your Orientation', style: SetupProfileTheme.getTitleStyle(context)),
           const SizedBox(height: 6),
-          Text(
-            'This helps us match you with compatible people.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFFAB47BC),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          Text('This helps us match you with compatible people.', style: SetupProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 8),
-          Text(
-            'Please select your preference.',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: const Color(0xFFAB47BC),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          Text('Please select your preference.', style: SetupProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 32),
           ProfileOptionSelector(
             options: orientationOptions,
@@ -59,11 +40,8 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> {
               }
             },
             labelText: 'Orientation',
-            labelStyle: theme.textTheme.titleMedium?.copyWith(
-              color: const Color(0xFFBA68C8),
-              fontWeight: FontWeight.w600,
-            ),
-            scrollable: false, // Vertical layout
+            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            scrollable: false,
           ),
           const SizedBox(height: 32),
           SetupProfileButton(

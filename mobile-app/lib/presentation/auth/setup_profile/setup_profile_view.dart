@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'setup_profile_gradient_bg.dart';
 import 'setup_profile_viewmodel.dart';
+import 'widgets/setup_profile_header.dart';
 import 'steps/step1_name_form.dart';
 import 'steps/step2_dob_gender_form.dart';
 import 'steps/step3_orientation_form.dart';
@@ -32,77 +33,12 @@ class SetupProfileView extends StatelessWidget {
               body: SafeArea(
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
-                      child: Row(
-                        children: [
-                          // Back button (visible after the first step)
-                          if (vm.currentStep > 0)
-                            TextButton(
-                              onPressed: () {
-                                vm.prevStep();
-                                // Placeholder for API call (to be implemented by others)
-                                // Example: await apiService.saveProgress();
-                              },
-                              child: const Text(
-                                'Back',
-                                style: TextStyle(
-                                  color: Color(0xFFD81B60),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ).animate(
-                              onPlay: (controller) => controller.repeat(reverse: true),
-                            ).scale(
-                              duration: const Duration(milliseconds: 800),
-                              begin: const Offset(1.0, 1.0),
-                              end: const Offset(1.05, 1.05),
-                              curve: Curves.easeInOut,
-                            ),
-                          // Setup Profile title and step indicator
-                          Text(
-                            'Setup Profile',
-                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFFEC407A),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '(${vm.currentStep + 1}/10)',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: const Color(0xFF8E24AA),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Spacer(),
-                          // Skip button (visible for non-required steps)
-                          if (vm.showSkip)
-                            TextButton(
-                              onPressed: () {
-                                vm.onSkip();
-                                // Placeholder for API call (to be implemented by others)
-                                // Example: await apiService.skipStep();
-                              },
-                              child: const Text(
-                                'Skip',
-                                style: TextStyle(
-                                  color: Color(0xFFD81B60),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ).animate(
-                              onPlay: (controller) => controller.repeat(reverse: true),
-                            ).scale(
-                              duration: const Duration(milliseconds: 800),
-                              begin: const Offset(1.0, 1.0),
-                              end: const Offset(1.05, 1.05),
-                              curve: Curves.easeInOut,
-                            ),
-                        ],
-                      ),
+                    SetupProfileHeader(
+                      currentStep: vm.currentStep,
+                      totalSteps: vm.totalSteps,
+                      showSkip: vm.showSkip,
+                      onBack: vm.prevStep,
+                      onSkip: vm.onSkip,
                     ),
                     _StepperProgress(totalSteps: 10, currentStep: vm.currentStep),
                     const SizedBox(height: 10),
@@ -143,7 +79,6 @@ class SetupProfileView extends StatelessWidget {
   }
 }
 
-// Widget to display the progress stepper for the setup profile flow.
 class _StepperProgress extends StatelessWidget {
   final int totalSteps;
   final int currentStep;

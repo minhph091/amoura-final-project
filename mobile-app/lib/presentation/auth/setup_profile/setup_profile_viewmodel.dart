@@ -51,6 +51,7 @@ class SetupProfileViewModel extends ChangeNotifier {
   // Step 10
   String? bio;
   List<String> galleryPhotos = [];
+  List<String> additionalPhotos = [];
 
   bool get showSkip => !_isStepRequired(currentStep);
 

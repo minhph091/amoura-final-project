@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step8_lifestyle_form.dart
-// Form widget for collecting the user's lifestyle preferences, such as drinking, smoking, and pets.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +7,7 @@ import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/pet_constants.dart';
 import '../../../../core/constants/profile/smoke_drink_constants.dart';
 import '../setup_profile_viewmodel.dart';
+import '../theme/setup_profile_theme.dart';
 
 class Step8LifestyleForm extends StatefulWidget {
   const Step8LifestyleForm({super.key});
@@ -20,42 +20,24 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: true);
-    final theme = Theme.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Your Lifestyle',
-            style: theme.textTheme.headlineLarge?.copyWith(
-              color: const Color(0xFFD81B60),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('Your Lifestyle', style: SetupProfileTheme.getTitleStyle(context)),
           const SizedBox(height: 6),
-          Text(
-            'Tell us about your lifestyle and pets.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFFAB47BC),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          Text('Tell us about your lifestyle and pets.', style: SetupProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 24),
           ProfileOptionSelector(
             options: drinkOptions,
             selectedValue: vm.drinkStatus,
             onChanged: (value, selected) {
-              if (selected) {
-                setState(() => vm.drinkStatus = value);
-              }
+              if (selected) setState(() => vm.drinkStatus = value);
             },
             labelText: 'Do you drink?',
-            labelStyle: theme.textTheme.titleMedium?.copyWith(
-              color: const Color(0xFFBA68C8),
-              fontWeight: FontWeight.w600,
-            ),
+            labelStyle: SetupProfileTheme.getLabelStyle(context),
             isDropdown: true,
           ),
           const SizedBox(height: 18),
@@ -63,15 +45,10 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
             options: smokeOptions,
             selectedValue: vm.smokeStatus,
             onChanged: (value, selected) {
-              if (selected) {
-                setState(() => vm.smokeStatus = value);
-              }
+              if (selected) setState(() => vm.smokeStatus = value);
             },
             labelText: 'Do you smoke?',
-            labelStyle: theme.textTheme.titleMedium?.copyWith(
-              color: const Color(0xFFBA68C8),
-              fontWeight: FontWeight.w600,
-            ),
+            labelStyle: SetupProfileTheme.getLabelStyle(context),
             isDropdown: true,
           ),
           const SizedBox(height: 18),
@@ -81,20 +58,14 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
             onChanged: (value, selected) {
               setState(() {
                 vm.selectedPets ??= [];
-                if (selected) {
-                  vm.selectedPets!.add(value);
-                } else {
-                  vm.selectedPets!.remove(value);
-                }
+                if (selected) vm.selectedPets!.add(value);
+                else vm.selectedPets!.remove(value);
               });
             },
             labelText: 'Do you have pets?',
-            labelStyle: theme.textTheme.titleMedium?.copyWith(
-              color: const Color(0xFFBA68C8),
-              fontWeight: FontWeight.w600,
-            ),
+            labelStyle: SetupProfileTheme.getLabelStyle(context),
             isMultiSelect: true,
-            scrollable: false, // Vertical layout
+            scrollable: false,
           ),
           const SizedBox(height: 30),
           SetupProfileButton(

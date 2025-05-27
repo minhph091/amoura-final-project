@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step2_dob_gender_form.dart
-// Form widget for collecting the user's date of birth and gender.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +10,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/sex_constants.dart';
 import '../setup_profile_viewmodel.dart';
+import '../theme/setup_profile_theme.dart';
 
 class Step2DobGenderForm extends StatefulWidget {
   const Step2DobGenderForm({super.key});
@@ -25,30 +25,30 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
   bool _dobError = false;
   bool _genderError = false;
 
-  late SetupProfileViewModel _viewModel;
-
-  // Initialize the date of birth controller with existing data.
   @override
   void initState() {
     super.initState();
-    _viewModel = Provider.of<SetupProfileViewModel>(context, listen: false);
+    final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
     _dobController = TextEditingController(
-      text: _viewModel.dateOfBirth == null ? '' : DateUtil.formatDDMMYYYY(_viewModel.dateOfBirth!),
+      text: vm.dateOfBirth == null ? '' : DateUtil.formatDDMMYYYY(vm.dateOfBirth!),
     );
   }
 
-  // Validate form inputs and update error states.
   void _validateAndSave() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       setState(() {
-        _dobError = ValidationUtil().validateBirthday(_viewModel.dateOfBirth) != null;
-        _genderError = _viewModel.sex == null || _viewModel.sex!.isEmpty;
+        _dobError = ValidationUtil().validateBirthday(
+            Provider.of<SetupProfileViewModel>(context, listen: false).dateOfBirth) != null;
+        _genderError = Provider.of<SetupProfileViewModel>(
+            context, listen: false).sex == null || Provider.of<SetupProfileViewModel>(
+            context, listen: false).sex!.isEmpty;
       });
     } else {
       setState(() {
-        _dobError = ValidationUtil().validateBirthday(_viewModel.dateOfBirth) != null;
-        _genderError = _viewModel.sex == null || _viewModel.sex!.isEmpty;
+        final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+        _dobError = ValidationUtil().validateBirthday(vm.dateOfBirth) != null;
+        _genderError = vm.sex == null || vm.sex!.isEmpty;
       });
     }
   }
@@ -56,7 +56,6 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context);
-    final theme = Theme.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
@@ -65,29 +64,11 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Your Birthday & Gender',
-              style: theme.textTheme.headlineLarge?.copyWith(
-                color: const Color(0xFFD81B60),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Your Birthday & Gender', style: SetupProfileTheme.getTitleStyle(context)),
             const SizedBox(height: 6),
-            Text(
-              'This helps us personalize your dating experience.',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFFAB47BC),
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+            Text('This helps us personalize your dating experience.', style: SetupProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 8),
-            Text(
-              'Fields marked with * are required.',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: const Color(0xFFAB47BC),
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+            Text('Fields marked with * are required.', style: SetupProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 24),
             ShakeWidget(
               shake: _dobError,
@@ -111,17 +92,12 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                 child: AbsorbPointer(
                   child: AppTextField(
                     labelText: 'Birthday *',
-                    labelStyle: theme.textTheme.titleMedium?.copyWith(
-                      color: const Color(0xFFBA68C8),
-                      fontWeight: FontWeight.w600,
-                    ),
+                    labelStyle: SetupProfileTheme.getLabelStyle(context),
                     prefixIcon: Icons.cake_rounded,
-                    prefixIconColor: const Color(0xFFD81B60),
+                    prefixIconColor: SetupProfileTheme.darkPink,
                     controller: _dobController,
                     validator: (v) => ValidationUtil().validateBirthday(vm.dateOfBirth),
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: const Color(0xFF424242),
-                    ),
+                    style: SetupProfileTheme.getInputTextStyle(context),
                   ),
                 ),
               ),
@@ -141,10 +117,7 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                   }
                 },
                 labelText: 'Gender *',
-                labelStyle: theme.textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFFBA68C8),
-                  fontWeight: FontWeight.w600,
-                ),
+                labelStyle: SetupProfileTheme.getLabelStyle(context),
                 scrollable: false,
               ),
             ),

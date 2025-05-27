@@ -1,5 +1,4 @@
 // lib/presentation/auth/setup_profile/steps/step1_name_form.dart
-// Form widget for collecting the user's first and last name in the profile setup process.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +7,7 @@ import '../../../shared/widgets/shake_widget.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../setup_profile_viewmodel.dart';
+import '../theme/setup_profile_theme.dart';
 
 class Step1NameForm extends StatefulWidget {
   const Step1NameForm({super.key});
@@ -23,7 +23,6 @@ class _Step1NameFormState extends State<Step1NameForm> {
   bool _firstNameError = false;
   bool _lastNameError = false;
 
-  // Initialize controllers with existing data from the view model.
   @override
   void initState() {
     super.initState();
@@ -32,7 +31,6 @@ class _Step1NameFormState extends State<Step1NameForm> {
     _lastNameCtrl = TextEditingController(text: vm.lastName ?? "");
   }
 
-  // Dispose controllers to prevent memory leaks.
   @override
   void dispose() {
     _firstNameCtrl.dispose();
@@ -40,7 +38,6 @@ class _Step1NameFormState extends State<Step1NameForm> {
     super.dispose();
   }
 
-  // Validate form inputs and save data to the view model.
   void _validateAndSave() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -59,7 +56,6 @@ class _Step1NameFormState extends State<Step1NameForm> {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
-    final theme = Theme.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
@@ -68,47 +64,24 @@ class _Step1NameFormState extends State<Step1NameForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Your Name",
-              style: theme.textTheme.headlineLarge?.copyWith(
-                color: const Color(0xFFD81B60), // Deep pink for step titles
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text("Your Name", style: SetupProfileTheme.getTitleStyle(context)),
             const SizedBox(height: 6),
-            Text(
-              "This name will be visible to everyone.",
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFFAB47BC), // Lighter purple for descriptions
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+            Text("This name will be visible to everyone.", style: SetupProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 8),
-            Text(
-              "Fields marked with * are required.",
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: const Color(0xFFAB47BC),
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+            Text("Fields marked with * are required.", style: SetupProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 24),
             ShakeWidget(
               shake: _firstNameError,
               child: AppTextField(
                 controller: _firstNameCtrl,
                 labelText: "First Name *",
-                labelStyle: theme.textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFFBA68C8), // Muted purple for field labels
-                  fontWeight: FontWeight.w600,
-                ),
+                labelStyle: SetupProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.person,
-                prefixIconColor: const Color(0xFFD81B60),
+                prefixIconColor: SetupProfileTheme.darkPink,
                 maxLength: 50,
                 validator: (v) => ValidationUtil().validateFirstName(v),
                 onSaved: (v) => vm.firstName = v?.trim(),
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF424242), // Dark gray for input text
-                ),
+                style: SetupProfileTheme.getInputTextStyle(context),
               ),
             ),
             const SizedBox(height: 18),
@@ -117,18 +90,13 @@ class _Step1NameFormState extends State<Step1NameForm> {
               child: AppTextField(
                 controller: _lastNameCtrl,
                 labelText: "Last Name *",
-                labelStyle: theme.textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFFBA68C8),
-                  fontWeight: FontWeight.w600,
-                ),
+                labelStyle: SetupProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.badge,
-                prefixIconColor: const Color(0xFFD81B60),
+                prefixIconColor: SetupProfileTheme.darkPink,
                 maxLength: 50,
                 validator: (v) => ValidationUtil().validateLastName(v),
                 onSaved: (v) => vm.lastName = v?.trim(),
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF424242),
-                ),
+                style: SetupProfileTheme.getInputTextStyle(context),
               ),
             ),
             const SizedBox(height: 28),
