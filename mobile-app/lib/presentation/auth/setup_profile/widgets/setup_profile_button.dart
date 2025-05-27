@@ -1,6 +1,4 @@
 // lib/presentation/auth/setup_profile/widgets/setup_profile_button.dart
-// Custom button widget for setup profile steps with animated gradient and dynamic colors.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../setup_profile_viewmodel.dart';
@@ -20,10 +18,9 @@ class SetupProfileButton extends StatelessWidget {
     this.height = 52,
   });
 
-  // Calculate button gradient colors based on the current step.
   List<Color> _getButtonGradient(int currentStep, int totalSteps) {
-    const buttonStart = Color(0xFFD81B60); // Darker pink for buttons
-    const buttonEnd = Color(0xFF8E24AA); // Darker purple for buttons
+    const buttonStart = Color(0xFFD81B60);
+    const buttonEnd = Color(0xFF8E24AA);
     double factor = currentStep / (totalSteps - 1);
     final startColor = Color.lerp(buttonStart, buttonEnd, factor) ?? buttonStart;
     final endColor = Color.lerp(buttonEnd, buttonStart, factor) ?? buttonEnd;

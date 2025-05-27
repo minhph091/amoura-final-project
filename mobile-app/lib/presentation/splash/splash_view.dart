@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../core/constants/asset_path.dart';
+import '../../core/services/auth_service.dart';
+import '../../app/routes/app_routes.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -30,11 +32,22 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
     _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
     _controller.forward();
-    Future.delayed(const Duration(milliseconds: 1700), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/welcome');
+    _navigateAfterDelay();
+  }
+
+  Future<void> _navigateAfterDelay() async {
+    final authService = AuthService();
+    final isAuthenticated = await authService.isAuthenticated();
+
+    await Future.delayed(const Duration(milliseconds: 1700));
+
+    if (mounted) {
+      if (isAuthenticated) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.mainNavigator);
+      } else {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.welcome);
       }
-    });
+    }
   }
 
   @override
@@ -47,25 +60,25 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark
         ? const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Color(0xFF23223B),
-        Color(0xFF3A374D),
-        Color(0xFFFC5185),
-      ],
-    )
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF23223B),
+              Color(0xFF3A374D),
+              Color(0xFFFC5185),
+            ],
+          )
         : const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Color(0xFFFCEFF9),
-        Color(0xFFFF8FB2),
-        Color(0xFFFC5185),
-        Color(0xFF364F6B),
-      ],
-      stops: [0.02, 0.42, 0.7, 1.0],
-    );
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFCEFF9),
+              Color(0xFFFF8FB2),
+              Color(0xFFFC5185),
+              Color(0xFF364F6B),
+            ],
+            stops: [0.02, 0.42, 0.7, 1.0],
+          );
   }
 
   @override

@@ -1,13 +1,13 @@
 // lib/core/api/api_client.dart
-
 import 'package:dio/dio.dart';
+import '../../config/environment.dart';
 
 class ApiClient {
   final Dio dio;
 
   ApiClient()
       : dio = Dio(BaseOptions(
-          baseUrl: 'http://10.0.2.2:8080/api',
+          baseUrl: EnvironmentConfig.baseUrl,
           connectTimeout: Duration(seconds: 10),
           receiveTimeout: Duration(seconds: 10),
           headers: {
@@ -33,13 +33,17 @@ class ApiClient {
       rethrow;
     }
   }
-}
 
-// Lớp ngoại lệ tùy chỉnh
-class ApiException implements Exception {
-  final String message;
-  ApiException(this.message);
-
-  @override
-  String toString() => message;
+  // Gửi yêu cầu GET
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+    try {
+      return await dio.get(
+        path,
+        queryParameters: queryParameters,
+      );
+    } on DioException catch (e) {
+      _handleError(e);
+      rethrow;
+    }
+  }
 }

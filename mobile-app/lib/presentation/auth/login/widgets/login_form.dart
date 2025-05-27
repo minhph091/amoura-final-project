@@ -1,25 +1,19 @@
 // lib/presentation/auth/login/widgets/login_form.dart
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../login_viewmodel.dart';
 
 class LoginForm extends StatefulWidget {
-  final void Function(String account, String password)? onLogin;
-
-  const LoginForm({super.key, this.onLogin});
+  const LoginForm({super.key});
 
   @override
   State<LoginForm> createState() => _LoginFormState();
 }
 
 class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _accountCtl = TextEditingController();
-  final TextEditingController _passwordCtl = TextEditingController();
-  bool _obscurePwd = true;
-
   late AnimationController _animController;
 
   @override
@@ -33,60 +27,48 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
-    _accountCtl.dispose();
-    _passwordCtl.dispose();
     _animController.dispose();
     super.dispose();
   }
 
-  void _onLogin() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      await Future.delayed(const Duration(milliseconds: 600));
-      widget.onLogin?.call(_accountCtl.text.trim(), _passwordCtl.text);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<LoginViewModel>(context);
     return FadeTransition(
       opacity: _animController,
       child: Form(
-        key: _formKey,
+        key: viewModel.formKey,
         child: Column(
           children: [
             AppTextField(
-              controller: _accountCtl,
+              controller: viewModel.accountController,
               labelText: "Email or Phone",
               hintText: "Enter email or phone",
               keyboardType: TextInputType.emailAddress,
               prefixIcon: Icons.person_outline,
               prefixIconColor: Theme.of(context).colorScheme.primary,
-              errorText: null,
               validator: (value) {
-                final emailError = ValidationUtil().validateEmail(value);
-                final phoneError = ValidationUtil().validatePhone(value);
-                // If either validation passes (returns null), the input is valid
+                final emailError = ValidationUtil.validateEmail(value);
+                final phoneError = ValidationUtil.validatePhone(value);
                 if (emailError == null || phoneError == null) {
                   return null;
                 }
-                // Both validations failed, return a descriptive error
                 return "Please enter a valid email or phone number";
               },
             ),
             const SizedBox(height: 16),
             AppTextField(
-              controller: _passwordCtl,
+              controller: viewModel.passwordController,
               labelText: "Password",
               hintText: "Enter your password",
-              obscureText: _obscurePwd,
+              obscureText: viewModel.obscurePassword,
               prefixIcon: Icons.lock_outline,
               prefixIconColor: Theme.of(context).colorScheme.primary,
               suffixIcon: IconButton(
-                icon: Icon(_obscurePwd ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => _obscurePwd = !_obscurePwd),
+                icon: Icon(viewModel.obscurePassword ? Icons.visibility_off : Icons.visibility),
+                onPressed: viewModel.toggleObscurePassword,
               ),
-              errorText: null,
-              validator: ValidationUtil().validatePassword,
+              validator: ValidationUtil.validatePassword,
             ),
             const SizedBox(height: 12),
             Align(
@@ -102,8 +84,29 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
             AppButton(
               text: "Sign In",
               icon: Icons.login,
-              onPressed: _onLogin,
+              onPressed: viewModel.isLoading
+                  ? null
+                  : () => viewModel.onLoginPressed(
+                        onSuccess: () {
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/mainNavigator',
+                            (route) => false, // Xóa tất cả các route trước đó
+                          );
+                        },
+                      ),
             ),
+            if (viewModel.errorMessage != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                viewModel.errorMessage!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
         ),
       ),

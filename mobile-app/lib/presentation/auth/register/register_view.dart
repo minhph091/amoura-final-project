@@ -1,5 +1,4 @@
 // lib/presentation/auth/register/register_view.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'register_viewmodel.dart';
@@ -14,23 +13,23 @@ class RegisterView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark
         ? LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        AppColors.darkBackground,
-        AppColors.darkSecondary.withValues(alpha: 0.90),
-        AppColors.darkPrimary.withValues(alpha: 0.82),
-      ],
-    )
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.darkBackground,
+              AppColors.darkSecondary.withValues(alpha: 0.90),
+              AppColors.darkPrimary.withValues(alpha: 0.82),
+            ],
+          )
         : LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        AppColors.background,
-        AppColors.primary.withValues(alpha: 0.13),
-        AppColors.secondary.withValues(alpha: 0.06),
-      ],
-    );
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.background,
+              AppColors.primary.withValues(alpha: 0.13),
+              AppColors.secondary.withValues(alpha: 0.06),
+            ],
+          );
   }
 
   @override
@@ -65,13 +64,24 @@ class RegisterView extends StatelessWidget {
                         Text(
                           "Create your Amoura account",
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
                         RegisterForm(viewModel: viewModel),
+                        if (viewModel.errorMessage != null && !viewModel.showOtp) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            viewModel.errorMessage!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                         const SizedBox(height: 18),
                       ],
                     ),

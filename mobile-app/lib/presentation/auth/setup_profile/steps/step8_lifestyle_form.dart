@@ -70,7 +70,7 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
           const SizedBox(height: 30),
           SetupProfileButton(
             text: 'Next',
-            onPressed: () => vm.nextStep(),
+            onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
           ),

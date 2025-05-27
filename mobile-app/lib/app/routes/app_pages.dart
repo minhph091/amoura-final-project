@@ -1,5 +1,4 @@
 // lib/app/routes/app_pages.dart
-
 import 'package:flutter/material.dart';
 import '../../presentation/auth/login/login_view.dart';
 import '../../presentation/auth/setup_profile/setup_profile_view.dart';
@@ -53,12 +52,15 @@ class AppPages {
           builder: (_) => ResetPasswordView(email: email),
         );
       case AppRoutes.setupProfile:
-        return MaterialPageRoute(builder: (_) => const SetupProfileView());
-        case AppRoutes.mainNavigator:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final sessionToken = args?['sessionToken'] as String?;
+        return MaterialPageRoute(
+          builder: (_) => SetupProfileView(sessionToken: sessionToken),
+        );
+      case AppRoutes.mainNavigator:
         return MaterialPageRoute(builder: (_) => const MainNavigatorView());
       case AppRoutes.discovery:
         return MaterialPageRoute(builder: (_) => const DiscoveryView());
-
       default:
         return MaterialPageRoute(builder: (_) => const SplashView());
     }

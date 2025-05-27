@@ -106,7 +106,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
                 _validateAndSave();
                 if (!_firstNameError && !_lastNameError) {
                   FocusScope.of(context).unfocus();
-                  vm.nextStep();
+                  vm.nextStep(context: context);
                 }
               },
               width: double.infinity,

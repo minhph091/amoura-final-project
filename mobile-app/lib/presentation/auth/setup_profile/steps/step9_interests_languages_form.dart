@@ -89,7 +89,7 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
                       setState(() => _interestError = true);
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select at least one interest.')));
                     } else {
-                      vm.nextStep();
+                      vm.nextStep(context: context);
                     }
                   },
                   width: double.infinity,

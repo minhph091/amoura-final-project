@@ -1,6 +1,4 @@
 // lib/presentation/main_navigator/main_navigator_view.dart
-// Main navigator shell with animated 3D bottom navigation bar.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

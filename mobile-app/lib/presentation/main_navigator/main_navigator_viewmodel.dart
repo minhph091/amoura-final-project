@@ -1,10 +1,8 @@
 // lib/presentation/main_navigator/main_navigator_viewmodel.dart
-// ViewModel for main navigator, manages current tab and badge state.
-
 import 'package:flutter/material.dart';
 
 class MainNavigatorViewModel extends ChangeNotifier {
-  int _currentIndex = 0;
+  int _currentIndex = 0; // Mặc định bắt đầu với Discovery (index 0)
   int? _chatBadgeCount;
   int? _notificationBadgeCount;
 

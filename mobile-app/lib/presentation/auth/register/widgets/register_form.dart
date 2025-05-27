@@ -1,7 +1,6 @@
 // lib/presentation/auth/register/widgets/register_form.dart
-
-import 'package:amoura/core/utils/validation_util.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/otp_input_form.dart';
@@ -14,12 +13,16 @@ class RegisterForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (viewModel.showOtp) {
       return OtpInputForm(
         otpLength: 6,
         onSubmit: (otp) => viewModel.verifyOtp(context, otp),
-        resendAvailable: true,
-        onResend: viewModel.initiateRegistration,
+        resendAvailable: viewModel.canResend,
+        onResend: viewModel.resendOtp,
+        remainingSeconds: viewModel.remainingSeconds,
+        errorMessage: viewModel.errorMessage,
       );
     }
 
@@ -33,7 +36,8 @@ class RegisterForm extends StatelessWidget {
             hintText: "Enter your email",
             keyboardType: TextInputType.emailAddress,
             prefixIcon: Icons.email_outlined,
-            prefixIconColor: Theme.of(context).colorScheme.primary,
+            prefixIconColor: theme.colorScheme.primary,
+            validator: ValidationUtil.validateEmail,
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -42,8 +46,8 @@ class RegisterForm extends StatelessWidget {
             hintText: "Enter your phone number",
             keyboardType: TextInputType.phone,
             prefixIcon: Icons.phone_outlined,
-            prefixIconColor: Theme.of(context).colorScheme.primary,
-            validator: ValidationUtil().validatePhone,
+            prefixIconColor: theme.colorScheme.primary,
+            validator: ValidationUtil.validatePhone,
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -52,12 +56,12 @@ class RegisterForm extends StatelessWidget {
             hintText: "Create a password",
             obscureText: viewModel.obscurePassword,
             prefixIcon: Icons.lock_outline,
-            prefixIconColor: Theme.of(context).colorScheme.primary,
+            prefixIconColor: theme.colorScheme.primary,
             suffixIcon: IconButton(
               icon: Icon(viewModel.obscurePassword ? Icons.visibility_off : Icons.visibility),
               onPressed: viewModel.toggleObscurePassword,
             ),
-            validator: ValidationUtil().validatePassword,
+            validator: ValidationUtil.validatePassword,
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -66,33 +70,37 @@ class RegisterForm extends StatelessWidget {
             hintText: "Re-enter your password",
             obscureText: viewModel.obscureConfirm,
             prefixIcon: Icons.lock_outline,
-            prefixIconColor: Theme.of(context).colorScheme.primary,
+            prefixIconColor: theme.colorScheme.primary,
             suffixIcon: IconButton(
               icon: Icon(viewModel.obscureConfirm ? Icons.visibility_off : Icons.visibility),
               onPressed: viewModel.toggleObscureConfirm,
             ),
-            validator: (value) => ValidationUtil().validateConfirmPassword(
-              value,
+            validator: (value) => ValidationUtil.validateConfirmPassword(
               viewModel.passwordController.text,
+              value,
             ),
           ),
           const SizedBox(height: 22),
           AppButton(
             text: "Register",
             icon: Icons.person_add_alt_1,
-            loading: SizedBox(
+            isLoading: viewModel.isLoading,
+            loading: const SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
             ),
-            onPressed: viewModel.isLoading ? null : viewModel.initiateRegistration,
+            onPressed: viewModel.isLoading ? null : () => viewModel.initiateRegistration(context),
           ),
           if (viewModel.errorMessage != null) ...[
             const SizedBox(height: 12),
             Text(
               viewModel.errorMessage!,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
+                color: theme.colorScheme.error,
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -104,7 +112,7 @@ class RegisterForm extends StatelessWidget {
             children: [
               Text(
                 "Already have an account?",
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium,
               ),
               TextButton(
                 onPressed: () {

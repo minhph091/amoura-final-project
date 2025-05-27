@@ -207,8 +207,8 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please upload both photos.")));
                 return;
               }
-              vm.nextStep();
-            },
+              vm.nextStep(context: context);
+              },
             width: double.infinity,
             height: 52,
           ),

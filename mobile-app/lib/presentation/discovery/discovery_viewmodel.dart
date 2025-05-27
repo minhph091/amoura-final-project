@@ -1,6 +1,4 @@
 // lib/presentation/discovery/discovery_viewmodel.dart
-// Holds state for DiscoveryView
-
 import 'package:flutter/material.dart';
 
 import '../../data/models/profile/interest_model.dart';

@@ -1,9 +1,11 @@
 // lib/presentation/auth/setup_profile/setup_profile_view.dart
-// Main view for the setup profile flow, managing navigation between steps.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get_it/get_it.dart'; // For dependency injection
+import '../../../domain/usecases/auth/register_usecase.dart';
+import '../../../domain/usecases/auth/update_profile_usecase.dart';
 import 'setup_profile_gradient_bg.dart';
 import 'setup_profile_viewmodel.dart';
 import 'widgets/setup_profile_header.dart';
@@ -19,12 +21,18 @@ import 'steps/step9_interests_languages_form.dart';
 import 'steps/step10_bio_review_form.dart';
 
 class SetupProfileView extends StatelessWidget {
-  const SetupProfileView({super.key});
+  final String? sessionToken;
+
+  const SetupProfileView({super.key, this.sessionToken});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => SetupProfileViewModel(),
+      create: (_) => SetupProfileViewModel(
+        GetIt.I<RegisterUseCase>(),
+        GetIt.I<UpdateProfileUseCase>(),
+        sessionToken: sessionToken,
+      ),
       child: Consumer<SetupProfileViewModel>(
         builder: (context, vm, child) {
           return SetupProfileGradientBg(
@@ -38,7 +46,7 @@ class SetupProfileView extends StatelessWidget {
                       totalSteps: vm.totalSteps,
                       showSkip: vm.showSkip,
                       onBack: vm.prevStep,
-                      onSkip: vm.onSkip,
+                      onSkip: () => vm.skipStep(context: context),
                     ),
                     _StepperProgress(totalSteps: 10, currentStep: vm.currentStep),
                     const SizedBox(height: 10),

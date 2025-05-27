@@ -127,7 +127,7 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
               onPressed: () {
                 _validateAndSave();
                 if (!_dobError && !_genderError) {
-                  vm.nextStep();
+                  vm.nextStep(context: context);
                 } else if (_genderError) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Please select your gender')),

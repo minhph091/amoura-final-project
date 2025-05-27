@@ -69,7 +69,7 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
               Expanded(
                 child: SetupProfileButton(
                   text: 'Next',
-                  onPressed: () => vm.nextStep(),
+                  onPressed: () => vm.nextStep(context: context),
                   width: double.infinity,
                   height: 52,
                 ),

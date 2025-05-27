@@ -1,6 +1,4 @@
 // lib/presentation/discovery/discovery_view.dart
-// Discovery screen with correct vertical stacking, header, and bottom action bar.
-
 import 'package:amoura/presentation/discovery/widgets/action_buttons.dart';
 import 'package:amoura/presentation/discovery/widgets/filter_dialog.dart';
 import 'package:amoura/presentation/discovery/widgets/swipe_card.dart';
@@ -20,7 +18,6 @@ class DiscoveryView extends StatelessWidget {
       create: (_) => DiscoveryViewModel(),
       child: Consumer<DiscoveryViewModel>(
         builder: (context, vm, _) {
-          // Assume profiles and interests are provided by ViewModel
           final profiles = vm.profiles;
           final interests = vm.interests;
 
@@ -79,9 +76,9 @@ class DiscoveryView extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: profiles.isNotEmpty
                                 ? SwipeCardStack(
-                              profile: profiles.first,
-                              interests: interests,
-                            )
+                                    profile: profiles.first,
+                                    interests: interests,
+                                  )
                                 : const Center(child: Text('No profiles available')),
                           ),
                         ),

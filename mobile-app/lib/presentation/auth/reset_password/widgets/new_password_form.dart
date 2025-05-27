@@ -1,12 +1,8 @@
-// lib/presentation/auth/reset_password/widgets/new_password_form.dart
-
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../../core/utils/validation_util.dart';
 
-// Form for setting a new password after OTP verification
 class NewPasswordForm extends StatefulWidget {
-  // Callback function when user submits new password
   final void Function(String password) onSubmit;
 
   const NewPasswordForm({super.key, required this.onSubmit});
@@ -42,9 +38,14 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
     super.dispose();
   }
 
-  // Validates passwords match and meet requirements before submission
   void _onSubmit() {
     if (_formKey.currentState?.validate() == true) {
+      if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Passwords do not match')), // Thông báo lỗi bằng tiếng Anh
+        );
+        return;
+      }
       widget.onSubmit(_passwordController.text);
     } else {
       _shakeController.forward(from: 0);
@@ -63,7 +64,6 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
         key: _formKey,
         child: Column(
           children: [
-            // New Password Field
             AppTextField(
               labelText: "New Password",
               hintText: "Enter your new password",
@@ -78,13 +78,9 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               onChanged: (_) => setState(() {}),
-              validator: (value) {
-                return ValidationUtil().validatePassword(value);
-              },
+              validator: (value) => ValidationUtil.validatePassword(value),
             ),
             const SizedBox(height: 16),
-
-            // Confirm Password Field
             AppTextField(
               labelText: "Confirm Password",
               hintText: "Confirm your new password",
@@ -99,16 +95,9 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               onChanged: (_) => setState(() {}),
-              validator: (value) {
-                if (value != _passwordController.text) {
-                  return 'Passwords do not match';
-                }
-                return null;
-              },
+              validator: (value) => ValidationUtil.validatePassword(value),
             ),
             const SizedBox(height: 24),
-
-            // Submit Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

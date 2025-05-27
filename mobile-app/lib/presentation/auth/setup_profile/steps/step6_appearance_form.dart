@@ -57,7 +57,7 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
           const SizedBox(height: 28),
           SetupProfileButton(
             text: 'Next',
-            onPressed: () => vm.nextStep(),
+            onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
           ),

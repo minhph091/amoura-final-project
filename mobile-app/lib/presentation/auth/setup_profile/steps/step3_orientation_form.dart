@@ -46,7 +46,7 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> {
           const SizedBox(height: 32),
           SetupProfileButton(
             text: 'Next',
-            onPressed: vm.orientation != null ? vm.nextStep : null,
+            onPressed: vm.orientation != null ? () => vm.nextStep(context: context) : null,
             width: double.infinity,
             height: 52,
           ),
