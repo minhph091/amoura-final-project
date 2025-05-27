@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'main_navigator_viewmodel.dart';
 import 'widgets/nav_bar_item.dart';
 import '../discovery/discovery_view.dart';
+import '../settings/settings_view.dart'; // Import for SettingsView
 
 class MainNavigatorView extends StatelessWidget {
   const MainNavigatorView({super.key});
@@ -20,26 +21,9 @@ class MainNavigatorView extends StatelessWidget {
               index: vm.currentIndex,
               children: [
                 const DiscoveryView(),
-                const Placeholder(), // Matches screen
+                const Placeholder(), // Matches screen (who likes me)
                 const Placeholder(), // Chat screen
-                Stack(
-                  children: [
-                    const Placeholder(), // Settings screen
-                    Positioned(
-                      top: kToolbarHeight + MediaQuery.of(context).padding.top,
-                      right: 16,
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.notifications_sharp,
-                          size: 28,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        tooltip: 'Notifications',
-                        onPressed: () {}, // Logic to be implemented
-                      ),
-                    ),
-                  ],
-                ),
+                const SettingsView(), // Settings screen
               ],
             ),
             bottomNavigationBar: BottomAppBar(
@@ -78,7 +62,6 @@ class MainNavigatorView extends StatelessWidget {
                       label: "Settings",
                       isActive: vm.currentIndex == 3,
                       onTap: () => vm.setCurrentIndex(3),
-                      badgeCount: vm.notificationBadgeCount,
                       activeColor: Colors.amber,
                     ),
                   ],

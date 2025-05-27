@@ -1,0 +1,104 @@
+// lib/presentation/settings/settings_view.dart
+
+import 'package:flutter/material.dart';
+import '../shared/widgets/app_gradient_background.dart';
+
+import 'legal_resources/legal_resources_view.dart';
+import 'settings_viewmodel.dart';
+import 'widgets/settings_header.dart';
+import 'widgets/settings_section_title.dart';
+import 'widgets/settings_tile.dart';
+import 'widgets/settings_divider.dart';
+import 'widgets/settings_logout_button.dart';
+import 'widgets/settings_version_text.dart';
+
+import 'profile/profile_view.dart';
+import 'edit_profile/edit_profile_view.dart';
+import 'security/security_view.dart';
+import 'notification_settings/notification_settings_view.dart';
+import 'subscription/plan_list/plan_list_view.dart';
+
+class SettingsView extends StatelessWidget {
+  const SettingsView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppGradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Settings'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications_rounded),
+              color: Colors.amber,
+              onPressed: () {
+                // Navigator.of(context).push(
+                //   MaterialPageRoute(builder: (_) => const NotificationSettingsView()),
+                // );
+              },
+            ),
+          ],
+        ),
+        body: const SettingsBody(),
+      ),
+    );
+  }
+}
+
+class SettingsBody extends StatelessWidget {
+  const SettingsBody({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        const SettingsHeader(),
+        const SettingsDivider(),
+        const SettingsSectionTitle(title: 'Account & Profile'),
+        SettingsTile(
+          icon: Icons.person_outline_rounded,
+          title: 'View Profile',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileView())),
+        ),
+        SettingsTile(
+          icon: Icons.edit_outlined,
+          title: 'Edit Profile',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileView())),
+        ),
+        SettingsTile(
+          icon: Icons.security_outlined,
+          title: 'Account & Security',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SecurityView())),
+        ),
+        SettingsTile(
+          icon: Icons.notifications_active_outlined,
+          title: 'Notification Settings',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationSettingsView())),
+        ),
+        const SettingsDivider(),
+        const SettingsSectionTitle(title: 'App Experience'),
+        SettingsTile(
+          icon: Icons.subscriptions_outlined,
+          title: 'Subscription Plans',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const planListView())),
+        ),
+        const SettingsDivider(),
+        const SettingsSectionTitle(title: 'Support & Legal'),
+        SettingsTile(
+          icon: Icons.article_outlined,
+          title: 'Legal & Resources',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LegalResourcesView())),
+        ),
+        // Add more SettingsTile widgets for Help, Terms, Privacy, etc.
+        const SizedBox(height: 16),
+        const SettingsLogoutButton(),
+        const SizedBox(height: 8),
+        const SettingsVersionText(),
+      ],
+    );
+  }
+}

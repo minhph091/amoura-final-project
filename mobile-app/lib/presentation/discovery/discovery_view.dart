@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../shared/widgets/app_gradient_background.dart';
 import 'widgets/action_buttons.dart';
 import 'widgets/filter_dialog.dart';
 import 'widgets/swipe_card.dart';
@@ -22,25 +23,10 @@ class DiscoveryView extends StatelessWidget {
           final profiles = vm.profiles;
           final interests = vm.interests;
 
-          return Scaffold(
-            body: Container(
-              width: double.infinity,
-              height: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.brightness == Brightness.light
-                        ? const Color(0xFFF5F6FA)
-                        : const Color(0xFF121212),
-                    theme.brightness == Brightness.light
-                        ? const Color(0xFFEFF3FF)
-                        : const Color(0xFF1E1E1E),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: SafeArea(
+          return AppGradientBackground(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SafeArea(
                 child: Stack(
                   children: [
                     Column(

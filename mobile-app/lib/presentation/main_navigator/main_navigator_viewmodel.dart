@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 class MainNavigatorViewModel extends ChangeNotifier {
-  int _currentIndex = 0; // Mặc định bắt đầu với Discovery (index 0)
+  int _currentIndex = 0;
   int? _chatBadgeCount;
   int? _notificationBadgeCount;
 
@@ -19,11 +19,6 @@ class MainNavigatorViewModel extends ChangeNotifier {
 
   void setChatBadgeCount(int? value) {
     _chatBadgeCount = value;
-    notifyListeners();
-  }
-
-  void setNotificationBadgeCount(int? value) {
-    _notificationBadgeCount = value;
     notifyListeners();
   }
 }
