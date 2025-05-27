@@ -1,10 +1,11 @@
-// lib/presentation/discovery/discovery_view.dart
-import 'package:amoura/presentation/discovery/widgets/action_buttons.dart';
-import 'package:amoura/presentation/discovery/widgets/filter_dialog.dart';
-import 'package:amoura/presentation/discovery/widgets/swipe_card.dart';
+// lib/discovery/discovery_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:google_fonts/google_fonts.dart';
+import 'widgets/action_buttons.dart';
+import 'widgets/filter_dialog.dart';
+import 'widgets/swipe_card.dart';
 import 'discovery_viewmodel.dart';
 
 class DiscoveryView extends StatelessWidget {
@@ -50,6 +51,14 @@ class DiscoveryView extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              Text(
+                                'Amoura',
+                                style: GoogleFonts.pacifico(
+                                  fontSize: 28,
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               IconButton(
                                 icon: Icon(
                                   Icons.filter_alt_outlined,
@@ -59,15 +68,6 @@ class DiscoveryView extends StatelessWidget {
                                 tooltip: 'Filter',
                                 onPressed: () => showFilterDialog(context),
                               ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.notifications_sharp,
-                                  size: 28,
-                                  color: theme.colorScheme.secondary,
-                                ),
-                                tooltip: 'Notifications',
-                                onPressed: () {}, // Logic to be implemented
-                              ),
                             ],
                           ),
                         ),
@@ -76,9 +76,9 @@ class DiscoveryView extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: profiles.isNotEmpty
                                 ? SwipeCardStack(
-                                    profile: profiles.first,
-                                    interests: interests,
-                                  )
+                              profile: profiles.first,
+                              interests: interests,
+                            )
                                 : const Center(child: Text('No profiles available')),
                           ),
                         ),

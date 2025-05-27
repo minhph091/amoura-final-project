@@ -1,11 +1,9 @@
 // lib/presentation/main_navigator/widgets/nav_bar_item.dart
 
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:particle_field/particle_field.dart';
-import 'gradient_icon.dart';
 import '../../../core/constants/asset_path.dart';
 
 class NavBarItem extends StatefulWidget {
@@ -15,7 +13,7 @@ class NavBarItem extends StatefulWidget {
   final VoidCallback onTap;
   final int? badgeCount;
   final String? badge;
-  final Gradient gradient;
+  final Color activeColor;
 
   const NavBarItem({
     super.key,
@@ -25,7 +23,7 @@ class NavBarItem extends StatefulWidget {
     required this.onTap,
     this.badgeCount,
     this.badge,
-    required this.gradient,
+    required this.activeColor,
   });
 
   @override
@@ -36,14 +34,27 @@ class _NavBarItemState extends State<NavBarItem> with SingleTickerProviderStateM
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _elevationAnimation;
+  late Animation<Color?> _backgroundAnimation;
   bool _showSparkle = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(duration: const Duration(milliseconds: 260), vsync: this);
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _elevationAnimation = Tween<double>(begin: 0.0, end: 9.0).animate(CurvedAnimation(parent: _controller, curve: Curves.ease));
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 260),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+    _elevationAnimation = Tween<double>(begin: 0.0, end: 9.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.ease),
+    );
+    _backgroundAnimation = ColorTween(
+      begin: Colors.transparent,
+      end: widget.activeColor.withValues(alpha: 0.1),
+    ).animate(_controller);
+
     if (widget.isActive) _controller.forward();
   }
 
@@ -72,8 +83,8 @@ class _NavBarItemState extends State<NavBarItem> with SingleTickerProviderStateM
   Widget _buildBadge() {
     if (widget.badgeCount != null && widget.badgeCount! > 0) {
       return Positioned(
-        right: 2,
-        top: 3,
+        right: -5,
+        top: -5,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
@@ -90,8 +101,8 @@ class _NavBarItemState extends State<NavBarItem> with SingleTickerProviderStateM
       );
     } else if (widget.badge != null) {
       return Positioned(
-        right: 2,
-        top: 3,
+        right: -8,
+        top: -5,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
@@ -143,7 +154,6 @@ class _NavBarItemState extends State<NavBarItem> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: () {
         widget.onTap();
@@ -155,37 +165,53 @@ class _NavBarItemState extends State<NavBarItem> with SingleTickerProviderStateM
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (ctx, child) => Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Material(
-            elevation: _elevationAnimation.value,
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                GradientIcon(
-                  icon: widget.icon,
-                  size: widget.isActive ? 30 : 24,
-                  gradient: widget.gradient,
-                  withShadow: widget.isActive,
+        builder: (ctx, child) => Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _backgroundAnimation.value,
+                border: Border.all(
+                  color: widget.isActive ? widget.activeColor.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.2),
+                  width: 1.5,
                 ),
-                _buildBadge(),
-                _buildSparkleEffect(),
-                Positioned(
-                  bottom: -17,
-                  child: Text(
-                    widget.label,
-                    style: GoogleFonts.lato(
-                      fontSize: 11,
-                      color: widget.isActive ? activeColor : Colors.grey.shade500,
-                      fontWeight: widget.isActive ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            Transform.scale(
+              scale: _scaleAnimation.value,
+              child: Material(
+                elevation: _elevationAnimation.value,
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      widget.icon,
+                      size: widget.isActive ? 30 : 24,
+                      color: widget.isActive ? widget.activeColor : Colors.grey.shade500,
+                    ),
+                    _buildBadge(),
+                    _buildSparkleEffect(),
+                    Positioned(
+                      bottom: -17,
+                      child: Text(
+                        widget.label,
+                        style: GoogleFonts.lato(
+                          fontSize: 11,
+                          color: widget.isActive ? widget.activeColor : Colors.grey.shade500,
+                          fontWeight: widget.isActive ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
