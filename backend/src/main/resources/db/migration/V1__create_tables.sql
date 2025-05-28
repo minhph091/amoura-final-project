@@ -288,12 +288,25 @@ CREATE TABLE login_history (
                                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE password_reset_sessions (
+                                         id BIGSERIAL PRIMARY KEY,
+                                         session_token VARCHAR(255) NOT NULL UNIQUE,
+                                         user_id BIGINT REFERENCES users(id),
+                                         email VARCHAR(255) NOT NULL,
+                                         status VARCHAR(20) NOT NULL, -- INITIATED, VERIFIED, COMPLETED
+                                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         expires_at TIMESTAMP NOT NULL,
+                                         last_otp_sent_at TIMESTAMP,
+                                         CONSTRAINT chk_password_reset_status CHECK (status IN ('INITIATED', 'VERIFIED', 'COMPLETED'))
+);
+
 -- --- Thêm các ràng buộc CHECK ---
 ALTER TABLE users
     ADD CONSTRAINT chk_user_status CHECK (status IN ('active', 'inactive', 'suspend'));
 
 ALTER TABLE profiles
-    ADD CONSTRAINT chk_sex CHECK (sex IN ('male', 'female'));
+    ADD CONSTRAINT chk_sex CHECK (sex IN ('male', 'female','non-binary','prefer not to say'));
 
 ALTER TABLE matches
     ADD CONSTRAINT chk_match_status CHECK (status IN ('active', 'unmatched'));
@@ -312,3 +325,11 @@ ALTER TABLE notifications
 
 ALTER TABLE transactions
     ADD CONSTRAINT chk_transaction_status CHECK (status IN ('success', 'failed'));
+
+ALTER TABLE photos
+    ADD CONSTRAINT chk_photo_type
+        CHECK (type IN (
+                        'avatar',
+                        'profile_cover',
+                        'highlight'
+            ));

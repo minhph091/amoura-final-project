@@ -36,7 +36,7 @@ public class Profile {
     @JoinColumn(name = "body_type_id")
     private BodyType bodyType;
 
-    private String sex; // male, female
+    private String sex; // male, female, non-binary, prefer not to say
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "orientation_id")

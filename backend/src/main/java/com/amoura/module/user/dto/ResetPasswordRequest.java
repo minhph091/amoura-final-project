@@ -15,11 +15,8 @@ import jakarta.validation.constraints.Size;
 @AllArgsConstructor
 public class ResetPasswordRequest {
 
-    @NotBlank(message = "Email is required")
-    private String email;
-
-    @NotBlank(message = "OTP code is required")
-    private String otpCode;
+    @NotBlank(message = "Session token is required")
+    private String sessionToken;
 
     @NotBlank(message = "New password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")

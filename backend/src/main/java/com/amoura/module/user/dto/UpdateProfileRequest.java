@@ -24,21 +24,21 @@ public class UpdateProfileRequest {
     @Max(value = 250, message = "Height must be less than 250cm")
     private Integer height;
 
-    private String bodyProfile;
+    private Long bodyTypeId;
 
     private String sex;
 
-    private String orientation;
+    private Long orientationId;
 
-    private String job;
+    private Long jobIndustryId;
 
-    private String drinks;
+    private Long drinkStatusId;
 
-    private String smokes;
+    private Long smokeStatusId;
 
-    private String newLanguage;
+    private Boolean interestedInNewLanguage;
 
-    private String educationLevel;
+    private Long educationLevelId;
 
     private Boolean dropOut;
 
@@ -49,9 +49,9 @@ public class UpdateProfileRequest {
 
     private LocationDTO location;
 
-    private List<String> interests;
+    private List<Long> interestIds;
 
-    private List<String> languages;
+    private List<Long> languageIds;
 
-    private List<String> pets;
+    private List<Long> petIds;
 }
