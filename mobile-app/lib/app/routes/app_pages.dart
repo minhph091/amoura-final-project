@@ -1,7 +1,8 @@
 // lib/app/routes/app_pages.dart
+
 import 'package:flutter/material.dart';
 import '../../presentation/auth/login/login_view.dart';
-import '../../presentation/auth/setup_profile/setup_profile_view.dart';
+import '../../presentation/profile/setup/setup_profile_view.dart';
 import '../../presentation/auth/reset_password/reset_password_view.dart';
 import '../../presentation/auth/register/register_view.dart';
 import '../../presentation/auth/login_otp/login_otp_view.dart';

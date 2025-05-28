@@ -22,7 +22,7 @@ class WelcomePageIndicator extends StatelessWidget {
           decoration: BoxDecoration(
             color: currentPage == index
                 ? AppColors.secondary
-                : Colors.white.withOpacity(0.4),
+                : Colors.white.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
         );

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../shared/widgets/app_gradient_background.dart';
 import 'widgets/action_buttons.dart';
-import 'widgets/filter_dialog.dart';
+import 'widgets/filter/filter_dialog.dart';
 import 'widgets/swipe_card.dart';
 import 'discovery_viewmodel.dart';
 

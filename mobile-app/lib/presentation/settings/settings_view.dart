@@ -12,8 +12,8 @@ import 'widgets/settings_divider.dart';
 import 'widgets/settings_logout_button.dart';
 import 'widgets/settings_version_text.dart';
 
-import 'profile/profile_view.dart';
-import 'edit_profile/edit_profile_view.dart';
+import '../profile/view/profile_view.dart';
+import '../profile/edit/edit_profile_view.dart';
 import 'security/security_view.dart';
 import 'notification_settings/notification_settings_view.dart';
 import 'subscription/plan_list/plan_list_view.dart';
