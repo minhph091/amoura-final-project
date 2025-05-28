@@ -1,199 +1,243 @@
-// lib/presentation/profile/edit/edit_profile_view.dart
-
+import 'package:amoura/presentation/profile/edit/sections/edit_profile_bio_photos_section.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import '../../shared/dialogs/confirm_dialog.dart';
+import '../../shared/widgets/app_gradient_background.dart';
+import '../setup/theme/setup_profile_theme.dart';
 import 'edit_profile_viewmodel.dart';
-import 'widgets/edit_profile_cover_avatar.dart';
-import 'widgets/edit_profile_main_info.dart';
-import 'widgets/edit_profile_bio_interests.dart';
-import 'widgets/edit_profile_accordion_section.dart';
-import 'widgets/edit_profile_accordion_controller.dart';
-import '../shared/profile_section_container.dart';
-import '../shared/profile_location.dart';
-import '../shared/profile_appearance.dart';
-import '../shared/profile_job_education.dart';
-import '../shared/profile_lifestyle.dart';
-import '../shared/profile_interests_languages.dart';
-import '../shared/profile_bio_photos.dart';
+import 'sections/edit_profile_avatar_cover_section.dart';
+import 'sections/edit_profile_basic_info_section.dart';
+import 'sections/edit_profile_location_section.dart';
+import 'sections/edit_profile_appearance_section.dart';
+import 'sections/edit_profile_job_education_section.dart';
+import 'sections/edit_profile_lifestyle_section.dart';
+import 'sections/edit_profile_interests_languages_section.dart';
+import 'widgets/collapsible_edit_section.dart';
 
-class EditProfileView extends StatelessWidget {
-  const EditProfileView({super.key});
+class EditProfileView extends StatefulWidget {
+  final dynamic profile;
+
+  const EditProfileView({
+    super.key,
+    required this.profile,
+  });
+
+  @override
+  State<EditProfileView> createState() => _EditProfileViewState();
+}
+
+class _EditProfileViewState extends State<EditProfileView> {
+  final _formKey = GlobalKey<FormState>();
+  late EditProfileViewModel _viewModel;
+  bool _isLoading = false;
+  String? _expandedSection;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = EditProfileViewModel(profile: widget.profile);
+    // No section is expanded initially
+    _expandedSection = null;
+  }
+
+  void _toggleSection(String sectionKey) {
+    setState(() {
+      if (_expandedSection == sectionKey) {
+        _expandedSection = null; // Close if already open
+      } else {
+        _expandedSection = sectionKey; // Open this section and close others
+      }
+    });
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fix the errors before saving")),
+      );
+      return;
+    }
+
+    _formKey.currentState!.save();
+
+    final shouldSave = await showConfirmDialog(
+      context: context,
+      title: 'Save Changes',
+      content: 'Do you want to save all changes to your profile?',
+      confirmText: 'Save',
+      cancelText: 'Cancel',
+      icon: Icons.save,
+      iconColor: ProfileTheme.darkPink,
+    );
+
+    if (shouldSave == true) {
+      setState(() => _isLoading = true);
+
+      try {
+        await _viewModel.saveProfile();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Profile updated successfully"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to update profile: ${e.toString()}"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    }
+  }
+
+  Future<bool> _onWillPop() async {
+    if (_viewModel.hasChanges) {
+      final shouldDiscard = await showConfirmDialog(
+        context: context,
+        title: 'Discard Changes',
+        content: 'You have unsaved changes. Are you sure you want to discard them?',
+        confirmText: 'Discard',
+        cancelText: 'Keep Editing',
+        icon: Icons.warning,
+        iconColor: Colors.orange,
+      );
+
+      return shouldDiscard ?? false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => EditProfileViewModel()..loadProfile(),
-      child: Consumer<EditProfileViewModel>(
-        builder: (context, vm, _) {
-          if (vm.isLoading) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (vm.error != null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Edit Profile')),
-              body: Center(child: Text('Error')),
-            );
-          }
-          final profile = vm.profile;
-          if (profile == null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Edit Profile')),
-              body: const Center(child: Text('No profile data found.')),
-            );
-          }
-          final controller = EditProfileAccordionController();
-
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Edit Profile'),
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.save_alt),
-                  tooltip: 'Save',
-                  onPressed: vm.isSaving
-                      ? null
-                      : () async {
-                    await vm.saveProfile(profile);
-                    if (vm.error == null) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-              ],
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: AppGradientBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Text('Edit Profile', style: TextStyle(
+              color: ProfileTheme.darkPurple,
+              fontWeight: FontWeight.bold,
+            )),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: ProfileTheme.darkPurple),
+              onPressed: () async {
+                if (await _onWillPop()) {
+                  Navigator.pop(context);
+                }
+              },
             ),
-            body: ListView(
-              padding: EdgeInsets.zero,
+            actions: [
+              IconButton(
+                icon: Icon(Icons.save, color: ProfileTheme.darkPink),
+                tooltip: 'Save Changes',
+                onPressed: _isLoading ? null : _saveProfile,
+              ),
+            ],
+          ),
+          body: _isLoading
+              ? Center(child: CircularProgressIndicator(color: ProfileTheme.darkPink))
+              : Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: 24),
               children: [
-                EditProfileCoverAvatar(
-                  avatarUrl: profile.avatarUrl,
-                  coverUrl: profile.coverUrl,
-                  onEditAvatar: () {}, // TODO
-                  onEditCover: () {}, // TODO
+                // Avatar and Cover Photo Section (Always visible)
+                EditProfileAvatarCoverSection(viewModel: _viewModel),
+
+                const SizedBox(height: 16),
+
+                // Basic Info Section (Steps 1, 2, 3)
+                CollapsibleEditSection(
+                  title: "Basic Information",
+                  icon: Icons.person,
+                  isExpanded: _expandedSection == 'basic',
+                  onToggle: () => _toggleSection('basic'),
+                  child: EditProfileBasicInfoSection(viewModel: _viewModel),
                 ),
-                EditProfileMainInfo(
-                  firstName: profile.firstName,
-                  lastName: profile.lastName,
-                  dob: profile.dateOfBirth,
-                  gender: profile.gender,
-                  onEdit: (field) {}, // TODO: open edit dialog for each field
+
+                const SizedBox(height: 10),
+
+                // Bio & Photos Section (Step 10)
+                CollapsibleEditSection(
+                  title: "Bio & Photos",
+                  icon: Icons.photo_library,
+                  isExpanded: _expandedSection == 'bio',
+                  onToggle: () => _toggleSection('bio'),
+                  child: EditProfileBioPhotosSection(viewModel: _viewModel),
                 ),
-                EditProfileBioInterests(
-                  bio: profile.bio,
-                  interests: profile.interests,
-                  onEditBio: () {}, // TODO
-                  onEditInterests: () {}, // TODO
+
+                const SizedBox(height: 10),
+
+                // Location Section (Step 5)
+                CollapsibleEditSection(
+                  title: "Location",
+                  icon: Icons.location_on,
+                  isExpanded: _expandedSection == 'location',
+                  onToggle: () => _toggleSection('location'),
+                  child: EditProfileLocationSection(viewModel: _viewModel),
                 ),
-                const SizedBox(height: 6),
-                EditProfileAccordionSection(
-                  controller: controller,
-                  sectionKey: 'location',
-                  title: 'Location',
-                  icon: Icons.location_on_outlined,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileLocation(
-                      city: profile.city,
-                      state: profile.state,
-                      country: profile.country,
-                      locationPreference: profile.locationPreference,
-                      editable: true,
-                      onEdit: (field) {}, // TODO
-                    ),
-                  ),
+
+                const SizedBox(height: 10),
+
+                // Appearance Section (Step 6)
+                CollapsibleEditSection(
+                  title: "Appearance",
+                  icon: Icons.accessibility_new,
+                  isExpanded: _expandedSection == 'appearance',
+                  onToggle: () => _toggleSection('appearance'),
+                  child: EditProfileAppearanceSection(viewModel: _viewModel),
                 ),
-                EditProfileAccordionSection(
-                  controller: controller,
-                  sectionKey: 'appearance',
-                  title: 'Appearance',
-                  icon: Icons.accessibility_new_rounded,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileAppearance(
-                      bodyType: profile.bodyType,
-                      height: profile.height,
-                      editable: true,
-                      onEdit: (field) {}, // TODO
-                    ),
-                  ),
+
+                const SizedBox(height: 10),
+
+                // Job & Education Section (Step 7)
+                CollapsibleEditSection(
+                  title: "Job & Education",
+                  icon: Icons.work,
+                  isExpanded: _expandedSection == 'job',
+                  onToggle: () => _toggleSection('job'),
+                  child: EditProfileJobEducationSection(viewModel: _viewModel),
                 ),
-                EditProfileAccordionSection(
-                  controller: controller,
-                  sectionKey: 'job',
-                  title: 'Job & Education',
-                  icon: Icons.work_outline_rounded,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileJobEducation(
-                      jobIndustry: profile.jobIndustry,
-                      educationLevel: profile.educationLevel,
-                      dropOut: profile.dropOut,
-                      editable: true,
-                      onEdit: (field) {}, // TODO
-                    ),
-                  ),
+
+                const SizedBox(height: 10),
+
+                // Lifestyle Section (Step 8)
+                CollapsibleEditSection(
+                  title: "Lifestyle",
+                  icon: Icons.emoji_emotions,
+                  isExpanded: _expandedSection == 'lifestyle',
+                  onToggle: () => _toggleSection('lifestyle'),
+                  child: EditProfileLifestyleSection(viewModel: _viewModel),
                 ),
-                EditProfileAccordionSection(
-                  controller: controller,
-                  sectionKey: 'lifestyle',
-                  title: 'Lifestyle',
-                  icon: Icons.self_improvement_outlined,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileLifestyle(
-                      drinkStatus: profile.drinkStatus,
-                      smokeStatus: profile.smokeStatus,
-                      pets: profile.pets,
-                      editable: true,
-                      onEdit: (field) {}, // TODO
-                    ),
-                  ),
+
+                const SizedBox(height: 10),
+
+                // Interests & Languages Section (Step 9)
+                CollapsibleEditSection(
+                  title: "Interests & Languages",
+                  icon: Icons.interests,
+                  isExpanded: _expandedSection == 'interests',
+                  onToggle: () => _toggleSection('interests'),
+                  child: EditProfileInterestsLanguagesSection(viewModel: _viewModel),
                 ),
-                EditProfileAccordionSection(
-                  controller: controller,
-                  sectionKey: 'languages',
-                  title: 'Languages',
-                  icon: Icons.language,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileInterestsLanguages(
-                      interests: profile.interests,
-                      languages: profile.languages,
-                      interestedInNewLanguage: profile.interestedInNewLanguage,
-                      editable: true,
-                      onEdit: (field) {}, // TODO
-                    ),
-                  ),
-                ),
-                EditProfileAccordionSection(
-                  controller: controller,
-                  sectionKey: 'photos',
-                  title: 'Gallery Photos',
-                  icon: Icons.photo_library_outlined,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileBioPhotos(
-                      bio: profile.bio,
-                      galleryPhotos: profile.galleryPhotos,
-                      editable: true,
-                      onEditBio: () {}, // TODO
-                      onAddPhoto: () {}, // TODO
-                      onRemovePhoto: (idx) {}, // TODO
-                    ),
-                  ),
-                ),
-                if (vm.isSaving)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
