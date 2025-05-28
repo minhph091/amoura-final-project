@@ -1,0 +1,2 @@
+ALTER TABLE locations
+    ADD version BIGINT NOT NULL DEFAULT 0;
