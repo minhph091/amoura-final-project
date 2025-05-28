@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../shared/theme/profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/pet_constants.dart';
 import '../../../../core/constants/profile/smoke_drink_constants.dart';
 import '../setup_profile_viewmodel.dart';
-import '../theme/setup_profile_theme.dart';
 
 class Step8LifestyleForm extends StatefulWidget {
   const Step8LifestyleForm({super.key});

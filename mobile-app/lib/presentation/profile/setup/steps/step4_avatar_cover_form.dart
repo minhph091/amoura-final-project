@@ -6,9 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../shared/theme/profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
-import '../theme/setup_profile_theme.dart';
 
 class Step4AvatarCoverForm extends StatefulWidget {
   const Step4AvatarCoverForm({super.key});

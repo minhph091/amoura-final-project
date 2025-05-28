@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/shake_widget.dart';
+import '../../shared/theme/profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../setup_profile_viewmodel.dart';
-import '../theme/setup_profile_theme.dart';
 
 class Step1NameForm extends StatefulWidget {
   const Step1NameForm({super.key});

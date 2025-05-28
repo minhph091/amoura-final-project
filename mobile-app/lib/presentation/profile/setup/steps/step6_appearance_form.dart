@@ -2,11 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../shared/theme/profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/body_type_constants.dart';
 import '../setup_profile_viewmodel.dart';
-import '../theme/setup_profile_theme.dart';
 
 class Step6AppearanceForm extends StatefulWidget {
   const Step6AppearanceForm({super.key});
@@ -44,8 +44,8 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
           Slider(
             value: (vm.height ?? 170).toDouble(),
             min: 100,
-            max: 220,
-            divisions: 120,
+            max: 250,
+            divisions: 150,
             label: '${vm.height ?? 170} cm',
             activeColor: SetupProfileTheme.darkPink,
             inactiveColor: SetupProfileTheme.darkPurple.withAlpha(77),

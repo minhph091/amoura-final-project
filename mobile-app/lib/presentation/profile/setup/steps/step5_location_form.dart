@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../shared/theme/profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
-import '../theme/setup_profile_theme.dart';
 
 class Step5LocationForm extends StatelessWidget {
   const Step5LocationForm({super.key});

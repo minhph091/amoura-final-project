@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../shared/theme/profile_theme.dart';
 import '../theme/setup_profile_theme.dart';
 
 class SetupProfileHeader extends StatelessWidget {

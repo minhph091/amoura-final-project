@@ -5,12 +5,12 @@ import 'package:provider/provider.dart';
 import '../../../../core/utils/date_util.dart';
 import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/shake_widget.dart';
+import '../../shared/theme/profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/sex_constants.dart';
 import '../setup_profile_viewmodel.dart';
-import '../theme/setup_profile_theme.dart';
 
 class Step2DobGenderForm extends StatefulWidget {
   const Step2DobGenderForm({super.key});
