@@ -5,6 +5,7 @@ import com.amoura.module.profile.dto.ProfileOptionsDTO;
 import com.amoura.module.profile.service.ProfileService;
 import com.amoura.module.user.dto.UpdateProfileRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ public class ProfileController {
 
     @PatchMapping("/me")
     @Operation(summary = "Update current user's profile")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ProfileDTO> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request) {
