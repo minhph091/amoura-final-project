@@ -18,6 +18,17 @@ class AppTheme {
       onSurface: AppColors.text,
       onSecondary: AppColors.label,
     ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      iconTheme: const IconThemeData(color: AppColors.primary),
+      titleTextStyle: const TextStyle(
+        color: AppColors.primary,
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+      ),
+      // toolbarTextStyle: ... // optional
+    ),
     textTheme: const TextTheme(
       headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.text),
       headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.text),
@@ -28,15 +39,15 @@ class AppTheme {
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: AppColors.primary, width: 2),
       ),
-      labelStyle: const TextStyle(color: AppColors.label),
-      hintStyle: const TextStyle(color: AppColors.label),
+      labelStyle: TextStyle(color: AppColors.label),
+      hintStyle: TextStyle(color: AppColors.label),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -73,6 +84,17 @@ class AppTheme {
       onSurface: AppColors.darkText,
       onSecondary: AppColors.darkLabel,
     ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      iconTheme: const IconThemeData(color: Color(0xFFFF69B4)), // Hồng sáng
+      titleTextStyle: const TextStyle(
+        color: Color(0xFFFF69B4), // Hồng sáng (Bright Pink)
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+      ),
+      // toolbarTextStyle: ... // optional
+    ),
     textTheme: const TextTheme(
       headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.darkText),
       headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.darkText),
@@ -83,15 +105,15 @@ class AppTheme {
       filled: true,
       fillColor: AppColors.darkBackground,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.darkBorder),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: AppColors.darkBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.darkPrimary, width: 2),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: AppColors.darkPrimary, width: 2),
       ),
-      labelStyle: const TextStyle(color: AppColors.darkLabel),
-      hintStyle: const TextStyle(color: AppColors.darkLabel),
+      labelStyle: TextStyle(color: AppColors.darkLabel),
+      hintStyle: TextStyle(color: AppColors.darkLabel),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
