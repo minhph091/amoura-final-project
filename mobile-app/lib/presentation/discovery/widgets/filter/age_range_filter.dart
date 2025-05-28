@@ -1,8 +1,7 @@
 // lib/presentation/discovery/widgets/age_range_filter.dart
 
 import 'package:flutter/material.dart';
-import '../../../../config/theme/app_colors.dart';
-import 'filter_section_header.dart'; // Import the header widget
+import 'filter_section_header.dart';
 
 // A filter widget for selecting an age range using a RangeSlider.
 class AgeRangeFilter extends StatelessWidget {
@@ -28,8 +27,8 @@ class AgeRangeFilter extends StatelessWidget {
         RangeSlider(
           values: currentAgeRange,
           min: 18,
-          max: 99,
-          divisions: 81, // 99 - 18 = 81 divisions for integer steps
+          max: 120,
+          divisions: 102, // 120 - 18 = 102 divisions for integer steps
           labels: RangeLabels(
             currentAgeRange.start.round().toString(),
             currentAgeRange.end.round().toString(),
