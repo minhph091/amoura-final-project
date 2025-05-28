@@ -1,28 +1,29 @@
 // lib/presentation/discovery/widgets/filter_dialog.dart
-// Modal dialog for filters (age, distance, etc.)
-
-// lib/presentation/discovery/widgets/filter_dialog.dart
 
 import 'package:flutter/material.dart';
-import '../../common/common_info_view.dart'; // Để dùng AppTextStyles nếu muốn hoặc Theme.of(context).textTheme
-import '../../../config/theme/app_colors.dart'; // Để dùng các màu của theme
-import '../../../config/theme/text_styles.dart'; // Để dùng AppTextStyles
-import '../../../core/constants/profile/interest_constants.dart'; // Để lấy interestOptions
-import '../../shared/widgets/profile_option_selector.dart'; // Tái sử dụng ProfileOptionSelector
+import '../../../../config/theme/text_styles.dart';
+import '../../../../core/constants/profile/interest_constants.dart';
 
-// Để có thể sử dụng showFilterDialog từ bên ngoài
+// Import the new granular filter widgets
+import 'age_range_filter.dart';
+import 'distance_range_filter.dart';
+import 'interest_filter.dart';
+import 'filter_action_buttons.dart';
+
+// Shows a customizable filter modal bottom sheet for discovery.
 Future<void> showFilterDialog(BuildContext context) async {
   await showModalBottomSheet(
     context: context,
-    isScrollControlled: true, // Cho phép bottom sheet chiếm gần hết màn hình
-    backgroundColor: Colors.transparent, // Để lộ borderRadius của container bên trong
+    isScrollControlled: true, // Allows the bottom sheet to take up more screen space
+    backgroundColor: Colors.transparent, // For custom border radius on the inner container
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(30)), // Bo góc trên
+      borderRadius: BorderRadius.vertical(top: Radius.circular(30)), // Top border radius
     ),
     builder: (ctx) => const FilterDialogContent(),
   );
 }
 
+// The main content of the filter dialog, managing state for all filters.
 class FilterDialogContent extends StatefulWidget {
   const FilterDialogContent({super.key});
 
@@ -31,65 +32,63 @@ class FilterDialogContent extends StatefulWidget {
 }
 
 class _FilterDialogContentState extends State<FilterDialogContent> {
-  // Giá trị mặc định cho bộ lọc tuổi
+  // Current filter values
   RangeValues _ageRange = const RangeValues(18, 60);
-  // Giá trị mặc định cho bộ lọc khoảng cách (km)
-  RangeValues _distanceRange = const RangeValues(0, 100);
-  // Danh sách các sở thích được chọn
+  double _distanceValue = 50; // in km (defaulting to 50km)
   List<String> _selectedInterestIds = [];
 
   @override
   void initState() {
     super.initState();
-    // Khởi tạo giá trị mặc định hoặc từ trạng thái đã lưu (nếu có)
-    _ageRange = const RangeValues(18, 60); // Ví dụ: từ 18 đến 60 tuổi
-    _distanceRange = const RangeValues(0, 100); // Ví dụ: từ 0 đến 100 km
-    _selectedInterestIds = []; // Bắt đầu với không có sở thích nào được chọn
+    // Initialize filter values, potentially from saved preferences or an API.
+    // For this frontend-only example, we'll use default values.
+    _ageRange = const RangeValues(18, 60);
+    _distanceValue = 50; // Single distance value
+    _selectedInterestIds = []; // Starts with no interests selected
   }
 
+  // Resets all filters to their default values.
   void _resetFilters() {
     setState(() {
       _ageRange = const RangeValues(18, 60);
-      _distanceRange = const RangeValues(0, 100);
+      _distanceValue = 50; // Reset to default
       _selectedInterestIds = [];
     });
+    // Provides user feedback
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Filters have been reset.')),
     );
   }
 
+  // Applies the current filter settings.
+  // In a real application, this would pass data to a ViewModel/Bloc/Cubit/Service.
   void _applyFilters() {
-    // Logic áp dụng bộ lọc.
-    // Trong môi trường thực, bạn sẽ gửi các giá trị này đến ViewModel/Bloc/Cubit
-    // hoặc một callback để xử lý.
-    // Ví dụ:
+    // This is where you would send the selected filter values to your logic layer.
     print('Applying filters:');
     print('Age Range: ${_ageRange.start.round()} - ${_ageRange.end.round()}');
-    print('Distance Range: ${_distanceRange.start.round()} - ${_distanceRange.end.round()} km');
+    print('Distance: ${_distanceValue.round()} km');
     print('Selected Interests: $_selectedInterestIds');
 
-    Navigator.of(context).pop(); // Đóng dialog sau khi áp dụng
+    Navigator.of(context).pop(); // Closes the dialog
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.8, // Bắt đầu chiếm 80% màn hình
-      minChildSize: 0.5,     // Kéo xuống tối thiểu 50%
-      maxChildSize: 0.9,     // Kéo lên tối đa 90%
-      expand: false,         // Không mở rộng hết màn hình ngay lập tức
+      initialChildSize: 0.8, // Starts at 80% of screen height
+      minChildSize: 0.5,     // Can be dragged down to 50%
+      maxChildSize: 0.9,     // Can be dragged up to 90%
+      expand: false,         // Does not expand to full screen immediately
       builder: (BuildContext context, ScrollController scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface, // Sử dụng màu nền từ theme
+            color: colorScheme.surface, // Background color from theme
             borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -97,21 +96,21 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
           ),
           child: Column(
             children: [
-              // Thanh kéo để đóng dialog
+              // Draggable handle to indicate it can be dragged
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                 child: Container(
                   width: 40,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: colorScheme.onSurface.withOpacity(0.3),
+                    color: colorScheme.onSurface.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  controller: scrollController, // Gắn scrollController vào SingleChildScrollView
+                  controller: scrollController, // Links scroll to DraggableScrollableSheet
                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,118 +122,49 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Filter: Age Range
-                      Text(
-                        'Age Range: ${_ageRange.start.round()} - ${_ageRange.end.round()}',
-                        style: AppTextStyles.heading2.copyWith(color: colorScheme.onSurface),
-                      ),
-                      RangeSlider(
-                        values: _ageRange,
-                        min: 18,
-                        max: 99,
-                        divisions: 81, // 99 - 18 = 81
-                        labels: RangeLabels(
-                          _ageRange.start.round().toString(),
-                          _ageRange.end.round().toString(),
-                        ),
-                        onChanged: (values) {
+                      // Age Range Filter Section
+                      AgeRangeFilter(
+                        currentAgeRange: _ageRange,
+                        onChanged: (newRange) {
                           setState(() {
-                            _ageRange = values;
+                            _ageRange = newRange;
                           });
                         },
-                        activeColor: colorScheme.primary,
-                        inactiveColor: colorScheme.primary.withOpacity(0.3),
                       ),
                       const SizedBox(height: 24),
 
-                      // Filter: Distance Range
-                      Text(
-                        'Distance: ${_distanceRange.start.round()} - ${_distanceRange.end.round()} km',
-                        style: AppTextStyles.heading2.copyWith(color: colorScheme.onSurface),
-                      ),
-                      RangeSlider(
-                        values: _distanceRange,
-                        min: 0,
-                        max: 500, // Ví dụ: tối đa 500km
-                        divisions: 500, // 500 - 0 = 500
-                        labels: RangeLabels(
-                          _distanceRange.start.round().toString() + ' km',
-                          _distanceRange.end.round().toString() + ' km',
-                        ),
-                        onChanged: (values) {
+                      // Distance Range Filter Section
+                      DistanceRangeFilter(
+                        currentDistance: _distanceValue,
+                        onChanged: (newRange) {
                           setState(() {
-                            _distanceRange = values;
+                            _distanceValue = newRange;
                           });
                         },
-                        activeColor: colorScheme.primary,
-                        inactiveColor: colorScheme.primary.withOpacity(0.3),
                       ),
                       const SizedBox(height: 24),
 
-                      // Filter: Interests
-                      Text(
-                        'Interests',
-                        style: AppTextStyles.heading2.copyWith(color: colorScheme.onSurface),
-                      ),
-                      const SizedBox(height: 12),
-                      ProfileOptionSelector(
-                        options: interestOptions, // Sử dụng dữ liệu interestOptions đã có
-                        selectedValues: _selectedInterestIds,
-                        onChanged: (value, selected) {
+                      // Interests Filter Section
+                      InterestFilter(
+                        selectedInterestIds: _selectedInterestIds,
+                        onChanged: (newSelectedIds) {
                           setState(() {
-                            if (selected) {
-                              _selectedInterestIds.add(value);
-                            } else {
-                              _selectedInterestIds.remove(value);
-                            }
+                            _selectedInterestIds = newSelectedIds;
                           });
                         },
-                        labelText: 'Select your interests',
-                        labelStyle: AppTextStyles.body.copyWith(color: colorScheme.label),
-                        isMultiSelect: true,
-                        scrollable: false, // Để ProfileOptionSelector tự quản lý scroll
-                        isSearchable: true,
+                        interestOptions: interestOptions, // Pass interestOptions here (simulating API data)
                       ),
                       const SizedBox(height: 30),
-
-                      // Buttons: Reset and Apply
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _resetFilters,
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: AppColors.secondary, width: 2),
-                                foregroundColor: AppColors.secondary,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                textStyle: AppTextStyles.button.copyWith(fontSize: 16),
-                              ),
-                              child: const Text('Reset'),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _applyFilters,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                textStyle: AppTextStyles.button.copyWith(fontSize: 16),
-                                elevation: 0,
-                              ),
-                              child: const Text('Apply'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
               ),
+              // Reset and Apply buttons are placed outside the scrollable area
+              FilterActionButtons(
+                onReset: _resetFilters,
+                onApply: _applyFilters,
+              ),
+              const SizedBox(height: 20), // Bottom padding
             ],
           ),
         );
