@@ -1,14 +1,10 @@
-// lib/presentation/main_navigator/widgets/nav_bar_item.dart
-
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:particle_field/particle_field.dart';
-import '../../../core/constants/asset_path.dart';
+import 'nav_bar_icon.dart';
+import 'nav_bar_circle_burst.dart';
+import 'nav_bar_sparkle_effect.dart';
 
 class NavBarItem extends StatefulWidget {
   final IconData icon;
-  final String label;
   final bool isActive;
   final VoidCallback onTap;
   final int? badgeCount;
@@ -18,7 +14,6 @@ class NavBarItem extends StatefulWidget {
   const NavBarItem({
     super.key,
     required this.icon,
-    required this.label,
     required this.isActive,
     required this.onTap,
     this.badgeCount,
@@ -30,32 +25,32 @@ class NavBarItem extends StatefulWidget {
   State<NavBarItem> createState() => _NavBarItemState();
 }
 
-class _NavBarItemState extends State<NavBarItem> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _elevationAnimation;
-  late Animation<Color?> _backgroundAnimation;
+class _NavBarItemState extends State<NavBarItem> with TickerProviderStateMixin {
+  late AnimationController _burstController;
+  late AnimationController _mainController;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _iconSizeAnim;
   bool _showSparkle = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 260),
+    _burstController = AnimationController(
       vsync: this,
+      duration: const Duration(milliseconds: 430),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    _mainController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+      value: widget.isActive ? 1 : 0,
     );
-    _elevationAnimation = Tween<double>(begin: 0.0, end: 9.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.ease),
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.22).animate(
+      CurvedAnimation(parent: _mainController, curve: Curves.easeOutCubic),
     );
-    _backgroundAnimation = ColorTween(
-      begin: Colors.transparent,
-      end: widget.activeColor.withValues(alpha: 0.1),
-    ).animate(_controller);
-
-    if (widget.isActive) _controller.forward();
+    _iconSizeAnim = Tween<double>(begin: 24, end: 30).animate(
+      CurvedAnimation(parent: _mainController, curve: Curves.easeOutCubic),
+    );
+    if (widget.isActive) _showSparkle = false;
   }
 
   @override
@@ -63,20 +58,17 @@ class _NavBarItemState extends State<NavBarItem> with SingleTickerProviderStateM
     super.didUpdateWidget(oldWidget);
     if (widget.isActive != oldWidget.isActive) {
       if (widget.isActive) {
-        _controller.forward();
-        setState(() => _showSparkle = true);
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) setState(() => _showSparkle = false);
-        });
+        _mainController.forward();
       } else {
-        _controller.reverse();
+        _mainController.reverse();
       }
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _burstController.dispose();
+    _mainController.dispose();
     super.dispose();
   }
 
@@ -120,98 +112,91 @@ class _NavBarItemState extends State<NavBarItem> with SingleTickerProviderStateM
     return const SizedBox.shrink();
   }
 
-  Widget _buildSparkleEffect() {
-    if (!_showSparkle) return const SizedBox.shrink();
-    return Positioned.fill(
-      child: ParticleField(
-        spriteSheet: SpriteSheet(
-          image: const AssetImage(AssetPath.sparkleEffect),
-          frameWidth: 32,
-          frameHeight: 32,
-        ),
-        blendMode: BlendMode.srcIn,
-        onTick: (controller, elapsed, size) {
-          final r = Random();
-          List<Particle> particles = [];
-          for (int i = 0; i < 10; i++) {
-            particles.add(
-              Particle(
-                x: size.width / 2 + r.nextDouble() * 20 - 10,
-                y: size.height / 2 + r.nextDouble() * 20 - 10,
-                vx: r.nextDouble() * 50 - 25,
-                vy: r.nextDouble() * 50 - 25,
-                lifespan: 0.5,
-                frame: r.nextInt(4),
-                scale: 0.5 + r.nextDouble() * 0.5,
-              ),
-            );
-          }
-          controller.particles = particles;
-        },
-      ),
-    );
+  void _doBurst() async {
+    _burstController.forward(from: 0);
+
+    // Bật hiệu ứng sparkle khi ấn vào và tắt sau 1s
+    setState(() => _showSparkle = true);
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _showSparkle = false);
+    });
+
+    if (!widget.isActive) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      widget.onTap();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        widget.onTap();
-        setState(() => _showSparkle = true);
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) setState(() => _showSparkle = false);
-        });
-      },
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (ctx, child) => Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _backgroundAnimation.value,
-                border: Border.all(
-                  color: widget.isActive ? widget.activeColor.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.2),
-                  width: 1.5,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _doBurst,
+        child: SizedBox(
+          width: 68,
+          height: 64,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Hiệu ứng burst khi ấn vào
+              NavBarCircleBurst(
+                animation: _burstController,
+                color: widget.activeColor,
+                maxRadius: 56,
+              ),
+              // Sparkle hiệu ứng khi ấn vào icon (icon center, nhỏ vừa, rơi xuống)
+              Positioned(
+                bottom: 8,
+                child: NavBarSparkleEffect(
+                  show: _showSparkle,
+                  size: 32,
                 ),
               ),
-            ),
-            Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Material(
-                elevation: _elevationAnimation.value,
-                color: Colors.transparent,
-                shape: const CircleBorder(),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      widget.icon,
-                      size: widget.isActive ? 30 : 24,
-                      color: widget.isActive ? widget.activeColor : Colors.grey.shade500,
-                    ),
-                    _buildBadge(),
-                    _buildSparkleEffect(),
-                    Positioned(
-                      bottom: -17,
-                      child: Text(
-                        widget.label,
-                        style: GoogleFonts.lato(
-                          fontSize: 11,
-                          color: widget.isActive ? widget.activeColor : Colors.grey.shade500,
-                          fontWeight: widget.isActive ? FontWeight.bold : FontWeight.normal,
+              // Border luôn hiện nếu đang active
+              AnimatedBuilder(
+                animation: _mainController,
+                builder: (context, child) {
+                  return Opacity(
+                    opacity: widget.isActive ? 1 : 0,
+                    child: Container(
+                      width: 44 * _scaleAnim.value,
+                      height: 44 * _scaleAnim.value,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: widget.activeColor,
+                          width: 2.2,
                         ),
                       ),
+                    ),
+                  );
+                },
+              ),
+              // Icon + badge
+              AnimatedBuilder(
+                animation: Listenable.merge([_mainController, _burstController]),
+                builder: (context, child) => Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        NavBarIcon(
+                          icon: widget.icon,
+                          isActive: widget.isActive,
+                          activeColor: widget.activeColor,
+                          size: _iconSizeAnim.value,
+                        ),
+                        _buildBadge(),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
