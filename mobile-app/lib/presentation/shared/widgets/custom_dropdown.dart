@@ -21,6 +21,8 @@ class CustomDropdown extends StatelessWidget {
     final isValueSelected = value != null && value!.isNotEmpty;
 
     return DropdownButtonFormField<String>(
+      isExpanded: true, // This fixes the overflow issue
+      menuMaxHeight: 300, // Limit dropdown height for long lists
       decoration: InputDecoration(
         prefixIcon: Icon(
           Icons.category,
@@ -46,6 +48,8 @@ class CustomDropdown extends StatelessWidget {
             ? const Color(0xFFD81B60).withAlpha(25)
             : Colors.white.withAlpha(240),
         floatingLabelBehavior: FloatingLabelBehavior.never,
+        // Add proper padding to ensure text fits
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
       value: value,
       hint: Text(
@@ -65,7 +69,6 @@ class CustomDropdown extends StatelessWidget {
         return DropdownMenuItem<String>(
           value: option['value'] as String,
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               if (option['icon'] != null)
                 Padding(
@@ -78,14 +81,14 @@ class CustomDropdown extends StatelessWidget {
                     size: 20,
                   ),
                 ),
-              Flexible(
+              Expanded( // Changed from Flexible to Expanded for better width control
                 child: Text(
                   option['label'] as String,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: isOptionSelected ? const Color(0xFFD81B60) : const Color(0xFF424242),
                     fontWeight: isOptionSelected ? FontWeight.bold : FontWeight.normal,
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis, // Keep this to handle long text
                 ),
               ),
               if (isOptionSelected)
@@ -108,7 +111,6 @@ class CustomDropdown extends StatelessWidget {
             alignment: Alignment.centerLeft,
             constraints: const BoxConstraints(minWidth: 100),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 if (option['icon'] != null)
                   Padding(
@@ -119,7 +121,7 @@ class CustomDropdown extends StatelessWidget {
                       size: 20,
                     ),
                   ),
-                Flexible(
+                Expanded( // Changed from Flexible to Expanded for better width control
                   child: Text(
                     option['label'] as String,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -127,6 +129,7 @@ class CustomDropdown extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                     overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
               ],

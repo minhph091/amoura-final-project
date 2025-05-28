@@ -29,9 +29,9 @@ class AppGradientBackground extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0x27FC5185),
-                Color(0x3043DDE6),
-                Color(0x38E0C3FC),
+                Color(0xFFFFEAF4),
+                Color(0xFFE4FFFA),
+                Color(0xFFFFF0F5),
               ],
             )),
       ),
