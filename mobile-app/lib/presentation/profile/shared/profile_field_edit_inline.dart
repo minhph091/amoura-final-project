@@ -1,12 +1,13 @@
-// lib/presentation/profile/shared/profile_field_edit_inline.dart
-
 import 'package:flutter/material.dart';
+import '../setup/theme/setup_profile_theme.dart';
+import 'theme/profile_theme.dart';
 
 class ProfileFieldEditInline extends StatefulWidget {
   final String label;
   final String? initialValue;
   final String hintText;
   final IconData? icon;
+  final bool required;
   final ValueChanged<String> onSaved;
   final VoidCallback? onCancel;
   final String? Function(String?)? validator;
@@ -19,6 +20,7 @@ class ProfileFieldEditInline extends StatefulWidget {
     this.initialValue,
     required this.hintText,
     this.icon,
+    this.required = false,
     required this.onSaved,
     this.onCancel,
     this.validator,
@@ -52,39 +54,68 @@ class _ProfileFieldEditInlineState extends State<ProfileFieldEditInline> {
     }
   }
 
+  String? _validateField(String? value) {
+    if (widget.required && (value == null || value.trim().isEmpty)) {
+      return 'Please enter ${widget.label}';
+    }
+    return widget.validator != null ? widget.validator!(value) : null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Form(
       key: _formKey,
       child: ListTile(
-        leading: widget.icon != null ? Icon(widget.icon, color: theme.colorScheme.primary, size: 22) : null,
-        title: TextFormField(
-          controller: _controller,
-          decoration: InputDecoration(
-            labelText: widget.label,
-            hintText: widget.hintText,
-            border: const OutlineInputBorder(),
-          ),
-          validator: widget.validator,
-          maxLength: widget.maxLength,
-          maxLines: widget.maxLines ?? 1,
+        leading: widget.icon != null ? Icon(widget.icon, color: ProfileTheme.darkPink, size: 22) : null,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  widget.label,
+                  style: ProfileTheme.getLabelStyle(context),
+                ),
+                if (widget.required)
+                  Text(" *", style: TextStyle(color: ProfileTheme.darkPink, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _controller,
+              decoration: InputDecoration(
+                hintText: widget.hintText,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: ProfileTheme.darkPink, width: 2),
+                ),
+              ),
+              validator: _validateField,
+              maxLength: widget.maxLength,
+              maxLines: widget.maxLines ?? 1,
+              style: ProfileTheme.getInputTextStyle(context),
+            ),
+          ],
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.check, color: Colors.green),
+              icon: const Icon(Icons.check_circle, color: Colors.green, size: 28),
               onPressed: _save,
               tooltip: 'Save',
             ),
             IconButton(
-              icon: const Icon(Icons.close, color: Colors.redAccent),
+              icon: Icon(Icons.cancel, color: ProfileTheme.darkPink, size: 28),
               onPressed: widget.onCancel,
               tooltip: 'Cancel',
             ),
           ],
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }

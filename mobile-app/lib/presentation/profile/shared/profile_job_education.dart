@@ -1,7 +1,7 @@
-// // lib/presentation/profile/shared/profile_job_education.dart
-
 import 'package:flutter/material.dart';
+import '../setup/theme/setup_profile_theme.dart';
 import 'profile_field_display.dart';
+import 'theme/profile_theme.dart';
 
 class ProfileJobEducation extends StatelessWidget {
   final String? jobIndustry;
@@ -26,18 +26,24 @@ class ProfileJobEducation extends StatelessWidget {
         ProfileFieldDisplay(
           label: 'Job Industry',
           value: jobIndustry,
+          icon: Icons.work,
+          iconColor: ProfileTheme.darkPink,
           editable: editable,
           onEdit: onEdit != null ? () => onEdit!("jobIndustry") : null,
         ),
         ProfileFieldDisplay(
           label: 'Education Level',
           value: educationLevel,
+          icon: Icons.school,
+          iconColor: ProfileTheme.darkPink,
           editable: editable,
           onEdit: onEdit != null ? () => onEdit!("educationLevel") : null,
         ),
         ProfileFieldDisplay(
           label: 'Drop Out',
           value: dropOut == null ? null : (dropOut! ? 'Yes' : 'No'),
+          icon: Icons.info_outline,
+          iconColor: ProfileTheme.darkPink,
           editable: editable,
           onEdit: onEdit != null ? () => onEdit!("dropOut") : null,
           showDivider: false,

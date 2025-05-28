@@ -1,6 +1,7 @@
-// lib/presentation/profile/shared/profile_bio_photos.dart
-
 import 'package:flutter/material.dart';
+import '../setup/theme/setup_profile_theme.dart';
+import 'theme/profile_theme.dart';
+import 'widgets/expandable_text.dart';
 
 class ProfileBioPhotos extends StatelessWidget {
   final String? bio;
@@ -9,6 +10,7 @@ class ProfileBioPhotos extends StatelessWidget {
   final VoidCallback? onEditBio;
   final VoidCallback? onAddPhoto;
   final void Function(int idx)? onRemovePhoto;
+  final void Function(String url)? onViewPhoto;
 
   const ProfileBioPhotos({
     super.key,
@@ -18,36 +20,43 @@ class ProfileBioPhotos extends StatelessWidget {
     this.onEditBio,
     this.onAddPhoto,
     this.onRemovePhoto,
+    this.onViewPhoto,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (bio != null && bio!.isNotEmpty) ...[
           Row(
             children: [
-              Text('Bio', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+              Icon(Icons.edit_note, color: ProfileTheme.darkPink),
+              const SizedBox(width: 8),
+              Text('Bio', style: ProfileTheme.getSubtitleStyle(context)),
               if (editable && onEditBio != null)
                 IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
+                  icon: Icon(Icons.edit, size: 20, color: ProfileTheme.darkPink),
                   onPressed: onEditBio,
                   tooltip: "Edit Bio",
                 ),
             ],
           ),
-          Text(bio!, style: theme.textTheme.bodyMedium),
+          Padding(
+            padding: const EdgeInsets.only(left: 32.0),
+            child: ExpandableText(text: bio!, maxLines: 2),
+          ),
           const SizedBox(height: 18),
         ],
         if (galleryPhotos != null) ...[
           Row(
             children: [
-              Text('Gallery Photos', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+              Icon(Icons.photo_library, color: ProfileTheme.darkPink),
+              const SizedBox(width: 8),
+              Text('Gallery Photos', style: ProfileTheme.getSubtitleStyle(context)),
               if (editable && onAddPhoto != null)
                 IconButton(
-                  icon: const Icon(Icons.add_a_photo),
+                  icon: Icon(Icons.add_a_photo, color: ProfileTheme.darkPink),
                   onPressed: onAddPhoto,
                   tooltip: "Add Photo",
                 ),
@@ -55,7 +64,7 @@ class ProfileBioPhotos extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 70,
+            height: 100,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: galleryPhotos!.length,
@@ -64,9 +73,29 @@ class ProfileBioPhotos extends StatelessWidget {
                 final url = galleryPhotos![i];
                 return Stack(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(url, width: 70, height: 70, fit: BoxFit.cover),
+                    GestureDetector(
+                      onTap: onViewPhoto != null ? () => onViewPhoto!(url) : null,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: ProfileTheme.darkPurple.withOpacity(0.3)),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            url,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 100,
+                              height: 100,
+                              color: ProfileTheme.lightPink.withOpacity(0.2),
+                              child: Icon(Icons.image_not_supported, color: ProfileTheme.darkPink),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                     if (editable && onRemovePhoto != null)
                       Positioned(
@@ -76,11 +105,11 @@ class ProfileBioPhotos extends StatelessWidget {
                           onTap: () => onRemovePhoto!(i),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Colors.white.withOpacity(0.8),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             padding: const EdgeInsets.all(2),
-                            child: const Icon(Icons.close, color: Colors.red, size: 16),
+                            child: Icon(Icons.close, color: ProfileTheme.darkPink, size: 16),
                           ),
                         ),
                       ),

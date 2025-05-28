@@ -1,18 +1,29 @@
-// lib/presentation/profile/shared/profile_section_title.dart
-
 import 'package:flutter/material.dart';
+import '../setup/theme/setup_profile_theme.dart';
+import 'theme/profile_theme.dart';
 
 class ProfileSectionTitle extends StatelessWidget {
   final String title;
+  final IconData icon;
   final Widget? trailing;
-  const ProfileSectionTitle({super.key, required this.title, this.trailing});
+
+  const ProfileSectionTitle({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
     return Row(
       children: [
-        Text(title, style: style),
+        Icon(icon, color: ProfileTheme.darkPink),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: ProfileTheme.getSubtitleStyle(context),
+        ),
         if (trailing != null) ...[
           const Spacer(),
           trailing!,

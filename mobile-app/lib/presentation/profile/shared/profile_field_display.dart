@@ -1,14 +1,16 @@
-// lib/presentation/profile/shared/profile_field_display.dart
-
 import 'package:flutter/material.dart';
+import '../setup/theme/setup_profile_theme.dart';
+import 'theme/profile_theme.dart';
 
 class ProfileFieldDisplay extends StatelessWidget {
   final String label;
   final String? value;
   final IconData? icon;
+  final Color? iconColor;
   final VoidCallback? onEdit;
   final bool showDivider;
   final bool editable;
+  final bool required;
   final Widget? customValueWidget;
 
   const ProfileFieldDisplay({
@@ -16,9 +18,11 @@ class ProfileFieldDisplay extends StatelessWidget {
     required this.label,
     this.value,
     this.icon,
+    this.iconColor,
     this.onEdit,
     this.showDivider = true,
     this.editable = false,
+    this.required = false,
     this.customValueWidget,
   });
 
@@ -29,13 +33,25 @@ class ProfileFieldDisplay extends StatelessWidget {
     return Column(
       children: [
         ListTile(
-          leading: icon != null ? Icon(icon, color: theme.colorScheme.primary, size: 22) : null,
-          title: Text(label, style: theme.textTheme.bodyMedium),
+          leading: icon != null ? Icon(icon, color: iconColor ?? theme.colorScheme.primary, size: 22) : null,
+          title: Row(
+            children: [
+              Text(
+                label,
+                style: ProfileTheme.getLabelStyle(context),
+              ),
+              if (required)
+                Text(" *", style: TextStyle(color: ProfileTheme.darkPink, fontWeight: FontWeight.bold)),
+            ],
+          ),
           subtitle: customValueWidget ??
-              Text(value?.isNotEmpty == true ? value! : '-', style: theme.textTheme.titleSmall),
+              Text(
+                value?.isNotEmpty == true ? value! : '-',
+                style: ProfileTheme.getInputTextStyle(context),
+              ),
           trailing: editable
               ? IconButton(
-            icon: const Icon(Icons.edit, size: 20),
+            icon: Icon(Icons.edit, size: 20, color: ProfileTheme.darkPink),
             onPressed: onEdit,
             tooltip: 'Edit $label',
           )
@@ -43,7 +59,7 @@ class ProfileFieldDisplay extends StatelessWidget {
           dense: true,
           onTap: editable ? onEdit : null,
         ),
-        if (showDivider) const Divider(height: 2),
+        if (showDivider) Divider(height: 2, color: ProfileTheme.lightPurple),
       ],
     );
   }

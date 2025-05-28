@@ -1,7 +1,7 @@
-// // lib/presentation/profile/shared/profile_lifestyle.dart
-
 import 'package:flutter/material.dart';
+import '../setup/theme/setup_profile_theme.dart';
 import 'profile_field_display.dart';
+import 'theme/profile_theme.dart';
 
 class ProfileLifestyle extends StatelessWidget {
   final String? drinkStatus;
@@ -26,18 +26,24 @@ class ProfileLifestyle extends StatelessWidget {
         ProfileFieldDisplay(
           label: 'Drink',
           value: drinkStatus,
+          icon: Icons.local_bar,
+          iconColor: ProfileTheme.darkPink,
           editable: editable,
           onEdit: onEdit != null ? () => onEdit!("drinkStatus") : null,
         ),
         ProfileFieldDisplay(
           label: 'Smoke',
           value: smokeStatus,
+          icon: Icons.smoking_rooms,
+          iconColor: ProfileTheme.darkPink,
           editable: editable,
           onEdit: onEdit != null ? () => onEdit!("smokeStatus") : null,
         ),
         ProfileFieldDisplay(
           label: 'Pets',
           value: pets != null && pets!.isNotEmpty ? pets!.join(', ') : null,
+          icon: Icons.pets,
+          iconColor: ProfileTheme.darkPink,
           editable: editable,
           onEdit: onEdit != null ? () => onEdit!("pets") : null,
           showDivider: false,

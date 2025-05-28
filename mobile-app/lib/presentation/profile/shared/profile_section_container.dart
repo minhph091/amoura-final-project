@@ -1,6 +1,5 @@
-// lib/presentation/profile/shared/profile_section_container.dart
-
 import 'package:flutter/material.dart';
+import 'theme/profile_theme.dart';
 
 class ProfileSectionContainer extends StatelessWidget {
   final Widget child;
@@ -18,9 +17,8 @@ class ProfileSectionContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Card(
-      color: color ?? theme.cardColor,
+      color: color ?? Colors.white,
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       elevation: 1.5,
