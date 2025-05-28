@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'main_navigator_viewmodel.dart';
 import 'widgets/nav_bar_item.dart';
 import '../discovery/discovery_view.dart';
-import '../settings/settings_view.dart'; // Import for SettingsView
+import '../settings/settings_view.dart';
 
 class MainNavigatorView extends StatelessWidget {
   const MainNavigatorView({super.key});
@@ -21,7 +21,7 @@ class MainNavigatorView extends StatelessWidget {
               index: vm.currentIndex,
               children: [
                 const DiscoveryView(),
-                const Placeholder(), // Matches screen (who likes me)
+                const Placeholder(), // Matches screen
                 const Placeholder(), // Chat screen
                 const SettingsView(), // Settings screen
               ],
@@ -36,14 +36,12 @@ class MainNavigatorView extends StatelessWidget {
                   children: [
                     NavBarItem(
                       icon: Icons.explore,
-                      label: "Discover",
                       isActive: vm.currentIndex == 0,
                       onTap: () => vm.setCurrentIndex(0),
                       activeColor: Colors.blue,
                     ),
                     NavBarItem(
                       icon: Icons.favorite,
-                      label: "Matches",
                       isActive: vm.currentIndex == 1,
                       onTap: () => vm.setCurrentIndex(1),
                       badge: "VIP",
@@ -51,7 +49,6 @@ class MainNavigatorView extends StatelessWidget {
                     ),
                     NavBarItem(
                       icon: Icons.chat,
-                      label: "Chat",
                       isActive: vm.currentIndex == 2,
                       onTap: () => vm.setCurrentIndex(2),
                       badgeCount: vm.chatBadgeCount,
@@ -59,7 +56,6 @@ class MainNavigatorView extends StatelessWidget {
                     ),
                     NavBarItem(
                       icon: Icons.settings,
-                      label: "Settings",
                       isActive: vm.currentIndex == 3,
                       onTap: () => vm.setCurrentIndex(3),
                       activeColor: Colors.amber,
