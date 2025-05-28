@@ -52,6 +52,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/profiles/photos/*/cover").permitAll()
                         .requestMatchers(HttpMethod.GET, "/profiles/photos/*/highlights").permitAll()
                         .requestMatchers(HttpMethod.GET, "/profiles/photos/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/profiles/options").permitAll()
+
 
 
                         // Bắt buộc phải xác thực

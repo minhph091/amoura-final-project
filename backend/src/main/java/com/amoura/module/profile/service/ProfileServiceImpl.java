@@ -2,7 +2,7 @@ package com.amoura.module.profile.service;
 
 import com.amoura.common.exception.ApiException;
 import com.amoura.module.profile.domain.*;
-import com.amoura.module.profile.dto.ProfileDTO;
+import com.amoura.module.profile.dto.*;
 import com.amoura.module.profile.mapper.ProfileMapper;
 import com.amoura.module.profile.repository.*;
 import com.amoura.module.user.domain.User;
@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -176,5 +177,67 @@ public class ProfileServiceImpl implements ProfileService {
         List<Photo> photos = user.getPhotos();
 
         return profileMapper.toDTO(user, savedProfile, user.getLocation(), photos, interests, languages, pets);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProfileOptionsDTO getAllProfileOptions() {
+        return ProfileOptionsDTO.builder()
+                .orientations(orientationRepository.findAll().stream()
+                        .map(o -> OrientationDTO.builder()
+                                .id(o.getId())
+                                .name(o.getName())
+                                .description(o.getDescription())
+                                .build())
+                        .collect(Collectors.toList()))
+                .jobIndustries(jobIndustryRepository.findAll().stream()
+                        .map(j -> JobIndustryDTO.builder()
+                                .id(j.getId())
+                                .name(j.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .drinkStatuses(drinkStatusRepository.findAll().stream()
+                        .map(d -> DrinkStatusDTO.builder()
+                                .id(d.getId())
+                                .name(d.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .smokeStatuses(smokeStatusRepository.findAll().stream()
+                        .map(s -> SmokeStatusDTO.builder()
+                                .id(s.getId())
+                                .name(s.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .educationLevels(educationLevelRepository.findAll().stream()
+                        .map(e -> EducationLevelDTO.builder()
+                                .id(e.getId())
+                                .name(e.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .pets(petRepository.findAll().stream()
+                        .map(p -> PetDTO.builder()
+                                .id(p.getId())
+                                .name(p.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .interests(interestRepository.findAll().stream()
+                        .map(i -> InterestDTO.builder()
+                                .id(i.getId())
+                                .name(i.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .languages(languageRepository.findAll().stream()
+                        .map(l -> LanguageDTO.builder()
+                                .id(l.getId())
+                                .name(l.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .bodyTypes(bodyTypeRepository.findAll().stream()
+                        .map(b -> BodyTypeDTO.builder()
+                                .id(b.getId())
+                                .name(b.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
     }
 } 
