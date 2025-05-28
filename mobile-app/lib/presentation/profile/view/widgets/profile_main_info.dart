@@ -27,37 +27,38 @@ class ProfileMainInfo extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            displayName,
+            displayName.isNotEmpty ? displayName : '-',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (age != null)
-                Text('$age yrs', style: Theme.of(context).textTheme.bodyMedium),
-              if (age != null && gender != null) const SizedBox(width: 12),
-              if (gender != null)
-                Row(
-                  children: [
-                    Icon(
-                      gender == 'Male'
-                          ? Icons.male
-                          : gender == 'Female'
-                          ? Icons.female
-                          : Icons.transgender,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      gender!,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-            ],
-          ),
+          if (age != null || gender != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (age != null)
+                  Text('$age yrs', style: Theme.of(context).textTheme.bodyMedium),
+                if (age != null && gender != null) const SizedBox(width: 12),
+                if (gender != null)
+                  Row(
+                    children: [
+                      Icon(
+                        gender == 'Male'
+                            ? Icons.male
+                            : gender == 'Female'
+                            ? Icons.female
+                            : Icons.transgender,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        gender ?? '-',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+              ],
+            ),
         ],
       ),
     );

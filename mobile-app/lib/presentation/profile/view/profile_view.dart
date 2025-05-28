@@ -1,175 +1,210 @@
-// lib/presentation/profile/view/profile_view.dart
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'profile_viewmodel.dart';
-import '../shared/profile_section_container.dart';
+import '../../shared/widgets/app_gradient_background.dart';
+import '../setup/theme/setup_profile_theme.dart';
+import '../shared/widgets/collapsible_section.dart';
+import '../shared/profile_avatar_cover.dart';
+import '../shared/profile_basic_info.dart';
+import '../shared/profile_bio_photos.dart';
 import '../shared/profile_location.dart';
 import '../shared/profile_appearance.dart';
 import '../shared/profile_job_education.dart';
 import '../shared/profile_lifestyle.dart';
 import '../shared/profile_interests_languages.dart';
-import '../shared/profile_bio_photos.dart';
-import 'widgets/profile_cover_avatar.dart';
-import 'widgets/profile_main_info.dart';
-import 'widgets/profile_bio_interests.dart';
-import 'widgets/profile_accordion_section.dart';
-import 'widgets/accordion_section_controller.dart';
-import '../edit/edit_profile_view.dart';
+import 'widgets/profile_action_menu.dart';
 
-class ProfileView extends StatelessWidget {
-  const ProfileView({super.key});
+class ProfileView extends StatefulWidget {
+  final dynamic profile;
+  final bool isMyProfile;
+
+  const ProfileView({
+    super.key,
+    required this.profile,
+    required this.isMyProfile,
+  });
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  String? _expandedSection;
+
+  void _toggleSection(String section) {
+    setState(() {
+      if (_expandedSection == section) {
+        _expandedSection = null;
+      } else {
+        _expandedSection = section;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ProfileViewModel()..loadProfile(),
-      child: Consumer<ProfileViewModel>(
-        builder: (context, vm, _) {
-          if (vm.isLoading) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (vm.error != null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Profile')),
-              body: Center(child: Text(vm.error!)),
-            );
-          }
-          // Sửa tại đây: nếu profile null thì show loading hoặc empty/error UI
-          final profile = vm.profile;
-          if (profile == null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Profile')),
-              body: const Center(child: Text('No profile data found.')),
-            );
-          }
-          final AccordionSectionController _accordionController = AccordionSectionController();
+    final displayName = [
+      if (widget.profile?.firstName?.isNotEmpty ?? false) widget.profile.firstName,
+      if (widget.profile?.lastName?.isNotEmpty ?? false) widget.profile.lastName,
+    ].join(' ');
 
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Profile'),
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Edit Profile',
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const EditProfileView()),
-                    );
-                  },
-                ),
-              ],
+    return AppGradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text('Profile', style: TextStyle(
+            color: ProfileTheme.darkPurple,
+            fontWeight: FontWeight.bold,
+          )),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          actions: [
+            if (widget.isMyProfile)
+              IconButton(
+                icon: Icon(Icons.edit, color: ProfileTheme.darkPink),
+                tooltip: 'Edit Profile',
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/edit-profile', arguments: widget.profile);
+                },
+              )
+            else
+              IconButton(
+                icon: Icon(Icons.more_vert, color: ProfileTheme.darkPink),
+                onPressed: () {
+                  showProfileActionMenu(context, widget.profile);
+                },
+                tooltip: 'More Options',
+              ),
+          ],
+        ),
+        body: ListView(
+          children: [
+            ProfileAvatarCover(
+              avatarUrl: widget.profile?.avatarUrl,
+              coverUrl: widget.profile?.coverUrl,
+              onViewCover: () {
+                // View full cover photo (could navigate to a full-screen image view)
+                if (widget.profile?.coverUrl != null) {
+                  // Implementation for viewing full size cover photo
+                }
+              },
             ),
-            body: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                ProfileCoverAvatar(
-                  avatarUrl: profile.avatarUrl,
-                  coverUrl: profile.coverUrl,
-                ),
-                ProfileMainInfo(
-                  firstName: profile.firstName,
-                  lastName: profile.lastName,
-                  dob: profile.dateOfBirth,
-                  gender: profile.gender,
-                ),
-                ProfileBioInterests(
-                  bio: profile.bio,
-                  interests: profile.interests,
-                ),
-                const SizedBox(height: 6),
-                ProfileAccordionSection(
-                  controller: _accordionController,
-                  sectionKey: 'location',
-                  title: 'Location',
-                  icon: Icons.location_on_outlined,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileLocation(
-                      city: profile.city,
-                      state: profile.state,
-                      country: profile.country,
-                      locationPreference: profile.locationPreference,
-                    ),
-                  ),
-                ),
-                ProfileAccordionSection(
-                  controller: _accordionController,
-                  sectionKey: 'appearance',
-                  title: 'Appearance',
-                  icon: Icons.accessibility_new_rounded,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileAppearance(
-                      bodyType: profile.bodyType,
-                      height: profile.height,
-                    ),
-                  ),
-                ),
-                ProfileAccordionSection(
-                  controller: _accordionController,
-                  sectionKey: 'job',
-                  title: 'Job & Education',
-                  icon: Icons.work_outline_rounded,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileJobEducation(
-                      jobIndustry: profile.jobIndustry,
-                      educationLevel: profile.educationLevel,
-                      dropOut: profile.dropOut,
-                    ),
-                  ),
-                ),
-                ProfileAccordionSection(
-                  controller: _accordionController,
-                  sectionKey: 'lifestyle',
-                  title: 'Lifestyle',
-                  icon: Icons.self_improvement_outlined,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileLifestyle(
-                      drinkStatus: profile.drinkStatus,
-                      smokeStatus: profile.smokeStatus,
-                      pets: profile.pets,
-                    ),
-                  ),
-                ),
-                ProfileAccordionSection(
-                  controller: _accordionController,
-                  sectionKey: 'languages',
-                  title: 'Languages',
-                  icon: Icons.language,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileInterestsLanguages(
-                      interests: null,
-                      languages: profile.languages,
-                      interestedInNewLanguage: profile.interestedInNewLanguage,
-                    ),
-                  ),
-                ),
-                ProfileAccordionSection(
-                  controller: _accordionController,
-                  sectionKey: 'photos',
-                  title: 'Gallery Photos',
-                  icon: Icons.photo_library_outlined,
-                  child: ProfileSectionContainer(
-                    margin: EdgeInsets.zero,
-                    child: ProfileBioPhotos(
-                      bio: null,
-                      galleryPhotos: profile.galleryPhotos,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-              ],
+
+            Padding(
+              padding: const EdgeInsets.only(top: 16, bottom: 8),
+              child: Text(
+                displayName.isNotEmpty ? displayName : '-',
+                style: ProfileTheme.getTitleStyle(context),
+                textAlign: TextAlign.center,
+              ),
             ),
-          );
-        },
+
+            if (widget.profile?.username != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  '@${widget.profile.username}',
+                  style: TextStyle(color: ProfileTheme.darkPink),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+            // Bio & Photos
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ProfileBioPhotos(
+                bio: widget.profile?.bio,
+                galleryPhotos: widget.profile?.galleryPhotos,
+                onViewPhoto: (url) {
+                  // Navigate to photo viewer
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Basic Information (Collapsible)
+            CollapsibleSection(
+              title: "Basic Information",
+              icon: Icons.person,
+              initiallyExpanded: _expandedSection == 'basic',
+              onToggle: () => _toggleSection('basic'),
+              child: ProfileBasicInfo(
+                firstName: widget.profile?.firstName,
+                lastName: widget.profile?.lastName,
+                username: widget.profile?.username,
+                dob: widget.profile?.dateOfBirth,
+                gender: widget.profile?.gender,
+                orientation: widget.profile?.orientation,
+              ),
+            ),
+
+            // Appearance
+            CollapsibleSection(
+              title: "Appearance",
+              icon: Icons.accessibility_new,
+              initiallyExpanded: _expandedSection == 'appearance',
+              onToggle: () => _toggleSection('appearance'),
+              child: ProfileAppearance(
+                bodyType: widget.profile?.bodyType,
+                height: widget.profile?.height,
+              ),
+            ),
+
+            // Location
+            CollapsibleSection(
+              title: "Location",
+              icon: Icons.location_on,
+              initiallyExpanded: _expandedSection == 'location',
+              onToggle: () => _toggleSection('location'),
+              child: ProfileLocation(
+                city: widget.profile?.city,
+                state: widget.profile?.state,
+                country: widget.profile?.country,
+                locationPreference: widget.profile?.locationPreference,
+              ),
+            ),
+
+            // Job & Education
+            CollapsibleSection(
+              title: "Job & Education",
+              icon: Icons.work,
+              initiallyExpanded: _expandedSection == 'job',
+              onToggle: () => _toggleSection('job'),
+              child: ProfileJobEducation(
+                jobIndustry: widget.profile?.jobIndustry,
+                educationLevel: widget.profile?.educationLevel,
+                dropOut: widget.profile?.dropOut,
+              ),
+            ),
+
+            // Lifestyle
+            CollapsibleSection(
+              title: "Lifestyle",
+              icon: Icons.emoji_emotions,
+              initiallyExpanded: _expandedSection == 'lifestyle',
+              onToggle: () => _toggleSection('lifestyle'),
+              child: ProfileLifestyle(
+                drinkStatus: widget.profile?.drinkStatus,
+                smokeStatus: widget.profile?.smokeStatus,
+                pets: widget.profile?.pets,
+              ),
+            ),
+
+            // Interests & Languages
+            CollapsibleSection(
+              title: "Interests & Languages",
+              icon: Icons.interests,
+              initiallyExpanded: _expandedSection == 'interests',
+              onToggle: () => _toggleSection('interests'),
+              child: ProfileInterestsLanguages(
+                interests: widget.profile?.interests,
+                languages: widget.profile?.languages,
+                interestedInNewLanguage: widget.profile?.interestedInNewLanguage,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
