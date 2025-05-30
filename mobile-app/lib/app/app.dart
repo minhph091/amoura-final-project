@@ -16,7 +16,7 @@ class AmouraApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       onGenerateRoute: AppPages.generateRoute,
-      initialRoute: AppPages.initial,
+      initialRoute: AppPages.initial, // Sử dụng initialRoute thay vì home
       debugShowCheckedModeBanner: false,
     );
   }

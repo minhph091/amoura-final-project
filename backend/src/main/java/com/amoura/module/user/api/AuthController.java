@@ -70,32 +70,20 @@ public class AuthController {
 
     @PostMapping("/password/reset/request")
     @Operation(summary = "Request password reset")
-    public ResponseEntity<PasswordResetResponse> requestPasswordReset(
+    public ResponseEntity<Map<String, String>> requestPasswordReset(
             @Valid @RequestBody RequestPasswordResetRequest request) {
-        return ResponseEntity.ok(passwordResetService.requestPasswordReset(request));
-    }
-
-    @PostMapping("/password/reset/verify-otp")
-    @Operation(summary = "Verify OTP for password reset")
-    public ResponseEntity<PasswordResetResponse> verifyPasswordResetOtp(
-            @Valid @RequestBody VerifyPasswordResetOtpRequest request) {
-        return ResponseEntity.ok(passwordResetService.verifyOtp(request));
+        passwordResetService.requestPasswordReset(request);
+        return ResponseEntity.ok(Collections.singletonMap("message",
+                "If your email is registered, a password reset OTP has been sent."));
     }
 
     @PostMapping("/password/reset")
-    @Operation(summary = "Reset password with verified OTP")
+    @Operation(summary = "Reset password with OTP")
     public ResponseEntity<Map<String, String>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetPassword(request);
         return ResponseEntity.ok(Collections.singletonMap("message",
                 "Password has been reset successfully."));
-    }
-
-    @PostMapping("/password/reset/resend-otp")
-    @Operation(summary = "Resend OTP for password reset")
-    public ResponseEntity<PasswordResetResponse> resendPasswordResetOtp(
-            @RequestParam String sessionToken) {
-        return ResponseEntity.ok(passwordResetService.resendOtp(sessionToken));
     }
 
     @PostMapping("/refresh")

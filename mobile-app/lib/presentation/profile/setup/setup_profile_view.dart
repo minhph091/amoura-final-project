@@ -1,11 +1,10 @@
-// lib/presentation/profile/setup/setup_profile_view.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get_it/get_it.dart';
 import '../../../domain/usecases/auth/register_usecase.dart';
 import '../../../domain/usecases/auth/update_profile_usecase.dart';
-import 'setup_profile_gradient_bg.dart';
+import '../../shared/widgets/app_gradient_background.dart';
 import 'setup_profile_viewmodel.dart';
 import 'widgets/setup_profile_header.dart';
 import 'steps/step1_name_form.dart';
@@ -34,7 +33,7 @@ class SetupProfileView extends StatelessWidget {
       ),
       child: Consumer<SetupProfileViewModel>(
         builder: (context, vm, child) {
-          return SetupProfileGradientBg(
+          return AppGradientBackground(
             child: Scaffold(
               backgroundColor: Colors.transparent,
               body: SafeArea(

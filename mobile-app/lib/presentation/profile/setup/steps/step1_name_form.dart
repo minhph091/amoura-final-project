@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/shake_widget.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../setup_profile_viewmodel.dart';
@@ -63,24 +63,24 @@ class _Step1NameFormState extends State<Step1NameForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Your Name", style: SetupProfileTheme.getTitleStyle(context)),
+            Text("Your Name", style: ProfileTheme.getTitleStyle(context)),
             const SizedBox(height: 6),
-            Text("This name will be visible to everyone.", style: SetupProfileTheme.getDescriptionStyle(context)),
+            Text("This name will be visible to everyone.", style: ProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 8),
-            Text("Fields marked with * are required.", style: SetupProfileTheme.getDescriptionStyle(context)),
+            Text("Fields marked with * are required.", style: ProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 24),
             ShakeWidget(
               shake: _firstNameError,
               child: AppTextField(
                 controller: _firstNameCtrl,
                 labelText: "First Name *",
-                labelStyle: SetupProfileTheme.getLabelStyle(context),
+                labelStyle: ProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.person,
-                prefixIconColor: SetupProfileTheme.darkPink,
+                prefixIconColor: ProfileTheme.darkPink,
                 maxLength: 50,
                 validator: (v) => ValidationUtil().validateFirstName(v),
                 onSaved: (v) => vm.firstName = v?.trim(),
-                style: SetupProfileTheme.getInputTextStyle(context),
+                style: ProfileTheme.getInputTextStyle(context),
               ),
             ),
             const SizedBox(height: 18),
@@ -89,13 +89,13 @@ class _Step1NameFormState extends State<Step1NameForm> {
               child: AppTextField(
                 controller: _lastNameCtrl,
                 labelText: "Last Name *",
-                labelStyle: SetupProfileTheme.getLabelStyle(context),
+                labelStyle: ProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.badge,
-                prefixIconColor: SetupProfileTheme.darkPink,
+                prefixIconColor: ProfileTheme.darkPink,
                 maxLength: 50,
                 validator: (v) => ValidationUtil().validateLastName(v),
                 onSaved: (v) => vm.lastName = v?.trim(),
-                style: SetupProfileTheme.getInputTextStyle(context),
+                style: ProfileTheme.getInputTextStyle(context),
               ),
             ),
             const SizedBox(height: 28),

@@ -1,7 +1,8 @@
+// lib/presentation/profile/setup/steps/step9_interests_languages_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/shake_widget.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/interest_constants.dart';
@@ -27,11 +28,11 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Your Interests & Languages', style: SetupProfileTheme.getTitleStyle(context)),
+          Text('Your Interests & Languages', style: ProfileTheme.getTitleStyle(context)),
           const SizedBox(height: 6),
-          Text('This helps us match you with like-minded people.', style: SetupProfileTheme.getDescriptionStyle(context)),
+          Text('This helps us match you with like-minded people.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 8),
-          Text('Fields marked with * are required.', style: SetupProfileTheme.getDescriptionStyle(context)),
+          Text('Fields marked with * are required.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 18),
           ProfileOptionSelector(
             options: languageOptions,
@@ -44,17 +45,17 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
               });
             },
             labelText: 'Languages you speak',
-            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            labelStyle: ProfileTheme.getLabelStyle(context),
             isMultiSelect: true,
             scrollable: false,
             isSearchable: true,
           ),
           const SizedBox(height: 12),
           CheckboxListTile(
-            title: Text('Interested in learning new languages?', style: SetupProfileTheme.getInputTextStyle(context)),
+            title: Text('Interested in learning new languages?', style: ProfileTheme.getInputTextStyle(context)),
             value: vm.interestedInNewLanguage ?? false,
             onChanged: (val) => setState(() => vm.interestedInNewLanguage = val ?? false),
-            activeColor: SetupProfileTheme.darkPink,
+            activeColor: ProfileTheme.darkPink,
           ),
           const SizedBox(height: 16),
           ShakeWidget(
@@ -71,7 +72,7 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
                 });
               },
               labelText: 'Your Interests *',
-              labelStyle: SetupProfileTheme.getLabelStyle(context),
+              labelStyle: ProfileTheme.getLabelStyle(context),
               isMultiSelect: true,
               scrollable: false,
             ),

@@ -1,7 +1,7 @@
 // lib/presentation/profile/setup/steps/step3_orientation_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/orientation_constants.dart';
@@ -24,11 +24,11 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Your Orientation', style: SetupProfileTheme.getTitleStyle(context)),
+          Text('Your Orientation', style: ProfileTheme.getTitleStyle(context)),
           const SizedBox(height: 6),
-          Text('This helps us match you with compatible people.', style: SetupProfileTheme.getDescriptionStyle(context)),
+          Text('This helps us match you with compatible people.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 8),
-          Text('Please select your preference.', style: SetupProfileTheme.getDescriptionStyle(context)),
+          Text('Please select your preference.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 32),
           ProfileOptionSelector(
             options: orientationOptions,
@@ -43,7 +43,7 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> {
               }
             },
             labelText: 'Orientation',
-            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            labelStyle: ProfileTheme.getLabelStyle(context),
             scrollable: false,
           ),
           const SizedBox(height: 32),

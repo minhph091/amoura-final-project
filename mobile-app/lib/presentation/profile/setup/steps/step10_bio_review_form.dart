@@ -1,5 +1,4 @@
 // lib/presentation/profile/setup/steps/step10_bio_review_form.dart
-
 import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +7,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../shared/widgets/app_text_field.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/photo_viewer.dart';
 import '../setup_profile_viewmodel.dart';
@@ -88,27 +87,27 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Your Bio & Photos", style: SetupProfileTheme.getTitleStyle(context)),
+            Text("Your Bio & Photos", style: ProfileTheme.getTitleStyle(context)),
             const SizedBox(height: 6),
             Text("Write a short introduction and upload up to 4 vertical or square photos (max 2MB, 512x512).",
-                style: SetupProfileTheme.getDescriptionStyle(context)),
+                style: ProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 18),
             AppTextField(
               labelText: "Your Bio",
-              labelStyle: SetupProfileTheme.getLabelStyle(context),
+              labelStyle: ProfileTheme.getLabelStyle(context),
               hintText: "Tell us about yourself...",
               prefixIcon: Icons.edit_note,
-              prefixIconColor: SetupProfileTheme.darkPink,
+              prefixIconColor: ProfileTheme.darkPink,
               maxLines: 5,
               maxLength: 1000,
               initialValue: vm.bio,
               onSaved: (v) => vm.bio = v,
               validator: (value) => value != null && value.length > 1000 ? "Bio must not exceed 1000 characters." : null,
-              style: SetupProfileTheme.getInputTextStyle(context),
+              style: ProfileTheme.getInputTextStyle(context),
             ),
             const SizedBox(height: 22),
             Text("Your Photos (${uploadedImages.length}/$maxAdditionalPhotos)",
-                style: SetupProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600)),
+                style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 10,
@@ -133,7 +132,7 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                           shape: BoxShape.circle,
                           boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
                         ),
-                        child: Icon(Icons.close, color: SetupProfileTheme.darkPink, size: 18),
+                        child: Icon(Icons.close, color: ProfileTheme.darkPink, size: 18),
                       ),
                     ),
                   ],
@@ -152,7 +151,7 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                         width: 80,
                         height: 80,
                         alignment: Alignment.center,
-                        child: Icon(Icons.add_a_photo_rounded, color: SetupProfileTheme.darkPink, size: 32),
+                        child: Icon(Icons.add_a_photo_rounded, color: ProfileTheme.darkPink, size: 32),
                       ),
                     ),
                   ),

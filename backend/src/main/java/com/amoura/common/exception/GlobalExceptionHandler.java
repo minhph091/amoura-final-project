@@ -3,18 +3,12 @@ package com.amoura.common.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -101,79 +95,4 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
-
-    // Looix khong tim thay tài nguyên
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode("RESOURCE_NOT_FOUND")
-                .message("The requested resource was not found on the server")
-                .status(HttpStatus.NOT_FOUND.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        log.error("No Resource Found: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-    }
-    // Xử lý gọi các phuơng thức không hỗ trowj
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode("METHOD_NOT_ALLOWED")
-                .message("HTTP method not supported: " + ex.getMethod())
-                .status(HttpStatus.METHOD_NOT_ALLOWED.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        log.error("Method Not Allowed: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(errorResponse);
-    }
-
-    // Xử lý báo lỗi định dạng server lỗi
-    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode("UNSUPPORTED_MEDIA_TYPE")
-                .message("Media type not supported: " + ex.getContentType())
-                .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        log.error("Unsupported Media Type: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorResponse);
-    }
-    // Không đuúng kểu ữ liệu
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
-        String paramName = ex.getName();
-        String value = ex.getValue() != null ? ex.getValue().toString() : "null";
-        String message = String.format("Invalid value '%s' for parameter '%s'. Expected type: %s",
-                value, paramName, ex.getRequiredType().getSimpleName());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode("TYPE_MISMATCH")
-                .message(message)
-                .status(HttpStatus.BAD_REQUEST.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        log.error("Type Mismatch: {}", ex.getMessage());
-        return ResponseEntity.badRequest().body(errorResponse);
-    }
-    
-    // Định dạng body loi
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode("INVALID_REQUEST_BODY")
-                .message("Invalid request body format")
-                .status(HttpStatus.BAD_REQUEST.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        log.error("Invalid Request Body: {}", ex.getMessage());
-        return ResponseEntity.badRequest().body(errorResponse);
-    }
-
-
 }

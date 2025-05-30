@@ -1,4 +1,3 @@
-// lib/presentation/settings/settings_view.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../shared/widgets/app_gradient_background.dart';
@@ -32,17 +31,6 @@ class SettingsView extends StatelessWidget {
             title: const Text('Settings'),
             backgroundColor: Colors.transparent,
             elevation: 0,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.notifications_rounded),
-                color: Colors.orange,
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const NotificationSettingsView()),
-                  );
-                },
-              ),
-            ],
           ),
           body: ListView(
             padding: const EdgeInsets.only(bottom: 24), // Đổi từ top: 24 sang bottom: 24 để đồng bộ UI

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_text_field.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 
@@ -18,48 +18,48 @@ class Step5LocationForm extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Your Location", style: SetupProfileTheme.getTitleStyle(context)),
+              Text("Your Location", style: ProfileTheme.getTitleStyle(context)),
               const SizedBox(height: 6),
-              Text("This helps you connect with people nearby.", style: SetupProfileTheme.getDescriptionStyle(context)),
+              Text("This helps you connect with people nearby.", style: ProfileTheme.getDescriptionStyle(context)),
               const SizedBox(height: 8),
-              Text("Tap the GPS icon to automatically detect your location.", style: SetupProfileTheme.getDescriptionStyle(context)),
+              Text("Tap the GPS icon to automatically detect your location.", style: ProfileTheme.getDescriptionStyle(context)),
               const SizedBox(height: 18),
               AppTextField(
                 labelText: "City",
-                labelStyle: SetupProfileTheme.getLabelStyle(context),
+                labelStyle: ProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.location_city,
-                prefixIconColor: SetupProfileTheme.darkPink,
+                prefixIconColor: ProfileTheme.darkPink,
                 initialValue: vm.city ?? "",
                 readOnly: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                style: SetupProfileTheme.getInputTextStyle(context),
+                style: ProfileTheme.getInputTextStyle(context),
                 suffixIcon: _buildGpsButton(context),
               ),
               const SizedBox(height: 12),
               AppTextField(
                 labelText: "State",
-                labelStyle: SetupProfileTheme.getLabelStyle(context),
+                labelStyle: ProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.map,
-                prefixIconColor: SetupProfileTheme.darkPink,
+                prefixIconColor: ProfileTheme.darkPink,
                 initialValue: vm.state ?? "",
                 readOnly: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                style: SetupProfileTheme.getInputTextStyle(context),
+                style: ProfileTheme.getInputTextStyle(context),
               ),
               const SizedBox(height: 12),
               AppTextField(
                 labelText: "Country",
-                labelStyle: SetupProfileTheme.getLabelStyle(context),
+                labelStyle: ProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.flag,
-                prefixIconColor: SetupProfileTheme.darkPink,
+                prefixIconColor: ProfileTheme.darkPink,
                 initialValue: vm.country ?? "",
                 readOnly: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                style: SetupProfileTheme.getInputTextStyle(context),
+                style: ProfileTheme.getInputTextStyle(context),
               ),
               const SizedBox(height: 20),
               Center(
-                child: Text("Preferred Distance (km)", style: SetupProfileTheme.getLabelStyle(context), textAlign: TextAlign.center),
+                child: Text("Preferred Distance (km)", style: ProfileTheme.getLabelStyle(context), textAlign: TextAlign.center),
               ),
               Slider(
                 value: (vm.locationPreference ?? 10).toDouble(),
@@ -67,8 +67,8 @@ class Step5LocationForm extends StatelessWidget {
                 max: 300,
                 divisions: 30,
                 label: "${vm.locationPreference ?? 10} km",
-                activeColor: SetupProfileTheme.darkPink,
-                inactiveColor: SetupProfileTheme.darkPurple.withAlpha(77),
+                activeColor: ProfileTheme.darkPink,
+                inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
                 onChanged: (val) => vm.setLocationPreference(val.round()),
               ),
               const SizedBox(height: 28),
@@ -112,14 +112,14 @@ class Step5LocationForm extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: SetupProfileTheme.darkPink.withAlpha(38),
+            color: ProfileTheme.darkPink.withAlpha(38),
           ),
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 1.0, end: 1.2),
             duration: const Duration(seconds: 2),
             curve: Curves.easeInOut,
             builder: (context, value, child) => Transform.scale(scale: value, child: child),
-            child: Icon(Icons.gps_fixed, color: SetupProfileTheme.darkPink, size: 24),
+            child: Icon(Icons.gps_fixed, color: ProfileTheme.darkPink, size: 24),
           ),
         ),
       ),

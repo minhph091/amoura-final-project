@@ -5,7 +5,6 @@ import '../../../../core/constants/profile/orientation_constants.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/shake_widget.dart';
 import '../../setup/theme/setup_profile_theme.dart';
-import '../../theme/profile_theme.dart';
 import '../edit_profile_viewmodel.dart';
 
 class EditProfileBasicInfoSection extends StatefulWidget {
