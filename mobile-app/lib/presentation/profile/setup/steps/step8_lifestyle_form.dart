@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/pet_constants.dart';
@@ -26,9 +26,9 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Your Lifestyle', style: SetupProfileTheme.getTitleStyle(context)),
+          Text('Your Lifestyle', style: ProfileTheme.getTitleStyle(context)),
           const SizedBox(height: 6),
-          Text('Tell us about your lifestyle and pets.', style: SetupProfileTheme.getDescriptionStyle(context)),
+          Text('Tell us about your lifestyle and pets.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 24),
           ProfileOptionSelector(
             options: drinkOptions,
@@ -37,7 +37,7 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
               if (selected) setState(() => vm.drinkStatus = value);
             },
             labelText: 'Do you drink?',
-            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            labelStyle: ProfileTheme.getLabelStyle(context),
             isDropdown: true,
           ),
           const SizedBox(height: 18),
@@ -48,7 +48,7 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
               if (selected) setState(() => vm.smokeStatus = value);
             },
             labelText: 'Do you smoke?',
-            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            labelStyle: ProfileTheme.getLabelStyle(context),
             isDropdown: true,
           ),
           const SizedBox(height: 18),
@@ -63,7 +63,7 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
               });
             },
             labelText: 'Do you have pets?',
-            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            labelStyle: ProfileTheme.getLabelStyle(context),
             isMultiSelect: true,
             scrollable: false,
           ),

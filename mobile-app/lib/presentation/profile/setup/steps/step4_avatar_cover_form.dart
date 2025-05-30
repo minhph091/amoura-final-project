@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 
@@ -93,10 +93,10 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Your Avatar & Cover Photo", style: SetupProfileTheme.getTitleStyle(context)),
+          Text("Your Avatar & Cover Photo", style: ProfileTheme.getTitleStyle(context)),
           const SizedBox(height: 6),
           Text("Upload a vertical or square photo (max 2MB, recommended 512x512 for avatar, 1024x1024 for cover).",
-              style: SetupProfileTheme.getDescriptionStyle(context)),
+              style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 24),
           Row(
             children: [
@@ -114,12 +114,12 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                color: SetupProfileTheme.darkPink.withAlpha(20),
+                                color: ProfileTheme.darkPink.withAlpha(20),
                                 borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: SetupProfileTheme.darkPink, width: 2),
+                                border: Border.all(color: ProfileTheme.darkPink, width: 2),
                               ),
                               child: vm.avatarPath == null
-                                  ? Center(child: Icon(Icons.camera_alt, size: 48, color: SetupProfileTheme.darkPink))
+                                  ? Center(child: Icon(Icons.camera_alt, size: 48, color: ProfileTheme.darkPink))
                                   : ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
                                 child: Image.file(File(vm.avatarPath!), fit: BoxFit.cover, width: double.infinity, height: double.infinity),
@@ -135,7 +135,7 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                     shape: BoxShape.circle,
                                     boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
                                   ),
-                                  child: Icon(Icons.close, color: SetupProfileTheme.darkPink, size: 18),
+                                  child: Icon(Icons.close, color: ProfileTheme.darkPink, size: 18),
                                 ),
                               ),
                           ],
@@ -143,8 +143,8 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text("Avatar", style: SetupProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                    Text("Your main profile photo", style: SetupProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
+                    Text("Avatar", style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                    Text("Your main profile photo", style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
                   ],
                 ),
               ),
@@ -163,12 +163,12 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                color: SetupProfileTheme.darkPurple.withAlpha(25),
+                                color: ProfileTheme.darkPurple.withAlpha(25),
                                 borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: SetupProfileTheme.darkPurple, width: 2),
+                                border: Border.all(color: ProfileTheme.darkPurple, width: 2),
                               ),
                               child: vm.coverPath == null
-                                  ? Center(child: Icon(Icons.image, size: 48, color: SetupProfileTheme.darkPurple))
+                                  ? Center(child: Icon(Icons.image, size: 48, color: ProfileTheme.darkPurple))
                                   : ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
                                 child: Image.file(File(vm.coverPath!), fit: BoxFit.cover, width: double.infinity, height: double.infinity),
@@ -184,7 +184,7 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                     shape: BoxShape.circle,
                                     boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
                                   ),
-                                  child: Icon(Icons.close, color: SetupProfileTheme.darkPink, size: 18),
+                                  child: Icon(Icons.close, color: ProfileTheme.darkPink, size: 18),
                                 ),
                               ),
                           ],
@@ -192,8 +192,8 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text("Cover Photo", style: SetupProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                    Text("Large background photo", style: SetupProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
+                    Text("Cover Photo", style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                    Text("Large background photo", style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
                   ],
                 ),
               ),
@@ -208,7 +208,7 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                 return;
               }
               vm.nextStep(context: context);
-              },
+            },
             width: double.infinity,
             height: 52,
           ),

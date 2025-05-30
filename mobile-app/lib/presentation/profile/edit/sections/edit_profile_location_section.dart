@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../setup/theme/setup_profile_theme.dart';
-import '../../theme/profile_theme.dart';
 import '../edit_profile_viewmodel.dart';
 
 class EditProfileLocationSection extends StatefulWidget {

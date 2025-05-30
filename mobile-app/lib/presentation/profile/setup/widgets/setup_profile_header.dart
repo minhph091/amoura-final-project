@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../shared/theme/profile_theme.dart';
 import '../theme/setup_profile_theme.dart';
 
 class SetupProfileHeader extends StatelessWidget {
@@ -34,13 +33,13 @@ class SetupProfileHeader extends StatelessWidget {
             children: [
               Text(
                 'Setup Profile',
-                style: SetupProfileTheme.getTitleStyle(context),
+                style: ProfileTheme.getTitleStyle(context), // Use ProfileTheme
                 textAlign: TextAlign.center,
               ),
               Text(
                 '($currentStep/$totalSteps)',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: SetupProfileTheme.darkPurple,
+                  color: ProfileTheme.darkPurple, // Use ProfileTheme
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -58,7 +57,7 @@ class SetupProfileHeader extends StatelessWidget {
                 child: Text(
                   'Back',
                   style: TextStyle(
-                    color: SetupProfileTheme.darkPink,
+                    color: ProfileTheme.darkPink, // Use ProfileTheme
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
                   ),
@@ -80,7 +79,7 @@ class SetupProfileHeader extends StatelessWidget {
                 child: Text(
                   'Skip',
                   style: TextStyle(
-                    color: SetupProfileTheme.darkPink,
+                    color: ProfileTheme.darkPink, // Use ProfileTheme
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
                   ),

@@ -3,7 +3,6 @@ import '../../../../core/constants/profile/language_constants.dart';
 import '../../../../core/constants/profile/interest_constants.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../setup/theme/setup_profile_theme.dart';
-import '../../theme/profile_theme.dart';
 import '../edit_profile_viewmodel.dart';
 
 class EditProfileInterestsLanguagesSection extends StatefulWidget {

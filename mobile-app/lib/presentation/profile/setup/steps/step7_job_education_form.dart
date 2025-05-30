@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/education_constants.dart';
@@ -26,9 +26,9 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text('Your Job & Education', style: SetupProfileTheme.getTitleStyle(context), textAlign: TextAlign.center),
+          Text('Your Job & Education', style: ProfileTheme.getTitleStyle(context), textAlign: TextAlign.center),
           const SizedBox(height: 6),
-          Text('Tell us about your career and education.', style: SetupProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
+          Text('Tell us about your career and education.', style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
           const SizedBox(height: 24),
           ProfileOptionSelector(
             options: jobOptions,
@@ -37,7 +37,7 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
               if (selected) setState(() => vm.jobIndustry = value);
             },
             labelText: 'Job Industry',
-            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            labelStyle: ProfileTheme.getLabelStyle(context),
             isDropdown: true,
           ),
           const SizedBox(height: 18),
@@ -48,19 +48,19 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
               if (selected) setState(() => vm.educationLevel = value);
             },
             labelText: 'Education Level',
-            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            labelStyle: ProfileTheme.getLabelStyle(context),
             isDropdown: true,
           ),
           const SizedBox(height: 18),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text('I have dropped out / not completed the curriculum', style: SetupProfileTheme.getInputTextStyle(context), textAlign: TextAlign.left),
+            title: Text('I have dropped out / not completed the curriculum', style: ProfileTheme.getInputTextStyle(context), textAlign: TextAlign.left),
             trailing: Switch(
               value: vm.dropOut ?? false,
               onChanged: (val) => setState(() => vm.dropOut = val),
-              activeColor: SetupProfileTheme.darkPink,
-              inactiveThumbColor: SetupProfileTheme.darkPurple.withAlpha(128),
-              inactiveTrackColor: SetupProfileTheme.darkPurple.withAlpha(51),
+              activeColor: ProfileTheme.darkPink,
+              inactiveThumbColor: ProfileTheme.darkPurple.withAlpha(128),
+              inactiveTrackColor: ProfileTheme.darkPurple.withAlpha(51),
             ),
           ),
           const SizedBox(height: 24),

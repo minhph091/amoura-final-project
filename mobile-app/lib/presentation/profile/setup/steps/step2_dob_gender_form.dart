@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/utils/date_util.dart';
 import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/shake_widget.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
@@ -64,11 +64,11 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your Birthday & Gender', style: SetupProfileTheme.getTitleStyle(context)),
+            Text('Your Birthday & Gender', style: ProfileTheme.getTitleStyle(context)),
             const SizedBox(height: 6),
-            Text('This helps us personalize your dating experience.', style: SetupProfileTheme.getDescriptionStyle(context)),
+            Text('This helps us personalize your dating experience.', style: ProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 8),
-            Text('Fields marked with * are required.', style: SetupProfileTheme.getDescriptionStyle(context)),
+            Text('Fields marked with * are required.', style: ProfileTheme.getDescriptionStyle(context)),
             const SizedBox(height: 24),
             ShakeWidget(
               shake: _dobError,
@@ -92,12 +92,12 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                 child: AbsorbPointer(
                   child: AppTextField(
                     labelText: 'Birthday *',
-                    labelStyle: SetupProfileTheme.getLabelStyle(context),
+                    labelStyle: ProfileTheme.getLabelStyle(context),
                     prefixIcon: Icons.cake_rounded,
-                    prefixIconColor: SetupProfileTheme.darkPink,
+                    prefixIconColor: ProfileTheme.darkPink,
                     controller: _dobController,
                     validator: (v) => ValidationUtil().validateBirthday(vm.dateOfBirth),
-                    style: SetupProfileTheme.getInputTextStyle(context),
+                    style: ProfileTheme.getInputTextStyle(context),
                   ),
                 ),
               ),
@@ -117,7 +117,7 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                   }
                 },
                 labelText: 'Gender *',
-                labelStyle: SetupProfileTheme.getLabelStyle(context),
+                labelStyle: ProfileTheme.getLabelStyle(context),
                 scrollable: false,
               ),
             ),

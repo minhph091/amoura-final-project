@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../shared/theme/profile_theme.dart';
+import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/body_type_constants.dart';
@@ -25,9 +25,9 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Your Appearance', style: SetupProfileTheme.getTitleStyle(context)),
+          Text('Your Appearance', style: ProfileTheme.getTitleStyle(context)),
           const SizedBox(height: 6),
-          Text('Let others know more about your look.', style: SetupProfileTheme.getDescriptionStyle(context)),
+          Text('Let others know more about your look.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 24),
           ProfileOptionSelector(
             options: bodyTypeOptions,
@@ -36,23 +36,23 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
               if (selected) setState(() => vm.bodyType = value);
             },
             labelText: 'Body Type',
-            labelStyle: SetupProfileTheme.getLabelStyle(context),
+            labelStyle: ProfileTheme.getLabelStyle(context),
             isDropdown: true,
           ),
           const SizedBox(height: 20),
-          Text('Height (cm)', style: SetupProfileTheme.getLabelStyle(context)),
+          Text('Height (cm)', style: ProfileTheme.getLabelStyle(context)),
           Slider(
             value: (vm.height ?? 170).toDouble(),
             min: 100,
             max: 250,
             divisions: 150,
             label: '${vm.height ?? 170} cm',
-            activeColor: SetupProfileTheme.darkPink,
-            inactiveColor: SetupProfileTheme.darkPurple.withAlpha(77),
+            activeColor: ProfileTheme.darkPink,
+            inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
             onChanged: (val) => setState(() => vm.height = val.round()),
           ),
           Center(
-            child: Text('${vm.height ?? 170} cm', style: SetupProfileTheme.getTitleStyle(context).copyWith(fontSize: 16)),
+            child: Text('${vm.height ?? 170} cm', style: ProfileTheme.getTitleStyle(context).copyWith(fontSize: 16)),
           ),
           const SizedBox(height: 28),
           SetupProfileButton(

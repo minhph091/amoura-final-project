@@ -40,17 +40,6 @@ class SettingsView extends StatelessWidget {
           title: const Text('Settings'),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications_rounded),
-              color: Colors.orange,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const NotificationSettingsView()),
-                );
-              },
-            ),
-          ],
         ),
         body: ListView(
           padding: const EdgeInsets.only(bottom: 24),
