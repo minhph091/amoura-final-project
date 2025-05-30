@@ -1,5 +1,6 @@
 // lib/app/app.dart
 
+import 'package:amoura/presentation/main_navigator/main_navigator_view.dart';
 import 'package:flutter/material.dart';
 import '../config/theme/app_theme.dart';
 import 'routes/app_pages.dart';
@@ -15,7 +16,7 @@ class AmouraApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       onGenerateRoute: AppPages.generateRoute,
-      initialRoute: AppPages.initial,
+      home: const MainNavigatorView(),
       debugShowCheckedModeBanner: false,
     );
   }

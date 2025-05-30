@@ -1,4 +1,3 @@
-// lib/presentation/main_navigator/main_navigator_viewmodel.dart
 import 'package:flutter/material.dart';
 
 class MainNavigatorViewModel extends ChangeNotifier {
@@ -19,6 +18,11 @@ class MainNavigatorViewModel extends ChangeNotifier {
 
   void setChatBadgeCount(int? value) {
     _chatBadgeCount = value;
+    notifyListeners();
+  }
+
+  void setNotificationBadgeCount(int? value) {
+    _notificationBadgeCount = value;
     notifyListeners();
   }
 }

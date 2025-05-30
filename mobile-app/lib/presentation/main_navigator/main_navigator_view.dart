@@ -1,5 +1,3 @@
-// lib/presentation/main_navigator/main_navigator_view.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'main_navigator_viewmodel.dart';
@@ -20,9 +18,10 @@ class MainNavigatorView extends StatelessWidget {
             body: IndexedStack(
               index: vm.currentIndex,
               children: [
-                const DiscoveryView(),
-                const Placeholder(), // Matches screen
-                const Placeholder(), // Chat screen
+                const DiscoveryView(), // Discovery screen
+                const Placeholder(), // Placeholder for Favorites
+                const Placeholder(), // Placeholder for Chats
+                const Placeholder(), // Placeholder for Notifications
                 const SettingsView(), // Settings screen
               ],
             ),
@@ -34,31 +33,48 @@ class MainNavigatorView extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    NavBarItem(
-                      icon: Icons.explore,
-                      isActive: vm.currentIndex == 0,
-                      onTap: () => vm.setCurrentIndex(0),
-                      activeColor: Colors.blue,
+                    Expanded(
+                      child: NavBarItem(
+                        icon: Icons.explore,
+                        isActive: vm.currentIndex == 0,
+                        onTap: () => vm.setCurrentIndex(0),
+                        activeColor: Colors.blue,
+                      ),
                     ),
-                    NavBarItem(
-                      icon: Icons.favorite,
-                      isActive: vm.currentIndex == 1,
-                      onTap: () => vm.setCurrentIndex(1),
-                      badge: "VIP",
-                      activeColor: Colors.pink,
+                    Expanded(
+                      child: NavBarItem(
+                        icon: Icons.favorite,
+                        isActive: vm.currentIndex == 1,
+                        onTap: () => vm.setCurrentIndex(1),
+                        badge: "VIP",
+                        activeColor: Colors.pink,
+                      ),
                     ),
-                    NavBarItem(
-                      icon: Icons.chat,
-                      isActive: vm.currentIndex == 2,
-                      onTap: () => vm.setCurrentIndex(2),
-                      badgeCount: vm.chatBadgeCount,
-                      activeColor: Colors.green,
+                    Expanded(
+                      child: NavBarItem(
+                        icon: Icons.chat,
+                        isActive: vm.currentIndex == 2,
+                        onTap: () => vm.setCurrentIndex(2),
+                        badgeCount: vm.chatBadgeCount,
+                        activeColor: Colors.green,
+                      ),
                     ),
-                    NavBarItem(
-                      icon: Icons.settings,
-                      isActive: vm.currentIndex == 3,
-                      onTap: () => vm.setCurrentIndex(3),
-                      activeColor: Colors.amber,
+                    Expanded(
+                      child: NavBarItem(
+                        icon: Icons.notifications,
+                        isActive: vm.currentIndex == 3,
+                        onTap: () => vm.setCurrentIndex(3),
+                        badgeCount: vm.notificationBadgeCount,
+                        activeColor: Colors.orange,
+                      ),
+                    ),
+                    Expanded(
+                      child: NavBarItem(
+                        icon: Icons.settings,
+                        isActive: vm.currentIndex == 4,
+                        onTap: () => vm.setCurrentIndex(4),
+                        activeColor: Colors.purple,
+                      ),
                     ),
                   ],
                 ),
