@@ -160,7 +160,7 @@ public class GlobalExceptionHandler {
         log.error("Type Mismatch: {}", ex.getMessage());
         return ResponseEntity.badRequest().body(errorResponse);
     }
-    
+
     // Định dạng body loi
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
