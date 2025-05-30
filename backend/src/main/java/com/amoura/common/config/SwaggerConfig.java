@@ -22,8 +22,10 @@ public class SwaggerConfig {
                         .contact(new Contact()
                                 .name("Amoura Team")
                                 .email("minhph091@gmail.com")))
+                .addSecurityItem(new SecurityRequirement().addList("JWT"))
                 .components(new Components()
-                        .addSecuritySchemes("bearerAuth", new SecurityScheme()
+                        .addSecuritySchemes("JWT", new SecurityScheme()
+                                .name("JWT")
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")));
