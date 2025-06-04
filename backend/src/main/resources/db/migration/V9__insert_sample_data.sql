@@ -87,8 +87,3 @@ VALUES
     ('Urdu'),
     ('Vietnamese'),
     ('Other');
-INSERT INTO orientations (name, description, created_at, updated_at)
-VALUES
-    ('Bisexual', 'Attraction to both genders', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('Homosexual', 'Attraction to the same gender', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('Straight', 'Attraction to the opposite gender', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
