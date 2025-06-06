@@ -2,6 +2,7 @@ package com.amoura.module.profile.api;
 
 import com.amoura.module.profile.dto.ProfileDTO;
 import com.amoura.module.profile.dto.ProfileOptionsDTO;
+import com.amoura.module.profile.dto.ProfileResponseDTO;
 import com.amoura.module.profile.service.ProfileService;
 import com.amoura.module.user.dto.UpdateProfileRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +29,15 @@ public class ProfileController {
     public ResponseEntity<ProfileOptionsDTO> getProfileOptions() {
         ProfileOptionsDTO options = profileService.getAllProfileOptions();
         return ResponseEntity.ok(options);
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user's profile")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ProfileResponseDTO> getProfile(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        ProfileResponseDTO profile = profileService.getProfile(userDetails.getUsername());
+        return ResponseEntity.ok(profile);
     }
 
     @PatchMapping("/me")

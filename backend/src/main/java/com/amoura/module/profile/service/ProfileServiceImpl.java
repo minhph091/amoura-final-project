@@ -42,6 +42,23 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileMapper profileMapper;
 
     @Override
+    @Transactional(readOnly = true)
+    public ProfileResponseDTO getProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
+
+        Profile profile = profileRepository.findById(user.getId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Profile not found", "PROFILE_NOT_FOUND"));
+
+        List<UserInterest> interests = userInterestRepository.findByUserId(user.getId());
+        List<UserLanguage> languages = userLanguageRepository.findByUserId(user.getId());
+        List<UserPet> pets = userPetRepository.findByUserId(user.getId());
+        List<Photo> photos = user.getPhotos();
+
+        return profileMapper.toProfileResponseDTO(profile, user.getLocation(), photos, interests, languages, pets);
+    }
+
+    @Override
     @Transactional
     public ProfileDTO updateProfile(String email, UpdateProfileRequest request) {
         User user = userRepository.findByEmail(email)
