@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
-import '../../../../core/constants/profile/orientation_constants.dart';
 import '../setup_profile_viewmodel.dart';
+import '../stepmodel/step3_viewmodel.dart';
 
 class Step3OrientationForm extends StatefulWidget {
   const Step3OrientationForm({super.key});
@@ -16,8 +16,15 @@ class Step3OrientationForm extends StatefulWidget {
 
 class _Step3OrientationFormState extends State<Step3OrientationForm> {
   @override
+  void initState() {
+    super.initState();
+    // KHÔNG gọi fetchOrientationOptions ở đây nữa!
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<SetupProfileViewModel>(context, listen: true);
+    final vm = Provider.of<SetupProfileViewModel>(context);
+    final step3ViewModel = vm.stepViewModels[2] as Step3ViewModel;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
@@ -30,26 +37,32 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> {
           const SizedBox(height: 8),
           Text('Please select your preference.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 32),
-          ProfileOptionSelector(
-            options: orientationOptions,
-            selectedValue: vm.orientation,
-            onChanged: (value, selected) {
-              if (selected) {
-                setState(() {
-                  final index = orientationOptions.indexWhere((option) => option['value'] == value);
-                  vm.orientationId = index;
-                  vm.orientation = value;
-                });
-              }
-            },
-            labelText: 'Orientation',
-            labelStyle: ProfileTheme.getLabelStyle(context),
-            scrollable: false,
-          ),
+          step3ViewModel.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : step3ViewModel.errorMessage != null
+                  ? Center(child: Text(step3ViewModel.errorMessage!, style: const TextStyle(color: Colors.red)))
+                  : step3ViewModel.orientationOptions.isEmpty
+                      ? const Center(child: Text('No orientation options available'))
+                      : ProfileOptionSelector(
+                          options: step3ViewModel.orientationOptions,
+                          selectedValue: step3ViewModel.orientationId,
+                          onChanged: (value, selected) {
+                            if (selected && value.isNotEmpty) {
+                              final selectedOption = step3ViewModel.orientationOptions.firstWhere(
+                                (option) => option['value'] == value,
+                                orElse: () => {'value': '0', 'label': 'Unknown'},
+                              );
+                              step3ViewModel.setOrientation(selectedOption['value'] as String, selectedOption['label'] as String);
+                            }
+                          },
+                          labelText: 'Orientation',
+                          labelStyle: ProfileTheme.getLabelStyle(context),
+                          isDropdown: true,
+                        ),
           const SizedBox(height: 32),
           SetupProfileButton(
             text: 'Next',
-            onPressed: vm.orientation != null ? () => vm.nextStep(context: context) : null,
+            onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
           ),

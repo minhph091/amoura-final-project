@@ -1,10 +1,14 @@
 // lib/domain/usecases/auth/register_usecase.dart
 import '../../../data/repositories/auth_repository.dart';
+import '../../../core/services/auth_service.dart';
+import 'package:get_it/get_it.dart';
 
 class RegisterUseCase {
   final AuthRepository _authRepository;
+  final AuthService _authService;
 
-  RegisterUseCase(this._authRepository);
+  RegisterUseCase(this._authRepository, [AuthService? authService])
+      : _authService = authService ?? GetIt.I<AuthService>();
 
   Future<Map<String, dynamic>> initiate({
     required String email,
@@ -35,13 +39,28 @@ class RegisterUseCase {
     required String dateOfBirth,
     required String sex,
   }) async {
-    return await _authRepository.completeRegistration(
+    final response = await _authRepository.completeRegistration(
       sessionToken: sessionToken,
       firstName: firstName,
       lastName: lastName,
       dateOfBirth: dateOfBirth,
       sex: sex,
     );
+    // Log response để kiểm tra token
+    print('Complete registration response: $response');
+    // Save tokens if present
+    if (response['authResponse'] != null &&
+        response['authResponse']['accessToken'] != null &&
+        response['authResponse']['refreshToken'] != null) {
+      await _authService.saveTokens(
+        response['authResponse']['accessToken'],
+        response['authResponse']['refreshToken'],
+      );
+      print('Tokens saved successfully: accessToken=${response['authResponse']['accessToken']}');
+    } else {
+      print('Warning: No tokens found in authResponse');
+    }
+    return response;
   }
 
   Future<Map<String, dynamic>> resendOtp({required String sessionToken}) async {

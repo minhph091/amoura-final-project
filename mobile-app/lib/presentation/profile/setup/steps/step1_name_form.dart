@@ -7,6 +7,7 @@ import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../setup_profile_viewmodel.dart';
+import '../stepmodel/step1_viewmodel.dart';
 
 class Step1NameForm extends StatefulWidget {
   const Step1NameForm({super.key});
@@ -38,6 +39,17 @@ class _Step1NameFormState extends State<Step1NameForm> {
   }
 
   void _validateAndSave() {
+    final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+    vm.firstName = _firstNameCtrl.text.trim();
+    vm.lastName = _lastNameCtrl.text.trim();
+
+    // Đồng bộ lại cho Step1ViewModel nếu có
+    if (vm.stepViewModels.isNotEmpty && vm.stepViewModels[0] is Step1ViewModel) {
+      final step1Vm = vm.stepViewModels[0] as Step1ViewModel;
+      step1Vm.firstName = vm.firstName;
+      step1Vm.lastName = vm.lastName;
+    }
+
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       setState(() {

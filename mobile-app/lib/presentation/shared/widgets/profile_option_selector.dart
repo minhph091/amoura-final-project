@@ -34,77 +34,79 @@ class ProfileOptionSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    try {
+      final theme = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (labelText.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(
-              labelText,
-              style: labelStyle ?? theme.textTheme.headlineMedium?.copyWith(
-                color: const Color(0xFFD81B60),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (labelText.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                labelText,
+                style: labelStyle ?? theme.textTheme.headlineMedium?.copyWith(
+                  color: const Color(0xFFD81B60),
+                ),
               ),
             ),
-          ),
-        isDropdown
-            ? CustomDropdown(
-          options: options,
-          value: selectedValue,
-          onChanged: (val) => onChanged(val!, true),
-        )
-            : isMultiSelect && isSearchable
-            ? SearchableMultiSelectDropdown(
-          options: options,
-          selectedValues: selectedValues ?? [],
-          onChanged: onChanged,
-        )
-            : scrollable
-            ? SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: _buildChips(context),
-        )
-            : _buildChips(context),
-      ],
-    );
+          isDropdown
+              ? CustomDropdown(
+                  options: options,
+                  value: selectedValue,
+                  onChanged: (val) => onChanged(val ?? '', true), // Xử lý null
+                )
+              : isMultiSelect && isSearchable
+                  ? SearchableMultiSelectDropdown(
+                      options: options,
+                      selectedValues: selectedValues ?? [],
+                      onChanged: onChanged,
+                    )
+                  : scrollable
+                      ? SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: _buildChips(context),
+                        )
+                      : _buildChips(context),
+        ],
+      );
+    } catch (e, stack) {
+      print('ERROR in ProfileOptionSelector: $e\n$stack');
+      return Center(child: Text('Widget error: $e'));
+    }
   }
 
   Widget _buildChips(BuildContext context) {
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    final screenWidth = MediaQuery.of(context).size.width;
     final horizontalPadding = 48.0; // 24px on each side
-    final chipWidth = (screenWidth - horizontalPadding - 8) /
-        2; // Width for exactly 2 items per row
+    final chipWidth = (screenWidth - horizontalPadding - 8) / 2; // Width for exactly 2 items per row
 
     return Wrap(
       spacing: 8,
       runSpacing: 12,
       children: options.map((option) {
+        final value = option['value'] as String? ?? 'Unknown'; // Xử lý null cho value
+        final label = option['label'] as String? ?? 'Unknown'; // Xử lý null cho label
         final isSelected = isMultiSelect
-            ? selectedValues?.contains(option['value'] as String) ?? false
-            : selectedValue == option['value'];
+            ? selectedValues?.contains(value) ?? false
+            : selectedValue == value;
 
         return SizedBox(
           width: chipWidth,
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => onChanged(option['value'] as String, !isSelected),
+              onTap: () => onChanged(value, !isSelected),
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFFD81B60)
-                          : const Color(0xFFBA68C8),
-                      width: isSelected ? 2.0 : 1.2
+                    color: isSelected
+                        ? const Color(0xFFD81B60)
+                        : const Color(0xFFBA68C8),
+                    width: isSelected ? 2.0 : 1.2,
                   ),
                   borderRadius: BorderRadius.circular(12),
                   color: isSelected
@@ -126,21 +128,19 @@ class ProfileOptionSelector extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 8.0),
                         child: Icon(
                           option['icon'] as IconData,
-                          color: option['color'] as Color? ??
-                              const Color(0xFFD81B60),
+                          color: option['color'] as Color? ?? const Color(0xFFD81B60),
                           size: 20,
                         ),
                       ),
                     Expanded(
                       child: Text(
-                        option['label'] as String,
+                        label,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: isSelected
                               ? const Color(0xFFD81B60)
                               : const Color(0xFF424242),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight
-                              .normal,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     ),

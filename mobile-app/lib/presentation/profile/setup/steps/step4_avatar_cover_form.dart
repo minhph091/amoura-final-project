@@ -1,13 +1,15 @@
 // lib/presentation/profile/setup/steps/step4_avatar_cover_form.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/services/auth_service.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
+import '../stepmodel/step4_viewmodel.dart';
+import 'package:get_it/get_it.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class Step4AvatarCoverForm extends StatefulWidget {
   const Step4AvatarCoverForm({super.key});
@@ -17,197 +19,263 @@ class Step4AvatarCoverForm extends StatefulWidget {
 }
 
 class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
-  Future<bool> _requestPermissions(ImageSource source) async {
-    Permission permission = source == ImageSource.camera ? Permission.camera : Permission.photos;
-    var status = await permission.status;
+  String? _accessToken;
 
-    if (!status.isGranted) {
-      status = await permission.request();
-      if (!status.isGranted) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Please grant ${source == ImageSource.camera ? 'camera' : 'photo'} permission.")),
-          );
-        }
-        return false;
-      }
-    }
-    return true;
+  @override
+  void initState() {
+    super.initState();
+    // Lấy access token khi khởi tạo
+    _loadAccessToken();
   }
 
-  Future<void> _pickImage(BuildContext context, bool isAvatar) async {
-    final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
-    final source = await showDialog<ImageSource>(
+  Future<void> _loadAccessToken() async {
+    final authService = GetIt.I<AuthService>();
+    _accessToken = await authService.getAccessToken();
+    if (mounted) setState(() {});
+  }
+
+  // Điều chỉnh URL cho emulator
+  String _adjustUrl(String url) {
+    if (kIsWeb) return url; // Không thay đổi trên web
+    if (Platform.isAndroid && !kIsWeb) {
+      // Thay localhost và 127.0.0.1 bằng 10.0.2.2 cho emulator Android
+      return url
+          .replaceFirst('localhost', '10.0.2.2')
+          .replaceFirst('127.0.0.1', '10.0.2.2');
+    }
+    return url;
+  }
+
+  void _showImageOptions(BuildContext context, bool isAvatar, String path) {
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Image Source'),
+        title: const Text('Photo Options'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, ImageSource.camera), child: const Text('Camera')),
-          TextButton(onPressed: () => Navigator.pop(context, ImageSource.gallery), child: const Text('Gallery')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              final step4ViewModel = Provider.of<Step4ViewModel>(context, listen: false);
+              step4ViewModel.editImage(context, path, isAvatar);
+            },
+            child: const Text('Edit Photo'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              final step4ViewModel = Provider.of<Step4ViewModel>(context, listen: false);
+              step4ViewModel.pickImage(context, isAvatar);
+            },
+            child: const Text('Choose Another Photo'),
+          ),
         ],
       ),
     );
-    if (source == null) return;
-    if (!await _requestPermissions(source)) return;
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source, preferredCameraDevice: CameraDevice.rear);
-    if (pickedFile != null) {
-      final image = await decodeImageFromList(await File(pickedFile.path).readAsBytes());
-      if (image.width > image.height) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please upload a vertical or square photo.")),
-        );
-        return;
-      }
-      final compressedFile = await FlutterImageCompress.compressAndGetFile(
-        pickedFile.path,
-        "${pickedFile.path}_compressed.jpg",
-        quality: 70,
-        minWidth: isAvatar ? 512 : 1024,
-        minHeight: isAvatar ? 512 : 1024,
-        keepExif: true,
-      );
-      if (compressedFile != null) {
-        setState(() {
-          if (isAvatar) {
-            vm.avatarPath = compressedFile.path;
-          } else {
-            vm.coverPath = compressedFile.path;
-          }
-        });
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<SetupProfileViewModel>(context, listen: true);
+    final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+    final step4ViewModel = vm.stepViewModels[3] as Step4ViewModel;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Your Avatar & Cover Photo", style: ProfileTheme.getTitleStyle(context)),
-          const SizedBox(height: 6),
-          Text("Upload a vertical or square photo (max 2MB, recommended 512x512 for avatar, 1024x1024 for cover).",
-              style: ProfileTheme.getDescriptionStyle(context)),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+    // Wrap widget với ChangeNotifierProvider để lắng nghe Step4ViewModel
+    return ChangeNotifierProvider<Step4ViewModel>.value(
+      value: step4ViewModel,
+      child: Consumer<Step4ViewModel>(
+        builder: (context, step4ViewModel, child) {
+          // Log URL để debug
+          if (step4ViewModel.avatarPath != null) {
+            final adjustedAvatarUrl = _adjustUrl(step4ViewModel.avatarPath!);
+            print('Adjusted Avatar image url: $adjustedAvatarUrl');
+          }
+          if (step4ViewModel.coverPath != null) {
+            final adjustedCoverUrl = _adjustUrl(step4ViewModel.coverPath!);
+            print('Adjusted Cover image url: $adjustedCoverUrl');
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Your Avatar & Cover Photo", style: ProfileTheme.getTitleStyle(context)),
+                const SizedBox(height: 6),
+                Text("Upload a vertical or square photo (max 2MB, recommended 512x512 for avatar, 1024x1024 for cover).",
+                    style: ProfileTheme.getDescriptionStyle(context)),
+                const SizedBox(height: 24),
+                Row(
                   children: [
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: GestureDetector(
-                        onTap: () => _pickImage(context, true),
-                        child: Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: ProfileTheme.darkPink.withAlpha(20),
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: ProfileTheme.darkPink, width: 2),
-                              ),
-                              child: vm.avatarPath == null
-                                  ? Center(child: Icon(Icons.camera_alt, size: 48, color: ProfileTheme.darkPink))
-                                  : ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.file(File(vm.avatarPath!), fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          AspectRatio(
+                            aspectRatio: 1,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (step4ViewModel.avatarPath == null) {
+                                  step4ViewModel.pickImage(context, true);
+                                } else {
+                                  _showImageOptions(context, true, step4ViewModel.avatarPath!);
+                                }
+                              },
+                              child: Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: ProfileTheme.darkPink.withAlpha(20),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: ProfileTheme.darkPink, width: 2),
+                                    ),
+                                    child: step4ViewModel.avatarPath == null
+                                        ? const Center(child: Icon(Icons.camera_alt, size: 48, color: ProfileTheme.darkPink))
+                                        : ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: CachedNetworkImage(
+                                              imageUrl: _adjustUrl(step4ViewModel.avatarPath!),
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              memCacheWidth: 512, // Giảm tải bộ nhớ
+                                              httpHeaders: _accessToken != null
+                                                  ? {'Authorization': 'Bearer $_accessToken'}
+                                                  : null,
+                                              errorWidget: (context, url, error) {
+                                                print('Error loading avatar: $error, URL: ${_adjustUrl(step4ViewModel.avatarPath!)}');
+                                                return const Center(
+                                                  child: Icon(Icons.error, size: 48, color: Colors.red),
+                                                );
+                                              },
+                                              placeholder: (context, url) {
+                                                return const Center(child: CircularProgressIndicator());
+                                              },
+                                            ),
+                                          ),
+                                  ),
+                                  if (step4ViewModel.avatarPath != null)
+                                    GestureDetector(
+                                      onTap: () => setState(() {
+                                        step4ViewModel.avatarPath = null;
+                                        vm.avatarPath = null;
+                                      }),
+                                      child: Container(
+                                        margin: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
+                                        ),
+                                        child: const Icon(Icons.close, color: ProfileTheme.darkPink, size: 18),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
-                            if (vm.avatarPath != null)
-                              GestureDetector(
-                                onTap: () => setState(() => vm.avatarPath = null),
-                                child: Container(
-                                  margin: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
-                                  ),
-                                  child: Icon(Icons.close, color: ProfileTheme.darkPink, size: 18),
-                                ),
-                              ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text("Avatar", style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                          Text("Your main profile photo", style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text("Avatar", style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                    Text("Your main profile photo", style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: GestureDetector(
-                        onTap: () => _pickImage(context, false),
-                        child: Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: ProfileTheme.darkPurple.withAlpha(25),
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: ProfileTheme.darkPurple, width: 2),
-                              ),
-                              child: vm.coverPath == null
-                                  ? Center(child: Icon(Icons.image, size: 48, color: ProfileTheme.darkPurple))
-                                  : ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.file(File(vm.coverPath!), fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+                    const SizedBox(width: 18),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          AspectRatio(
+                            aspectRatio: 1,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (step4ViewModel.coverPath == null) {
+                                  step4ViewModel.pickImage(context, false);
+                                } else {
+                                  _showImageOptions(context, false, step4ViewModel.coverPath!);
+                                }
+                              },
+                              child: Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: ProfileTheme.darkPurple.withAlpha(25),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: ProfileTheme.darkPurple, width: 2),
+                                    ),
+                                    child: step4ViewModel.coverPath == null
+                                        ? const Center(child: Icon(Icons.image, size: 48, color: ProfileTheme.darkPurple))
+                                        : ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: CachedNetworkImage(
+                                              imageUrl: _adjustUrl(step4ViewModel.coverPath!),
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              memCacheWidth: 1024, // Giảm tải bộ nhớ
+                                              httpHeaders: _accessToken != null
+                                                  ? {'Authorization': 'Bearer $_accessToken'}
+                                                  : null,
+                                              errorWidget: (context, url, error) {
+                                                print('Error loading cover: $error, URL: ${_adjustUrl(step4ViewModel.coverPath!)}');
+                                                return const Center(
+                                                  child: Icon(Icons.error, size: 48, color: Colors.red),
+                                                );
+                                              },
+                                              placeholder: (context, url) {
+                                                return const Center(child: CircularProgressIndicator());
+                                              },
+                                            ),
+                                          ),
+                                  ),
+                                  if (step4ViewModel.coverPath != null)
+                                    GestureDetector(
+                                      onTap: () => setState(() {
+                                        step4ViewModel.coverPath = null;
+                                        vm.coverPath = null;
+                                      }),
+                                      child: Container(
+                                        margin: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
+                                        ),
+                                        child: const Icon(Icons.close, color: ProfileTheme.darkPurple, size: 18),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
-                            if (vm.coverPath != null)
-                              GestureDetector(
-                                onTap: () => setState(() => vm.coverPath = null),
-                                child: Container(
-                                  margin: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
-                                  ),
-                                  child: Icon(Icons.close, color: ProfileTheme.darkPink, size: 18),
-                                ),
-                              ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text("Cover Photo", style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                          Text("Large background photo", style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text("Cover Photo", style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                    Text("Large background photo", style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-          SetupProfileButton(
-            text: "Next",
-            onPressed: () {
-              if (vm.avatarPath == null || vm.coverPath == null) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please upload both photos.")));
-                return;
-              }
-              vm.nextStep(context: context);
-            },
-            width: double.infinity,
-            height: 52,
-          ),
-        ],
+                const SizedBox(height: 28),
+                SetupProfileButton(
+                  text: "Next",
+                  onPressed: () {
+                    final error = step4ViewModel.validate();
+                    if (error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                      return;
+                    }
+                    vm.nextStep(context: context);
+                  },
+                  width: double.infinity,
+                  height: 52,
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

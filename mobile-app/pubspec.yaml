@@ -1,7 +1,7 @@
 name: amoura
 description: "A new Flutter project."
 
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -12,6 +12,10 @@ dependencies:
   flutter:
     sdk: flutter
   dio: ^5.7.0
+  geolocator: ^10.0.0
+  geocoding: ^2.1.0
+  image_cropper:
+  http_parser: ^4.0.2
   get_it: ^7.2.0
   shared_preferences: ^2.0.15
   provider: ^6.1.2

@@ -1,4 +1,3 @@
-// lib/presentation/profile/setup/steps/step2_dob_gender_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/date_util.dart';
@@ -10,6 +9,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/sex_constants.dart';
 import '../setup_profile_viewmodel.dart';
+import '../stepmodel/step2_viewmodel.dart';
 
 class Step2DobGenderForm extends StatefulWidget {
   const Step2DobGenderForm({super.key});
@@ -40,16 +40,23 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
   }
 
   void _validateAndSave() {
+    final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+
+    // Đồng bộ lại cho Step2ViewModel nếu có
+    if (vm.stepViewModels.isNotEmpty && vm.stepViewModels[1] is Step2ViewModel) {
+      final step2Vm = vm.stepViewModels[1] as Step2ViewModel;
+      step2Vm.dateOfBirth = vm.dateOfBirth;
+      step2Vm.sex = vm.sex;
+    }
+
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       setState(() {
-        final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
         _dobError = ValidationUtil().validateBirthday(vm.dateOfBirth) != null;
         _genderError = vm.sex == null || vm.sex!.isEmpty;
       });
     } else {
       setState(() {
-        final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
         _dobError = ValidationUtil().validateBirthday(vm.dateOfBirth) != null;
         _genderError = vm.sex == null || vm.sex!.isEmpty;
       });
@@ -88,6 +95,11 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                   if (picked != null) {
                     setState(() {
                       vm.dateOfBirth = picked;
+                      // Đồng bộ lại cho Step2ViewModel
+                      if (vm.stepViewModels.isNotEmpty && vm.stepViewModels[1] is Step2ViewModel) {
+                        final step2Vm = vm.stepViewModels[1] as Step2ViewModel;
+                        step2Vm.dateOfBirth = picked;
+                      }
                       _dobController.text = DateUtil.formatDDMMYYYY(picked);
                     });
                   }
@@ -115,6 +127,11 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                   if (selected) {
                     setState(() {
                       vm.sex = value;
+                      // Đồng bộ lại cho Step2ViewModel
+                      if (vm.stepViewModels.isNotEmpty && vm.stepViewModels[1] is Step2ViewModel) {
+                        final step2Vm = vm.stepViewModels[1] as Step2ViewModel;
+                        step2Vm.sex = value;
+                      }
                       _genderError = false;
                     });
                   }

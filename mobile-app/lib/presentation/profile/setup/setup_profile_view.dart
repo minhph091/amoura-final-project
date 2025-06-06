@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get_it/get_it.dart';
 import '../../../domain/usecases/auth/register_usecase.dart';
 import '../../../domain/usecases/auth/update_profile_usecase.dart';
+import '../../../core/services/setup_profile_service.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import 'setup_profile_viewmodel.dart';
 import 'widgets/setup_profile_header.dart';
@@ -30,6 +31,7 @@ class SetupProfileView extends StatelessWidget {
         GetIt.I<RegisterUseCase>(),
         GetIt.I<UpdateProfileUseCase>(),
         sessionToken: sessionToken,
+        setupProfileService: GetIt.I<SetupProfileService>(),
       ),
       child: Consumer<SetupProfileViewModel>(
         builder: (context, vm, child) {
