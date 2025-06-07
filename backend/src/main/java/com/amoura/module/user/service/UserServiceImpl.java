@@ -82,6 +82,39 @@ public class UserServiceImpl implements UserService {
         return mapToUserDTO(savedUser);
     }
 
+    @Override
+    @Transactional
+    public UserDTO updateUserByEmail(String email, UpdateUserRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
+
+        if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
+            if (userRepository.existsByUsername(request.getUsername())) {
+                throw new ApiException(HttpStatus.CONFLICT, "Username already in use", "USERNAME_EXISTS");
+            }
+            user.setUsername(request.getUsername());
+        }
+
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(user.getPhoneNumber())) {
+            if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                throw new ApiException(HttpStatus.CONFLICT, "Phone number already in use", "PHONE_EXISTS");
+            }
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        User savedUser = userRepository.save(user);
+
+        return mapToUserDTO(savedUser);
+    }
 
     @Override
     @Transactional

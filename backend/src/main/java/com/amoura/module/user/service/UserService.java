@@ -22,6 +22,9 @@ public interface UserService {
     UserDTO updateUser(Long id, UpdateUserRequest request);
 
 
+    UserDTO updateUserByEmail(String email, UpdateUserRequest request);
+
+
     void changePassword(Long id, ChangePasswordRequest request);
 
 

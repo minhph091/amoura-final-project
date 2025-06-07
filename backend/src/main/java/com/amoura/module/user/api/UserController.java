@@ -35,8 +35,7 @@ public class UserController {
     public ResponseEntity<UserDTO> updateUser(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateUserRequest request) {
-        UserDTO userDTO = userService.getUserByEmail(userDetails.getUsername());
-        UserDTO updatedUser = userService.updateUser(userDTO.getId(), request);
+        UserDTO updatedUser = userService.updateUserByEmail(userDetails.getUsername(), request);
         return ResponseEntity.ok(updatedUser);
     }
 
