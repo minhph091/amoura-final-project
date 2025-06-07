@@ -4,6 +4,7 @@ import com.amoura.common.exception.ApiException;
 import com.amoura.module.user.dto.*;
 import com.amoura.module.user.service.UserService;
 import com.amoura.module.user.service.UserUpdateService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +24,14 @@ public class UserController {
     private final UserUpdateService userUpdateService;
 
     @GetMapping
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<UserDTO> getUserInfo(@AuthenticationPrincipal UserDetails userDetails) {
         UserDTO userDTO = userService.getUserByEmail(userDetails.getUsername());
         return ResponseEntity.ok(userDTO);
     }
 
     @PatchMapping
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<UserDTO> updateUser(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateUserRequest request) {
@@ -38,6 +41,7 @@ public class UserController {
     }
 
     @PostMapping("/change-password")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> changePassword(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody ChangePasswordRequest request) {
@@ -47,6 +51,7 @@ public class UserController {
     }
 
     @PostMapping("/change-email/request")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<EmailChangeResponse> requestEmailChange(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody EmailChangeRequest request) {
@@ -56,6 +61,7 @@ public class UserController {
     }
 
     @PostMapping("/change-email/confirm")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> confirmEmailChange(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody EmailChangeConfirmationRequest request) {
