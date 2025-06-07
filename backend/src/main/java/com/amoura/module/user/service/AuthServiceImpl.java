@@ -287,7 +287,7 @@ public class AuthServiceImpl implements AuthService {
     private UserDTO mapToUserDTO(User user) {
         return UserDTO.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .username(user.getActualUsername())
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName())
