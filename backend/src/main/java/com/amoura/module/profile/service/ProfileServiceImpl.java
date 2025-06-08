@@ -166,7 +166,9 @@ public class ProfileServiceImpl implements ProfileService {
             for (Long languageId : request.getLanguageIds()) {
                 Language language = languageRepository.findById(languageId)
                         .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid language ID: " + languageId, "INVALID_LANGUAGE"));
+                UserLanguage.UserLanguageId userLanguageId = new UserLanguage.UserLanguageId(user.getId(), languageId);
                 userLanguages.add(UserLanguage.builder()
+                        .id(userLanguageId)
                         .user(user)
                         .language(language)
                         .build());
@@ -180,7 +182,9 @@ public class ProfileServiceImpl implements ProfileService {
             for (Long petId : request.getPetIds()) {
                 Pet pet = petRepository.findById(petId)
                         .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid pet ID: " + petId, "INVALID_PET"));
+                UserPet.UserPetId userPetId = new UserPet.UserPetId(user.getId(), petId);
                 userPets.add(UserPet.builder()
+                        .id(userPetId)
                         .user(user)
                         .pet(pet)
                         .build());
