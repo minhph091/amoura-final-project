@@ -1,4 +1,3 @@
-// lib/data/repositories/setup_profile_repository.dart
 import 'dart:io';
 import '../remote/setup_profile_api.dart';
 
@@ -13,5 +12,9 @@ class SetupProfileRepository {
 
   Future<Map<String, dynamic>> uploadPhoto(File file, String endpoint) async {
     return await _setupProfileApi.uploadPhoto(file, endpoint);
+  }
+
+  Future<void> deletePhoto(String endpoint) async {
+    await _setupProfileApi.deletePhoto(endpoint);
   }
 }

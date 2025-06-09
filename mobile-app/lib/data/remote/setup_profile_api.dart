@@ -1,4 +1,3 @@
-// lib/data/remote/setup_profile_api.dart
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -135,6 +134,35 @@ class SetupProfileApi {
     }
   }
 
+  Future<void> deletePhoto(String endpoint) async {
+    try {
+      final accessToken = await _authService.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Authentication required. Please log in again.');
+      }
+
+      final response = await _apiClient.dio.delete(
+        endpoint,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete photo: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
+        print('Photo not found, skipping deletion');
+      } else {
+        print('Error in deletePhoto: $e');
+        throw Exception('Error deleting photo: $e');
+      }
+    }
+  }
+
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> profileData) async {
     try {
       final accessToken = await _authService.getAccessToken();
@@ -142,38 +170,41 @@ class SetupProfileApi {
         throw Exception('Authentication required. Please log in again.');
       }
 
+      // Lọc dữ liệu để chỉ gửi các trường không null
+      final filteredData = <String, dynamic>{};
+      profileData.forEach((key, value) {
+        if (value != null) {
+          filteredData[key] = value;
+        }
+      });
+
+      // Nếu có dữ liệu location, chỉ gửi các trường không null
+      if (profileData.containsKey('location')) {
+        final location = profileData['location'] as Map<String, dynamic>?;
+        if (location != null) {
+          final filteredLocation = <String, dynamic>{};
+          location.forEach((key, value) {
+            if (value != null) {
+              filteredLocation[key] = value;
+            }
+          });
+          if (filteredLocation.isNotEmpty) {
+            filteredData['location'] = filteredLocation;
+          }
+        }
+      }
+
+      // [API Integration - Debug] Log the data being sent to the backend for verification
+      print('Sending update profile request with data: $filteredData');
+
+      // [API Integration] Send PATCH request to update the user profile
+      // - Endpoint: /profiles/me
+      // - Method: PATCH
+      // - Headers: Authorization Bearer <accessToken>, Content-Type: application/json
+      // - Body: filteredData (contains fields like interestIds, languageIds, etc.)
       final response = await _apiClient.dio.patch(
         ApiEndpoints.updateProfile,
-        data: {
-          'orientationId': profileData['orientationId'],
-          'orientation': profileData['orientation'],
-          'location': {
-            'latitude': profileData['latitude'],
-            'longitude': profileData['longitude'],
-            'country': profileData['country'],
-            'state': profileData['state'],
-            'city': profileData['city'],
-          },
-          'locationPreference': profileData['locationPreference'],
-          'bodyTypeId': profileData['bodyTypeId'],
-          'bodyType': profileData['bodyType'],
-          'height': profileData['height'],
-          'jobIndustryId': profileData['jobIndustryId'],
-          'jobIndustry': profileData['jobIndustry'],
-          'educationLevelId': profileData['educationLevelId'],
-          'educationLevel': profileData['educationLevel'],
-          'dropOut': profileData['dropOut'],
-          'drinkStatusId': profileData['drinkStatusId'],
-          'drinkStatus': profileData['drinkStatus'],
-          'smokeStatusId': profileData['smokeStatusId'],
-          'smokeStatus': profileData['smokeStatus'],
-          'selectedPets': profileData['selectedPets'],
-          'selectedInterestIds': profileData['selectedInterestIds'],
-          'selectedLanguageIds': profileData['selectedLanguageIds'],
-          'interestedInNewLanguage': profileData['interestedInNewLanguage'],
-          'bio': profileData['bio'],
-          'galleryPhotos': profileData['galleryPhotos'],
-        },
+        data: filteredData,
         options: Options(
           headers: {
             'Authorization': 'Bearer $accessToken',
@@ -183,14 +214,22 @@ class SetupProfileApi {
         ),
       );
 
+      // [API Integration - Debug] Log the response from the backend for verification
+      print('Received update profile response: ${response.data}');
+
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
       } else {
-        throw Exception('Failed to update profile: ${response.statusCode}');
+        throw Exception('Failed to update profile: ${response.statusCode} - ${response.data['message'] ?? 'Unknown error'}');
       }
     } on DioException catch (e) {
-      throw Exception('Error updating profile: ${e.message}');
+      // [API Integration - Debug] Log detailed error information from DioException
+      print('DioException during update profile: ${e.response?.data}');
+      print('DioException status code: ${e.response?.statusCode}');
+      print('DioException message: ${e.message}');
+      throw Exception('Error updating profile: ${e.message} - ${e.response?.data['message'] ?? ''}');
     } catch (e) {
+      print('General error during update profile: $e');
       throw Exception('Error updating profile: $e');
     }
   }

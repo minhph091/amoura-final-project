@@ -36,15 +36,21 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
                   : Column(
                       children: [
                         ProfileOptionSelector(
-                          options: step8ViewModel.drinkStatusOptions,
+                          options: step8ViewModel.drinkStatusOptions.map((opt) => {
+                            'value': opt['value'] as String,
+                            'label': opt['label'] as String,
+                          }).toList(),
                           selectedValue: step8ViewModel.drinkStatusId,
                           onChanged: (value, selected) {
-                            if (selected && value.isNotEmpty) {
+                            if (selected && value != null && value.isNotEmpty) {
                               final selectedOption = step8ViewModel.drinkStatusOptions.firstWhere(
                                 (option) => option['value'] == value,
                                 orElse: () => {'value': '0', 'label': 'Unknown'},
                               );
-                              step8ViewModel.setDrinkStatus(selectedOption['value'], selectedOption['label']);
+                              step8ViewModel.setDrinkStatus(
+                                selectedOption['value'] as String,
+                                selectedOption['label'] as String,
+                              );
                             }
                           },
                           labelText: 'Do you drink?',
@@ -53,15 +59,21 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
                         ),
                         const SizedBox(height: 18),
                         ProfileOptionSelector(
-                          options: step8ViewModel.smokeStatusOptions,
+                          options: step8ViewModel.smokeStatusOptions.map((opt) => {
+                            'value': opt['value'] as String,
+                            'label': opt['label'] as String,
+                          }).toList(),
                           selectedValue: step8ViewModel.smokeStatusId,
                           onChanged: (value, selected) {
-                            if (selected && value.isNotEmpty) {
+                            if (selected && value != null && value.isNotEmpty) {
                               final selectedOption = step8ViewModel.smokeStatusOptions.firstWhere(
                                 (option) => option['value'] == value,
                                 orElse: () => {'value': '0', 'label': 'Unknown'},
                               );
-                              step8ViewModel.setSmokeStatus(selectedOption['value'], selectedOption['label']);
+                              step8ViewModel.setSmokeStatus(
+                                selectedOption['value'] as String,
+                                selectedOption['label'] as String,
+                              );
                             }
                           },
                           labelText: 'Do you smoke?',
@@ -70,7 +82,10 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
                         ),
                         const SizedBox(height: 18),
                         ProfileOptionSelector(
-                          options: step8ViewModel.petOptions,
+                          options: step8ViewModel.petOptions.map((opt) => {
+                            'value': opt['value'] as String,
+                            'label': opt['label'] as String,
+                          }).toList(),
                           selectedValues: step8ViewModel.selectedPets,
                           onChanged: (value, selected) {
                             setState(() {

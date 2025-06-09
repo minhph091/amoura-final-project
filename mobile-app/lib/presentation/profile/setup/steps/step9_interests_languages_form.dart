@@ -8,6 +8,7 @@ import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../core/constants/profile/interest_constants.dart';
 import '../../../../core/constants/profile/language_constants.dart';
 import '../setup_profile_viewmodel.dart';
+import '../stepmodel/step9_viewmodel.dart'; // Thêm import Step9ViewModel
 
 class Step9InterestsLanguagesForm extends StatefulWidget {
   const Step9InterestsLanguagesForm({super.key});
@@ -22,6 +23,7 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+    final step9ViewModel = vm.stepViewModels[8] as Step9ViewModel;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
@@ -35,13 +37,14 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
           Text('Fields marked with * are required.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 18),
           ProfileOptionSelector(
-            options: languageOptions,
-            selectedValues: vm.selectedLanguageIds,
+            options: step9ViewModel.languageOptions,
+            selectedValues: step9ViewModel.selectedLanguageIds ?? [],
             onChanged: (value, selected) {
               setState(() {
-                vm.selectedLanguageIds ??= [];
-                if (selected) vm.selectedLanguageIds!.add(value);
-                else vm.selectedLanguageIds!.remove(value);
+                final updatedLanguages = step9ViewModel.selectedLanguageIds ?? [];
+                if (selected) updatedLanguages.add(value);
+                else updatedLanguages.remove(value);
+                step9ViewModel.setSelectedLanguageIds(updatedLanguages);
               });
             },
             labelText: 'Languages you speak',
@@ -53,21 +56,22 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
           const SizedBox(height: 12),
           CheckboxListTile(
             title: Text('Interested in learning new languages?', style: ProfileTheme.getInputTextStyle(context)),
-            value: vm.interestedInNewLanguage ?? false,
-            onChanged: (val) => setState(() => vm.interestedInNewLanguage = val ?? false),
+            value: step9ViewModel.interestedInNewLanguage ?? false,
+            onChanged: (val) => setState(() => step9ViewModel.setInterestedInNewLanguage(val ?? false)),
             activeColor: ProfileTheme.darkPink,
           ),
           const SizedBox(height: 16),
           ShakeWidget(
             shake: _interestError,
             child: ProfileOptionSelector(
-              options: interestOptions,
-              selectedValues: vm.selectedInterestIds,
+              options: step9ViewModel.interestOptions,
+              selectedValues: step9ViewModel.selectedInterestIds ?? [],
               onChanged: (value, selected) {
                 setState(() {
-                  vm.selectedInterestIds ??= [];
-                  if (selected) vm.selectedInterestIds!.add(value);
-                  else vm.selectedInterestIds!.remove(value);
+                  final updatedInterests = step9ViewModel.selectedInterestIds ?? [];
+                  if (selected) updatedInterests.add(value);
+                  else updatedInterests.remove(value);
+                  step9ViewModel.setSelectedInterestIds(updatedInterests);
                   _interestError = false;
                 });
               },
@@ -84,7 +88,7 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
                 child: SetupProfileButton(
                   text: 'Next',
                   onPressed: () {
-                    final error = vm.validateStep8();
+                    final error = vm.validateCurrentStep() ?? step9ViewModel.validate();
                     if (error == null) {
                       vm.nextStep(context: context);
                     } else {

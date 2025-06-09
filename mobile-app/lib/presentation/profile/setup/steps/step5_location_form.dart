@@ -63,15 +63,22 @@ class Step5LocationForm extends StatelessWidget {
           Center(
             child: Text("Preferred Distance (km)", style: ProfileTheme.getLabelStyle(context), textAlign: TextAlign.center),
           ),
-          Slider(
-            value: (step5ViewModel.locationPreference ?? 10).toDouble(),
-            min: 1,
-            max: 300,
-            divisions: 30,
-            label: "${step5ViewModel.locationPreference ?? 10} km",
-            activeColor: ProfileTheme.darkPink,
-            inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
-            onChanged: (val) => step5ViewModel.setLocationPreference(val.round()),
+          Selector<SetupProfileViewModel, int?>(
+            selector: (_, vm) => vm.locationPreference,
+            builder: (context, locationPreference, child) {
+              return Slider(
+                value: (locationPreference ?? 50).toDouble(), // Default to 50 if null
+                min: 1,
+                max: 300,
+                divisions: 30,
+                label: "${locationPreference ?? 50} km",
+                activeColor: ProfileTheme.darkPink,
+                inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
+                onChanged: (val) {
+                  vm.setLocationPreference(val.round()); // Call setLocationPreference to update value
+                },
+              );
+            },
           ),
           const SizedBox(height: 28),
           SetupProfileButton(

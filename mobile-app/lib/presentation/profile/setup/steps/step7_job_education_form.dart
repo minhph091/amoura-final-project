@@ -36,15 +36,21 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
                   : Column(
                       children: [
                         ProfileOptionSelector(
-                          options: step7ViewModel.jobIndustryOptions,
+                          options: step7ViewModel.jobIndustryOptions.map((opt) => {
+                            'value': opt['value'] as String,
+                            'label': opt['label'] as String,
+                          }).toList(),
                           selectedValue: step7ViewModel.jobIndustryId,
                           onChanged: (value, selected) {
-                            if (selected && value.isNotEmpty) {
+                            if (selected && value != null && value.isNotEmpty) {
                               final selectedOption = step7ViewModel.jobIndustryOptions.firstWhere(
                                 (option) => option['value'] == value,
                                 orElse: () => {'value': '0', 'label': 'Unknown'},
                               );
-                              step7ViewModel.setJobIndustry(selectedOption['value'], selectedOption['label']);
+                              step7ViewModel.setJobIndustry(
+                                selectedOption['value'] as String,
+                                selectedOption['label'] as String,
+                              );
                             }
                           },
                           labelText: 'Job Industry',
@@ -53,15 +59,21 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
                         ),
                         const SizedBox(height: 18),
                         ProfileOptionSelector(
-                          options: step7ViewModel.educationLevelOptions,
+                          options: step7ViewModel.educationLevelOptions.map((opt) => {
+                            'value': opt['value'] as String,
+                            'label': opt['label'] as String,
+                          }).toList(),
                           selectedValue: step7ViewModel.educationLevelId,
                           onChanged: (value, selected) {
-                            if (selected && value.isNotEmpty) {
+                            if (selected && value != null && value.isNotEmpty) {
                               final selectedOption = step7ViewModel.educationLevelOptions.firstWhere(
                                 (option) => option['value'] == value,
                                 orElse: () => {'value': '0', 'label': 'Unknown'},
                               );
-                              step7ViewModel.setEducationLevel(selectedOption['value'], selectedOption['label']);
+                              step7ViewModel.setEducationLevel(
+                                selectedOption['value'] as String,
+                                selectedOption['label'] as String,
+                              );
                             }
                           },
                           labelText: 'Education Level',
@@ -79,7 +91,7 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
                             inactiveThumbColor: ProfileTheme.darkPurple.withAlpha(128),
                             inactiveTrackColor: ProfileTheme.darkPurple.withAlpha(51),
                           ),
-                        ), // Removed invalid 'desenho'
+                        ),
                       ],
                     ),
           const SizedBox(height: 24),

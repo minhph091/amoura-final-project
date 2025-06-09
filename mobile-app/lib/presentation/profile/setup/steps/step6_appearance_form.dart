@@ -18,7 +18,7 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
   @override
   void initState() {
     super.initState();
-    // KHÔNG gọi fetchBodyTypeOptions ở đây nữa!
+    // Pre-fetch body type options đã được xử lý trong SetupProfileViewModel
   }
 
   @override
@@ -35,6 +35,7 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
           const SizedBox(height: 6),
           Text('Let others know more about your look.', style: ProfileTheme.getDescriptionStyle(context)),
           const SizedBox(height: 24),
+          // Hiển thị trạng thái loading, lỗi hoặc dropdown body type
           step6ViewModel.isLoading
               ? const Center(child: CircularProgressIndicator())
               : step6ViewModel.errorMessage != null
@@ -42,22 +43,23 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
                   : step6ViewModel.bodyTypeOptions.isEmpty
                       ? const Center(child: Text('No body type options available'))
                       : ProfileOptionSelector(
-                          options: (() {
-                            print('DEBUG options: ${step6ViewModel.bodyTypeOptions}');
-                            return step6ViewModel.bodyTypeOptions;
-                          })(),
-                          selectedValue: (() {
-                            print('DEBUG selectedValue: ${step6ViewModel.bodyTypeId}');
-                            return step6ViewModel.bodyTypeId;
-                          })(),
+                          options: step6ViewModel.bodyTypeOptions.map((opt) => {
+                            'value': opt['value'] as String,
+                            'label': opt['label'] as String,
+                          }).toList(),
+                          selectedValue: step6ViewModel.bodyTypeId,
                           onChanged: (value, selected) {
                             print('DEBUG onChanged: value=$value, selected=$selected');
-                            if (selected && value.isNotEmpty) {
+                            if (selected && value != null && value.isNotEmpty) {
                               final selectedOption = step6ViewModel.bodyTypeOptions.firstWhere(
                                 (option) => option['value'] == value,
                                 orElse: () => {'value': '0', 'label': 'Unknown'},
                               );
-                              step6ViewModel.setBodyType(selectedOption['value'] as String, selectedOption['label'] as String);
+                              step6ViewModel.setBodyType(
+                                selectedOption['value'] as String,
+                                selectedOption['label'] as String,
+                              );
+                              setState(() {}); // Cập nhật UI ngay lập tức
                             }
                           },
                           labelText: 'Body Type',
@@ -66,6 +68,7 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
                         ),
           const SizedBox(height: 20),
           Text('Height (cm)', style: ProfileTheme.getLabelStyle(context)),
+          // Slider height với cập nhật UI tức thời
           Slider(
             value: (step6ViewModel.height ?? 170).toDouble(),
             min: 100,
@@ -76,6 +79,7 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
             inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
             onChanged: (val) {
               step6ViewModel.setHeight(val.round());
+              setState(() {}); // Cập nhật UI ngay khi slider thay đổi
             },
           ),
           Center(

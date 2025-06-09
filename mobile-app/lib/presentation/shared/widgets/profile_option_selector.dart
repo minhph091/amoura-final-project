@@ -52,9 +52,16 @@ class ProfileOptionSelector extends StatelessWidget {
             ),
           isDropdown
               ? CustomDropdown(
-                  options: options,
+                  options: options.map((opt) => {
+                    'value': opt['value'] as String,
+                    'label': opt['label'] as String,
+                  }).toList(),
                   value: selectedValue,
-                  onChanged: (val) => onChanged(val ?? '', true), // Xử lý null
+                  onChanged: (val) {
+                    if (val != null && val.isNotEmpty) {
+                      onChanged(val, true);
+                    }
+                  },
                 )
               : isMultiSelect && isSearchable
                   ? SearchableMultiSelectDropdown(

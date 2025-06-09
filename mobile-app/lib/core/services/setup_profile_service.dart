@@ -1,4 +1,3 @@
-// lib/core/services/setup_profile_service.dart
 import 'dart:io';
 import 'package:get_it/get_it.dart';
 import '../../data/remote/setup_profile_api.dart';
@@ -30,6 +29,15 @@ class SetupProfileService {
       return await _setupProfileRepository.uploadPhoto(file, endpoint);
     } catch (e) {
       print('Error in uploadPhoto service: $e'); // Log lỗi
+      rethrow;
+    }
+  }
+
+  Future<void> deletePhoto(String endpoint) async {
+    try {
+      await _setupProfileRepository.deletePhoto(endpoint);
+    } catch (e) {
+      print('Error in deletePhoto service: $e');
       rethrow;
     }
   }

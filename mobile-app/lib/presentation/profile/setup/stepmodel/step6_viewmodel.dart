@@ -7,7 +7,7 @@ import '../../../../core/services/setup_profile_service.dart';
 class Step6ViewModel extends BaseStepViewModel {
   final SetupProfileService _setupProfileService;
 
-  List<Map<String, dynamic>> bodyTypeOptions = [];
+  List<Map<String, String>> bodyTypeOptions = []; // Sửa kiểu từ dynamic thành String
   String? bodyTypeId; // id dạng String
   String? bodyType;   // name
   int? height;
@@ -16,7 +16,7 @@ class Step6ViewModel extends BaseStepViewModel {
   String? errorMessage;
   bool _fetched = false; // Đánh dấu đã fetch
 
-  Step6ViewModel(SetupProfileViewModel parent, {SetupProfileService? setupProfileService})
+  Step6ViewModel({required SetupProfileViewModel parent, SetupProfileService? setupProfileService})
       : _setupProfileService = setupProfileService ?? SetupProfileService(),
         super(parent) {
     bodyTypeId = parent.bodyTypeId?.toString();
@@ -42,7 +42,7 @@ class Step6ViewModel extends BaseStepViewModel {
           final id = option['id']?.toString() ?? '0';
           final name = option['name']?.toString() ?? 'Unknown';
           print('Mapped body type option: id=$id, name=$name');
-          return {'value': id, 'label': name};
+          return {'value': id, 'label': name}; // Đảm bảo kiểu Map<String, String>
         }).toList();
         print('Fetched body type options: $bodyTypeOptions');
       }
@@ -70,16 +70,16 @@ class Step6ViewModel extends BaseStepViewModel {
   void setBodyType(String id, String name) {
     bodyTypeId = id;
     bodyType = name;
-    parent.bodyTypeId = int.tryParse(id);
-    parent.bodyType = name;
-    notifyListeners();
+    parent.bodyTypeId = int.tryParse(id); // Lưu bodyTypeId dưới dạng int cho API
+    parent.bodyType = name; // Lưu tên để tham chiếu nếu cần
+    notifyListeners(); // Thông báo UI cập nhật
     print('Set body type: id=$id, name=$name');
   }
 
   void setHeight(int value) {
     height = value;
     parent.height = value;
-    notifyListeners();
+    notifyListeners(); // Thông báo UI cập nhật
     print('Set height: $value cm');
   }
 
@@ -91,11 +91,11 @@ class Step6ViewModel extends BaseStepViewModel {
 
   @override
   void saveData() {
-    parent.bodyTypeId = int.tryParse(bodyTypeId ?? '');
+    parent.bodyTypeId = int.tryParse(bodyTypeId ?? ''); // Đảm bảo bodyTypeId luôn có giá trị hợp lệ
     parent.bodyType = bodyType;
     parent.height = height;
-    parent.profileData['bodyTypeId'] = parent.bodyTypeId;
-    parent.profileData['bodyType'] = bodyType;
+    parent.profileData['bodyTypeId'] = parent.bodyTypeId; // Lưu bodyTypeId vào profiles
+    parent.profileData['bodyType'] = bodyType; // Lưu tên để debug hoặc tham chiếu
     parent.profileData['height'] = height;
     print('Saved appearance data to parent profileData: bodyTypeId=${parent.bodyTypeId}, bodyType=$bodyType, height=$height');
   }

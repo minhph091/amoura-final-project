@@ -1,4 +1,3 @@
-// lib/presentation/profile/setup/setup_profile_viewmodel.dart
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../../domain/usecases/auth/register_usecase.dart';
@@ -13,13 +12,17 @@ import 'stepmodel/step4_viewmodel.dart';
 import 'stepmodel/step5_viewmodel.dart';
 import 'stepmodel/step6_viewmodel.dart';
 import 'stepmodel/step7_viewmodel.dart';
-import 'stepmodel/step8_viewmodel.dart'; // Add this import
+import 'stepmodel/step8_viewmodel.dart';
+import 'stepmodel/step9_viewmodel.dart';
+import 'stepmodel/step10_viewmodel.dart';
 import '../../../core/services/setup_profile_service.dart';
+import '../../../core/services/auth_service.dart';
 
 class SetupProfileViewModel extends ChangeNotifier {
   final RegisterUseCase _registerUseCase;
   final UpdateProfileUseCase _updateProfileUseCase;
   final SetupProfileService _setupProfileService;
+  final AuthService _authService;
   String? sessionToken;
   int currentStep = 0;
   final int totalSteps = 10;
@@ -80,14 +83,16 @@ class SetupProfileViewModel extends ChangeNotifier {
   String? bio;
   List<String>? additionalPhotos;
 
-  bool get showSkip => !stepViewModels.isNotEmpty ? true : !stepViewModels[currentStep].isRequired;
+  bool get showSkip => !stepViewModels.isEmpty ? !stepViewModels[currentStep].isRequired : true;
 
   SetupProfileViewModel(
     this._registerUseCase,
     this._updateProfileUseCase, {
     this.sessionToken,
     SetupProfileService? setupProfileService,
-  }) : _setupProfileService = setupProfileService ?? SetupProfileService() {
+    AuthService? authService,
+  })  : _setupProfileService = setupProfileService ?? SetupProfileService(),
+        _authService = authService ?? GetIt.I<AuthService>() {
     stepViewModel();
     _preloadStepData();
   }
@@ -99,24 +104,27 @@ class SetupProfileViewModel extends ChangeNotifier {
       Step3ViewModel(this, setupProfileService: _setupProfileService),
       Step4ViewModel(this, setupProfileService: _setupProfileService),
       Step5ViewModel(this),
-      Step6ViewModel(this, setupProfileService: _setupProfileService),
+      Step6ViewModel(parent: this, setupProfileService: _setupProfileService),
       Step7ViewModel(this, setupProfileService: _setupProfileService),
-      Step8ViewModel(this, setupProfileService: _setupProfileService), // Add Step 8
-      // Add other steps (9-10) later as needed
+      Step8ViewModel(this, setupProfileService: _setupProfileService),
+      Step9ViewModel(this, setupProfileService: _setupProfileService),
+      Step10ViewModel(this, setupProfileService: _setupProfileService),
     ];
-    print('Initialized stepViewModels with Step 8.');
+    print('Initialized stepViewModels with Step 10.');
   }
 
   Future<void> _preloadStepData() async {
     final step3ViewModel = stepViewModels[2] as Step3ViewModel;
     final step6ViewModel = stepViewModels[5] as Step6ViewModel;
     final step7ViewModel = stepViewModels[6] as Step7ViewModel;
-    final step8ViewModel = stepViewModels[7] as Step8ViewModel; // Reference Step 8
-    await Future.wait([
+    final step8ViewModel = stepViewModels[7] as Step8ViewModel;
+    final step9ViewModel = stepViewModels[8] as Step9ViewModel;
+    await Future.wait(<Future<void>>[
       step3ViewModel.fetchOrientationOptions(null),
       step6ViewModel.fetchBodyTypeOptions(null),
       step7ViewModel.fetchJobEducationOptions(null),
-      step8ViewModel.fetchLifestyleOptions(null), // Preload Step 8 data
+      step8ViewModel.fetchLifestyleOptions(null),
+      step9ViewModel.fetchInterestsLanguagesOptions(null),
     ]);
     notifyListeners();
   }
@@ -138,6 +146,19 @@ class SetupProfileViewModel extends ChangeNotifier {
         return;
       }
       currentViewModel.saveData();
+      if (currentStep == 2) {
+        await _updateProfileStep(context, step: 3);
+      } else if (currentStep == 4) {
+        await _updateProfileStep(context, step: 5);
+      } else if (currentStep == 5) {
+        await _updateProfileStep(context, step: 6);
+      } else if (currentStep == 6) {
+        await _updateProfileStep(context, step: 7);
+      } else if (currentStep == 7) {
+        await _updateProfileStep(context, step: 8);
+      } else if (currentStep == 8) {
+        await _updateProfileStep(context, step: 9);
+      }
     }
 
     if (currentStep == 1) {
@@ -158,6 +179,8 @@ class SetupProfileViewModel extends ChangeNotifier {
           duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
       notifyListeners();
     } else if (currentStep == totalSteps - 1) {
+      final step10ViewModel = stepViewModels[9] as Step10ViewModel;
+      step10ViewModel.saveData();
       await _updateProfile(context);
     }
   }
@@ -205,6 +228,10 @@ class SetupProfileViewModel extends ChangeNotifier {
       );
       print('Complete registration response: $response');
       if (response['status'] == 'COMPLETED') {
+        if (response['authResponse'] != null && response['authResponse']['accessToken'] != null) {
+          sessionToken = response['authResponse']['accessToken'];
+          print('Updated sessionToken with accessToken: ${sessionToken!.substring(0, 10)}...');
+        }
         currentStep++;
         pageController.nextPage(
             duration: const Duration(milliseconds: 300),
@@ -221,27 +248,161 @@ class SetupProfileViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _updateProfile(BuildContext context) async {
-    if (sessionToken == null) {
+  // Update profile for specific steps (Step 3, 5, 6, 7, 8, 9) with API
+  Future<void> _updateProfileStep(BuildContext context, {required int step}) async {
+    final accessToken = await _authService.getAccessToken();
+    if (accessToken == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid session')),
+        const SnackBar(content: Text('Authentication required. Please log in again.')),
       );
       return;
     }
+
+    Map<String, dynamic> stepData = {};
+    if (step == 3) {
+      if (orientationId == null || orientation == null) {
+        print('Skipping updateProfileStep because orientationId or orientation is null');
+        return;
+      }
+      stepData = {
+        'orientationId': orientationId,
+        'orientation': orientation,
+      };
+    } else if (step == 5) {
+      stepData = {
+        'location': {
+          'city': profileData['city'],
+          'state': profileData['state'],
+          'country': profileData['country'],
+          'latitude': profileData['latitude'],
+          'longitude': profileData['longitude'],
+        },
+        'locationPreference': profileData['locationPreference'], // Use the latest value from profileData
+      };
+      print('Prepared step 5 data for API: $stepData'); // Log data before sending to API
+    } else if (step == 6) {
+      final step6ViewModel = stepViewModels[5] as Step6ViewModel;
+      stepData = {
+        'bodyTypeId': step6ViewModel.bodyTypeId != null ? int.tryParse(step6ViewModel.bodyTypeId!) : null,
+        'height': step6ViewModel.height,
+      };
+      if (stepData['bodyTypeId'] == null && stepData['height'] == null) {
+        print('Skipping updateProfileStep because all fields are null');
+        return;
+      }
+    } else if (step == 7) {
+      final step7ViewModel = stepViewModels[6] as Step7ViewModel;
+      stepData = {
+        'jobIndustryId': step7ViewModel.jobIndustryId != null ? int.tryParse(step7ViewModel.jobIndustryId!) : null,
+        'educationLevelId': step7ViewModel.educationLevelId != null ? int.tryParse(step7ViewModel.educationLevelId!) : null,
+        'dropOut': step7ViewModel.dropOut,
+      };
+      if (stepData['jobIndustryId'] == null && stepData['educationLevelId'] == null && stepData['dropOut'] == null) {
+        print('Skipping updateProfileStep because all fields are null');
+        return;
+      }
+    } else if (step == 8) {
+      final step8ViewModel = stepViewModels[7] as Step8ViewModel;
+      stepData = {
+        'drinkStatusId': step8ViewModel.drinkStatusId != null ? int.tryParse(step8ViewModel.drinkStatusId!) : null,
+        'smokeStatusId': step8ViewModel.smokeStatusId != null ? int.tryParse(step8ViewModel.drinkStatusId!) : null,
+        // [API Integration] Convert selectedPets from List<String> to List<int> to match backend (List<Long>)
+        'petIds': step8ViewModel.selectedPets?.map((id) => int.parse(id)).toList() ?? [],
+      };
+      stepData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
+      if (stepData.isEmpty) {
+        print('Skipping updateProfileStep because all fields are null or empty');
+        return;
+      }
+    } else if (step == 9) {
+      final step9ViewModel = stepViewModels[8] as Step9ViewModel;
+      // [API Integration - Debug] Log raw selectedLanguageIds to verify data from UI before processing
+      print('Raw selectedInterestIds in Step 9: ${step9ViewModel.selectedInterestIds}');
+      print('Raw selectedLanguageIds in Step 9: ${step9ViewModel.selectedLanguageIds}');
+      print('Raw interestedInNewLanguage in Step 9: ${step9ViewModel.interestedInNewLanguage}');
+      stepData = {
+        // [API Integration] Convert selectedInterestIds from List<String> to List<int> to match backend (List<Long>)
+        'interestIds': step9ViewModel.selectedInterestIds?.map((id) {
+          try {
+            return int.parse(id);
+          } catch (e) {
+            print('Error parsing interestId $id: $e');
+            return null;
+          }
+        }).where((id) => id != null).toList() ?? [],
+        // [API Integration] Convert selectedLanguageIds from List<String> to List<int> to match backend (List<Long>)
+        'languageIds': step9ViewModel.selectedLanguageIds?.map((id) {
+          try {
+            return int.parse(id);
+          } catch (e) {
+            print('Error parsing languageId $id: $e');
+            return null;
+          }
+        }).where((id) => id != null).toList() ?? [],
+        'interestedInNewLanguage': step9ViewModel.interestedInNewLanguage,
+      };
+      // [API Integration - Debug] Log parsed stepData to verify data before sending to API
+      print('Parsed stepData for Step 9 before API call: $stepData');
+      stepData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
+      if (stepData.isEmpty) {
+        print('Skipping updateProfileStep because all fields are null or empty');
+        return;
+      }
+    }
+
+    print('Updating profile step $step with data: $stepData');
+
+    try {
+      // [API Integration] Send PATCH request to update profile step
+      // - Endpoint: /profiles/me
+      // - Method: PATCH
+      // - Headers: Authorization Bearer <accessToken>
+      // - Body: stepData (contains the latest data for the step)
+      print('Sending PATCH request to /profiles/me with accessToken: ${accessToken.substring(0, 10)}...');
+      final response = await _updateProfileUseCase.execute(
+        sessionToken: accessToken,
+        profileData: stepData,
+      );
+      print('Update profile step $step response: $response');
+      // [API Response Validation] Check if update was successful based on status code or response structure
+      if (response is Map<String, dynamic> && (response['status'] == 'UPDATED' || response['statusCode'] == 200)) {
+        print('Profile step $step updated successfully');
+      } else {
+        throw Exception('Could not update profile step $step: ${response['message'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      print('Error updating profile step $step: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update profile step $step: $e')),
+      );
+    }
+  }
+
+  Future<void> _updateProfile(BuildContext context) async {
+    final accessToken = await _authService.getAccessToken();
+    if (accessToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Authentication required. Please log in again.')),
+      );
+      return;
+    }
+    final step10ViewModel = stepViewModels[9] as Step10ViewModel;
+    step10ViewModel.saveData();
 
     final profileData = {
       'orientationId': orientationId,
       'orientation': orientation,
       'avatarPath': avatarPath,
-      'coverPath': coverPath,
-      'city': city,
-      'state': state,
-      'country': country,
-      'latitude': latitude,
-      'longitude': longitude,
-      'locationPreference': locationPreference,
+      'coverPath': coverPath ?? (additionalPhotos?.isNotEmpty ?? false ? additionalPhotos!.first : null),
+      'location': {
+        'city': city,
+        'state': state,
+        'country': country,
+        'latitude': latitude,
+        'longitude': longitude,
+        'locationPreference': locationPreference,
+      },
       'bodyTypeId': bodyTypeId,
-      'bodyType': bodyType,
       'height': height,
       'jobIndustryId': jobIndustryId,
       'jobIndustry': jobIndustry,
@@ -252,34 +413,45 @@ class SetupProfileViewModel extends ChangeNotifier {
       'drinkStatus': drinkStatus,
       'smokeStatusId': smokeStatusId,
       'smokeStatus': smokeStatus,
-      'petIds': selectedPets, // Match backend field name
-      'selectedInterestIds': selectedInterestIds,
-      'selectedLanguageIds': selectedLanguageIds,
+      // [API Integration] Convert selectedPets from List<String> to List<int> to match backend (List<Long>)
+      'petIds': selectedPets?.map((id) => int.parse(id)).toList() ?? [],
+      // [API Integration] Convert selectedInterestIds from List<String> to List<int> to match backend (List<Long>)
+      'interestIds': selectedInterestIds?.map((id) => int.parse(id)).toList() ?? [],
+      // [API Integration] Convert selectedLanguageIds from List<String> to List<int> to match backend (List<Long>)
+      'languageIds': selectedLanguageIds?.map((id) => int.parse(id)).toList() ?? [],
       'interestedInNewLanguage': interestedInNewLanguage,
       'bio': bio,
-      'galleryPhotos': additionalPhotos,
+      'galleryPhotos': additionalPhotos ?? [],
     };
+
+    profileData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
+
     print('Updating profile with data: $profileData');
 
     try {
+      // [API Integration] Send final PATCH request to update entire profile
+      // - Endpoint: /profiles/me
+      // - Method: PATCH
+      // - Headers: Authorization Bearer <accessToken>
+      // - Body: profileData
       final response = await _updateProfileUseCase.execute(
-        sessionToken: sessionToken!,
+        sessionToken: accessToken,
         profileData: profileData,
       );
       print('Update profile response: $response');
+      // [API Response Validation] Check if update was successful
       if (response['status'] == 'UPDATED') {
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/mainNavigator');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile setup complete!')),
         );
       } else {
-        throw Exception('Failed to update profile');
+        throw Exception('Failed to update profile: ${response['message'] ?? 'Unknown error'}');
       }
     } catch (e) {
       print('Error updating profile: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Failed to update profile. Please try again.')),
+        SnackBar(content: Text('Failed to update profile: $e')),
       );
     }
   }
@@ -299,10 +471,11 @@ class SetupProfileViewModel extends ChangeNotifier {
 
   void setLocationPreference(int value) {
     locationPreference = value;
+    profileData['locationPreference'] = value; // Update profileData with slider value
     notifyListeners();
+    print('Set location preference to: $value km'); // Log to confirm slider update
   }
 
-  // Getter và setter cho drinkStatus và drinkStatusId
   int? getDrinkStatusId() => drinkStatusId;
   String? getDrinkStatus() => drinkStatus;
   void setDrinkStatusId(int? value) {
@@ -314,7 +487,6 @@ class SetupProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Getter và setter cho smokeStatus và smokeStatusId
   int? getSmokeStatusId() => smokeStatusId;
   String? getSmokeStatus() => smokeStatus;
   void setSmokeStatusId(int? value) {

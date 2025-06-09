@@ -16,5 +16,12 @@ class ApiEndpoints {
   static const String profileOptions = '/profiles/options';
   static const String uploadAvatar = '/profiles/photos/avatar';
   static const String uploadCover = '/profiles/photos/cover';
+  static const String uploadHighlights = '/profiles/photos/highlights';
   static const String updateProfile = '/profiles/me';
+  static const String deleteAvatar = '/profiles/photos/avatar';
+  static const String deleteCover = '/profiles/photos/cover';
+  static const String highlightsBase = '/profiles/photos/highlights';
+  
+  // Helper method for delete highlight with photoId
+  static String deleteHighlight(int photoId) => '$highlightsBase/$photoId';
 }

@@ -1,4 +1,3 @@
-// lib/presentation/profile/setup/steps/step4_avatar_cover_form.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -47,23 +46,22 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
   }
 
   void _showImageOptions(BuildContext context, bool isAvatar, String path) {
+    final step4ViewModel = Provider.of<Step4ViewModel>(context, listen: false);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Photo Options'),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              final step4ViewModel = Provider.of<Step4ViewModel>(context, listen: false);
+              Navigator.pop(dialogContext);
               step4ViewModel.editImage(context, path, isAvatar);
             },
             child: const Text('Edit Photo'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              final step4ViewModel = Provider.of<Step4ViewModel>(context, listen: false);
+              Navigator.pop(dialogContext);
               step4ViewModel.pickImage(context, isAvatar);
             },
             child: const Text('Choose Another Photo'),
@@ -156,10 +154,13 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                   ),
                                   if (step4ViewModel.avatarPath != null)
                                     GestureDetector(
-                                      onTap: () => setState(() {
-                                        step4ViewModel.avatarPath = null;
-                                        vm.avatarPath = null;
-                                      }),
+                                      onTap: () async {
+                                        await step4ViewModel.deleteImage(context, true); // Xóa ảnh trên backend
+                                        setState(() {
+                                          step4ViewModel.avatarPath = null;
+                                          vm.avatarPath = null;
+                                        });
+                                      },
                                       child: Container(
                                         margin: const EdgeInsets.all(4),
                                         decoration: const BoxDecoration(
@@ -232,10 +233,13 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                   ),
                                   if (step4ViewModel.coverPath != null)
                                     GestureDetector(
-                                      onTap: () => setState(() {
-                                        step4ViewModel.coverPath = null;
-                                        vm.coverPath = null;
-                                      }),
+                                      onTap: () async {
+                                        await step4ViewModel.deleteImage(context, false); // Xóa ảnh trên backend
+                                        setState(() {
+                                          step4ViewModel.coverPath = null;
+                                          vm.coverPath = null;
+                                        });
+                                      },
                                       child: Container(
                                         margin: const EdgeInsets.all(4),
                                         decoration: const BoxDecoration(

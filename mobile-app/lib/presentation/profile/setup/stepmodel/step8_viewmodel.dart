@@ -10,16 +10,17 @@ class Step8ViewModel extends BaseStepViewModel {
   String? smokeStatusId; // API returns Long, stored as String
   String? smokeStatus;   // Name of the selected smoke status
   List<String>? selectedPets; // List of pet IDs
-  List<Map<String, dynamic>> drinkStatusOptions = [];
-  List<Map<String, dynamic>> smokeStatusOptions = [];
-  List<Map<String, dynamic>> petOptions = [];
+  List<Map<String, String>> drinkStatusOptions = []; // Changed to List<Map<String, String>>
+  List<Map<String, String>> smokeStatusOptions = []; // Changed to List<Map<String, String>>
+  List<Map<String, String>> petOptions = []; // Changed to List<Map<String, String>>
   final SetupProfileService _setupProfileService;
   bool isLoading = false;
   String? errorMessage;
   bool _fetched = false;
 
-  Step8ViewModel(super.parent, {SetupProfileService? setupProfileService})
-      : _setupProfileService = setupProfileService ?? SetupProfileService() {
+  Step8ViewModel(SetupProfileViewModel parent, {SetupProfileService? setupProfileService})
+      : _setupProfileService = setupProfileService ?? SetupProfileService(),
+        super(parent) {
     // Initialize with parent data if available
     drinkStatusId = parent.drinkStatusId?.toString();
     drinkStatus = parent.drinkStatus;

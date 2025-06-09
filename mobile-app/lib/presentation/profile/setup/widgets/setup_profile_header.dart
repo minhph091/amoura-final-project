@@ -51,7 +51,7 @@ class SetupProfileHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Back button
-              onBack != null
+              onBack != null && currentStep != 2  // Hide back button at step 3 (index 2)
                   ? TextButton(
                 onPressed: onBack,
                 child: Text(

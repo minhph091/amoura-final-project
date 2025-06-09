@@ -7,7 +7,7 @@ import '../setup_profile_viewmodel.dart';
 class Step3ViewModel extends BaseStepViewModel {
   String? orientationId; // id dạng String
   String? orientation;   // name
-  List<Map<String, dynamic>> orientationOptions = [];
+  List<Map<String, String>> orientationOptions = []; // Sửa kiểu từ dynamic thành String
   final SetupProfileService _setupProfileService;
   bool isLoading = false;
   String? errorMessage;
@@ -37,7 +37,7 @@ class Step3ViewModel extends BaseStepViewModel {
           final id = option['id']?.toString() ?? '0';
           final name = option['name']?.toString() ?? 'Unknown';
           print('Mapped orientation option: id=$id, name=$name');
-          return {'value': id, 'label': name};
+          return {'value': id, 'label': name}; // Đảm bảo kiểu Map<String, String>
         }).toList();
         print('Fetched orientation options: $orientationOptions');
       }

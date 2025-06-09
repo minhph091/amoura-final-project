@@ -1,3 +1,4 @@
+// lib/data/remote/auth_api.dart
 import 'package:dio/dio.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
@@ -101,7 +102,7 @@ class AuthApi {
       );
       final data = response.data as Map<String, dynamic>;
       if (data['status'] != 'COMPLETED') {
-        throw ApiException(data['message'] ?? 'Không thể hoàn tất đăng ký');
+        throw ApiException(data['message'] ?? 'Could not complete registration');
       }
       return data;
     } on DioException catch (e) {
@@ -226,27 +227,42 @@ class AuthApi {
     required Map<String, dynamic> profileData,
   }) async {
     try {
-      final response = await _apiClient.post(
+      print('Calling updateProfile with sessionToken: ${sessionToken.substring(0, 10)}...');
+      print('Profile data to update: $profileData');
+
+      final response = await _apiClient.dio.patch(
         ApiEndpoints.updateProfile,
         data: {
-          'sessionToken': sessionToken,
           ...profileData,
         },
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $sessionToken',
+          },
+        ),
       );
+
+      print('Update profile response status: ${response.statusCode}');
+      print('Update profile response data: ${response.data}');
+
       final data = response.data as Map<String, dynamic>;
       if (data['status'] != 'UPDATED') {
         throw ApiException(data['message'] ?? 'Could not update profile');
       }
       return data;
     } on DioException catch (e) {
-      throw ApiException(_handleDioError(e));
+      final errorMessage = _handleDioError(e);
+      print('DioException in updateProfile: $errorMessage');
+      throw ApiException(errorMessage);
     }
   }
 
   String _handleDioError(DioException e) {
     if (e.response != null) {
       final data = e.response!.data as Map<String, dynamic>?;
-      final message = data?['message'] ?? 'Unknown error';
+      final statusCode = e.response!.statusCode;
+      final message = data?['message'] ?? 'Unknown error (Status: $statusCode)';
+      print('DioError details - Status: $statusCode, Message: $message, Data: $data');
       if (message.contains('Invalid OTP') || message.contains('expired')) {
         return 'Invalid or expired OTP';
       } else if (message.contains('not found') || message.contains('not registered')) {

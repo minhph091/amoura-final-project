@@ -23,6 +23,7 @@ class Step5ViewModel extends BaseStepViewModel {
     cityController.text = parent.city ?? '';
     stateController.text = parent.state ?? '';
     countryController.text = parent.country ?? '';
+    locationPreference = parent.locationPreference ?? 50; // Default value changed to 50
   }
 
   @override
@@ -102,7 +103,7 @@ class Step5ViewModel extends BaseStepViewModel {
     locationPreference = value;
     parent.locationPreference = value;
     notifyListeners();
-    print('Set location preference: $value km');
+    print('Set location preference: $value km'); // Log to verify slider change
   }
 
   @override
@@ -118,14 +119,15 @@ class Step5ViewModel extends BaseStepViewModel {
     parent.country = country;
     parent.latitude = latitude;
     parent.longitude = longitude;
-    parent.locationPreference = locationPreference;
+    // Use the latest locationPreference from parent to ensure slider value is saved
+    parent.locationPreference = parent.locationPreference ?? 50;
     parent.profileData['city'] = city;
     parent.profileData['state'] = state;
     parent.profileData['country'] = country;
     parent.profileData['latitude'] = latitude;
     parent.profileData['longitude'] = longitude;
-    parent.profileData['locationPreference'] = locationPreference;
-    print('Saved location data to parent profileData.');
+    parent.profileData['locationPreference'] = parent.locationPreference; // Sync with parent value
+    print('Saved location data to parent profileData: ${parent.profileData}');
   }
 
   @override

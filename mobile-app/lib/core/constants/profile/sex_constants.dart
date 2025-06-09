@@ -24,7 +24,7 @@ const List<Map<String, dynamic>> sexOptions = [
   },
   {
     'label': 'Prefer not to say',
-    'value': 'prefer_not_to_say',
+    'value': 'prefer not to say',
     'icon': Icons.help_outline,
     'color': Colors.grey,
   },

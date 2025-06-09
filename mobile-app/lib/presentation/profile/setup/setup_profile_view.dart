@@ -42,13 +42,15 @@ class SetupProfileView extends StatelessWidget {
                 child: Column(
                   children: [
                     SetupProfileHeader(
-                      currentStep: vm.currentStep,
+                      currentStep: vm.currentStep + 1,
                       totalSteps: vm.totalSteps,
-                      showSkip: vm.showSkip,
-                      onBack: vm.prevStep,
-                      onSkip: () => vm.skipStep(context: context),
+                      showSkip: !(vm.currentStep == 0 || vm.currentStep == 1 || vm.currentStep == 9) && vm.showSkip,
+                      onBack: (vm.currentStep == 0 || vm.currentStep == 2) ? null : vm.prevStep,
+                      onSkip: (vm.currentStep == 0 || vm.currentStep == 1 || vm.currentStep == 9)
+                          ? null
+                          : () => vm.skipStep(context: context),
                     ),
-                    _StepperProgress(totalSteps: 10, currentStep: vm.currentStep),
+                    _StepperProgress(totalSteps: 10, currentStep: vm.currentStep + 1),
                     const SizedBox(height: 10),
                     Expanded(
                       child: PageView(

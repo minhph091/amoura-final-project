@@ -10,15 +10,16 @@ class Step7ViewModel extends BaseStepViewModel {
   String? educationLevelId; // API returns Long, stored as String
   String? educationLevel;   // Name of the selected education level
   bool? dropOut;
-  List<Map<String, dynamic>> jobIndustryOptions = [];
-  List<Map<String, dynamic>> educationLevelOptions = [];
+  List<Map<String, String>> jobIndustryOptions = []; // Changed from dynamic to String
+  List<Map<String, String>> educationLevelOptions = []; // Changed from dynamic to String
   final SetupProfileService _setupProfileService;
   bool isLoading = false;
   String? errorMessage;
   bool _fetched = false;
 
-  Step7ViewModel(super.parent, {SetupProfileService? setupProfileService})
-      : _setupProfileService = setupProfileService ?? SetupProfileService() {
+  Step7ViewModel(SetupProfileViewModel parent, {SetupProfileService? setupProfileService})
+      : _setupProfileService = setupProfileService ?? SetupProfileService(),
+        super(parent) {
     // Initialize with parent data if available
     jobIndustryId = parent.jobIndustryId?.toString();
     jobIndustry = parent.jobIndustry;
