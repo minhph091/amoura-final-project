@@ -78,4 +78,14 @@ public class EmailService {
 
         sendEmail(to, subject, template, variables);
     }
+
+    @Async
+    public void sendEmailChangeOtpEmail(String to, String otp, int expiresInMinutes) {
+        Map<String, Object> variables = Map.of(
+                "otp", otp,
+                "expiresInMinutes", expiresInMinutes
+        );
+
+        sendEmail(to, "Change Your Email Address", "email-change-otp", variables);
+    }
 }
