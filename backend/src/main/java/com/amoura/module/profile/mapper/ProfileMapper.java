@@ -18,7 +18,7 @@ public class ProfileMapper {
                           List<UserLanguage> languages, List<UserPet> pets) {
         ProfileDTO.ProfileDTOBuilder builder = ProfileDTO.builder()
                 .userId(user.getId())
-                .username(user.getUsername())
+                .username(user.getActualUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .fullName(user.getFullName());
