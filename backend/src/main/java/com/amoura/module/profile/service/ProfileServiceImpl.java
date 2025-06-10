@@ -7,6 +7,7 @@ import com.amoura.module.profile.mapper.ProfileMapper;
 import com.amoura.module.profile.repository.*;
 import com.amoura.module.user.domain.User;
 import com.amoura.module.user.dto.UpdateProfileRequest;
+import com.amoura.module.profile.dto.LocationDTO;
 import com.amoura.module.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,6 +42,59 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserPetRepository userPetRepository;
     private final ProfileMapper profileMapper;
 
+    private void validateIds(List<Long> ids, String entityName, Function<Long, Boolean> existsCheck) {
+        if (ids != null && !ids.isEmpty()) {
+            List<Long> invalidIds = ids.stream()
+                .filter(id -> !existsCheck.apply(id))
+                .toList();
+                
+            if (!invalidIds.isEmpty()) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "Invalid " + entityName + " IDs: " + invalidIds, 
+                    "INVALID_" + entityName.toUpperCase());
+            }
+        }
+    }
+
+    private void validateLocation(LocationDTO location) {
+        if (location != null) {
+            if (location.getLatitude() < -90 || location.getLatitude() > 90) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "Invalid latitude value", "INVALID_LATITUDE");
+            }
+            if (location.getLongitude() < -180 || location.getLongitude() > 180) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "Invalid longitude value", "INVALID_LONGITUDE");
+            }
+        }
+    }
+
+    private void validateRequiredFields(UpdateProfileRequest request) {
+        if (request.getSex() != null) {
+            Set<String> validSexValues = Set.of("male", "female", "non-binary", "prefer not to say");
+            if (!validSexValues.contains(request.getSex().toLowerCase())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "Invalid sex value. Must be one of: " + validSexValues, 
+                    "INVALID_SEX");
+            }
+        }
+    }
+
+    private Map<Long, Interest> getInterestsByIds(List<Long> ids) {
+        return interestRepository.findAllById(ids).stream()
+            .collect(Collectors.toMap(Interest::getId, Function.identity()));
+    }
+
+    private Map<Long, Language> getLanguagesByIds(List<Long> ids) {
+        return languageRepository.findAllById(ids).stream()
+            .collect(Collectors.toMap(Language::getId, Function.identity()));
+    }
+
+    private Map<Long, Pet> getPetsByIds(List<Long> ids) {
+        return petRepository.findAllById(ids).stream()
+            .collect(Collectors.toMap(Pet::getId, Function.identity()));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public ProfileResponseDTO getProfile(String email) {
@@ -61,11 +115,18 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     @Transactional
     public ProfileDTO updateProfile(String email, UpdateProfileRequest request) {
+        log.debug("Updating profile for user: {}", email);
+        log.debug("Received request: {}", request);
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
 
         Profile profile = profileRepository.findById(user.getId())
                 .orElseGet(() -> Profile.builder().user(user).userId(user.getId()).build());
+
+        // Validate request
+        validateRequiredFields(request);
+        validateLocation(request.getLocation());
 
         // Update basic profile information
         if (request.getAge() != null) {
@@ -147,11 +208,12 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         if (request.getInterestIds() != null) {
+            validateIds(request.getInterestIds(), "interest", interestRepository::existsById);
             userInterestRepository.deleteByUserId(user.getId());
+            Map<Long, Interest> interests = getInterestsByIds(request.getInterestIds());
             List<UserInterest> userInterests = new ArrayList<>();
             for (Long interestId : request.getInterestIds()) {
-                Interest interest = interestRepository.findById(interestId)
-                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid interest ID: " + interestId, "INVALID_INTEREST"));
+                Interest interest = interests.get(interestId);
                 UserInterest.UserInterestId userInterestId = new UserInterest.UserInterestId(user.getId(), interestId);
                 userInterests.add(UserInterest.builder()
                         .id(userInterestId)
@@ -163,11 +225,12 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         if (request.getLanguageIds() != null) {
+            validateIds(request.getLanguageIds(), "language", languageRepository::existsById);
             userLanguageRepository.deleteByUserId(user.getId());
+            Map<Long, Language> languages = getLanguagesByIds(request.getLanguageIds());
             List<UserLanguage> userLanguages = new ArrayList<>();
             for (Long languageId : request.getLanguageIds()) {
-                Language language = languageRepository.findById(languageId)
-                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid language ID: " + languageId, "INVALID_LANGUAGE"));
+                Language language = languages.get(languageId);
                 UserLanguage.UserLanguageId userLanguageId = new UserLanguage.UserLanguageId(user.getId(), languageId);
                 userLanguages.add(UserLanguage.builder()
                         .id(userLanguageId)
@@ -179,11 +242,12 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         if (request.getPetIds() != null) {
+            validateIds(request.getPetIds(), "pet", petRepository::existsById);
             userPetRepository.deleteByUserId(user.getId());
+            Map<Long, Pet> pets = getPetsByIds(request.getPetIds());
             List<UserPet> userPets = new ArrayList<>();
             for (Long petId : request.getPetIds()) {
-                Pet pet = petRepository.findById(petId)
-                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid pet ID: " + petId, "INVALID_PET"));
+                Pet pet = pets.get(petId);
                 UserPet.UserPetId userPetId = new UserPet.UserPetId(user.getId(), petId);
                 userPets.add(UserPet.builder()
                         .id(userPetId)
