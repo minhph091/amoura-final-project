@@ -152,7 +152,9 @@ public class ProfileServiceImpl implements ProfileService {
             for (Long interestId : request.getInterestIds()) {
                 Interest interest = interestRepository.findById(interestId)
                         .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid interest ID: " + interestId, "INVALID_INTEREST"));
+                UserInterest.UserInterestId userInterestId = new UserInterest.UserInterestId(user.getId(), interestId);
                 userInterests.add(UserInterest.builder()
+                        .id(userInterestId)
                         .user(user)
                         .interest(interest)
                         .build());
