@@ -1,4 +1,5 @@
-// lib/presentation/profile/setup/stepmodel/step9_viewmodel.dart
+// lib/presentation/stepmodel/step9_viewmodel.dart
+
 import 'package:flutter/material.dart';
 import '../../../../core/services/setup_profile_service.dart';
 import 'base_step_viewmodel.dart';
@@ -8,8 +9,8 @@ class Step9ViewModel extends BaseStepViewModel {
   List<String>? selectedInterestIds; // Danh sách ID sở thích được chọn
   List<String>? selectedLanguageIds; // Danh sách ID ngôn ngữ được chọn
   bool? interestedInNewLanguage; // Có muốn học ngôn ngữ mới không
-  List<Map<String, dynamic>> interestOptions = []; // Tùy chọn sở thích từ API
-  List<Map<String, dynamic>> languageOptions = []; // Tùy chọn ngôn ngữ từ API
+  List<Map<String, String>> interestOptions = []; // Tùy chọn sở thích từ API, ép kiểu thành Map<String, String>
+  List<Map<String, String>> languageOptions = []; // Tùy chọn ngôn ngữ từ API, ép kiểu thành Map<String, String>
   final SetupProfileService _setupProfileService; // Dịch vụ lấy dữ liệu từ API
   bool isLoading = false; // Trạng thái đang tải
   String? errorMessage; // Thông báo lỗi nếu có
@@ -31,27 +32,25 @@ class Step9ViewModel extends BaseStepViewModel {
       notifyListeners();
       print('Fetching interests and languages options...');
 
-      // Gọi API để lấy dữ liệu từ endpoint /profiles/options
+      // [API Integration] Gọi API để lấy dữ liệu từ endpoint /profiles/options
       final options = await _setupProfileService.fetchProfileOptions();
-      final interests = options['interests'] as List<dynamic>?;
-      final languages = options['languages'] as List<dynamic>?;
+      final interests = options['interests'] as List<dynamic>? ?? [];
+      final languages = options['languages'] as List<dynamic>? ?? [];
 
-      // Chuyển đổi dữ liệu sở thích từ API sang định dạng phù hợp với ProfileOptionSelector
-      interestOptions = interests?.map((option) {
-            final id = option['id']?.toString() ?? '0';
-            final name = option['name']?.toString() ?? 'Unknown';
-            return {'value': id, 'label': name};
-          }).toList() ??
-          [];
+      // [API Data Mapping] Chuyển đổi dữ liệu sở thích từ API sang định dạng Map<String, String>
+      interestOptions = interests.map((option) {
+        final id = option['id']?.toString() ?? '0';
+        final name = option['name']?.toString() ?? 'Unknown';
+        return {'value': id, 'label': name};
+      }).toList().cast<Map<String, String>>();
       print('Fetched interest options: $interestOptions');
 
-      // Chuyển đổi dữ liệu ngôn ngữ từ API sang định dạng phù hợp với ProfileOptionSelector
-      languageOptions = languages?.map((option) {
-            final id = option['id']?.toString() ?? '0';
-            final name = option['name']?.toString() ?? 'Unknown';
-            return {'value': id, 'label': name};
-          }).toList() ??
-          [];
+      // [API Data Mapping] Chuyển đổi dữ liệu ngôn ngữ từ API sang định dạng Map<String, String>
+      languageOptions = languages.map((option) {
+        final id = option['id']?.toString() ?? '0';
+        final name = option['name']?.toString() ?? 'Unknown';
+        return {'value': id, 'label': name};
+      }).toList().cast<Map<String, String>>();
       print('Fetched language options: $languageOptions');
 
       _fetched = true;
@@ -109,13 +108,16 @@ class Step9ViewModel extends BaseStepViewModel {
 
   @override
   void saveData() {
-    // Lưu dữ liệu vào parent (SetupProfileViewModel)
+    // Lưu dữ liệu mới nhất vào parent (SetupProfileViewModel)
     parent.selectedInterestIds = selectedInterestIds;
     parent.selectedLanguageIds = selectedLanguageIds;
     parent.interestedInNewLanguage = interestedInNewLanguage;
-    // [API Integration] Chuẩn bị dữ liệu cho API, giữ nguyên List<String> trong profileData
-    parent.profileData['interestIds'] = selectedInterestIds;
-    parent.profileData['languageIds'] = selectedLanguageIds;
+
+    // [API Data Preparation] Chuẩn bị dữ liệu để gửi API, chuyển đổi ID từ String sang int
+    final interestIds = selectedInterestIds?.map((id) => int.tryParse(id) ?? 0).where((id) => id != 0).toList() ?? [];
+    final languageIds = selectedLanguageIds?.map((id) => int.tryParse(id) ?? 0).where((id) => id != 0).toList() ?? [];
+    parent.profileData['interestIds'] = interestIds.isNotEmpty ? interestIds : null;
+    parent.profileData['languageIds'] = languageIds.isNotEmpty ? languageIds : null;
     parent.profileData['interestedInNewLanguage'] = interestedInNewLanguage;
     print('Saved Step 9 data: $parent.profileData');
   }

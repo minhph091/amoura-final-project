@@ -1,11 +1,12 @@
 // lib/presentation/profile/setup/steps/step6_appearance_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
-import '../../../shared/widgets/profile_option_selector.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step6_viewmodel.dart';
+import 'widgets/_step6_widgets.dart';
 
 class Step6AppearanceForm extends StatefulWidget {
   const Step6AppearanceForm({super.key});
@@ -16,86 +17,127 @@ class Step6AppearanceForm extends StatefulWidget {
 
 class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
   @override
-  void initState() {
-    super.initState();
-    // Pre-fetch body type options đã được xử lý trong SetupProfileViewModel
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<SetupProfileViewModel>(context, listen: true);
+    final vm = Provider.of<SetupProfileViewModel>(context);
     final step6ViewModel = vm.stepViewModels[5] as Step6ViewModel;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+    // Listen to Step6ViewModel changes for real-time UI updates
+    return AnimatedBuilder(
+      animation: step6ViewModel,
+      builder: (context, child) {
+        return _buildContent(vm, step6ViewModel);
+      },
+    );
+  }
+
+  Widget _buildContent(SetupProfileViewModel vm, Step6ViewModel step6ViewModel) {
+    // Debug: Track UI rebuilds
+    print('🔄 Step6 UI rebuilding - selected bodyType: ${step6ViewModel.bodyTypeId}, height: ${step6ViewModel.height}');
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Your Appearance', style: ProfileTheme.getTitleStyle(context)),
-          const SizedBox(height: 6),
-          Text('Let others know more about your look.', style: ProfileTheme.getDescriptionStyle(context)),
+          // Header Section
+          const AppearanceHeader(),
           const SizedBox(height: 24),
-          // Hiển thị trạng thái loading, lỗi hoặc dropdown body type
-          step6ViewModel.isLoading
-              ? const Center(child: CircularProgressIndicator())
+          
+          // Content Section - Fixed layout without scrolling
+          Expanded(
+            child: step6ViewModel.isLoading
+                ? const AppearanceLoadingState()
               : step6ViewModel.errorMessage != null
-                  ? Center(child: Text(step6ViewModel.errorMessage!, style: const TextStyle(color: Colors.red)))
+                    ? _buildErrorState(step6ViewModel.errorMessage!)
                   : step6ViewModel.bodyTypeOptions.isEmpty
-                      ? const Center(child: Text('No body type options available'))
-                      : ProfileOptionSelector(
-                          options: step6ViewModel.bodyTypeOptions.map((opt) => {
-                            'value': opt['value'] as String,
-                            'label': opt['label'] as String,
-                          }).toList(),
-                          selectedValue: step6ViewModel.bodyTypeId,
-                          onChanged: (value, selected) {
-                            print('DEBUG onChanged: value=$value, selected=$selected');
-                            if (selected && value != null && value.isNotEmpty) {
-                              final selectedOption = step6ViewModel.bodyTypeOptions.firstWhere(
-                                (option) => option['value'] == value,
-                                orElse: () => {'value': '0', 'label': 'Unknown'},
-                              );
-                              step6ViewModel.setBodyType(
-                                selectedOption['value'] as String,
-                                selectedOption['label'] as String,
-                              );
-                              setState(() {}); // Cập nhật UI ngay lập tức
-                            }
-                          },
-                          labelText: 'Body Type',
-                          labelStyle: ProfileTheme.getLabelStyle(context),
-                          isDropdown: true,
-                        ),
-          const SizedBox(height: 20),
-          Text('Height (cm)', style: ProfileTheme.getLabelStyle(context)),
-          // Slider height với cập nhật UI tức thời
-          Slider(
-            value: (step6ViewModel.height ?? 170).toDouble(),
-            min: 100,
-            max: 250,
-            divisions: 150,
-            label: '${step6ViewModel.height ?? 170} cm',
-            activeColor: ProfileTheme.darkPink,
-            inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
-            onChanged: (val) {
-              step6ViewModel.setHeight(val.round());
-              setState(() {}); // Cập nhật UI ngay khi slider thay đổi
-            },
-          ),
-          Center(
-            child: Text(
-              '${step6ViewModel.height ?? 170} cm',
-              style: ProfileTheme.getTitleStyle(context).copyWith(fontSize: 16),
-            ),
-          ),
-          const SizedBox(height: 28),
+                        ? _buildEmptyState()
+                        : Column(
+                            children: [
+                              // Body Type Selector
+                              BodyTypeSelector(step6ViewModel: step6ViewModel),
+                              const SizedBox(height: 24),
+                              
+                              // Height Selector
+                              HeightSelector(step6ViewModel: step6ViewModel),
+                              
+                              // Spacer to push button to bottom
+                              const Spacer(),
+                              
+                              // Next Button
           SetupProfileButton(
-            text: 'Next',
+                                text: 'Next',
             onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
           ),
         ],
+                          ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String errorMessage) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.red.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Colors.red[400],
+              size: 40,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              errorMessage,
+              style: TextStyle(
+                color: Colors.red[700],
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF666666).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.search_off,
+              color: const Color(0xFF666666),
+              size: 40,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No appearance options available',
+              style: TextStyle(
+                color: const Color(0xFF666666),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

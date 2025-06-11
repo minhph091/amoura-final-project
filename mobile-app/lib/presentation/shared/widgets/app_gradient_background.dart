@@ -1,3 +1,4 @@
+// lib/presentation/shared/widgets/app_gradient_background.dart
 import 'package:flutter/material.dart';
 
 class AppGradientBackground extends StatelessWidget {

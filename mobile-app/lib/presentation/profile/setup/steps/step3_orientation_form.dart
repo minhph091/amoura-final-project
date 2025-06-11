@@ -1,11 +1,11 @@
-// lib/presentation/profile/setup/steps/step3_orientation_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
-import '../../../shared/widgets/profile_option_selector.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step3_viewmodel.dart';
+import 'widgets/_step3_widgets.dart'; // Updated import path
 
 class Step3OrientationForm extends StatefulWidget {
   const Step3OrientationForm({super.key});
@@ -14,144 +14,83 @@ class Step3OrientationForm extends StatefulWidget {
   State<Step3OrientationForm> createState() => _Step3OrientationFormState();
 }
 
-class _Step3OrientationFormState extends State<Step3OrientationForm> {
-  bool _isDropdownOpen = false;
+class _Step3OrientationFormState extends State<Step3OrientationForm> with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    // KHÔNG gọi fetchOrientationOptions ở đây nữa!
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    _animationController.forward();
   }
 
-  void _toggleDropdown() {
-    setState(() {
-      _isDropdownOpen = !_isDropdownOpen;
-    });
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context);
     final step3ViewModel = vm.stepViewModels[2] as Step3ViewModel;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Your Orientation', style: ProfileTheme.getTitleStyle(context)),
-          const SizedBox(height: 6),
-          Text('This helps us match you with compatible people.', style: ProfileTheme.getDescriptionStyle(context)),
-          const SizedBox(height: 8),
-          Text('Please select your preference.', style: ProfileTheme.getDescriptionStyle(context)),
-          const SizedBox(height: 32),
-          step3ViewModel.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : step3ViewModel.errorMessage != null
-                  ? Center(child: Text(step3ViewModel.errorMessage!, style: const TextStyle(color: Colors.red)))
-                  : step3ViewModel.orientationOptions.isEmpty
-                      ? const Center(child: Text('No orientation options available'))
-                      : Column(
-                          children: [
-                            GestureDetector(
-                              onTap: _toggleDropdown,
-                              child: ProfileOptionSelector(
-                                options: step3ViewModel.orientationOptions,
-                                selectedValue: step3ViewModel.orientationId,
-                                onChanged: (value, selected) {
-                                  if (selected && value.isNotEmpty) {
-                                    final selectedOption = step3ViewModel.orientationOptions.firstWhere(
-                                      (option) => option['value'] == value,
-                                      orElse: () => {'value': '0', 'label': 'Unknown'},
-                                    );
-                                    step3ViewModel.setOrientation(selectedOption['value']!, selectedOption['label']!);
-                                  }
-                                },
-                                labelText: 'Orientation',
-                                labelStyle: ProfileTheme.getLabelStyle(context),
-                                isDropdown: true,
-                              ),
-                            ),
-                            if (_isDropdownOpen)
-                              Container(
-                                margin: const EdgeInsets.only(top: 8.0),
-                                padding: const EdgeInsets.all(8.0),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey.withOpacity(0.1),
-                                      spreadRadius: 1,
-                                      blurRadius: 3,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  children: step3ViewModel.orientationOptions.map((option) {
-                                    final isSelected = step3ViewModel.orientationId == option['value'];
-                                    return GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _isDropdownOpen = false;
-                                        });
-                                        if (!isSelected && option['value']!.isNotEmpty) {
-                                          step3ViewModel.setOrientation(option['value']!, option['label']!);
-                                        }
-                                      },
-                                      child: Container(
-                                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: isSelected ? Colors.purple : Colors.grey.withOpacity(0.3),
-                                            width: 1.0,
-                                          ),
-                                          borderRadius: BorderRadius.circular(8.0),
-                                        ),
-                                        child: ListTile(
-                                          leading: _getOrientationIcon(option['label']!),
-                                          title: Text(
-                                            option['label']!,
-                                            style: ProfileTheme.getLabelStyle(context).copyWith(
-                                              color: isSelected ? Colors.purple : Colors.black87,
-                                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                            ),
-                                          ),
-                                          trailing: isSelected
-                                              ? const Icon(Icons.check_circle, color: Colors.purple)
-                                              : null,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                          ],
-                        ),
-          const SizedBox(height: 32),
-          SetupProfileButton(
-            text: 'Next',
-            onPressed: () => vm.nextStep(context: context),
-            width: double.infinity,
-            height: 52,
-          ),
-        ],
-      ),
+    
+    // Listen to Step3ViewModel changes for real-time UI updates
+    return AnimatedBuilder(
+      animation: step3ViewModel,
+      builder: (context, child) {
+        return _buildContent(vm, step3ViewModel);
+      },
     );
   }
 
-  Widget _getOrientationIcon(String label) {
-    switch (label) {
-      case 'Bisexual':
-        return Icon(Icons.transgender, color: Colors.purple[300], size: 24);
-      case 'Homosexual':
-        return Icon(Icons.male, color: Colors.blue[300], size: 24);
-      case 'Straight':
-        return Icon(Icons.favorite, color: Colors.pink[300], size: 24);
-      default:
-        return const Icon(Icons.help, color: Colors.grey, size: 24);
-    }
+  Widget _buildContent(SetupProfileViewModel vm, Step3ViewModel step3ViewModel) {
+    // Debug: Track UI rebuilds
+    print('🔄 Step3 UI rebuilding - selected orientation: ${step3ViewModel.orientationId}');
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Section
+            OrientationHeader(),
+            const SizedBox(height: 32),
+            
+            // Content Section
+            step3ViewModel.isLoading
+                ? OrientationLoadingState()
+                : step3ViewModel.errorMessage != null
+                    ? OrientationErrorState(errorMessage: step3ViewModel.errorMessage!)
+                    : step3ViewModel.orientationOptions.isEmpty
+                        ? OrientationEmptyState()
+                        : OrientationCards(step3ViewModel: step3ViewModel),
+            
+            const SizedBox(height: 40),
+            
+            // Next Button
+            SetupProfileButton(
+              text: 'Next',
+              onPressed: () => vm.nextStep(context: context),
+              width: double.infinity,
+              height: 52,
+            ).animate().slideY(
+              begin: 0.3,
+              duration: const Duration(milliseconds: 600),
+              delay: const Duration(milliseconds: 400),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

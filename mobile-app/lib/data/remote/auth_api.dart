@@ -246,7 +246,9 @@ class AuthApi {
       print('Update profile response data: ${response.data}');
 
       final data = response.data as Map<String, dynamic>;
-      if (data['status'] != 'UPDATED') {
+      // Backend trả về profile data thực tế thay vì wrapper với status
+      // Kiểm tra xem response có chứa userId (indicate thành công)
+      if (data['userId'] == null) {
         throw ApiException(data['message'] ?? 'Could not update profile');
       }
       return data;

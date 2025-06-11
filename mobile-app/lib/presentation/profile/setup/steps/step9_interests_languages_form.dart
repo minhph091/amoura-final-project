@@ -1,14 +1,11 @@
-// lib/presentation/profile/setup/steps/step9_interests_languages_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/shake_widget.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
-import '../../../shared/widgets/profile_option_selector.dart';
-import '../../../../core/constants/profile/interest_constants.dart';
-import '../../../../core/constants/profile/language_constants.dart';
 import '../setup_profile_viewmodel.dart';
-import '../stepmodel/step9_viewmodel.dart'; // Thêm import Step9ViewModel
+import '../stepmodel/step9_viewmodel.dart';
+import 'widgets/_step9_widgets.dart';
 
 class Step9InterestsLanguagesForm extends StatefulWidget {
   const Step9InterestsLanguagesForm({super.key});
@@ -22,89 +19,144 @@ class _Step9InterestsLanguagesFormState extends State<Step9InterestsLanguagesFor
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+    final vm = Provider.of<SetupProfileViewModel>(context);
     final step9ViewModel = vm.stepViewModels[8] as Step9ViewModel;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
+    // Listen to Step9ViewModel changes for real-time UI updates
+    return AnimatedBuilder(
+      animation: step9ViewModel,
+      builder: (context, child) {
+        return _buildContent(vm, step9ViewModel);
+      },
+    );
+  }
+
+  Widget _buildContent(SetupProfileViewModel vm, Step9ViewModel step9ViewModel) {
+    // Debug: Track UI rebuilds
+    print('🔄 Step9 UI rebuilding - interests: ${step9ViewModel.selectedInterestIds}, languages: ${step9ViewModel.selectedLanguageIds}');
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Your Interests & Languages', style: ProfileTheme.getTitleStyle(context)),
-          const SizedBox(height: 6),
-          Text('This helps us match you with like-minded people.', style: ProfileTheme.getDescriptionStyle(context)),
-          const SizedBox(height: 8),
-          Text('Fields marked with * are required.', style: ProfileTheme.getDescriptionStyle(context)),
-          const SizedBox(height: 18),
-          ProfileOptionSelector(
-            options: step9ViewModel.languageOptions,
-            selectedValues: step9ViewModel.selectedLanguageIds ?? [],
-            onChanged: (value, selected) {
-              setState(() {
-                final updatedLanguages = step9ViewModel.selectedLanguageIds ?? [];
-                if (selected) updatedLanguages.add(value);
-                else updatedLanguages.remove(value);
-                step9ViewModel.setSelectedLanguageIds(updatedLanguages);
-              });
+          // Header Section
+          const InterestsLanguagesHeader(),
+          const SizedBox(height: 16), // Giảm từ 20 xuống 16
+          
+          // Content Section - Fixed layout without scroll
+          Expanded(
+            child: step9ViewModel.isLoading
+                ? const InterestsLanguagesLoadingState()
+                : step9ViewModel.errorMessage != null
+                    ? _buildErrorState(step9ViewModel.errorMessage!)
+                    : step9ViewModel.interestOptions.isEmpty || step9ViewModel.languageOptions.isEmpty
+                        ? _buildEmptyState()
+                        : Column(
+                            children: [
+                              // Language Selector
+                              LanguageSelector(step9ViewModel: step9ViewModel),
+                              const SizedBox(height: 8), // Giảm từ 12 xuống 8
+                              
+                              // New Language Checkbox
+                              NewLanguageCheckbox(step9ViewModel: step9ViewModel),
+                              const SizedBox(height: 12), // Giảm từ 16 xuống 12
+                              
+                              // Interest Selector with shake animation for errors - No scroll needed
+                              Expanded(
+                                child: ShakeWidget(
+                                  shake: _interestError,
+                                  child: InterestSelector(step9ViewModel: step9ViewModel),
+                                ),
+                              ),
+                            ],
+                          ),
+          ),
+          
+          // Next Button - Always visible at bottom
+          SetupProfileButton(
+            text: 'Next',
+            onPressed: () {
+              final error = vm.validateCurrentStep() ?? step9ViewModel.validate();
+              if (error == null) {
+                vm.nextStep(context: context);
+              } else {
+                setState(() => _interestError = true);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(error)),
+                );
+              }
             },
-            labelText: 'Languages you speak',
-            labelStyle: ProfileTheme.getLabelStyle(context),
-            isMultiSelect: true,
-            scrollable: false,
-            isSearchable: true,
-          ),
-          const SizedBox(height: 12),
-          CheckboxListTile(
-            title: Text('Interested in learning new languages?', style: ProfileTheme.getInputTextStyle(context)),
-            value: step9ViewModel.interestedInNewLanguage ?? false,
-            onChanged: (val) => setState(() => step9ViewModel.setInterestedInNewLanguage(val ?? false)),
-            activeColor: ProfileTheme.darkPink,
-          ),
-          const SizedBox(height: 16),
-          ShakeWidget(
-            shake: _interestError,
-            child: ProfileOptionSelector(
-              options: step9ViewModel.interestOptions,
-              selectedValues: step9ViewModel.selectedInterestIds ?? [],
-              onChanged: (value, selected) {
-                setState(() {
-                  final updatedInterests = step9ViewModel.selectedInterestIds ?? [];
-                  if (selected) updatedInterests.add(value);
-                  else updatedInterests.remove(value);
-                  step9ViewModel.setSelectedInterestIds(updatedInterests);
-                  _interestError = false;
-                });
-              },
-              labelText: 'Your Interests *',
-              labelStyle: ProfileTheme.getLabelStyle(context),
-              isMultiSelect: true,
-              scrollable: false,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: SetupProfileButton(
-                  text: 'Next',
-                  onPressed: () {
-                    final error = vm.validateCurrentStep() ?? step9ViewModel.validate();
-                    if (error == null) {
-                      vm.nextStep(context: context);
-                    } else {
-                      setState(() => _interestError = true);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error)),
-                      );
-                    }
-                  },
-                  width: double.infinity,
-                  height: 52,
-                ),
-              ),
-            ],
+            width: double.infinity,
+            height: 52,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String errorMessage) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.red.withOpacity(0.3)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Colors.red[400],
+              size: 40,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              errorMessage,
+              style: TextStyle(
+                color: Colors.red[700],
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF666666).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off,
+              color: const Color(0xFF666666),
+              size: 40,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No options available',
+              style: TextStyle(
+                color: const Color(0xFF666666),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+// lib/app/routes/app_pages.dart
 import 'package:flutter/material.dart';
 import '../../presentation/auth/login/login_view.dart';
 import '../../presentation/profile/setup/setup_profile_view.dart';
@@ -11,6 +12,7 @@ import '../../presentation/discovery/discovery_view.dart';
 import '../../presentation/main_navigator/main_navigator_view.dart';
 import '../../presentation/splash/splash_view.dart';
 import '../../presentation/welcome/welcome_view.dart';
+import '../../presentation/profile/setup/widgets/profile_setup_complete_screen.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -56,6 +58,8 @@ class AppPages {
         return MaterialPageRoute(
           builder: (_) => SetupProfileView(sessionToken: sessionToken),
         );
+      case AppRoutes.profileSetupComplete:
+        return MaterialPageRoute(builder: (_) => const ProfileSetupCompleteScreen());
       case AppRoutes.mainNavigator:
         return MaterialPageRoute(builder: (_) => const MainNavigatorView());
       case AppRoutes.discovery:

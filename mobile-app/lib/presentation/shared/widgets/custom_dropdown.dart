@@ -1,3 +1,6 @@
+// lib/presentation/shared/widgets/custom_dropdown.dart
+// Reusable dropdown widget for single-select options.
+
 import 'package:flutter/material.dart';
 
 class CustomDropdown extends StatelessWidget {
@@ -18,8 +21,8 @@ class CustomDropdown extends StatelessWidget {
     final isValueSelected = value != null && value!.isNotEmpty;
 
     return DropdownButtonFormField<String>(
-      isExpanded: true,
-      menuMaxHeight: 300,
+      isExpanded: true, // This fixes the overflow issue
+      menuMaxHeight: 300, // Limit dropdown height for long lists
       decoration: InputDecoration(
         prefixIcon: Icon(
           Icons.category,
@@ -45,6 +48,7 @@ class CustomDropdown extends StatelessWidget {
             ? const Color(0xFFD81B60).withAlpha(25)
             : Colors.white.withAlpha(240),
         floatingLabelBehavior: FloatingLabelBehavior.never,
+        // Add proper padding to ensure text fits
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
       value: value,
@@ -62,73 +66,41 @@ class CustomDropdown extends StatelessWidget {
       ),
       items: options.map((option) {
         final isOptionSelected = value == option['value'];
-        // Tùy chỉnh giao diện của mỗi mục trong dropdown
         return DropdownMenuItem<String>(
           value: option['value'],
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            decoration: BoxDecoration(
-              color: isOptionSelected
-                  ? const Color(0xFFD81B60).withAlpha(25)
-                  : const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isOptionSelected
-                    ? const Color(0xFFD81B60)
-                    : const Color(0xFFBA68C8),
-                width: isOptionSelected ? 2 : 1.5,
+          child: Row(
+            children: [
+              if (option.containsKey('icon'))
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Icon(
+                    IconData(int.parse(option['icon']!), fontFamily: 'MaterialIcons'),
+                    color: isOptionSelected
+                        ? const Color(0xFFD81B60)
+                        : (option['color'] != null ? Color(int.parse(option['color']!)) : const Color(0xFF424242)),
+                    size: 20,
+                  ),
+                ),
+              Expanded(
+                child: Text(
+                  option['label']!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isOptionSelected ? const Color(0xFFD81B60) : const Color(0xFF424242),
+                    fontWeight: isOptionSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              boxShadow: [
-                if (isOptionSelected)
-                  BoxShadow(
-                    color: const Color(0xFFD81B60).withAlpha(40),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // Icon tròn với biểu tượng orientation
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFD81B60),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _getIconForOption(option['label']!),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                      ),
-                    ),
+              if (isOptionSelected)
+                const Padding(
+                  padding: EdgeInsets.only(left: 4.0),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Color(0xFFD81B60),
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    option['label']!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF424242),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                if (isOptionSelected)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4.0),
-                    child: Icon(
-                      Icons.check_circle,
-                      color: Color(0xFFD81B60),
-                      size: 20,
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
         );
       }).toList(),
@@ -144,14 +116,15 @@ class CustomDropdown extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 100),
             child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Icon(
-                    Icons.category,
-                    color: const Color(0xFFD81B60),
-                    size: 20,
+                if (option.containsKey('icon'))
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Icon(
+                      IconData(int.parse(option['icon']!), fontFamily: 'MaterialIcons'),
+                      color: const Color(0xFFD81B60),
+                      size: 20,
+                    ),
                   ),
-                ),
                 Expanded(
                   child: Text(
                     option['label']!,
@@ -169,19 +142,5 @@ class CustomDropdown extends StatelessWidget {
         }).toList();
       },
     );
-  }
-
-  // Hàm để lấy biểu tượng cho từng orientation
-  String _getIconForOption(String label) {
-    switch (label.toLowerCase()) {
-      case 'bisexual':
-        return '⚥';
-      case 'homosexual':
-        return '⚣';
-      case 'straight':
-        return '⚤';
-      default:
-        return '⚪';
-    }
   }
 }

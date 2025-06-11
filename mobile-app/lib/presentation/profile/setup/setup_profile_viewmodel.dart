@@ -145,7 +145,9 @@ class SetupProfileViewModel extends ChangeNotifier {
         );
         return;
       }
-      currentViewModel.saveData();
+      currentViewModel.saveData(); // Lưu dữ liệu mới nhất trước khi chuyển bước
+
+      // [API Integration] Gọi API để cập nhật dữ liệu cho các bước cụ thể
       if (currentStep == 2) {
         await _updateProfileStep(context, step: 3);
       } else if (currentStep == 4) {
@@ -157,7 +159,7 @@ class SetupProfileViewModel extends ChangeNotifier {
       } else if (currentStep == 7) {
         await _updateProfileStep(context, step: 8);
       } else if (currentStep == 8) {
-        await _updateProfileStep(context, step: 9);
+        await _updateProfileStep(context, step: 9); // Cập nhật dữ liệu bước 9 khi nhấn Next
       }
     }
 
@@ -248,7 +250,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     }
   }
 
-  // Update profile for specific steps (Step 3, 5, 6, 7, 8, 9) with API
+  // [API Integration] Cập nhật hồ sơ cho các bước cụ thể (Step 3, 5, 6, 7, 8, 9) với API
   Future<void> _updateProfileStep(BuildContext context, {required int step}) async {
     final accessToken = await _authService.getAccessToken();
     if (accessToken == null) {
@@ -266,7 +268,6 @@ class SetupProfileViewModel extends ChangeNotifier {
       }
       stepData = {
         'orientationId': orientationId,
-        'orientation': orientation,
       };
     } else if (step == 5) {
       stepData = {
@@ -277,9 +278,9 @@ class SetupProfileViewModel extends ChangeNotifier {
           'latitude': profileData['latitude'],
           'longitude': profileData['longitude'],
         },
-        'locationPreference': profileData['locationPreference'], // Use the latest value from profileData
+        'locationPreference': profileData['locationPreference'], // Sử dụng giá trị mới nhất từ profileData
       };
-      print('Prepared step 5 data for API: $stepData'); // Log data before sending to API
+      print('Prepared step 5 data for API: $stepData'); // Ghi log dữ liệu trước khi gửi API
     } else if (step == 6) {
       final step6ViewModel = stepViewModels[5] as Step6ViewModel;
       stepData = {
@@ -305,8 +306,8 @@ class SetupProfileViewModel extends ChangeNotifier {
       final step8ViewModel = stepViewModels[7] as Step8ViewModel;
       stepData = {
         'drinkStatusId': step8ViewModel.drinkStatusId != null ? int.tryParse(step8ViewModel.drinkStatusId!) : null,
-        'smokeStatusId': step8ViewModel.smokeStatusId != null ? int.tryParse(step8ViewModel.drinkStatusId!) : null,
-        // [API Integration] Convert selectedPets from List<String> to List<int> to match backend (List<Long>)
+        'smokeStatusId': step8ViewModel.smokeStatusId != null ? int.tryParse(step8ViewModel.smokeStatusId!) : null,
+        // [API Data Preparation] Chuyển đổi selectedPets từ List<String> sang List<int> để khớp với backend (List<Long>)
         'petIds': step8ViewModel.selectedPets?.map((id) => int.parse(id)).toList() ?? [],
       };
       stepData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
@@ -316,60 +317,48 @@ class SetupProfileViewModel extends ChangeNotifier {
       }
     } else if (step == 9) {
       final step9ViewModel = stepViewModels[8] as Step9ViewModel;
-      // [API Integration - Debug] Log raw selectedLanguageIds to verify data from UI before processing
+      // [API Integration - Debug] Ghi log dữ liệu thô từ UI để kiểm tra trước khi xử lý
       print('Raw selectedInterestIds in Step 9: ${step9ViewModel.selectedInterestIds}');
       print('Raw selectedLanguageIds in Step 9: ${step9ViewModel.selectedLanguageIds}');
       print('Raw interestedInNewLanguage in Step 9: ${step9ViewModel.interestedInNewLanguage}');
+
+      // [API Data Preparation] Chuẩn bị dữ liệu cho API, chuyển đổi ID từ String sang int và loại bỏ giá trị không hợp lệ
+      final interestIds = step9ViewModel.selectedInterestIds?.map((id) {
+        return int.tryParse(id) ?? 0; // Chuyển đổi sang int, nếu lỗi thì gán 0
+      }).where((id) => id != 0).toList() ?? [];
+      final languageIds = step9ViewModel.selectedLanguageIds?.map((id) {
+        return int.tryParse(id) ?? 0; // Chuyển đổi sang int, nếu lỗi thì gán 0
+      }).where((id) => id != 0).toList() ?? [];
       stepData = {
-        // [API Integration] Convert selectedInterestIds from List<String> to List<int> to match backend (List<Long>)
-        'interestIds': step9ViewModel.selectedInterestIds?.map((id) {
-          try {
-            return int.parse(id);
-          } catch (e) {
-            print('Error parsing interestId $id: $e');
-            return null;
-          }
-        }).where((id) => id != null).toList() ?? [],
-        // [API Integration] Convert selectedLanguageIds from List<String> to List<int> to match backend (List<Long>)
-        'languageIds': step9ViewModel.selectedLanguageIds?.map((id) {
-          try {
-            return int.parse(id);
-          } catch (e) {
-            print('Error parsing languageId $id: $e');
-            return null;
-          }
-        }).where((id) => id != null).toList() ?? [],
+        'interestIds': interestIds.isNotEmpty ? interestIds : null,
+        'languageIds': languageIds.isNotEmpty ? languageIds : null,
         'interestedInNewLanguage': step9ViewModel.interestedInNewLanguage,
       };
-      // [API Integration - Debug] Log parsed stepData to verify data before sending to API
-      print('Parsed stepData for Step 9 before API call: $stepData');
+
+      // [API Data Validation] Loại bỏ các trường null hoặc rỗng để tránh gửi dữ liệu không cần thiết
       stepData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
       if (stepData.isEmpty) {
         print('Skipping updateProfileStep because all fields are null or empty');
         return;
       }
+      print('Parsed stepData for Step 9 before API call: $stepData');
     }
 
     print('Updating profile step $step with data: $stepData');
 
     try {
-      // [API Integration] Send PATCH request to update profile step
+      // [API Integration] Gửi yêu cầu PATCH đến endpoint /profiles/me với token xác thực
       // - Endpoint: /profiles/me
       // - Method: PATCH
       // - Headers: Authorization Bearer <accessToken>
-      // - Body: stepData (contains the latest data for the step)
-      print('Sending PATCH request to /profiles/me with accessToken: ${accessToken.substring(0, 10)}...');
+      // - Body: stepData (dữ liệu đã được chuẩn hóa)
       final response = await _updateProfileUseCase.execute(
         sessionToken: accessToken,
         profileData: stepData,
       );
       print('Update profile step $step response: $response');
-      // [API Response Validation] Check if update was successful based on status code or response structure
-      if (response is Map<String, dynamic> && (response['status'] == 'UPDATED' || response['statusCode'] == 200)) {
-        print('Profile step $step updated successfully');
-      } else {
-        throw Exception('Could not update profile step $step: ${response['message'] ?? 'Unknown error'}');
-      }
+      // Giả định cập nhật thành công nếu không có ngoại lệ, vì API trả về mã 200 và dữ liệu hồ sơ
+      print('Profile step $step updated successfully');
     } catch (e) {
       print('Error updating profile step $step: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -378,6 +367,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     }
   }
 
+  // [API Integration] Cập nhật toàn bộ hồ sơ khi hoàn thành thiết lập
   Future<void> _updateProfile(BuildContext context) async {
     final accessToken = await _authService.getAccessToken();
     if (accessToken == null) {
@@ -391,7 +381,6 @@ class SetupProfileViewModel extends ChangeNotifier {
 
     final profileData = {
       'orientationId': orientationId,
-      'orientation': orientation,
       'avatarPath': avatarPath,
       'coverPath': coverPath ?? (additionalPhotos?.isNotEmpty ?? false ? additionalPhotos!.first : null),
       'location': {
@@ -405,19 +394,15 @@ class SetupProfileViewModel extends ChangeNotifier {
       'bodyTypeId': bodyTypeId,
       'height': height,
       'jobIndustryId': jobIndustryId,
-      'jobIndustry': jobIndustry,
       'educationLevelId': educationLevelId,
-      'educationLevel': educationLevel,
       'dropOut': dropOut,
       'drinkStatusId': drinkStatusId,
-      'drinkStatus': drinkStatus,
       'smokeStatusId': smokeStatusId,
-      'smokeStatus': smokeStatus,
-      // [API Integration] Convert selectedPets from List<String> to List<int> to match backend (List<Long>)
+      // [API Data Preparation] Chuyển đổi selectedPets từ List<String> sang List<int> để khớp với backend (List<Long>)
       'petIds': selectedPets?.map((id) => int.parse(id)).toList() ?? [],
-      // [API Integration] Convert selectedInterestIds from List<String> to List<int> to match backend (List<Long>)
+      // [API Data Preparation] Chuyển đổi selectedInterestIds từ List<String> sang List<int> để khớp với backend (List<Long>)
       'interestIds': selectedInterestIds?.map((id) => int.parse(id)).toList() ?? [],
-      // [API Integration] Convert selectedLanguageIds from List<String> to List<int> to match backend (List<Long>)
+      // [API Data Preparation] Chuyển đổi selectedLanguageIds từ List<String> sang List<int> để khớp với backend (List<Long>)
       'languageIds': selectedLanguageIds?.map((id) => int.parse(id)).toList() ?? [],
       'interestedInNewLanguage': interestedInNewLanguage,
       'bio': bio,
@@ -429,7 +414,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     print('Updating profile with data: $profileData');
 
     try {
-      // [API Integration] Send final PATCH request to update entire profile
+      // [API Integration] Gửi yêu cầu PATCH cuối cùng để cập nhật toàn bộ hồ sơ
       // - Endpoint: /profiles/me
       // - Method: PATCH
       // - Headers: Authorization Bearer <accessToken>
@@ -438,22 +423,23 @@ class SetupProfileViewModel extends ChangeNotifier {
         sessionToken: accessToken,
         profileData: profileData,
       );
-      print('Update profile response: $response');
-      // [API Response Validation] Check if update was successful
-      if (response['status'] == 'UPDATED') {
-        Navigator.pushReplacementNamed(context, '/mainNavigator');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile setup complete!')),
-        );
-      } else {
-        throw Exception('Failed to update profile: ${response['message'] ?? 'Unknown error'}');
-      }
-    } catch (e) {
-      print('Error updating profile: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update profile: $e')),
-      );
-    }
+     print('Update profile response: $response');
+    // Hiển thị thông báo thành công trước khi chuyển đến màn hình chúc mừng
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile setup complete!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    // Chờ thông báo hiển thị, sau đó chuyển đến màn hình chúc mừng
+    await Future.delayed(const Duration(seconds: 2));
+    Navigator.pushReplacementNamed(context, '/profileSetupComplete');
+  } catch (e) {
+    print('Error updating profile: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to update profile: $e')),
+    );
+  }
   }
 
   String? validateStep8() {
@@ -471,9 +457,9 @@ class SetupProfileViewModel extends ChangeNotifier {
 
   void setLocationPreference(int value) {
     locationPreference = value;
-    profileData['locationPreference'] = value; // Update profileData with slider value
+    profileData['locationPreference'] = value; // Cập nhật profileData với giá trị thanh trượt
     notifyListeners();
-    print('Set location preference to: $value km'); // Log to confirm slider update
+    print('Set location preference to: $value km'); // Ghi log để xác nhận cập nhật thanh trượt
   }
 
   int? getDrinkStatusId() => drinkStatusId;
