@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'app/app.dart';
 import 'app/di/injection.dart';
 import 'presentation/settings/theme/theme_mode_controller.dart';
+import 'config/language/language_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,8 +12,11 @@ void main() async {
   await configureDependencies(navigatorKey); // Pass the navigatorKey
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeModeController(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeModeController()),
+        ChangeNotifierProvider(create: (_) => LanguageController()),
+      ],
       child: AmouraApp(navigatorKey: navigatorKey), // Pass navigatorKey to AmouraApp
     ),
   );
