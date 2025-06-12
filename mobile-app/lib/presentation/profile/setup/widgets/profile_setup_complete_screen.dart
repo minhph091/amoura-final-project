@@ -1,7 +1,7 @@
 // lib/presentation/profile/setup/widgets/profile_setup_complete_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../shared/widgets/app_gradient_background.dart'; // Đã sửa đường dẫn import
+import '../../../shared/widgets/app_gradient_background.dart';
 
 class ProfileSetupCompleteScreen extends StatefulWidget {
   const ProfileSetupCompleteScreen({super.key});
@@ -51,12 +51,9 @@ class _ProfileSetupCompleteScreenState extends State<ProfileSetupCompleteScreen>
 
   Future<void> _completeProfileSetup() async {
     try {
-      // Đây là nơi có thể thêm logic gọi API để hoàn tất setup profile
-      // Ví dụ: Gửi thông báo hoàn tất đến server nếu cần
       print('Profile setup was completed successfully!');
     } catch (e) {
       print('Error in completion screen: $e');
-      // Không hiển thị lỗi trên UI vì đây là màn hình chúc mừng
     }
   }
 
@@ -197,8 +194,8 @@ class _ProfileSetupCompleteScreenState extends State<ProfileSetupCompleteScreen>
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 48, // Tăng padding ngang để button rộng hơn
-                                    vertical: 20,   // Tăng padding dọc để button cao hơn
+                                    horizontal: 48,
+                                    vertical: 20,
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(50),
@@ -215,14 +212,14 @@ class _ProfileSetupCompleteScreenState extends State<ProfileSetupCompleteScreen>
                                         Color(0xFF764BA2)
                                       ],
                                       begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight, // Thêm gradient theo hướng đẹp hơn
+                                      end: Alignment.bottomRight,
                                     ),
                                     borderRadius: BorderRadius.circular(50),
                                     boxShadow: [
                                       BoxShadow(
                                         color: const Color(0xFF667EEA)
                                             .withOpacity(0.4),
-                                        blurRadius: 20, // Tăng blur để bóng đẹp hơn
+                                        blurRadius: 20,
                                         offset: const Offset(0, 10),
                                       ),
                                     ],
@@ -230,13 +227,13 @@ class _ProfileSetupCompleteScreenState extends State<ProfileSetupCompleteScreen>
                                   child: Container(
                                     alignment: Alignment.center,
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 8, // Thêm padding trong container để text to hơn
+                                      vertical: 8,
                                     ),
                                     child: Text(
                                       'Start Dating',
                                       style: TextStyle(
-                                        fontSize: 20, // Tăng font size để text nổi bật
-                                        fontWeight: FontWeight.w700, // Tăng độ đậm
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                   ),

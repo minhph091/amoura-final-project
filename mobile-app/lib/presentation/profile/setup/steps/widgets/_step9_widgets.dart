@@ -4,7 +4,7 @@ import '../../stepmodel/step9_viewmodel.dart';
 
 class InterestsLanguagesHeader extends StatelessWidget {
   const InterestsLanguagesHeader({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -23,7 +23,7 @@ class InterestsLanguagesHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF9C27B0).withOpacity(0.3),
+                    color: const Color(0xFF9C27B0).withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -39,7 +39,7 @@ class InterestsLanguagesHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 'Your Interests & Languages',
-                style: ProfileTheme.getTitleStyle(context)?.copyWith(
+                style: ProfileTheme.getTitleStyle(context).copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   foreground: Paint()
@@ -54,7 +54,7 @@ class InterestsLanguagesHeader extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'This helps us match you with like-minded people.',
-          style: ProfileTheme.getDescriptionStyle(context)?.copyWith(
+          style: ProfileTheme.getDescriptionStyle(context).copyWith(
             fontSize: 14,
             height: 1.4,
             color: const Color(0xFF666666),
@@ -76,7 +76,7 @@ class InterestsLanguagesHeader extends StatelessWidget {
 
 class InterestsLanguagesLoadingState extends StatelessWidget {
   const InterestsLanguagesLoadingState({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -85,8 +85,8 @@ class InterestsLanguagesLoadingState extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color(0xFF9C27B0).withOpacity(0.1),
-              const Color(0xFFE91E63).withOpacity(0.1),
+              const Color(0xFF9C27B0).withValues(alpha: 0.1),
+              const Color(0xFFE91E63).withValues(alpha: 0.1),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
@@ -123,7 +123,7 @@ class LanguageSelector extends StatefulWidget {
   State<LanguageSelector> createState() => _LanguageSelectorState();
 }
 
-class _LanguageSelectorState extends State<LanguageSelector> 
+class _LanguageSelectorState extends State<LanguageSelector>
     with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
   late AnimationController _animationController;
@@ -175,10 +175,10 @@ class _LanguageSelectorState extends State<LanguageSelector>
       return 'Select languages...';
     } else if (selected.length == 1) {
       final option = widget.step9ViewModel.languageOptions.firstWhere(
-        (lang) => lang['value'] == selected.first,
+            (lang) => lang['value'] == selected.first,
         orElse: () => {'value': '', 'label': 'Unknown'},
       );
-      return option['label'] as String? ?? 'Unknown';
+      return option['label'] ?? 'Unknown';
     } else {
       return '${selected.length} languages selected';
     }
@@ -207,7 +207,7 @@ class _LanguageSelectorState extends State<LanguageSelector>
   @override
   Widget build(BuildContext context) {
     final hasSelection = widget.step9ViewModel.selectedLanguageIds?.isNotEmpty ?? false;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -220,7 +220,7 @@ class _LanguageSelectorState extends State<LanguageSelector>
           ),
         ),
         const SizedBox(height: 8),
-        
+
         Material(
           color: Colors.transparent,
           child: InkWell(
@@ -229,7 +229,7 @@ class _LanguageSelectorState extends State<LanguageSelector>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: hasSelection 
+                color: hasSelection
                     ? const Color(0xFFD81B60).withAlpha(25)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -239,7 +239,7 @@ class _LanguageSelectorState extends State<LanguageSelector>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -273,7 +273,7 @@ class _LanguageSelectorState extends State<LanguageSelector>
             ),
           ),
         ),
-        
+
         SizeTransition(
           sizeFactor: _expandAnimation,
           child: Container(
@@ -284,7 +284,7 @@ class _LanguageSelectorState extends State<LanguageSelector>
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -326,9 +326,9 @@ class _LanguageSelectorState extends State<LanguageSelector>
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: isSelected 
-                      ? const Color(0xFFD81B60).withOpacity(0.1)
-                      : const Color(0xFFBA68C8).withOpacity(0.1),
+                  color: isSelected
+                      ? const Color(0xFFD81B60).withValues(alpha: 0.1)
+                      : const Color(0xFFBA68C8).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -349,9 +349,9 @@ class _LanguageSelectorState extends State<LanguageSelector>
               ),
               if (isSelected)
                 const Icon(
-                  Icons.check_circle, 
-                  color: Color(0xFFD81B60), 
-                  size: 18
+                    Icons.check_circle,
+                    color: Color(0xFFD81B60),
+                    size: 18
                 ),
             ],
           ),
@@ -369,11 +369,11 @@ class NewLanguageCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isChecked = step9ViewModel.interestedInNewLanguage ?? false;
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isChecked 
+        color: isChecked
             ? const Color(0xFFD81B60).withAlpha(25)
             : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -383,7 +383,7 @@ class NewLanguageCheckbox extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -463,9 +463,9 @@ class InterestSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPadding = 48.0; // 24px on each side  
-    final chipWidth = (screenWidth - horizontalPadding - 12) / 2; // Tăng chiều rộng để cân đối với dropdown languages
-    
+    final horizontalPadding = 48.0;
+    final chipWidth = (screenWidth - horizontalPadding - 12) / 2;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -478,13 +478,13 @@ class InterestSelector extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        
+
         // Use SingleChildScrollView only for interests area to allow vertical scroll
         Expanded(
           child: SingleChildScrollView(
             child: Wrap(
-              spacing: 6, // Giảm spacing để button rộng hơn có thể fit
-              runSpacing: 10, // Giữ vertical spacing bình thường 
+              spacing: 6,
+              runSpacing: 10,
               children: step9ViewModel.interestOptions.map((interest) {
                 final isSelected = step9ViewModel.selectedInterestIds?.contains(interest['value']) ?? false;
                 final interestData = _getInterestData(interest['label']!);
@@ -505,7 +505,7 @@ class InterestSelector extends StatelessWidget {
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14), // Tăng padding ngang để button đầy đặn hơn
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         decoration: BoxDecoration(
                           border: Border.all(
                             color: isSelected
@@ -531,7 +531,7 @@ class InterestSelector extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: (interestData['color'] as Color).withOpacity(0.1),
+                                color: (interestData['color'] as Color).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -545,7 +545,7 @@ class InterestSelector extends StatelessWidget {
                               child: Text(
                                 interest['label']!,
                                 style: TextStyle(
-                                  fontSize: 13, // Giữ nguyên font size
+                                  fontSize: 13,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                                   color: isSelected
                                       ? const Color(0xFFD81B60)

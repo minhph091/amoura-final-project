@@ -7,7 +7,7 @@ import '../../../../core/services/setup_profile_service.dart';
 class Step6ViewModel extends BaseStepViewModel {
   final SetupProfileService _setupProfileService;
 
-  List<Map<String, String>> bodyTypeOptions = []; // Sửa kiểu từ dynamic thành String
+  List<Map<String, String>> bodyTypeOptions = [];
   String? bodyTypeId; // id dạng String
   String? bodyType;   // name
   int? height;
