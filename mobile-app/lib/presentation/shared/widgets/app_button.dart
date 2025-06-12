@@ -17,7 +17,7 @@ class AppButton extends StatelessWidget {
   final bool useThemeGradient;
   final bool isDisabled;
   final BorderSide? borderSide;
-  final bool isLoading;  // Thêm tham số
+  final bool isLoading;
   final Widget? loading;
 
   const AppButton({
