@@ -11,7 +11,7 @@ class ApiEndpoints {
   static const String requestPasswordReset = '/auth/password/reset/request';
   static const String resetPassword = '/auth/password/reset';
   static const String logout = '/auth/logout';
-  static const String refreshToken = '/auth/refresh'; // Thêm endpoint này
+  static const String refreshToken = '/auth/refresh';
 
   static const String profileOptions = '/profiles/options';
   static const String uploadAvatar = '/profiles/photos/avatar';
