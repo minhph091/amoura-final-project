@@ -29,6 +29,20 @@ class LoginOptionsBottomSheet extends StatelessWidget {
         'color': AppColors.secondary,
         'route': AppRoutes.loginWithEmailOtp,
       },
+      {
+        'label': 'Google',
+        'icon': FontAwesomeIcons.google,
+        'color': Colors.red,
+        'route': null, // Will be handled in onTap
+        'action': 'google',
+      },
+      {
+        'label': 'Facebook',
+        'icon': FontAwesomeIcons.facebookF,
+        'color': Colors.blue,
+        'route': null, // Will be handled in onTap
+        'action': 'facebook',
+      },
     ];
 
     return BackdropFilter(
@@ -79,81 +93,94 @@ class LoginOptionsBottomSheet extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: loginMethods.asMap().entries.map((entry) {
-                  int index = entry.key;
-                  Map<String, dynamic> method = entry.value;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            if (method['route'] != null) {
-                              Navigator.pushNamed(context, method['route'] as String);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Login with ${method['label']} coming soon!')),
-                              );
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(40),
-                          splashColor: (method['color'] as Color).withValues(alpha: 0.25),
-                          highlightColor: (method['color'] as Color).withValues(alpha: 0.15),
-                          child: Container(
-                            width: 75,
-                            height: 75,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: (method['color'] as Color).withValues(alpha: 0.1),
-                              border: Border.all(
-                                color: (method['color'] as Color).withValues(alpha: 0.6),
-                                width: 1.8,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (method['color'] as Color).withValues(alpha: 0.25),
-                                  blurRadius: 10,
-                                  spreadRadius: 1.5,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
-                            ),
-                            child: Center(
-                              child: FaIcon(
-                                method['icon'] as IconData,
-                                color: method['color'] as Color,
-                                size: 30,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          method['label'] as String,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ).animate()
-                        .fadeIn(delay: (150 * index).ms, duration: 450.ms)
-                        .slideY(begin: 0.5, curve: Curves.easeOutExpo)
-                        .scaleXY(begin: 0.8, duration: 300.ms, curve: Curves.easeOutBack),
-                  );
-                }).toList(),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                childAspectRatio: 0.8,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 8,
               ),
+              itemCount: loginMethods.length,
+              itemBuilder: (context, index) {
+                final method = loginMethods[index];
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.of(context).pop();
+
+                        if (method['action'] == 'google') {
+                          // Handle Google sign in
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Google sign-in coming soon')),
+                          );
+                        } else if (method['action'] == 'facebook') {
+                          // Handle Facebook sign in
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Facebook sign-in coming soon')),
+                          );
+                        } else if (method['route'] != null) {
+                          // Navigate to login route
+                          Navigator.pushNamed(context, method['route'] as String);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Login with ${method['label']} coming soon!')),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(30),
+                      splashColor: (method['color'] as Color).withValues(alpha: 0.25),
+                      highlightColor: (method['color'] as Color).withValues(alpha: 0.15),
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: (method['color'] as Color).withValues(alpha: 0.1),
+                          border: Border.all(
+                            color: (method['color'] as Color).withValues(alpha: 0.6),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (method['color'] as Color).withValues(alpha: 0.25),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 3),
+                            )
+                          ],
+                        ),
+                        child: Center(
+                          child: FaIcon(
+                            method['icon'] as IconData,
+                            color: method['color'] as Color,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      method['label'] as String,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ).animate()
+                    .fadeIn(delay: (100 * index).ms, duration: 400.ms)
+                    .slideY(begin: 0.3, curve: Curves.easeOutExpo)
+                    .scaleXY(begin: 0.85, duration: 300.ms, curve: Curves.easeOutBack);
+              },
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(

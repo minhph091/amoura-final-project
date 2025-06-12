@@ -113,7 +113,7 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
       ),
     );
 
-    // Animation cho hiệu ứng thở, giữ nguyên vì đã hoạt động tốt
+    // Animation cho hiệu ứng thở
     _breathScaleAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
       CurvedAnimation(
         parent: _breathController,

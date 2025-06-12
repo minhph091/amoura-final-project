@@ -7,7 +7,7 @@ class NavBarSparkleEffect extends StatelessWidget {
   final bool show;
   final double size;
 
-  /// Hiệu ứng chỉ xuất hiện khi show = true, size = kích thước icon
+  // Hiệu ứng chỉ xuất hiện khi show = true, size = kích thước icon
   const NavBarSparkleEffect({
     super.key,
     required this.show,
@@ -30,17 +30,21 @@ class NavBarSparkleEffect extends StatelessWidget {
         onTick: (controller, elapsed, fieldSize) {
           final r = Random();
           List<Particle> particles = [];
-          // tạo hiệu ứng rơi xuống dưới từ center
-          for (int i = 0; i < 12; i++) {
+          // Tạo hiệu ứng sparkle từ chính giữa icon
+          for (int i = 0; i < 15; i++) {
             particles.add(
               Particle(
-                x: fieldSize.width / 2 + r.nextDouble() * 10 - 5,
-                y: fieldSize.height / 2 + r.nextDouble() * 4 - 2,
-                vx: r.nextDouble() * 8 - 4, // nhẹ sang trái phải
-                vy: 30 + r.nextDouble() * 40, // rơi xuống dưới
-                lifespan: 0.8 + r.nextDouble() * 0.4,
+                // Đặt vị trí xuất phát chính xác ở giữa
+                x: fieldSize.width / 2,
+                y: fieldSize.height / 2,
+                // Hướng di chuyển đa dạng hơn theo hình sao
+                vx: (r.nextDouble() * 60 - 30) * (r.nextBool() ? 1 : -1),
+                vy: (r.nextDouble() * 60 - 30) * (r.nextBool() ? 1 : -1),
+                // thời gian hiện thị để hiệu ứng
+                lifespan: 0.3 + r.nextDouble() * 0.2,
                 frame: r.nextInt(4),
-                scale: 0.6 + r.nextDouble() * 0.7,
+                // Đa dạng kích thước
+                scale: 0.5 + r.nextDouble() * 0.6,
               ),
             );
           }
