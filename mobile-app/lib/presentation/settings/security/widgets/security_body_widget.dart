@@ -4,8 +4,7 @@ import '../../widgets/settings_divider.dart';
 import '../../widgets/settings_section_title.dart';
 import '../../widgets/settings_tile.dart';
 import '../authentication/widgets/change_password_view.dart';
-import '../authentication/widgets/two_factor_auth_view.dart';
-import '../login_sessions/login_sessions_view.dart';
+import '../authentication/widgets/change_email_view.dart';
 import '../account_management/account_management_view.dart';
 
 class SecurityBodyWidget extends StatelessWidget {
@@ -26,36 +25,9 @@ class SecurityBodyWidget extends StatelessWidget {
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePasswordView())),
           ),
           SettingsTile(
-            icon: Icons.phone_android_outlined,
-            title: 'Two-Factor Authentication',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TwoFactorAuthView())),
-          ),
-          const SettingsDivider(),
-
-          const SettingsSectionTitle(title: 'Login Sessions'),
-          SettingsTile(
-            icon: Icons.devices_outlined,
-            title: 'Active Sessions',
-            subtitle: 'See all devices where you\'re logged in',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoginSessionsView())),
-          ),
-          SettingsTile(
-            icon: Icons.logout_outlined,
-            title: 'Sign Out From All Devices',
-            onTap: () async {
-              final result = await showConfirmDialog(
-                context: context,
-                title: 'Sign Out Everywhere',
-                content: 'Are you sure you want to sign out from all devices?',
-                confirmText: 'Yes, Sign Out',
-                cancelText: 'Cancel',
-                icon: Icons.logout_outlined,
-                iconColor: colorScheme.error,
-              );
-              if (result == true) {
-                // Implement sign out from all devices (backend logic)
-              }
-            },
+            icon: Icons.email_outlined,
+            title: 'Change Email',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangeEmailView())),
           ),
           const SettingsDivider(),
 

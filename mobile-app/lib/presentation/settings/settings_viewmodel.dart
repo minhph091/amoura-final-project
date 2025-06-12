@@ -13,7 +13,7 @@ class SettingsViewModel extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      print('Starting logout process'); // Log thêm để kiểm tra
+      print('Starting logout process');
       _isLoading = true;
       notifyListeners();
 

@@ -3,7 +3,7 @@ import '../../widgets/settings_section_title.dart';
 import '../../widgets/settings_tile.dart';
 import 'authentication_viewmodel.dart';
 import 'widgets/change_password_view.dart';
-import 'widgets/two_factor_auth_view.dart';
+import 'widgets/change_email_view.dart';
 
 class AuthenticationView extends StatelessWidget {
   const AuthenticationView({super.key});
@@ -23,9 +23,9 @@ class AuthenticationView extends StatelessWidget {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePasswordView())),
         ),
         SettingsTile(
-          icon: Icons.phone_android_outlined,
-          title: 'Two-Factor Authentication',
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TwoFactorAuthView())),
+          icon: Icons.email_outlined,
+          title: 'Change Email',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangeEmailView())),
         ),
       ],
     );

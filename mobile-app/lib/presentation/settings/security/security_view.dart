@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import 'authentication/authentication_view.dart';
-import 'login_sessions/login_sessions_view.dart';
 import 'account_management/account_management_view.dart';
 
 class SecurityView extends StatelessWidget {
@@ -24,7 +23,6 @@ class SecurityView extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             const AuthenticationView(),
-            const LoginSessionsView(),
             const AccountManagementView(),
             const SizedBox(height: 200),
           ],

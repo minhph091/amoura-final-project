@@ -10,6 +10,7 @@ import 'widgets/settings_divider.dart';
 import 'widgets/settings_logout_button.dart';
 import 'widgets/settings_version_text.dart';
 import 'widgets/settings_theme_picker.dart';
+import 'widgets/settings_language_selector.dart';
 import 'theme/theme_mode_controller.dart';
 import '../profile/view/profile_view.dart';
 import '../profile/edit/edit_profile_view.dart';
@@ -33,7 +34,7 @@ class SettingsView extends StatelessWidget {
             elevation: 0,
           ),
           body: ListView(
-            padding: const EdgeInsets.only(bottom: 24), // Đổi từ top: 24 sang bottom: 24 để đồng bộ UI
+            padding: const EdgeInsets.only(bottom: 24),
             children: [
               // Lấy thông tin user từ Provider/ViewModel sau này
               SettingsHeader(
@@ -81,6 +82,7 @@ class SettingsView extends StatelessWidget {
                   onChanged: (mode) => themeController.setThemeMode(mode),
                 ),
               ),
+              const SettingsLanguageSelector(), // Add language selector here
               SettingsTile(
                 icon: Icons.subscriptions_outlined,
                 title: 'Subscription Plans',
