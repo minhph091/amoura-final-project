@@ -5,6 +5,7 @@ import 'register_viewmodel.dart';
 import 'widgets/register_form.dart';
 import '../../../core/constants/asset_path.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../config/language/app_localizations.dart';
 
 class RegisterView extends StatelessWidget {
   const RegisterView({super.key});
@@ -34,6 +35,8 @@ class RegisterView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return ChangeNotifierProvider(
       create: (_) => RegisterViewModel(),
       child: Consumer<RegisterViewModel>(
@@ -62,7 +65,7 @@ class RegisterView extends StatelessWidget {
                         ),
                         const SizedBox(height: 22),
                         Text(
-                          "Create your Amoura account",
+                          localizations.translate("create_account"),
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: Theme.of(context).colorScheme.onSurface,

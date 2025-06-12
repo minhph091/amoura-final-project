@@ -1,9 +1,12 @@
 // lib/presentation/auth/register/widgets/register_form.dart
 import 'package:flutter/material.dart';
 import '../../../../core/utils/validation_util.dart';
+import '../../../../config/theme/app_colors.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/otp_input_form.dart';
+import 'terms_agreement_widget.dart';
 import '../register_viewmodel.dart';
 
 class RegisterForm extends StatelessWidget {
@@ -14,6 +17,7 @@ class RegisterForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
 
     if (viewModel.showOtp) {
       return OtpInputForm(
@@ -32,8 +36,8 @@ class RegisterForm extends StatelessWidget {
         children: [
           AppTextField(
             controller: viewModel.emailController,
-            labelText: "Email",
-            hintText: "Enter your email",
+            labelText: localizations.translate("email"),
+            hintText: localizations.translate("email_hint"),
             keyboardType: TextInputType.emailAddress,
             prefixIcon: Icons.email_outlined,
             prefixIconColor: theme.colorScheme.primary,
@@ -42,8 +46,8 @@ class RegisterForm extends StatelessWidget {
           const SizedBox(height: 12),
           AppTextField(
             controller: viewModel.phoneController,
-            labelText: "Phone number",
-            hintText: "Enter your phone number",
+            labelText: localizations.translate("phone_number"),
+            hintText: localizations.translate("phone_hint"),
             keyboardType: TextInputType.phone,
             prefixIcon: Icons.phone_outlined,
             prefixIconColor: theme.colorScheme.primary,
@@ -52,8 +56,8 @@ class RegisterForm extends StatelessWidget {
           const SizedBox(height: 12),
           AppTextField(
             controller: viewModel.passwordController,
-            labelText: "Password",
-            hintText: "Create a password",
+            labelText: localizations.translate("password_create"),
+            hintText: localizations.translate("password_create_hint"),
             obscureText: viewModel.obscurePassword,
             prefixIcon: Icons.lock_outline,
             prefixIconColor: theme.colorScheme.primary,
@@ -66,8 +70,8 @@ class RegisterForm extends StatelessWidget {
           const SizedBox(height: 12),
           AppTextField(
             controller: viewModel.confirmController,
-            labelText: "Confirm password",
-            hintText: "Re-enter your password",
+            labelText: localizations.translate("confirm_password"),
+            hintText: localizations.translate("confirm_password_hint"),
             obscureText: viewModel.obscureConfirm,
             prefixIcon: Icons.lock_outline,
             prefixIconColor: theme.colorScheme.primary,
@@ -80,10 +84,17 @@ class RegisterForm extends StatelessWidget {
               value,
             ),
           ),
+
+          // Add Terms Agreement Widget
+          TermsAgreementWidget(
+            isAgreed: viewModel.termsAgreed,
+            onChanged: viewModel.toggleTermsAgreement,
+            localizations: localizations,
+          ),
+
           const SizedBox(height: 22),
           AppButton(
-            text: "Register",
-            icon: Icons.person_add_alt_1,
+            text: localizations.translate("register"),
             isLoading: viewModel.isLoading,
             loading: const SizedBox(
               width: 24,
@@ -94,6 +105,22 @@ class RegisterForm extends StatelessWidget {
               ),
             ),
             onPressed: viewModel.isLoading ? null : () => viewModel.initiateRegistration(context),
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            textColor: Colors.white,
+            elevation: 7,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            textStyle: theme.textTheme.labelLarge?.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
           ),
           if (viewModel.errorMessage != null) ...[
             const SizedBox(height: 12),
@@ -111,14 +138,14 @@ class RegisterForm extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Already have an account?",
+                localizations.translate("already_have_account"),
                 style: theme.textTheme.bodyMedium,
               ),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacementNamed('/login');
                 },
-                child: const Text("Sign in now"),
+                child: Text(localizations.translate("sign_in_now")),
               ),
             ],
           ),

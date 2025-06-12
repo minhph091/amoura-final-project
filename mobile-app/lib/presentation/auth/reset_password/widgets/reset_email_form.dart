@@ -1,7 +1,9 @@
 // lib/presentation/auth/reset_password/widgets/reset_email_form.dart
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../../core/utils/validation_util.dart';
+import '../../../../config/theme/app_colors.dart';
 
 class ResetEmailForm extends StatefulWidget {
   final void Function(String email) onSend;
@@ -66,12 +68,24 @@ class _ResetEmailFormState extends State<ResetEmailForm> with SingleTickerProvid
               validator: (value) => ValidationUtil.validateEmail(value ?? ''),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.send_rounded),
-                onPressed: _onSubmit,
-                label: const Text("Send Code"),
+            AppButton(
+              text: "Send Code",
+              onPressed: _onSubmit,
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              textColor: Colors.white,
+              elevation: 7,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.5,
               ),
             ),
           ],

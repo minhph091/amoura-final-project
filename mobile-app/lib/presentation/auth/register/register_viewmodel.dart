@@ -18,6 +18,9 @@ class RegisterViewModel extends ChangeNotifier {
   String? errorMessage;
   String? sessionToken;
 
+  // Add terms agreement flag
+  bool termsAgreed = false;
+
   int remainingSeconds = 0;
   bool canResend = false;
   Timer? _timer;
@@ -34,7 +37,20 @@ class RegisterViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Add method to toggle terms agreement
+  void toggleTermsAgreement(bool value) {
+    termsAgreed = value;
+    notifyListeners();
+  }
+
   Future<void> initiateRegistration(BuildContext context) async {
+    // Check if terms are agreed
+    if (!termsAgreed) {
+      errorMessage = "You must agree to the Terms of Service to create an account";
+      notifyListeners();
+      return;
+    }
+
     if (formKey.currentState?.validate() ?? false) {
       isLoading = true;
       errorMessage = null;
@@ -101,48 +117,49 @@ class RegisterViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> resendOtp() async {
-    if (!canResend || sessionToken == null) return;
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners();
-    try {
-      await _registerUseCase.resendOtp(sessionToken: sessionToken!);
-      errorMessage = 'A new OTP has been sent to your email';
-      startResendTimer(60);
-      notifyListeners();
-    } catch (e) {
-      errorMessage = 'Failed to resend OTP. Please try again.';
-      notifyListeners();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
   void startResendTimer(int seconds) {
     remainingSeconds = seconds;
     canResend = false;
+    notifyListeners();
+
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (remainingSeconds > 0) {
         remainingSeconds--;
         notifyListeners();
       } else {
-        timer.cancel();
         canResend = true;
+        _timer?.cancel();
         notifyListeners();
       }
     });
   }
 
+  Future<void> resendOtp() async {
+    if (!canResend) return;
+
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      await Future.delayed(const Duration(seconds: 1)); // Simulating API call
+      startResendTimer(60);
+    } catch (e) {
+      errorMessage = 'Failed to resend OTP. Please try again.';
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
-    _timer?.cancel();
     emailController.dispose();
     phoneController.dispose();
     passwordController.dispose();
     confirmController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 }

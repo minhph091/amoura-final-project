@@ -5,6 +5,8 @@ import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../login_viewmodel.dart';
+import '../../../../config/theme/app_colors.dart';
+import '../../../../config/language/app_localizations.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -34,6 +36,8 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<LoginViewModel>(context);
+    final localizations = AppLocalizations.of(context);
+
     return FadeTransition(
       opacity: _animController,
       child: Form(
@@ -42,8 +46,8 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
           children: [
             AppTextField(
               controller: viewModel.accountController,
-              labelText: "Email or Phone",
-              hintText: "Enter email or phone",
+              labelText: localizations.translate("email_phone"),
+              hintText: localizations.translate("email_phone_hint"),
               keyboardType: TextInputType.emailAddress,
               prefixIcon: Icons.person_outline,
               prefixIconColor: Theme.of(context).colorScheme.primary,
@@ -59,8 +63,8 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
             const SizedBox(height: 16),
             AppTextField(
               controller: viewModel.passwordController,
-              labelText: "Password",
-              hintText: "Enter your password",
+              labelText: localizations.translate("password"),
+              hintText: localizations.translate("password_hint"),
               obscureText: viewModel.obscurePassword,
               prefixIcon: Icons.lock_outline,
               prefixIconColor: Theme.of(context).colorScheme.primary,
@@ -77,13 +81,12 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
                 onPressed: () {
                   Navigator.of(context).pushNamed('/forgot-password');
                 },
-                child: const Text("Forgot password?"),
+                child: Text(localizations.translate("forgot_password")),
               ),
             ),
             const SizedBox(height: 8),
             AppButton(
-              text: "Sign In",
-              icon: Icons.login,
+              text: localizations.translate("sign_in"),
               onPressed: viewModel.isLoading
                   ? null
                   : () => viewModel.onLoginPressed(
@@ -91,15 +94,40 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             '/mainNavigator',
-                            (route) => false, // Xóa tất cả các route trước đó
+                            (route) => false,
                           );
                         },
                       ),
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              textColor: Colors.white,
+              elevation: 7,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+              isLoading: viewModel.isLoading,
+              loading: const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
             ),
             if (viewModel.errorMessage != null) ...[
               const SizedBox(height: 12),
               Text(
-                viewModel.errorMessage!,
+                localizations.translate("login_error"),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.error,
                   fontSize: 14,

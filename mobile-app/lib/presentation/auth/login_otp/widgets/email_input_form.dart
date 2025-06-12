@@ -5,6 +5,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../login_otp_viewmodel.dart';
 import '../../../../core/utils/validation_util.dart';
+import '../../../../config/theme/app_colors.dart';
 
 class EmailInputForm extends StatefulWidget {
   const EmailInputForm({super.key});
@@ -57,7 +58,6 @@ class _EmailInputFormState extends State<EmailInputForm> with SingleTickerProvid
             const SizedBox(height: 24),
             AppButton(
               text: "Send OTP",
-              icon: Icons.send,
               onPressed: viewModel.isLoading
                   ? null
                   : () => viewModel.onSendOtp(
@@ -66,6 +66,31 @@ class _EmailInputFormState extends State<EmailInputForm> with SingleTickerProvid
                           arguments: {'email': email},
                         ),
                       ),
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              textColor: Colors.white,
+              elevation: 7,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+              isLoading: viewModel.isLoading,
+              loading: const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
             ),
           ],
         ),
