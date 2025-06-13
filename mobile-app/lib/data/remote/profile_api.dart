@@ -73,4 +73,82 @@ class ProfileApi {
       throw Exception('Error fetching profile options: $e');
     }
   }
+
+  // Upload avatar
+  Future<String> uploadAvatar(String filePath) async {
+    try {
+      final response = await _apiClient.uploadMultipart(
+        ApiEndpoints.uploadAvatar,
+        fileField: 'file',
+        filePath: filePath,
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data['url'] as String;
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to upload avatar');
+      }
+    } on DioException catch (e) {
+      print('Error uploading avatar: ${e.response?.statusCode} - ${e.response?.data}');
+      throw Exception(e.response?.data['message'] ?? 'Failed to upload avatar');
+    } catch (e) {
+      print('Unexpected error in uploadAvatar: $e');
+      throw Exception('Failed to upload avatar: $e');
+    }
+  }
+
+  // Upload cover
+  Future<String> uploadCover(String filePath) async {
+    try {
+      final response = await _apiClient.uploadMultipart(
+        ApiEndpoints.uploadCover,
+        fileField: 'file',
+        filePath: filePath,
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data['url'] as String;
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to upload cover');
+      }
+    } on DioException catch (e) {
+      print('Error uploading cover: ${e.response?.statusCode} - ${e.response?.data}');
+      throw Exception(e.response?.data['message'] ?? 'Failed to upload cover');
+    } catch (e) {
+      print('Unexpected error in uploadCover: $e');
+      throw Exception('Failed to upload cover: $e');
+    }
+  }
+
+  // Upload highlight
+  Future<String> uploadHighlight(String filePath) async {
+    try {
+      final response = await _apiClient.uploadMultipart(
+        ApiEndpoints.uploadHighlights,
+        fileField: 'file',
+        filePath: filePath,
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data['url'] as String;
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to upload highlight');
+      }
+    } on DioException catch (e) {
+      print('Error uploading highlight: ${e.response?.statusCode} - ${e.response?.data}');
+      throw Exception(e.response?.data['message'] ?? 'Failed to upload highlight');
+    } catch (e) {
+      print('Unexpected error in uploadHighlight: $e');
+      throw Exception('Failed to upload highlight: $e');
+    }
+  }
+
+  Future<void> deleteAvatar() async {
+    await _apiClient.dio.delete(ApiEndpoints.deleteAvatar);
+  }
+
+  Future<void> deleteCover() async {
+    await _apiClient.dio.delete(ApiEndpoints.deleteCover);
+  }
+
+  Future<void> deleteHighlight(int photoId) async {
+    await _apiClient.dio.delete(ApiEndpoints.deleteHighlight(photoId));
+  }
 }

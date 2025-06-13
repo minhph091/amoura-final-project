@@ -90,6 +90,7 @@ class _EditProfileAvatarCoverSectionState extends State<EditProfileAvatarCoverSe
         } else {
           widget.viewModel.updateCover(compressedFile.path);
         }
+        setState(() {}); // Cập nhật preview
       }
     }
   }

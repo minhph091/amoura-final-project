@@ -13,6 +13,10 @@ import 'package:get_it/get_it.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../domain/usecases/auth/update_profile_usecase.dart';
 import '../../../../core/services/profile_service.dart';
+import '../../../../domain/usecases/user/update_user_usecase.dart';
+import '../../../../data/remote/profile_api.dart';
+import 'dart:io';
+import 'package:image/image.dart';
 
 class EditProfileViewModel extends ChangeNotifier {
   // Profile data received from ProfileService as a Map
@@ -54,6 +58,7 @@ class EditProfileViewModel extends ChangeNotifier {
   String? bio;
   List<String> additionalPhotos = [];
   List<String> existingPhotos = [];
+  List<int> removedHighlightIds = [];
 
   // State variables
   bool isLoading = false;
@@ -339,8 +344,8 @@ class EditProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeExistingPhoto(String url) {
-    existingPhotos.remove(url);
+  void removeExistingPhoto(int photoId) {
+    removedHighlightIds.add(photoId);
     hasChanges = true;
     notifyListeners();
   }
@@ -366,54 +371,69 @@ class EditProfileViewModel extends ChangeNotifier {
         throw 'Please fill all required fields correctly';
       }
 
-      // Comment: Lấy ID trực tiếp từ API response thay vì map từ value
-      List<int>? petIdList = profile?['pets'] != null
-          ? (profile!['pets'] as List<dynamic>)
-              .map((pet) => (pet as Map<String, dynamic>)['id'] as int)
-              .toList()
-          : [];
+      // Lấy access token
+      final authService = GetIt.I<AuthService>();
+      final accessToken = await authService.getAccessToken();
+      if (accessToken == null) throw 'Authentication required. Please log in again.';
 
-      List<int>? interestIdList = profile?['interests'] != null
-          ? (profile!['interests'] as List<dynamic>)
-              .map((interest) => (interest as Map<String, dynamic>)['id'] as int)
-              .toList()
-          : [];
+      final profileApi = GetIt.I<ProfileApi>();
 
-      List<int>? languageIdList = profile?['languages'] != null
-          ? (profile!['languages'] as List<dynamic>)
-              .map((lang) => (lang as Map<String, dynamic>)['id'] as int)
-              .toList()
-          : [];
+      // 1. Upload avatar nếu có thay đổi
+      if (avatarPath != null) {
+        // Kiểm tra định dạng file
+        if (!await _isValidImageFile(avatarPath!)) {
+          throw 'Invalid image file format for avatar';
+        }
+        final url = await profileApi.uploadAvatar(avatarPath!);
+        avatarUrl = url;
+        avatarPath = null;
+      }
 
-      // Comment: Lấy ID trực tiếp từ API response cho các trường đơn lẻ
-      int? bodyTypeId = profile?['bodyType'] != null
-          ? (profile!['bodyType'] as Map<String, dynamic>)['id'] as int?
-          : null;
+      // 2. Upload cover nếu có thay đổi
+      if (coverPath != null) {
+        // Kiểm tra định dạng file
+        if (!await _isValidImageFile(coverPath!)) {
+          throw 'Invalid image file format for cover';
+        }
+        final url = await profileApi.uploadCover(coverPath!);
+        coverUrl = url;
+        coverPath = null;
+      }
 
-      int? jobIndustryId = profile?['jobIndustry'] != null
-          ? (profile!['jobIndustry'] as Map<String, dynamic>)['id'] as int?
-          : null;
+      // 3. Xóa highlight nếu có
+      for (final id in removedHighlightIds) {
+        await profileApi.deleteHighlight(id);
+      }
+      removedHighlightIds.clear();
 
-      int? educationLevelId = profile?['educationLevel'] != null
-          ? (profile!['educationLevel'] as Map<String, dynamic>)['id'] as int?
-          : null;
+      // 4. Upload highlight mới nếu có
+      for (final path in additionalPhotos) {
+        // Kiểm tra định dạng file
+        if (!await _isValidImageFile(path)) {
+          throw 'Invalid image file format for highlight';
+        }
+        await profileApi.uploadHighlight(path);
+      }
+      additionalPhotos.clear();
 
-      int? orientationId = profile?['orientation'] != null
-          ? (profile!['orientation'] as Map<String, dynamic>)['id'] as int?
-          : null;
+      // Chỉ gửi firstName, lastName vào /user
+      final Map<String, dynamic> userData = {
+        if (firstName != null) 'firstName': firstName,
+        if (lastName != null) 'lastName': lastName,
+      };
 
-      int? drinkStatusId = profile?['drinkStatus'] != null
-          ? (profile!['drinkStatus'] as Map<String, dynamic>)['id'] as int?
-          : null;
+      // Chuyển các trường id sang int
+      int? bodyTypeId = bodyType != null ? int.tryParse(bodyType!) : null;
+      int? jobIndustryId = jobIndustry != null ? int.tryParse(jobIndustry!) : null;
+      int? educationLevelId = educationLevel != null ? int.tryParse(educationLevel!) : null;
+      int? orientationId = orientation != null ? int.tryParse(orientation!) : null;
+      int? drinkStatusId = drinkStatus != null ? int.tryParse(drinkStatus!) : null;
+      int? smokeStatusId = smokeStatus != null ? int.tryParse(smokeStatus!) : null;
+      List<int> petIdList = selectedPets?.map((id) => int.tryParse(id)).whereType<int>().toList() ?? [];
+      List<int> interestIdList = selectedInterestIds?.map((id) => int.tryParse(id)).whereType<int>().toList() ?? [];
+      List<int> languageIdList = selectedLanguageIds?.map((id) => int.tryParse(id)).whereType<int>().toList() ?? [];
 
-      int? smokeStatusId = profile?['smokeStatus'] != null
-          ? (profile!['smokeStatus'] as Map<String, dynamic>)['id'] as int?
-          : null;
-
-      // Chuẩn hóa dữ liệu gửi lên backend
       final Map<String, dynamic> profileData = {
-        'firstName': firstName,
-        'lastName': lastName,
         'dateOfBirth': dateOfBirth?.toIso8601String(),
         'sex': sex,
         'orientationId': orientationId,
@@ -433,30 +453,29 @@ class EditProfileViewModel extends ChangeNotifier {
         'languageIds': languageIdList,
         'interestedInNewLanguage': interestedInNewLanguage,
         'bio': bio,
-        'galleryPhotos': existingPhotos,
       };
       profileData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
 
-      // Lấy access token
-      final authService = GetIt.I<AuthService>();
-      final accessToken = await authService.getAccessToken();
-      if (accessToken == null) throw 'Authentication required. Please log in again.';
-
-      // Gọi usecase để update profile
-      final updateProfileUseCase = GetIt.I<UpdateProfileUseCase>();
-      final response = await updateProfileUseCase.execute(
-        sessionToken: accessToken,
-        profileData: profileData,
-      );
-
-      // Cập nhật lại profile local với dữ liệu mới trả về (nếu có)
-      if (response != null) {
-        profile = Map<String, dynamic>.from(response);
-        _originalProfile = _deepCopy(profile!);
-        _initFromProfile();
+      // Gọi update user nếu có thay đổi
+      if (userData.isNotEmpty) {
+        final updateUserUseCase = GetIt.I<UpdateUserUseCase>();
+        await updateUserUseCase.execute(userData: userData);
       }
 
-      // Reset state after successful save
+      // Gọi update profile nếu có thay đổi
+      if (profileData.isNotEmpty) {
+        final updateProfileUseCase = GetIt.I<UpdateProfileUseCase>();
+        await updateProfileUseCase.execute(
+          sessionToken: accessToken,
+          profileData: profileData,
+        );
+      }
+
+      // Sau khi update, load lại profile để đồng bộ dữ liệu mới nhất
+      final profileService = GetIt.I<ProfileService>();
+      profile = await profileService.getProfile();
+      _originalProfile = _deepCopy(profile!);
+      _initFromProfile();
       hasChanges = false;
       successMessage = "Profile updated successfully";
     } catch (e) {
@@ -511,5 +530,113 @@ class EditProfileViewModel extends ChangeNotifier {
       if (e['icon'] != null) 'icon': e['icon'],
       if (e['color'] != null) 'color': e['color'],
     }).toList();
+  }
+
+  Future<void> uploadAvatar(String filePath) async {
+    final profileApi = GetIt.I<ProfileApi>();
+    try {
+      isLoading = true;
+      notifyListeners();
+      if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+        await profileApi.deleteAvatar();
+      }
+      final url = await profileApi.uploadAvatar(filePath);
+      avatarUrl = url;
+      avatarPath = null;
+      await reloadProfile();
+    } catch (e) {
+      error = 'Failed to upload avatar: $e';
+      notifyListeners();
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> uploadCover(String filePath) async {
+    final profileApi = GetIt.I<ProfileApi>();
+    try {
+      isLoading = true;
+      notifyListeners();
+      if (coverUrl != null && coverUrl!.isNotEmpty) {
+        await profileApi.deleteCover();
+      }
+      final url = await profileApi.uploadCover(filePath);
+      coverUrl = url;
+      coverPath = null;
+      await reloadProfile();
+    } catch (e) {
+      error = 'Failed to upload cover: $e';
+      notifyListeners();
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> uploadHighlight(String filePath) async {
+    final profileApi = GetIt.I<ProfileApi>();
+    try {
+      isLoading = true;
+      notifyListeners();
+      await profileApi.uploadHighlight(filePath);
+      await reloadProfile();
+    } catch (e) {
+      error = 'Failed to upload highlight: $e';
+      notifyListeners();
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteHighlight(int photoId) async {
+    final profileApi = GetIt.I<ProfileApi>();
+    try {
+      isLoading = true;
+      notifyListeners();
+      await profileApi.deleteHighlight(photoId);
+      await reloadProfile();
+    } catch (e) {
+      error = 'Failed to delete highlight: $e';
+      notifyListeners();
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> reloadProfile() async {
+    final profileService = GetIt.I<ProfileService>();
+    profile = await profileService.getProfile();
+    _initFromProfile();
+    notifyListeners();
+  }
+
+  // Helper method to validate image file
+  Future<bool> _isValidImageFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) return false;
+
+      final bytes = await file.readAsBytes();
+      if (bytes.length == 0) return false;
+
+      // Check file extension
+      final extension = filePath.split('.').last.toLowerCase();
+      final validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+      if (!validExtensions.contains(extension)) return false;
+
+      // Try to decode image to verify it's a valid image file
+      await decodeImageFromList(bytes);
+      return true;
+    } catch (e) {
+      print('Error validating image file: $e');
+      return false;
+    }
   }
 }

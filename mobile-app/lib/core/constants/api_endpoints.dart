@@ -24,4 +24,6 @@ class ApiEndpoints {
   
   // Helper method for delete highlight with photoId
   static String deleteHighlight(int photoId) => '$highlightsBase/$photoId';
+
+  static const String user = '/user';
 }

@@ -1,11 +1,13 @@
 // lib/core/api/api_client.dart
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 import '../../config/environment.dart';
 import '../../core/services/auth_service.dart';
 import '../../app/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../domain/usecases/auth/refresh_token_usecase.dart';
+import 'dart:io';
 
 class ApiClient {
   final Dio dio;
@@ -83,6 +85,60 @@ class ApiClient {
     try {
       return await dio.get(path, queryParameters: queryParameters);
     } on DioException catch (e) {
+      _handleError(e);
+      rethrow;
+    }
+  }
+
+  Future<Response> patch(String path, {dynamic data}) async {
+    try {
+      return await dio.patch(path, data: data);
+    } on DioException catch (e) {
+      _handleError(e);
+      rethrow;
+    }
+  }
+
+  Future<Response> uploadMultipart(String path, {required String fileField, required String filePath}) async {
+    try {
+      final file = File(filePath);
+      final fileName = filePath.split('/').last;
+      final extension = fileName.split('.').last.toLowerCase();
+      
+      // Map file extensions to MIME types
+      final mimeTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+      };
+      
+      final mimeType = mimeTypes[extension] ?? 'image/jpeg';
+      final contentType = MediaType.parse(mimeType);
+      
+      final formData = FormData.fromMap({
+        fileField: await MultipartFile.fromFile(
+          filePath,
+          filename: fileName,
+          contentType: contentType,
+        ),
+      });
+
+      return await dio.post(
+        path,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          headers: {
+            'Accept': 'application/json',
+          },
+        ),
+      );
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        throw Exception('${e.response?.data['message'] ?? e.message}');
+      }
       _handleError(e);
       rethrow;
     }

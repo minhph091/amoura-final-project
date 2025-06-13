@@ -60,8 +60,7 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
   }
 
   Future<void> _addPhoto() async {
-    final totalPhotos = widget.viewModel.existingPhotos.length +
-        widget.viewModel.additionalPhotos.length;
+    final totalPhotos = widget.viewModel.existingPhotos.length + widget.viewModel.additionalPhotos.length;
     if (totalPhotos >= maxAdditionalPhotos) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Maximum 4 photos allowed")),
@@ -96,35 +95,60 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
     if (!await _requestPermissions(source)) return;
 
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
+    final pickedFile = await picker.pickImage(
+      source: source,
+      imageQuality: 70,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
 
     if (pickedFile != null) {
-      // Check if the image is vertical or square
-      final image = await decodeImageFromList(
-          await File(pickedFile.path).readAsBytes());
-      if (image.width > image.height) {
+      try {
+        final image = await decodeImageFromList(
+            await File(pickedFile.path).readAsBytes());
+        
+        // Kiểm tra kích thước và tỷ lệ ảnh
+        if (image.width > image.height) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text("Please upload a vertical or square photo")),
+            );
+          }
+          return;
+        }
+
+        // Kiểm tra định dạng file
+        final extension = pickedFile.path.split('.').last.toLowerCase();
+        final validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (!validExtensions.contains(extension)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text("Please upload a valid image file (JPG, PNG, GIF, WEBP)")),
+            );
+          }
+          return;
+        }
+
+        final compressedFile = await FlutterImageCompress.compressAndGetFile(
+          pickedFile.path,
+          "${pickedFile.path}_compressed.jpg",
+          quality: 70,
+          minWidth: 512,
+          minHeight: 512,
+        );
+
+        if (compressedFile != null) {
+          widget.viewModel.addPhoto(compressedFile.path);
+          setState(() {}); // Cập nhật lại UI sau khi chọn
+        }
+      } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text("Please upload a vertical or square photo")),
+            SnackBar(content: Text("Error processing image: $e")),
           );
         }
-        return;
-      }
-
-      // Compress the image
-      final compressedFile = await FlutterImageCompress.compressAndGetFile(
-        pickedFile.path,
-        "${pickedFile.path}_compressed.jpg",
-        quality: 70,
-        minWidth: 512,
-        minHeight: 512,
-      );
-
-      if (compressedFile != null) {
-        setState(() {
-          widget.viewModel.addPhoto(compressedFile.path);
-        });
       }
     }
   }
@@ -160,7 +184,14 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
                       onPressed: () {
                         setState(() {
                           if (isExisting) {
-                            widget.viewModel.removeExistingPhoto(path);
+                            // Tìm photo ID từ path
+                            final photo = widget.viewModel.profile?['photos']?.firstWhere(
+                              (p) => p['url'] == path && p['type'] == 'highlight',
+                              orElse: () => null,
+                            );
+                            if (photo != null && photo['id'] != null) {
+                              widget.viewModel.removeExistingPhoto(photo['id'] as int);
+                            }
                           } else {
                             widget.viewModel.removePhoto(path);
                           }
@@ -254,16 +285,20 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
           childAspectRatio: 1,
           padding: EdgeInsets.zero,
           children: [
-            // Existing photos
-            ...widget.viewModel.existingPhotos.map((url) =>
+            // Existing photos (highlights)
+            ...?widget.viewModel.profile?['photos']?.where((p) => p['type'] == 'highlight').map((photo) =>
                 _buildPhotoItem(
                   isExisting: true,
-                  path: url,
-                  onRemove: () =>
-                      setState(() {
-                        widget.viewModel.removeExistingPhoto(url);
-                      }),
-                  onView: () => _viewPhoto(url, true),
+                  path: photo['url'],
+                  onRemove: () {
+                    if (photo['id'] != null) {
+                      widget.viewModel.removeExistingPhoto(photo['id'] as int);
+                      setState(() {});
+                    }
+                  },
+                  onView: () => _viewPhoto(photo['url'], true),
+                  photoId: photo['id'] as int?,
+                  type: photo['type'],
                 )),
 
             // Newly added photos
@@ -289,7 +324,7 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
                   (index) =>
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha:0.1),
+                      color: Colors.grey.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -305,6 +340,8 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
     required String path,
     required VoidCallback onRemove,
     required VoidCallback onView,
+    int? photoId,
+    String? type,
   }) {
     return Stack(
       clipBehavior: Clip.none,
@@ -352,28 +389,55 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
             ),
           ),
         ),
-        Positioned(
-          top: -10,
-          right: -10,
-          child: GestureDetector(
-            onTap: onRemove,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha:0.2),
-                    blurRadius: 3,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
+        if (type == 'highlight' && photoId != null)
+          Positioned(
+            top: -10,
+            right: -10,
+            child: GestureDetector(
+              onTap: () async {
+                await widget.viewModel.deleteHighlight(photoId);
+                setState(() {});
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha:0.2),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.close, color: Colors.red, size: 18),
               ),
-              child: const Icon(Icons.close, color: Colors.red, size: 18),
             ),
           ),
-        ),
+        if (!(type == 'highlight' && photoId != null))
+          Positioned(
+            top: -10,
+            right: -10,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha:0.2),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.close, color: Colors.red, size: 18),
+              ),
+            ),
+          ),
       ],
     );
   }

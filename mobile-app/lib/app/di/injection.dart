@@ -17,6 +17,9 @@ import '../../domain/usecases/auth/logout_usecase.dart';
 import '../../domain/usecases/auth/refresh_token_usecase.dart';
 import '../../domain/usecases/profile/get_profile_usecase.dart';
 import 'package:flutter/material.dart';
+import '../../data/remote/user_api.dart';
+import '../../data/repositories/user_repository.dart';
+import '../../domain/usecases/user/update_user_usecase.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -56,4 +59,9 @@ Future<void> configureDependencies(GlobalKey<NavigatorState> navigatorKey) async
   getIt.registerLazySingleton<LoginUseCase>(() => LoginUseCase(getIt<AuthRepository>(), getIt<AuthService>()));
   getIt.registerLazySingleton<LogoutUseCase>(() => LogoutUseCase(getIt<AuthRepository>(), getIt<AuthService>()));
   getIt.registerLazySingleton<GetProfileUseCase>(() => GetProfileUseCase(getIt<ProfileService>()));
+
+  // User
+  getIt.registerLazySingleton<UserApi>(() => UserApi(getIt<ApiClient>()));
+  getIt.registerLazySingleton<UserRepository>(() => UserRepository(getIt<UserApi>()));
+  getIt.registerLazySingleton<UpdateUserUseCase>(() => UpdateUserUseCase(getIt<UserRepository>()));
 }
