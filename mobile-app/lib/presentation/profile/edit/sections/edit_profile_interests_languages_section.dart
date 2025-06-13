@@ -78,6 +78,14 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
   }
 
   Widget _buildLanguageDropdown() {
+    final selectedLanguages = widget.viewModel.selectedLanguageIds?.map((id) {
+      final option = languageOptions.firstWhere(
+        (opt) => opt['value'] == id,
+        orElse: () => {'label': 'Unknown', 'value': id},
+      );
+      return option['label'] as String;
+    }).toList() ?? [];
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
@@ -96,7 +104,17 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
             children: [
               Icon(Icons.language, color: ProfileTheme.darkPink),
               const SizedBox(width: 10),
-              Text('Select languages...', style: TextStyle(color: ProfileTheme.lightPurple)),
+              Expanded(
+                child: Text(
+                  selectedLanguages.isEmpty 
+                    ? 'Select languages...' 
+                    : selectedLanguages.join(', '),
+                  style: TextStyle(
+                    color: ProfileTheme.lightPurple,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
             ],
           ),
           value: null, // Always show hint since we're using multi-select
@@ -127,7 +145,20 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
               final isSelected = widget.viewModel.selectedLanguageIds?.contains(option['value']) ?? false;
 
               return CheckboxListTile(
-                title: Text(option['label'] as String),
+                title: Row(
+                  children: [
+                    if (option['iconUrl'] != null)
+                      Image.network(
+                        option['iconUrl'] as String,
+                        width: 24,
+                        height: 16,
+                        errorBuilder: (context, error, stackTrace) => 
+                          Icon(Icons.language, color: option['color'] as Color),
+                      ),
+                    const SizedBox(width: 8),
+                    Text(option['label'] as String),
+                  ],
+                ),
                 value: isSelected,
                 activeColor: ProfileTheme.darkPink,
                 onChanged: (selected) {

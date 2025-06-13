@@ -1,6 +1,13 @@
 // lib/presentation/profile/edit/edit_profile_viewmodel.dart
 import 'package:flutter/material.dart';
 import '../../../../core/utils/validation_util.dart';
+import '../../../../core/constants/profile/body_type_constants.dart';
+import '../../../../core/constants/profile/job_constants.dart';
+import '../../../../core/constants/profile/education_constants.dart';
+import '../../../../core/constants/profile/smoke_drink_constants.dart';
+import '../../../../core/constants/profile/pet_constants.dart';
+import '../../../../core/constants/profile/interest_constants.dart';
+import '../../../../core/constants/profile/language_constants.dart';
 
 class EditProfileViewModel extends ChangeNotifier {
   // Profile data received from ProfileService as a Map
@@ -55,7 +62,7 @@ class EditProfileViewModel extends ChangeNotifier {
 
   void _initFromProfile() {
     // Comment: Initialize the view model's fields from the profile map received from ProfileService
-    // This ensures that basic information (e.g., firstName, lastName) is correctly loaded for display
+    // This ensures that all fields (e.g., firstName, avatarUrl, bodyType, ...) are loaded for display and editing
     firstName = profile?['firstName'] as String?;
     lastName = profile?['lastName'] as String?;
     dateOfBirth = profile?['dateOfBirth'] != null 
@@ -80,36 +87,87 @@ class EditProfileViewModel extends ChangeNotifier {
         : null;
     locationPreference = profile?['locationPreference'] as int? ?? 10;
 
-    bodyType = profile?['bodyType'] != null 
-        ? (profile!['bodyType'] as Map<String, dynamic>)['name'] as String? 
+    // Map bodyType name (label) to value (key) for dropdown
+    bodyType = profile?['bodyType'] != null
+        ? (() {
+            final name = (profile!['bodyType'] as Map<String, dynamic>)['name'];
+            final found = bodyTypeOptions.where((option) => option['label'] == name);
+            return found.isNotEmpty ? found.first['value'] as String? : null;
+          })()
         : null;
     height = profile?['height'] as int? ?? 170;
 
-    jobIndustry = profile?['jobIndustry'] != null 
-        ? (profile!['jobIndustry'] as Map<String, dynamic>)['name'] as String? 
+    // Map jobIndustry name (label) to value (key) for dropdown
+    jobIndustry = profile?['jobIndustry'] != null
+        ? (() {
+            final name = (profile!['jobIndustry'] as Map<String, dynamic>)['name'];
+            final found = jobOptions.where((option) => option['label'] == name);
+            return found.isNotEmpty ? found.first['value'] as String? : null;
+          })()
         : null;
-    educationLevel = profile?['educationLevel'] != null 
-        ? (profile!['educationLevel'] as Map<String, dynamic>)['name'] as String? 
+    // Map educationLevel name (label) to value (key) for dropdown
+    educationLevel = profile?['educationLevel'] != null
+        ? (() {
+            final name = (profile!['educationLevel'] as Map<String, dynamic>)['name'];
+            final found = educationOptions.where((option) => option['label'] == name);
+            return found.isNotEmpty ? found.first['value'] as String? : null;
+          })()
         : null;
     dropOut = profile?['dropOut'] as bool? ?? false;
 
-    drinkStatus = profile?['drinkStatus'] != null 
-        ? (profile!['drinkStatus'] as Map<String, dynamic>)['name'] as String? 
+    // Map drinkStatus name (label) to value (key) for dropdown
+    drinkStatus = profile?['drinkStatus'] != null
+        ? (() {
+            final name = (profile!['drinkStatus'] as Map<String, dynamic>)['name'];
+            final found = drinkOptions.where((option) => option['label'] == name);
+            return found.isNotEmpty ? found.first['value'] as String? : null;
+          })()
         : null;
-    smokeStatus = profile?['smokeStatus'] != null 
-        ? (profile!['smokeStatus'] as Map<String, dynamic>)['name'] as String? 
+    // Map smokeStatus name (label) to value (key) for dropdown
+    smokeStatus = profile?['smokeStatus'] != null
+        ? (() {
+            final name = (profile!['smokeStatus'] as Map<String, dynamic>)['name'];
+            final found = smokeOptions.where((option) => option['label'] == name);
+            return found.isNotEmpty ? found.first['value'] as String? : null;
+          })()
         : null;
-    selectedPets = profile?['pets'] != null 
-        ? (profile!['pets'] as List<dynamic>).map((pet) => (pet as Map<String, dynamic>)['name'] as String).toList() 
+    // Map pet name (label) to value (key) for pet selection
+    selectedPets = profile?['pets'] != null
+        ? (profile!['pets'] as List<dynamic>)
+            .map((pet) {
+              final name = (pet as Map<String, dynamic>)['name'];
+              final found = petOptions.where((option) => option['label'] == name);
+              return found.isNotEmpty ? found.first['value'] as String : null;
+            })
+            .whereType<String>()
+            .toList()
         : [];
 
-    selectedLanguageIds = profile?['languages'] != null 
-        ? (profile!['languages'] as List<dynamic>).map((lang) => (lang as Map<String, dynamic>)['id'] as String).toList() 
+    // Map interest name (label) to value (key) for interest selection
+    selectedInterestIds = profile?['interests'] != null
+        ? (profile!['interests'] as List<dynamic>)
+            .map((interest) {
+              final name = (interest as Map<String, dynamic>)['name'];
+              final found = interestOptions.where((option) => option['label'] == name);
+              return found.isNotEmpty ? found.first['value'] as String : null;
+            })
+            .whereType<String>()
+            .toList()
         : [];
+
+    // Map language name (label) to value (key) for language selection
+    selectedLanguageIds = profile?['languages'] != null
+        ? (profile!['languages'] as List<dynamic>)
+            .map((lang) {
+              final name = (lang as Map<String, dynamic>)['name'];
+              final found = languageOptions.where((option) => option['label'] == name);
+              return found.isNotEmpty ? found.first['value'] as String : null;
+            })
+            .whereType<String>()
+            .toList()
+        : [];
+
     interestedInNewLanguage = profile?['interestedInNewLanguage'] as bool? ?? false;
-    selectedInterestIds = profile?['interests'] != null 
-        ? (profile!['interests'] as List<dynamic>).map((interest) => (interest as Map<String, dynamic>)['id'] as String).toList() 
-        : [];
 
     bio = profile?['bio'] as String?;
     existingPhotos = profile?['galleryPhotos'] != null 
@@ -257,7 +315,7 @@ class EditProfileViewModel extends ChangeNotifier {
   }
 
   void updateLanguage(String value, bool selected) {
-    selectedPets ??= [];
+    selectedLanguageIds ??= [];
     if (selected && !selectedLanguageIds!.contains(value)) {
       selectedLanguageIds!.add(value);
     } else if (!selected && selectedLanguageIds!.contains(value)) {
