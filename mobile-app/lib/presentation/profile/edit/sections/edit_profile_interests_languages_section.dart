@@ -86,45 +86,35 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
       return option['label'] as String;
     }).toList() ?? [];
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: ProfileTheme.lightPurple,
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          icon: Icon(Icons.arrow_drop_down, color: ProfileTheme.darkPink),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+    return InkWell(
+      onTap: _showLanguagesDialog,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: ProfileTheme.lightPurple,
+            width: 1.5,
+          ),
           borderRadius: BorderRadius.circular(12),
-          hint: Row(
-            children: [
-              Icon(Icons.language, color: ProfileTheme.darkPink),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  selectedLanguages.isEmpty 
-                    ? 'Select languages...' 
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.language, color: ProfileTheme.darkPink),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                selectedLanguages.isEmpty
+                    ? 'Select languages...'
                     : selectedLanguages.join(', '),
-                  style: TextStyle(
-                    color: ProfileTheme.lightPurple,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                style: TextStyle(
+                  color: selectedLanguages.isEmpty ? ProfileTheme.lightPurple : ProfileTheme.darkPurple,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ],
-          ),
-          value: null, // Always show hint since we're using multi-select
-          onChanged: (String? newValue) {
-            // This is handled by our custom dropdown menu
-          },
-          items: null,
-          onTap: () {
-            _showLanguagesDialog();
-          },
+            ),
+            Icon(Icons.arrow_drop_down, color: ProfileTheme.darkPink),
+          ],
         ),
       ),
     );
@@ -135,42 +125,44 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Select Languages', style: TextStyle(color: ProfileTheme.darkPurple)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: languageOptions.length,
-            itemBuilder: (ctx, index) {
-              final option = languageOptions[index];
-              final isSelected = widget.viewModel.selectedLanguageIds?.contains(option['value']) ?? false;
+        content: StatefulBuilder(
+          builder: (context, setStateDialog) => SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: languageOptions.length,
+              itemBuilder: (ctx, index) {
+                final option = languageOptions[index];
+                final isSelected = widget.viewModel.selectedLanguageIds?.contains(option['value']) ?? false;
 
-              return CheckboxListTile(
-                title: Row(
-                  children: [
-                    if (option['iconUrl'] != null)
-                      Image.network(
-                        option['iconUrl'] as String,
-                        width: 24,
-                        height: 16,
-                        errorBuilder: (context, error, stackTrace) => 
-                          Icon(Icons.language, color: option['color'] as Color),
-                      ),
-                    const SizedBox(width: 8),
-                    Text(option['label'] as String),
-                  ],
-                ),
-                value: isSelected,
-                activeColor: ProfileTheme.darkPink,
-                onChanged: (selected) {
-                  setState(() {
-                    widget.viewModel.updateLanguage(
-                      option['value'] as String,
-                      selected ?? false,
-                    );
-                  });
-                },
-              );
-            },
+                return CheckboxListTile(
+                  title: Row(
+                    children: [
+                      if (option['iconUrl'] != null)
+                        Image.network(
+                          option['iconUrl'] as String,
+                          width: 24,
+                          height: 16,
+                          errorBuilder: (context, error, stackTrace) => 
+                            Icon(Icons.language, color: option['color'] as Color),
+                        ),
+                      const SizedBox(width: 8),
+                      Text(option['label'] as String),
+                    ],
+                  ),
+                  value: isSelected,
+                  activeColor: ProfileTheme.darkPink,
+                  onChanged: (selected) {
+                    setStateDialog(() {
+                      widget.viewModel.updateLanguage(
+                        option['value'] as String,
+                        selected ?? false,
+                      );
+                    });
+                  },
+                );
+              },
+            ),
           ),
         ),
         actions: [
