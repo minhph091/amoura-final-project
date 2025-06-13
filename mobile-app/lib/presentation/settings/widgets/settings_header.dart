@@ -1,5 +1,4 @@
 // lib/presentation/settings/widgets/settings_header.dart
-
 import 'package:flutter/material.dart';
 import '../../main_navigator/widgets/nav_bar_sparkle_effect.dart';
 import '../../profile/view/profile_view.dart';
@@ -58,9 +57,9 @@ class SettingsHeader extends StatelessWidget {
         // Chuyển sang form View Profile
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => ProfileView(
-            profile: null, // TODO: Pass the correct profile object here
-            isMyProfile: true, // TODO: Set this according to your logic
-          )),        );
+            isMyProfile: true, // Set this according to your logic
+          )),
+        );
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 28.0, horizontal: 20.0),

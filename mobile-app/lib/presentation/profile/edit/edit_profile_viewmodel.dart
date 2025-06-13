@@ -1,9 +1,10 @@
+// lib/presentation/profile/edit/edit_profile_viewmodel.dart
 import 'package:flutter/material.dart';
 import '../../../../core/utils/validation_util.dart';
 
 class EditProfileViewModel extends ChangeNotifier {
-  // Profile data
-  dynamic profile;
+  // Profile data received from ProfileService as a Map
+  Map<String, dynamic>? profile;
 
   // Edited data
   String? firstName;
@@ -53,37 +54,67 @@ class EditProfileViewModel extends ChangeNotifier {
   }
 
   void _initFromProfile() {
-    firstName = profile?.firstName;
-    lastName = profile?.lastName;
-    dateOfBirth = profile?.dateOfBirth;
-    sex = profile?.sex;
-    orientation = profile?.orientation;
+    // Comment: Initialize the view model's fields from the profile map received from ProfileService
+    // This ensures that basic information (e.g., firstName, lastName) is correctly loaded for display
+    firstName = profile?['firstName'] as String?;
+    lastName = profile?['lastName'] as String?;
+    dateOfBirth = profile?['dateOfBirth'] != null 
+        ? DateTime.tryParse(profile!['dateOfBirth'] as String) 
+        : null;
+    sex = profile?['sex'] as String?;
+    orientation = profile?['orientation'] != null 
+        ? (profile!['orientation'] as Map<String, dynamic>)['name'] as String? 
+        : null;
 
-    avatarUrl = profile?.avatarUrl;
-    coverUrl = profile?.coverUrl;
+    avatarUrl = profile?['avatarUrl'] as String?;
+    coverUrl = profile?['coverUrl'] as String?;
 
-    city = profile?.city;
-    state = profile?.state;
-    country = profile?.country;
-    locationPreference = profile?.locationPreference ?? 10;
+    city = profile?['location'] != null 
+        ? (profile!['location'] as Map<String, dynamic>)['city'] as String? 
+        : null;
+    state = profile?['location'] != null 
+        ? (profile!['location'] as Map<String, dynamic>)['state'] as String? 
+        : null;
+    country = profile?['location'] != null 
+        ? (profile!['location'] as Map<String, dynamic>)['country'] as String? 
+        : null;
+    locationPreference = profile?['locationPreference'] as int? ?? 10;
 
-    bodyType = profile?.bodyType;
-    height = profile?.height ?? 170;
+    bodyType = profile?['bodyType'] != null 
+        ? (profile!['bodyType'] as Map<String, dynamic>)['name'] as String? 
+        : null;
+    height = profile?['height'] as int? ?? 170;
 
-    jobIndustry = profile?.jobIndustry;
-    educationLevel = profile?.educationLevel;
-    dropOut = profile?.dropOut ?? false;
+    jobIndustry = profile?['jobIndustry'] != null 
+        ? (profile!['jobIndustry'] as Map<String, dynamic>)['name'] as String? 
+        : null;
+    educationLevel = profile?['educationLevel'] != null 
+        ? (profile!['educationLevel'] as Map<String, dynamic>)['name'] as String? 
+        : null;
+    dropOut = profile?['dropOut'] as bool? ?? false;
 
-    drinkStatus = profile?.drinkStatus;
-    smokeStatus = profile?.smokeStatus;
-    selectedPets = profile?.pets?.cast<String>() ?? [];
+    drinkStatus = profile?['drinkStatus'] != null 
+        ? (profile!['drinkStatus'] as Map<String, dynamic>)['name'] as String? 
+        : null;
+    smokeStatus = profile?['smokeStatus'] != null 
+        ? (profile!['smokeStatus'] as Map<String, dynamic>)['name'] as String? 
+        : null;
+    selectedPets = profile?['pets'] != null 
+        ? (profile!['pets'] as List<dynamic>).map((pet) => (pet as Map<String, dynamic>)['name'] as String).toList() 
+        : [];
 
-    selectedLanguageIds = profile?.languages?.cast<String>() ?? [];
-    interestedInNewLanguage = profile?.interestedInNewLanguage ?? false;
-    selectedInterestIds = profile?.interests?.cast<String>() ?? [];
+    selectedLanguageIds = profile?['languages'] != null 
+        ? (profile!['languages'] as List<dynamic>).map((lang) => (lang as Map<String, dynamic>)['id'] as String).toList() 
+        : [];
+    interestedInNewLanguage = profile?['interestedInNewLanguage'] as bool? ?? false;
+    selectedInterestIds = profile?['interests'] != null 
+        ? (profile!['interests'] as List<dynamic>).map((interest) => (interest as Map<String, dynamic>)['id'] as String).toList() 
+        : [];
 
-    bio = profile?.bio;
-    existingPhotos = profile?.galleryPhotos?.cast<String>() ?? [];
+    bio = profile?['bio'] as String?;
+    existingPhotos = profile?['galleryPhotos'] != null 
+        ? (profile!['galleryPhotos'] as List<dynamic>).cast<String>() 
+        : [];
   }
 
   // MARK: Form field validation
@@ -226,7 +257,7 @@ class EditProfileViewModel extends ChangeNotifier {
   }
 
   void updateLanguage(String value, bool selected) {
-    selectedLanguageIds ??= [];
+    selectedPets ??= [];
     if (selected && !selectedLanguageIds!.contains(value)) {
       selectedLanguageIds!.add(value);
     } else if (!selected && selectedLanguageIds!.contains(value)) {
@@ -298,43 +329,71 @@ class EditProfileViewModel extends ChangeNotifier {
         throw 'Please fill all required fields correctly';
       }
 
-      // In a real app, this would upload images if needed and call the API
-      // For now, we simulate success after a delay
+      // Simulate API call for saving profile (to be implemented later)
+      // Comment: In a real app, this would send updated data back to the API (e.g., PATCH /profiles/me)
       await Future.delayed(const Duration(milliseconds: 800));
 
-      // Update profile object with new values
-      profile.firstName = firstName;
-      profile.lastName = lastName;
-      profile.dateOfBirth = dateOfBirth;
-      profile.sex = sex;
-      profile.orientation = orientation;
+      // Update profile map with new values for local state consistency
+      // Comment: Since profile is a Map<String, dynamic>, we update its values using keys to reflect changes
+      profile!['firstName'] = firstName;
+      profile!['lastName'] = lastName;
+      profile!['dateOfBirth'] = dateOfBirth?.toIso8601String();
+      profile!['sex'] = sex;
+      if (orientation != null) {
+        profile!['orientation'] = {'name': orientation};
+      } else {
+        profile!['orientation'] = null;
+      }
 
       // Would handle avatar and cover photo uploads here
 
-      profile.city = city;
-      profile.state = state;
-      profile.country = country;
-      profile.locationPreference = locationPreference;
+      if (profile!['location'] == null) {
+        profile!['location'] = {};
+      }
+      profile!['location']['city'] = city;
+      profile!['location']['state'] = state;
+      profile!['location']['country'] = country;
+      profile!['locationPreference'] = locationPreference;
 
-      profile.bodyType = bodyType;
-      profile.height = height;
+      if (bodyType != null) {
+        profile!['bodyType'] = {'name': bodyType};
+      } else {
+        profile!['bodyType'] = null;
+      }
+      profile!['height'] = height;
 
-      profile.jobIndustry = jobIndustry;
-      profile.educationLevel = educationLevel;
-      profile.dropOut = dropOut;
+      if (jobIndustry != null) {
+        profile!['jobIndustry'] = {'name': jobIndustry};
+      } else {
+        profile!['jobIndustry'] = null;
+      }
+      if (educationLevel != null) {
+        profile!['educationLevel'] = {'name': educationLevel};
+      } else {
+        profile!['educationLevel'] = null;
+      }
+      profile!['dropOut'] = dropOut;
 
-      profile.drinkStatus = drinkStatus;
-      profile.smokeStatus = smokeStatus;
-      profile.pets = selectedPets;
+      if (drinkStatus != null) {
+        profile!['drinkStatus'] = {'name': drinkStatus};
+      } else {
+        profile!['drinkStatus'] = null;
+      }
+      if (smokeStatus != null) {
+        profile!['smokeStatus'] = {'name': smokeStatus};
+      } else {
+        profile!['smokeStatus'] = null;
+      }
+      profile!['pets'] = selectedPets?.map((pet) => {'name': pet}).toList();
 
-      profile.languages = selectedLanguageIds;
-      profile.interestedInNewLanguage = interestedInNewLanguage;
-      profile.interests = selectedInterestIds;
+      profile!['languages'] = selectedLanguageIds?.map((id) => {'id': id}).toList();
+      profile!['interestedInNewLanguage'] = interestedInNewLanguage;
+      profile!['interests'] = selectedInterestIds?.map((id) => {'id': id}).toList();
 
-      profile.bio = bio;
-      profile.galleryPhotos = [...existingPhotos];
+      profile!['bio'] = bio;
+      profile!['galleryPhotos'] = [...existingPhotos];
 
-      // Reset state
+      // Reset state after successful save
       hasChanges = false;
       successMessage = "Profile updated successfully";
     } catch (e) {

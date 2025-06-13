@@ -1,5 +1,7 @@
+// lib/presentation/profile/edit/edit_profile_view.dart
 import 'package:amoura/presentation/profile/edit/sections/edit_profile_bio_photos_section.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Import provider để sử dụng Provider.of
 import '../../shared/dialogs/confirm_dialog.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import '../setup/theme/setup_profile_theme.dart';
@@ -12,6 +14,7 @@ import 'sections/edit_profile_job_education_section.dart';
 import 'sections/edit_profile_lifestyle_section.dart';
 import 'sections/edit_profile_interests_languages_section.dart';
 import 'widgets/collapsible_edit_section.dart';
+import '../view/profile_viewmodel.dart'; // Import ProfileViewModel để truy cập dữ liệu profile
 
 class EditProfileView extends StatefulWidget {
   final dynamic profile;
@@ -34,7 +37,10 @@ class _EditProfileViewState extends State<EditProfileView> {
   @override
   void initState() {
     super.initState();
-    _viewModel = EditProfileViewModel(profile: widget.profile);
+    // Initialize view model with the provided profile or fetch from ProfileViewModel if null
+    // Comment: This line retrieves the current profile data from ProfileViewModel if widget.profile is not provided
+    final profileData = widget.profile ?? Provider.of<ProfileViewModel>(context, listen: false).profile;
+    _viewModel = EditProfileViewModel(profile: profileData);
     // No section is expanded initially
     _expandedSection = null;
   }
@@ -73,8 +79,8 @@ class _EditProfileViewState extends State<EditProfileView> {
       setState(() => _isLoading = true);
 
       try {
-        await _viewModel.saveProfile();
-
+        await _viewModel.saveProfile(); // API call to update profile data
+        // Comment: This line sends the updated profile data to the backend via the API
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

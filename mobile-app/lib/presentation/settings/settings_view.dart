@@ -1,3 +1,4 @@
+// lib/presentation/settings/settings_view.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../shared/widgets/app_gradient_background.dart';
@@ -17,6 +18,7 @@ import '../profile/edit/edit_profile_view.dart';
 import 'security/security_view.dart';
 import 'notification_settings/notification_settings_view.dart';
 import 'subscription/plan_list/plan_list_view.dart';
+import '../profile/view/profile_viewmodel.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -50,15 +52,18 @@ class SettingsView extends StatelessWidget {
                 icon: Icons.person_outline_rounded,
                 title: 'View Profile',
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => ProfileView(profile: null, isMyProfile: true)),
+                  MaterialPageRoute(builder: (_) => ProfileView(isMyProfile: true)),
                 ),
               ),
               SettingsTile(
                 icon: Icons.edit_outlined,
                 title: 'Edit Profile',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const EditProfileView(profile: null)),
-                ),
+                onTap: () {
+                  final profile = context.read<ProfileViewModel>().profile;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => EditProfileView(profile: profile)),
+                  );
+                },
               ),
               SettingsTile(
                 icon: Icons.security_outlined,

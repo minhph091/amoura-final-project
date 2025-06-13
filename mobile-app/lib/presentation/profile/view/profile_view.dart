@@ -1,4 +1,6 @@
+// lib/presentation/profile/view/profile_view.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import '../setup/theme/setup_profile_theme.dart';
 import '../shared/widgets/collapsible_section.dart';
@@ -11,14 +13,13 @@ import '../shared/profile_job_education.dart';
 import '../shared/profile_lifestyle.dart';
 import '../shared/profile_interests_languages.dart';
 import 'widgets/profile_action_menu.dart';
+import 'profile_viewmodel.dart';
 
 class ProfileView extends StatefulWidget {
-  final dynamic profile;
   final bool isMyProfile;
 
   const ProfileView({
     super.key,
-    required this.profile,
     required this.isMyProfile,
   });
 
@@ -40,12 +41,17 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final displayName = [
-      if (widget.profile?.firstName?.isNotEmpty ?? false) widget.profile.firstName,
-      if (widget.profile?.lastName?.isNotEmpty ?? false) widget.profile.lastName,
-    ].join(' ');
+  void initState() {
+    super.initState();
+    // Trigger profile loading after the first frame is built
+    // Comment: This ensures profile data is loaded from the API when the view is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
+    });
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return AppGradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -62,148 +68,179 @@ class _ProfileViewState extends State<ProfileView> {
                 icon: Icon(Icons.edit, color: ProfileTheme.darkPink),
                 tooltip: 'Edit Profile',
                 onPressed: () {
-                  Navigator.of(context).pushNamed('/edit-profile', arguments: widget.profile);
+                  Navigator.of(context).pushNamed('/edit-profile', arguments: Provider.of<ProfileViewModel>(context, listen: false).profile);
                 },
               )
             else
               IconButton(
                 icon: Icon(Icons.more_vert, color: ProfileTheme.darkPink),
                 onPressed: () {
-                  showProfileActionMenu(context, widget.profile);
+                  showProfileActionMenu(context, Provider.of<ProfileViewModel>(context, listen: false).profile);
                 },
                 tooltip: 'More Options',
               ),
           ],
         ),
-        body: ListView(
-          children: [
-            ProfileAvatarCover(
-              avatarUrl: widget.profile?.avatarUrl,
-              coverUrl: widget.profile?.coverUrl,
-              onViewCover: () {
-                // View full cover photo (could navigate to a full-screen image view)
-                if (widget.profile?.coverUrl != null) {
-                  // Implementation for viewing full size cover photo
-                }
-              },
-            ),
+        body: Consumer<ProfileViewModel>(
+          builder: (context, viewModel, child) {
+            if (viewModel.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (viewModel.error != null) {
+              return Center(child: Text('Error: ${viewModel.error}'));
+            } else if (viewModel.profile != null) {
+              final profile = viewModel.profile!;
+              final displayName = [
+                if (profile['firstName']?.isNotEmpty ?? false) profile['firstName'],
+                if (profile['lastName']?.isNotEmpty ?? false) profile['lastName'],
+              ].join(' ');
 
-            Padding(
-              padding: const EdgeInsets.only(top: 16, bottom: 8),
-              child: Text(
-                displayName.isNotEmpty ? displayName : '-',
-                style: ProfileTheme.getTitleStyle(context),
-                textAlign: TextAlign.center,
-              ),
-            ),
+              return ListView(
+                children: [
+                  ProfileAvatarCover(
+                    avatarUrl: profile['avatarUrl'] as String?,
+                    coverUrl: profile['coverUrl'] as String?,
+                    onViewCover: () {
+                      if (profile['coverUrl'] != null) {
+                        // Implementation for viewing full size cover photo
+                      }
+                    },
+                  ),
 
-            if (widget.profile?.username != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  '@${widget.profile.username}',
-                  style: TextStyle(color: ProfileTheme.darkPink),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16, bottom: 8),
+                    child: Text(
+                      displayName.isNotEmpty ? displayName : '-',
+                      style: ProfileTheme.getTitleStyle(context),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
 
-            // Bio & Photos
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ProfileBioPhotos(
-                bio: widget.profile?.bio,
-                galleryPhotos: widget.profile?.galleryPhotos,
-                onViewPhoto: (url) {
-                  // Navigate to photo viewer
-                },
-              ),
-            ),
+                  if (profile['username'] != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        '@${profile['username']}',
+                        style: TextStyle(color: ProfileTheme.darkPink),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
 
-            const SizedBox(height: 16),
+                  // Bio & Photos
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ProfileBioPhotos(
+                      bio: profile['bio'] as String?,
+                      galleryPhotos: (profile['galleryPhotos'] as List<dynamic>?)?.cast<String>(),
+                      onViewPhoto: (url) {
+                        // Navigate to photo viewer
+                      },
+                    ),
+                  ),
 
-            // Basic Information (Collapsible)
-            CollapsibleSection(
-              title: "Basic Information",
-              icon: Icons.person,
-              initiallyExpanded: _expandedSection == 'basic',
-              onToggle: () => _toggleSection('basic'),
-              child: ProfileBasicInfo(
-                firstName: widget.profile?.firstName,
-                lastName: widget.profile?.lastName,
-                username: widget.profile?.username,
-                dob: widget.profile?.dateOfBirth,
-                gender: widget.profile?.gender,
-                orientation: widget.profile?.orientation,
-              ),
-            ),
+                  const SizedBox(height: 16),
 
-            // Appearance
-            CollapsibleSection(
-              title: "Appearance",
-              icon: Icons.accessibility_new,
-              initiallyExpanded: _expandedSection == 'appearance',
-              onToggle: () => _toggleSection('appearance'),
-              child: ProfileAppearance(
-                bodyType: widget.profile?.bodyType,
-                height: widget.profile?.height,
-              ),
-            ),
+                  // Basic Information (Collapsible)
+                  CollapsibleSection(
+                    title: "Basic Information",
+                    icon: Icons.person,
+                    initiallyExpanded: _expandedSection == 'basic',
+                    onToggle: () => _toggleSection('basic'),
+                    child: ProfileBasicInfo(
+                      firstName: profile['firstName'] as String?,
+                      lastName: profile['lastName'] as String?,
+                      username: profile['username'] as String?,
+                      dob: profile['dateOfBirth'] != null
+                          ? DateTime.tryParse(profile['dateOfBirth'] as String)
+                          : null,
+                      gender: profile['sex'] as String?,
+                      orientation: profile['orientation'] != null
+                          ? (profile['orientation'] as Map<String, dynamic>)['name'] as String?
+                          : null,
+                    ),
+                  ),
 
-            // Location
-            CollapsibleSection(
-              title: "Location",
-              icon: Icons.location_on,
-              initiallyExpanded: _expandedSection == 'location',
-              onToggle: () => _toggleSection('location'),
-              child: ProfileLocation(
-                city: widget.profile?.city,
-                state: widget.profile?.state,
-                country: widget.profile?.country,
-                locationPreference: widget.profile?.locationPreference,
-              ),
-            ),
+                  // Appearance
+                  CollapsibleSection(
+                    title: "Appearance",
+                    icon: Icons.accessibility_new,
+                    initiallyExpanded: _expandedSection == 'appearance',
+                    onToggle: () => _toggleSection('appearance'),
+                    child: ProfileAppearance(
+                      bodyType: profile['bodyType'] != null
+                          ? (profile['bodyType'] as Map<String, dynamic>)['name'] as String?
+                          : null,
+                      height: profile['height'] as int?,
+                    ),
+                  ),
 
-            // Job & Education
-            CollapsibleSection(
-              title: "Job & Education",
-              icon: Icons.work,
-              initiallyExpanded: _expandedSection == 'job',
-              onToggle: () => _toggleSection('job'),
-              child: ProfileJobEducation(
-                jobIndustry: widget.profile?.jobIndustry,
-                educationLevel: widget.profile?.educationLevel,
-                dropOut: widget.profile?.dropOut,
-              ),
-            ),
+                  // Location
+                  CollapsibleSection(
+                    title: "Location",
+                    icon: Icons.location_on,
+                    initiallyExpanded: _expandedSection == 'location',
+                    onToggle: () => _toggleSection('location'),
+                    child: ProfileLocation(
+                      city: profile['location'] != null ? (profile['location'] as Map<String, dynamic>)['city'] as String? : null,
+                      state: profile['location'] != null ? (profile['location'] as Map<String, dynamic>)['state'] as String? : null,
+                      country: profile['location'] != null ? (profile['location'] as Map<String, dynamic>)['country'] as String? : null,
+                      locationPreference: profile['locationPreference'] as int?,
+                    ),
+                  ),
 
-            // Lifestyle
-            CollapsibleSection(
-              title: "Lifestyle",
-              icon: Icons.emoji_emotions,
-              initiallyExpanded: _expandedSection == 'lifestyle',
-              onToggle: () => _toggleSection('lifestyle'),
-              child: ProfileLifestyle(
-                drinkStatus: widget.profile?.drinkStatus,
-                smokeStatus: widget.profile?.smokeStatus,
-                pets: widget.profile?.pets,
-              ),
-            ),
+                  // Job & Education
+                  CollapsibleSection(
+                    title: "Job & Education",
+                    icon: Icons.work,
+                    initiallyExpanded: _expandedSection == 'job',
+                    onToggle: () => _toggleSection('job'),
+                    child: ProfileJobEducation(
+                      jobIndustry: profile['jobIndustry'] != null
+                          ? (profile['jobIndustry'] as Map<String, dynamic>)['name'] as String?
+                          : null,
+                      educationLevel: profile['educationLevel'] != null
+                          ? (profile['educationLevel'] as Map<String, dynamic>)['name'] as String?
+                          : null,
+                      dropOut: profile['dropOut'] as bool?,
+                    ),
+                  ),
 
-            // Interests & Languages
-            CollapsibleSection(
-              title: "Interests & Languages",
-              icon: Icons.interests,
-              initiallyExpanded: _expandedSection == 'interests',
-              onToggle: () => _toggleSection('interests'),
-              child: ProfileInterestsLanguages(
-                interests: widget.profile?.interests,
-                languages: widget.profile?.languages,
-                interestedInNewLanguage: widget.profile?.interestedInNewLanguage,
-              ),
-            ),
+                  // Lifestyle
+                  CollapsibleSection(
+                    title: "Lifestyle",
+                    icon: Icons.emoji_emotions,
+                    initiallyExpanded: _expandedSection == 'lifestyle',
+                    onToggle: () => _toggleSection('lifestyle'),
+                    child: ProfileLifestyle(
+                      drinkStatus: profile['drinkStatus'] != null
+                          ? (profile['drinkStatus'] as Map<String, dynamic>)['name'] as String?
+                          : null,
+                      smokeStatus: profile['smokeStatus'] != null
+                          ? (profile['smokeStatus'] as Map<String, dynamic>)['name'] as String?
+                          : null,
+                      pets: (profile['pets'] as List<dynamic>?)?.map((pet) => (pet as Map<String, dynamic>)['name'] as String).toList(),
+                    ),
+                  ),
 
-            const SizedBox(height: 24),
-          ],
+                  // Interests & Languages
+                  CollapsibleSection(
+                    title: "Interests & Languages",
+                    icon: Icons.interests,
+                    initiallyExpanded: _expandedSection == 'interests',
+                    onToggle: () => _toggleSection('interests'),
+                    child: ProfileInterestsLanguages(
+                      interests: (profile['interests'] as List<dynamic>?)?.map((interest) => (interest as Map<String, dynamic>)['name'] as String).toList(),
+                      languages: (profile['languages'] as List<dynamic>?)?.map((language) => (language as Map<String, dynamic>)['name'] as String).toList(),
+                      interestedInNewLanguage: profile['interestedInNewLanguage'] as bool?,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
+              );
+            } else {
+              return const Center(child: Text('No profile data available'));
+            }
+          },
         ),
       ),
     );

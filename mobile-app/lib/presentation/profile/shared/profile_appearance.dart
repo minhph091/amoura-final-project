@@ -19,6 +19,11 @@ class ProfileAppearance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Log the received data for debugging
+    print('ProfileAppearance - Received Data:');
+    print('Body Type: $bodyType');
+    print('Height: $height');
+
     return Column(
       children: [
         ProfileFieldDisplay(
