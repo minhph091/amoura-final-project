@@ -21,4 +21,28 @@ class UserApi {
       throw Exception('Error updating user: $e');
     }
   }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/user/change-password',
+        data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to change password');
+      }
+    } on DioException catch (e) {
+      print('Error changing password: ${e.response?.statusCode} - ${e.response?.data}');
+      throw Exception(e.response?.data['message'] ?? 'Failed to change password');
+    } catch (e) {
+      print('Unexpected error in changePassword: $e');
+      throw Exception('Failed to change password: $e');
+    }
+  }
 }
