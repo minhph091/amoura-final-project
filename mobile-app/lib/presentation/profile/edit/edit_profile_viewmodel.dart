@@ -8,10 +8,16 @@ import '../../../../core/constants/profile/smoke_drink_constants.dart';
 import '../../../../core/constants/profile/pet_constants.dart';
 import '../../../../core/constants/profile/interest_constants.dart';
 import '../../../../core/constants/profile/language_constants.dart';
+import '../../../../core/constants/profile/orientation_constants.dart';
+import 'package:get_it/get_it.dart';
+import '../../../../core/services/auth_service.dart';
+import '../../../../domain/usecases/auth/update_profile_usecase.dart';
+import '../../../../core/services/profile_service.dart';
 
 class EditProfileViewModel extends ChangeNotifier {
   // Profile data received from ProfileService as a Map
   Map<String, dynamic>? profile;
+  Map<String, dynamic>? _originalProfile;
 
   // Edited data
   String? firstName;
@@ -56,26 +62,81 @@ class EditProfileViewModel extends ChangeNotifier {
   String? error;
   String? successMessage;
 
+  // Options lấy từ API
+  Map<String, dynamic>? profileOptions;
+
   EditProfileViewModel({this.profile}) {
     _initFromProfile();
+    if (profile != null) {
+      _originalProfile = _deepCopy(profile!);
+    }
+    // Gọi load options khi khởi tạo
+    loadProfileOptions();
   }
 
   void _initFromProfile() {
-    // Comment: Initialize the view model's fields from the profile map received from ProfileService
-    // This ensures that all fields (e.g., firstName, avatarUrl, bodyType, ...) are loaded for display and editing
+    // Lưu id cho orientation
+    orientation = profile?['orientation'] != null
+        ? (profile!['orientation'] as Map<String, dynamic>)['id']?.toString()
+        : null;
+
+    // Lưu id cho bodyType
+    bodyType = profile?['bodyType'] != null
+        ? (profile!['bodyType'] as Map<String, dynamic>)['id']?.toString()
+        : null;
+    height = profile?['height'] as int? ?? 170;
+
+    // Lưu id cho jobIndustry
+    jobIndustry = profile?['jobIndustry'] != null
+        ? (profile!['jobIndustry'] as Map<String, dynamic>)['id']?.toString()
+        : null;
+    // Lưu id cho educationLevel
+    educationLevel = profile?['educationLevel'] != null
+        ? (profile!['educationLevel'] as Map<String, dynamic>)['id']?.toString()
+        : null;
+    dropOut = profile?['dropOut'] as bool? ?? false;
+
+    // Lưu id cho drinkStatus
+    drinkStatus = profile?['drinkStatus'] != null
+        ? (profile!['drinkStatus'] as Map<String, dynamic>)['id']?.toString()
+        : null;
+    // Lưu id cho smokeStatus
+    smokeStatus = profile?['smokeStatus'] != null
+        ? (profile!['smokeStatus'] as Map<String, dynamic>)['id']?.toString()
+        : null;
+    // Lưu id cho pets
+    selectedPets = profile?['pets'] != null
+        ? (profile!['pets'] as List<dynamic>)
+            .map((pet) => (pet as Map<String, dynamic>)['id']?.toString())
+            .whereType<String>()
+            .toList()
+        : [];
+
+    // Lưu id cho interests
+    selectedInterestIds = profile?['interests'] != null
+        ? (profile!['interests'] as List<dynamic>)
+            .map((interest) => (interest as Map<String, dynamic>)['id']?.toString())
+            .whereType<String>()
+            .toList()
+        : [];
+
+    // Lưu id cho languages
+    selectedLanguageIds = profile?['languages'] != null
+        ? (profile!['languages'] as List<dynamic>)
+            .map((lang) => (lang as Map<String, dynamic>)['id']?.toString())
+            .whereType<String>()
+            .toList()
+        : [];
+
+    // Các trường còn lại giữ nguyên
     firstName = profile?['firstName'] as String?;
     lastName = profile?['lastName'] as String?;
     dateOfBirth = profile?['dateOfBirth'] != null 
         ? DateTime.tryParse(profile!['dateOfBirth'] as String) 
         : null;
     sex = profile?['sex'] as String?;
-    orientation = profile?['orientation'] != null 
-        ? (profile!['orientation'] as Map<String, dynamic>)['name'] as String? 
-        : null;
-
     avatarUrl = profile?['avatarUrl'] as String?;
     coverUrl = profile?['coverUrl'] as String?;
-
     city = profile?['location'] != null 
         ? (profile!['location'] as Map<String, dynamic>)['city'] as String? 
         : null;
@@ -86,89 +147,7 @@ class EditProfileViewModel extends ChangeNotifier {
         ? (profile!['location'] as Map<String, dynamic>)['country'] as String? 
         : null;
     locationPreference = profile?['locationPreference'] as int? ?? 10;
-
-    // Map bodyType name (label) to value (key) for dropdown
-    bodyType = profile?['bodyType'] != null
-        ? (() {
-            final name = (profile!['bodyType'] as Map<String, dynamic>)['name'];
-            final found = bodyTypeOptions.where((option) => option['label'] == name);
-            return found.isNotEmpty ? found.first['value'] as String? : null;
-          })()
-        : null;
-    height = profile?['height'] as int? ?? 170;
-
-    // Map jobIndustry name (label) to value (key) for dropdown
-    jobIndustry = profile?['jobIndustry'] != null
-        ? (() {
-            final name = (profile!['jobIndustry'] as Map<String, dynamic>)['name'];
-            final found = jobOptions.where((option) => option['label'] == name);
-            return found.isNotEmpty ? found.first['value'] as String? : null;
-          })()
-        : null;
-    // Map educationLevel name (label) to value (key) for dropdown
-    educationLevel = profile?['educationLevel'] != null
-        ? (() {
-            final name = (profile!['educationLevel'] as Map<String, dynamic>)['name'];
-            final found = educationOptions.where((option) => option['label'] == name);
-            return found.isNotEmpty ? found.first['value'] as String? : null;
-          })()
-        : null;
-    dropOut = profile?['dropOut'] as bool? ?? false;
-
-    // Map drinkStatus name (label) to value (key) for dropdown
-    drinkStatus = profile?['drinkStatus'] != null
-        ? (() {
-            final name = (profile!['drinkStatus'] as Map<String, dynamic>)['name'];
-            final found = drinkOptions.where((option) => option['label'] == name);
-            return found.isNotEmpty ? found.first['value'] as String? : null;
-          })()
-        : null;
-    // Map smokeStatus name (label) to value (key) for dropdown
-    smokeStatus = profile?['smokeStatus'] != null
-        ? (() {
-            final name = (profile!['smokeStatus'] as Map<String, dynamic>)['name'];
-            final found = smokeOptions.where((option) => option['label'] == name);
-            return found.isNotEmpty ? found.first['value'] as String? : null;
-          })()
-        : null;
-    // Map pet name (label) to value (key) for pet selection
-    selectedPets = profile?['pets'] != null
-        ? (profile!['pets'] as List<dynamic>)
-            .map((pet) {
-              final name = (pet as Map<String, dynamic>)['name'];
-              final found = petOptions.where((option) => option['label'] == name);
-              return found.isNotEmpty ? found.first['value'] as String : null;
-            })
-            .whereType<String>()
-            .toList()
-        : [];
-
-    // Map interest name (label) to value (key) for interest selection
-    selectedInterestIds = profile?['interests'] != null
-        ? (profile!['interests'] as List<dynamic>)
-            .map((interest) {
-              final name = (interest as Map<String, dynamic>)['name'];
-              final found = interestOptions.where((option) => option['label'] == name);
-              return found.isNotEmpty ? found.first['value'] as String : null;
-            })
-            .whereType<String>()
-            .toList()
-        : [];
-
-    // Map language name (label) to value (key) for language selection
-    selectedLanguageIds = profile?['languages'] != null
-        ? (profile!['languages'] as List<dynamic>)
-            .map((lang) {
-              final name = (lang as Map<String, dynamic>)['name'];
-              final found = languageOptions.where((option) => option['label'] == name);
-              return found.isNotEmpty ? found.first['value'] as String : null;
-            })
-            .whereType<String>()
-            .toList()
-        : [];
-
     interestedInNewLanguage = profile?['interestedInNewLanguage'] as bool? ?? false;
-
     bio = profile?['bio'] as String?;
     existingPhotos = profile?['galleryPhotos'] != null 
         ? (profile!['galleryPhotos'] as List<dynamic>).cast<String>() 
@@ -387,69 +366,95 @@ class EditProfileViewModel extends ChangeNotifier {
         throw 'Please fill all required fields correctly';
       }
 
-      // Simulate API call for saving profile (to be implemented later)
-      // Comment: In a real app, this would send updated data back to the API (e.g., PATCH /profiles/me)
-      await Future.delayed(const Duration(milliseconds: 800));
+      // Comment: Lấy ID trực tiếp từ API response thay vì map từ value
+      List<int>? petIdList = profile?['pets'] != null
+          ? (profile!['pets'] as List<dynamic>)
+              .map((pet) => (pet as Map<String, dynamic>)['id'] as int)
+              .toList()
+          : [];
 
-      // Update profile map with new values for local state consistency
-      // Comment: Since profile is a Map<String, dynamic>, we update its values using keys to reflect changes
-      profile!['firstName'] = firstName;
-      profile!['lastName'] = lastName;
-      profile!['dateOfBirth'] = dateOfBirth?.toIso8601String();
-      profile!['sex'] = sex;
-      if (orientation != null) {
-        profile!['orientation'] = {'name': orientation};
-      } else {
-        profile!['orientation'] = null;
+      List<int>? interestIdList = profile?['interests'] != null
+          ? (profile!['interests'] as List<dynamic>)
+              .map((interest) => (interest as Map<String, dynamic>)['id'] as int)
+              .toList()
+          : [];
+
+      List<int>? languageIdList = profile?['languages'] != null
+          ? (profile!['languages'] as List<dynamic>)
+              .map((lang) => (lang as Map<String, dynamic>)['id'] as int)
+              .toList()
+          : [];
+
+      // Comment: Lấy ID trực tiếp từ API response cho các trường đơn lẻ
+      int? bodyTypeId = profile?['bodyType'] != null
+          ? (profile!['bodyType'] as Map<String, dynamic>)['id'] as int?
+          : null;
+
+      int? jobIndustryId = profile?['jobIndustry'] != null
+          ? (profile!['jobIndustry'] as Map<String, dynamic>)['id'] as int?
+          : null;
+
+      int? educationLevelId = profile?['educationLevel'] != null
+          ? (profile!['educationLevel'] as Map<String, dynamic>)['id'] as int?
+          : null;
+
+      int? orientationId = profile?['orientation'] != null
+          ? (profile!['orientation'] as Map<String, dynamic>)['id'] as int?
+          : null;
+
+      int? drinkStatusId = profile?['drinkStatus'] != null
+          ? (profile!['drinkStatus'] as Map<String, dynamic>)['id'] as int?
+          : null;
+
+      int? smokeStatusId = profile?['smokeStatus'] != null
+          ? (profile!['smokeStatus'] as Map<String, dynamic>)['id'] as int?
+          : null;
+
+      // Chuẩn hóa dữ liệu gửi lên backend
+      final Map<String, dynamic> profileData = {
+        'firstName': firstName,
+        'lastName': lastName,
+        'dateOfBirth': dateOfBirth?.toIso8601String(),
+        'sex': sex,
+        'orientationId': orientationId,
+        'city': city,
+        'state': state,
+        'country': country,
+        'locationPreference': locationPreference,
+        'bodyTypeId': bodyTypeId,
+        'height': height,
+        'jobIndustryId': jobIndustryId,
+        'educationLevelId': educationLevelId,
+        'dropOut': dropOut,
+        'drinkStatusId': drinkStatusId,
+        'smokeStatusId': smokeStatusId,
+        'petIds': petIdList,
+        'interestIds': interestIdList,
+        'languageIds': languageIdList,
+        'interestedInNewLanguage': interestedInNewLanguage,
+        'bio': bio,
+        'galleryPhotos': existingPhotos,
+      };
+      profileData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
+
+      // Lấy access token
+      final authService = GetIt.I<AuthService>();
+      final accessToken = await authService.getAccessToken();
+      if (accessToken == null) throw 'Authentication required. Please log in again.';
+
+      // Gọi usecase để update profile
+      final updateProfileUseCase = GetIt.I<UpdateProfileUseCase>();
+      final response = await updateProfileUseCase.execute(
+        sessionToken: accessToken,
+        profileData: profileData,
+      );
+
+      // Cập nhật lại profile local với dữ liệu mới trả về (nếu có)
+      if (response != null) {
+        profile = Map<String, dynamic>.from(response);
+        _originalProfile = _deepCopy(profile!);
+        _initFromProfile();
       }
-
-      // Would handle avatar and cover photo uploads here
-
-      if (profile!['location'] == null) {
-        profile!['location'] = {};
-      }
-      profile!['location']['city'] = city;
-      profile!['location']['state'] = state;
-      profile!['location']['country'] = country;
-      profile!['locationPreference'] = locationPreference;
-
-      if (bodyType != null) {
-        profile!['bodyType'] = {'name': bodyType};
-      } else {
-        profile!['bodyType'] = null;
-      }
-      profile!['height'] = height;
-
-      if (jobIndustry != null) {
-        profile!['jobIndustry'] = {'name': jobIndustry};
-      } else {
-        profile!['jobIndustry'] = null;
-      }
-      if (educationLevel != null) {
-        profile!['educationLevel'] = {'name': educationLevel};
-      } else {
-        profile!['educationLevel'] = null;
-      }
-      profile!['dropOut'] = dropOut;
-
-      if (drinkStatus != null) {
-        profile!['drinkStatus'] = {'name': drinkStatus};
-      } else {
-        profile!['drinkStatus'] = null;
-      }
-      if (smokeStatus != null) {
-        profile!['smokeStatus'] = {'name': smokeStatus};
-      } else {
-        profile!['smokeStatus'] = null;
-      }
-      profile!['pets'] = selectedPets?.map((pet) => {'name': pet}).toList();
-
-      profile!['languages'] = selectedLanguageIds?.map((id) => {'id': id}).toList();
-      profile!['interestedInNewLanguage'] = interestedInNewLanguage;
-      profile!['interests'] = selectedInterestIds?.map((id) => {'id': id}).toList();
-
-      profile!['bio'] = bio;
-      profile!['galleryPhotos'] = [...existingPhotos];
 
       // Reset state after successful save
       hasChanges = false;
@@ -461,5 +466,50 @@ class EditProfileViewModel extends ChangeNotifier {
       isSaving = false;
       notifyListeners();
     }
+  }
+
+  // Hàm deep copy cho Map<String, dynamic>
+  Map<String, dynamic> _deepCopy(Map<String, dynamic> source) {
+    return Map<String, dynamic>.from(source.map((key, value) {
+      if (value is Map<String, dynamic>) {
+        return MapEntry(key, _deepCopy(value));
+      } else if (value is List) {
+        return MapEntry(key, value.map((e) => e is Map<String, dynamic> ? _deepCopy(e) : e).toList());
+      } else {
+        return MapEntry(key, value);
+      }
+    }));
+  }
+
+  // Hàm khôi phục lại dữ liệu gốc
+  void resetToOriginal() {
+    if (_originalProfile != null) {
+      profile = _deepCopy(_originalProfile!);
+      _initFromProfile();
+      hasChanges = false;
+      notifyListeners();
+    }
+  }
+
+  // Hàm load options từ API
+  Future<void> loadProfileOptions() async {
+    try {
+      final profileService = GetIt.I<ProfileService>();
+      profileOptions = await profileService.getProfileOptions();
+      notifyListeners();
+    } catch (e) {
+      print('Error loading profile options: $e');
+    }
+  }
+
+  // Helper: Chuẩn hóa options từ API để tránh lỗi null hoặc sai kiểu
+  List<Map<String, dynamic>> safeOptions(List? raw) {
+    if (raw == null) return [];
+    return raw.map<Map<String, dynamic>>((e) => {
+      'value': (e['value'] ?? e['id'] ?? '').toString(),
+      'label': (e['label'] ?? e['name'] ?? 'Unknown').toString(),
+      if (e['icon'] != null) 'icon': e['icon'],
+      if (e['color'] != null) 'color': e['color'],
+    }).toList();
   }
 }

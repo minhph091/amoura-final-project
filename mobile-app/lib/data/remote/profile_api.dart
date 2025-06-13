@@ -55,4 +55,22 @@ class ProfileApi {
       throw Exception('Error fetching user info: $e');
     }
   }
+
+  // Lấy options cho profile từ API /profiles/options
+  Future<Map<String, dynamic>> getProfileOptions() async {
+    try {
+      final response = await _apiClient.get('/profiles/options');
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to fetch profile options: \\${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print('Error fetching profile options: \\${e.response?.statusCode} - \\${e.response?.data}');
+      throw Exception('Error fetching profile options: \\${e.message}');
+    } catch (e) {
+      print('Unexpected error in getProfileOptions: $e');
+      throw Exception('Error fetching profile options: $e');
+    }
+  }
 }

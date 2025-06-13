@@ -35,7 +35,7 @@ class _EditProfileAppearanceSectionState extends State<EditProfileAppearanceSect
 
             // Body Type Dropdown
             ProfileOptionSelector(
-              options: bodyTypeOptions,
+              options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['bodyTypes']),
               selectedValue: widget.viewModel.bodyType,
               onChanged: (value, selected) {
                 if (selected) {

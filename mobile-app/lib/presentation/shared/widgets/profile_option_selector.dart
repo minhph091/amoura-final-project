@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'custom_dropdown.dart';
 import 'searchable_multi_select_dropdown.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ProfileOptionSelector extends StatelessWidget {
   final List<Map<String, dynamic>> options;
@@ -53,8 +54,10 @@ class ProfileOptionSelector extends StatelessWidget {
           isDropdown
               ? CustomDropdown(
                   options: options.map((opt) => {
-                    'value': opt['value'] as String,
-                    'label': opt['label'] as String,
+                    'value': (opt['value'] ?? opt['id'] ?? '').toString(),
+                    'label': (opt['label'] ?? opt['name'] ?? 'Unknown').toString(),
+                    if (opt['icon'] != null) 'icon': opt['icon'].toString(),
+                    if (opt['color'] != null) 'color': opt['color'].toString(),
                   }).toList(),
                   value: selectedValue,
                   onChanged: (val) {
@@ -130,14 +133,12 @@ class ProfileOptionSelector extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    if (option['icon'] != null)
+                    if (option.containsKey('icon'))
                       Padding(
                         padding: const EdgeInsets.only(right: 8.0),
-                        child: Icon(
-                          option['icon'] as IconData,
-                          color: option['color'] as Color? ?? const Color(0xFFD81B60),
-                          size: 20,
-                        ),
+                        child: option['icon'] is IconData
+                          ? Icon(option['icon'], color: option['color'] as Color? ?? const Color(0xFFD81B60), size: 20)
+                          : FaIcon(option['icon'], color: option['color'] as Color? ?? const Color(0xFFD81B60), size: 20),
                       ),
                     Expanded(
                       child: Text(

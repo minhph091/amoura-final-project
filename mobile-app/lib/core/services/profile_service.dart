@@ -49,6 +49,16 @@ class ProfileService {
       rethrow; // Propagate error to the upper layers
     }
   }
+
+  // Lấy options cho profile từ repository
+  Future<Map<String, dynamic>> getProfileOptions() async {
+    try {
+      return await _profileRepository.getProfileOptions();
+    } catch (e) {
+      print('Error in ProfileService.getProfileOptions: $e');
+      rethrow;
+    }
+  }
 }
 
 // Helper: Fix localhost/127.0.0.1 url for Android emulator

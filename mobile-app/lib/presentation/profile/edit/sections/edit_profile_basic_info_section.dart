@@ -122,6 +122,7 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
             // Use cached error text instead of calling validator directly
             errorText: _firstNameError ? _firstNameErrorText : null,
             onChanged: _handleFirstNameChanged,
+            onSaved: (value) => widget.viewModel.updateFirstName(value ?? ''),
             style: ProfileTheme.getInputTextStyle(context),
           ),
         ),
@@ -141,6 +142,7 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
             // Use cached error text
             errorText: _lastNameError ? _lastNameErrorText : null,
             onChanged: _handleLastNameChanged,
+            onSaved: (value) => widget.viewModel.updateLastName(value ?? ''),
             style: ProfileTheme.getInputTextStyle(context),
           ),
         ),
@@ -269,6 +271,7 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
   }
 
   Widget _buildOrientationGrid() {
+    final options = widget.viewModel.safeOptions(widget.viewModel.profileOptions?['orientations']);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -278,9 +281,9 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
-      itemCount: orientationOptions.length,
+      itemCount: options.length,
       itemBuilder: (context, index) {
-        final option = orientationOptions[index];
+        final option = options[index];
         final isSelected = widget.viewModel.orientation == option['value'];
 
         return _buildOptionItem(

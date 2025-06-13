@@ -31,7 +31,7 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
 
         // Drink Status Dropdown
         ProfileOptionSelector(
-          options: drinkOptions,
+          options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['drinkStatuses']),
           selectedValue: widget.viewModel.drinkStatus,
           onChanged: (value, selected) {
             if (selected) {
@@ -47,7 +47,7 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
 
         // Smoke Status Dropdown
         ProfileOptionSelector(
-          options: smokeOptions,
+          options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['smokeStatuses']),
           selectedValue: widget.viewModel.smokeStatus,
           onChanged: (value, selected) {
             if (selected) {
@@ -73,6 +73,7 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
   }
 
   Widget _buildPetsGrid() {
+    final options = widget.viewModel.safeOptions(widget.viewModel.profileOptions?['pets']);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -82,9 +83,9 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
-      itemCount: petOptions.length,
+      itemCount: options.length,
       itemBuilder: (context, index) {
-        final option = petOptions[index];
+        final option = options[index];
         final isSelected = widget.viewModel.selectedPets?.contains(option['value']) ?? false;
 
         return _buildPetItem(
@@ -103,7 +104,7 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
 
   Widget _buildPetItem({
     required String label,
-    required IconData icon,
+    IconData? icon,
     required bool isSelected,
     required VoidCallback onToggle,
   }) {
@@ -125,11 +126,12 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    icon,
-                    color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
-                    size: 22,
-                  ),
+                  if (icon != null)
+                    Icon(
+                      icon,
+                      color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
+                      size: 22,
+                    ),
                   const SizedBox(width: 8),
                   Text(
                     label,

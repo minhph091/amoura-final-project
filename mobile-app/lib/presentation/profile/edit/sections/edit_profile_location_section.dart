@@ -125,6 +125,7 @@ class _EditProfileLocationSectionState extends State<EditProfileLocationSection>
                   ),
                 ),
               ),
+              onSaved: (value) => widget.viewModel.updateLocation(city: value),
             ),
 
             const SizedBox(height: 12),
@@ -138,6 +139,7 @@ class _EditProfileLocationSectionState extends State<EditProfileLocationSection>
               prefixIconColor: ProfileTheme.darkPink,
               readOnly: true,
               style: ProfileTheme.getInputTextStyle(context),
+              onSaved: (value) => widget.viewModel.updateLocation(state: value),
             ),
 
             const SizedBox(height: 12),
@@ -151,6 +153,7 @@ class _EditProfileLocationSectionState extends State<EditProfileLocationSection>
               prefixIconColor: ProfileTheme.darkPink,
               readOnly: true,
               style: ProfileTheme.getInputTextStyle(context),
+              onSaved: (value) => widget.viewModel.updateLocation(country: value),
             ),
 
             const SizedBox(height: 20),

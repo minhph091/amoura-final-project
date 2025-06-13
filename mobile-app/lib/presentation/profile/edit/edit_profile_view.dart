@@ -43,6 +43,19 @@ class _EditProfileViewState extends State<EditProfileView> {
     _viewModel = EditProfileViewModel(profile: profileData);
     // No section is expanded initially
     _expandedSection = null;
+
+    // Comment: Load profile data if not provided
+    if (profileData == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Provider.of<ProfileViewModel>(context, listen: false).loadProfile().then((_) {
+          if (mounted) {
+            setState(() {
+              _viewModel = EditProfileViewModel(profile: Provider.of<ProfileViewModel>(context, listen: false).profile);
+            });
+          }
+        });
+      });
+    }
   }
 
   void _toggleSection(String sectionKey) {
@@ -73,6 +86,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       cancelText: 'Cancel',
       icon: Icons.save,
       iconColor: ProfileTheme.darkPink,
+      onConfirm: () async {},
     );
 
     if (shouldSave == true) {
@@ -88,6 +102,9 @@ class _EditProfileViewState extends State<EditProfileView> {
               backgroundColor: Colors.green,
             ),
           );
+          // Reload lại profile khi quay về Settings
+          final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+          await profileVM.loadProfile();
           Navigator.of(context).pop();
         }
       } catch (e) {
@@ -117,9 +134,14 @@ class _EditProfileViewState extends State<EditProfileView> {
         cancelText: 'Keep Editing',
         icon: Icons.warning,
         iconColor: Colors.orange,
+        onConfirm: () async {},
       );
 
-      return shouldDiscard ?? false;
+      if (shouldDiscard == true) {
+        _viewModel.resetToOriginal();
+        return true;
+      }
+      return false;
     }
     return true;
   }

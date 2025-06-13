@@ -78,8 +78,9 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
   }
 
   Widget _buildLanguageDropdown() {
+    final options = widget.viewModel.safeOptions(widget.viewModel.profileOptions?['languages']);
     final selectedLanguages = widget.viewModel.selectedLanguageIds?.map((id) {
-      final option = languageOptions.firstWhere(
+      final option = options.firstWhere(
         (opt) => opt['value'] == id,
         orElse: () => {'label': 'Unknown', 'value': id},
       );
@@ -121,6 +122,7 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
   }
 
   void _showLanguagesDialog() {
+    final options = widget.viewModel.safeOptions(widget.viewModel.profileOptions?['languages']);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -130,9 +132,9 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: languageOptions.length,
+              itemCount: options.length,
               itemBuilder: (ctx, index) {
-                final option = languageOptions[index];
+                final option = options[index];
                 final isSelected = widget.viewModel.selectedLanguageIds?.contains(option['value']) ?? false;
 
                 return CheckboxListTile(
@@ -155,7 +157,7 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
                   onChanged: (selected) {
                     setStateDialog(() {
                       widget.viewModel.updateLanguage(
-                        option['value'] as String,
+                        option['value'],
                         selected ?? false,
                       );
                     });
@@ -176,6 +178,7 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
   }
 
   Widget _buildInterestsGrid() {
+    final options = widget.viewModel.safeOptions(widget.viewModel.profileOptions?['interests']);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -185,19 +188,19 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
-      itemCount: interestOptions.length,
+      itemCount: options.length,
       itemBuilder: (context, index) {
-        final option = interestOptions[index];
+        final option = options[index];
         final isSelected = widget.viewModel.selectedInterestIds?.contains(option['value']) ?? false;
 
         return _InterestItem(
           label: option['label'] as String,
-          icon: option['icon'] as IconData,
+          icon: option['icon'] as IconData?,
           isSelected: isSelected,
           onToggle: (selected) {
             setState(() {
               widget.viewModel.updateInterest(
-                option['value'] as String,
+                option['value'],
                 selected,
               );
             });
@@ -210,13 +213,13 @@ class _EditProfileInterestsLanguagesSectionState extends State<EditProfileIntere
 
 class _InterestItem extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final bool isSelected;
   final Function(bool) onToggle;
 
   const _InterestItem({
     required this.label,
-    required this.icon,
+    this.icon,
     required this.isSelected,
     required this.onToggle,
   });
@@ -241,11 +244,12 @@ class _InterestItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
-                  Icon(
-                    icon,
-                    color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
-                    size: 24,
-                  ),
+                  if (icon != null)
+                    Icon(
+                      icon,
+                      color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
+                      size: 24,
+                    ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

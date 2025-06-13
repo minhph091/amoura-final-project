@@ -36,7 +36,7 @@ class _EditProfileJobEducationSectionState extends State<EditProfileJobEducation
 
             // Job Industry Dropdown
             ProfileOptionSelector(
-              options: jobOptions,
+              options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['jobIndustries']),
               selectedValue: widget.viewModel.jobIndustry,
               onChanged: (value, selected) {
                 if (selected) {
@@ -52,7 +52,7 @@ class _EditProfileJobEducationSectionState extends State<EditProfileJobEducation
 
             // Education Level Dropdown
             ProfileOptionSelector(
-              options: educationOptions,
+              options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['educationLevels']),
               selectedValue: widget.viewModel.educationLevel,
               onChanged: (value, selected) {
                 if (selected) {

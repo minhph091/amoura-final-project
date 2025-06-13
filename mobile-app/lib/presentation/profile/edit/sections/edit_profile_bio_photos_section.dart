@@ -231,6 +231,7 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
           onChanged: (value) {
             widget.viewModel.updateBio(value);
           },
+          onSaved: (value) => widget.viewModel.updateBio(value ?? ''),
           style: ProfileTheme.getInputTextStyle(context),
         ),
 

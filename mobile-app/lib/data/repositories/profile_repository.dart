@@ -16,4 +16,9 @@ class ProfileRepository {
   Future<Map<String, dynamic>> getUserInfo() async {
     return await _profileApi.getUserInfo();
   }
+
+  // Lấy options cho profile từ API
+  Future<Map<String, dynamic>> getProfileOptions() async {
+    return await _profileApi.getProfileOptions();
+  }
 }
