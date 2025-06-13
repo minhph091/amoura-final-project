@@ -169,7 +169,9 @@ class _ProfileViewState extends State<ProfileView> {
                       bodyType: profile['bodyType'] != null
                           ? (profile['bodyType'] as Map<String, dynamic>)['name'] as String?
                           : null,
-                      height: profile['height'] as int?,
+                      height: profile['height'] != null 
+                          ? int.tryParse(profile['height'].toString())
+                          : null,
                     ),
                   ),
 

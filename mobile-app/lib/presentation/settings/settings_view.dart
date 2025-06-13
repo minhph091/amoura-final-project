@@ -38,13 +38,17 @@ class SettingsView extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.only(bottom: 24),
             children: [
-              // Lấy thông tin user từ Provider/ViewModel sau này
-              SettingsHeader(
-                avatarUrl: "",
-                firstName: "",
-                lastName: "",
-                username: "",
-                isVip: false,
+              Consumer<ProfileViewModel>(
+                builder: (context, profileVM, _) {
+                  final profile = profileVM.profile;
+                  return SettingsHeader(
+                    avatarUrl: profile?['avatarUrl'] as String? ?? "",
+                    firstName: profile?['firstName'] as String? ?? "",
+                    lastName: profile?['lastName'] as String? ?? "",
+                    username: profile?['username'] as String? ?? "",
+                    isVip: false,
+                  );
+                },
               ),
               const SettingsDivider(),
               const SettingsSectionTitle(title: 'Account & Profile'),

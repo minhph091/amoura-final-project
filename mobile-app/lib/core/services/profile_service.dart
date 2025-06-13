@@ -26,6 +26,22 @@ class ProfileService {
       profileData['firstName'] = userData['firstName'];
       profileData['lastName'] = userData['lastName'];
       profileData['username'] = userData['username'];
+
+      // Map avatarUrl and coverUrl from photos array
+      // Comment: Extract avatar and cover photo URLs from the 'photos' array for UI display
+      if (profileData['photos'] != null && profileData['photos'] is List) {
+        final photos = profileData['photos'] as List;
+        final avatar = photos.firstWhere(
+          (p) => p['type'] == 'avatar',
+          orElse: () => null,
+        );
+        final cover = photos.firstWhere(
+          (p) => p['type'] == 'profile_cover',
+          orElse: () => null,
+        );
+        profileData['avatarUrl'] = avatar != null ? fixLocalhostUrl(avatar['url']) : null;
+        profileData['coverUrl'] = cover != null ? fixLocalhostUrl(cover['url']) : null;
+      }
       
       return profileData;
     } catch (e) {
@@ -33,4 +49,13 @@ class ProfileService {
       rethrow; // Propagate error to the upper layers
     }
   }
+}
+
+// Helper: Fix localhost/127.0.0.1 url for Android emulator
+// Comment: Android emulator không truy cập được localhost/127.0.0.1 của máy host, phải dùng 10.0.2.2
+String fixLocalhostUrl(String? url) {
+  if (url == null) return '';
+  return url
+      .replaceAll('http://localhost:', 'http://10.0.2.2:')
+      .replaceAll('http://127.0.0.1:', 'http://10.0.2.2:');
 }
