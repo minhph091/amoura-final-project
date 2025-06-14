@@ -1,34 +1,6 @@
 // lib/presentation/settings/widgets/settings_header.dart
 import 'package:flutter/material.dart';
-import '../../main_navigator/widgets/nav_bar_sparkle_effect.dart';
 import '../../profile/view/profile_view.dart';
-
-// Widget hiệu ứng sparkle cho avatar hoặc tên, chỉ dành cho VIP
-class VipSparkleEffect extends StatelessWidget {
-  final bool show;
-  final double size;
-  final Alignment alignment;
-
-  const VipSparkleEffect({
-    super.key,
-    required this.show,
-    this.size = 76,
-    this.alignment = Alignment.center,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!show) return const SizedBox.shrink();
-    return Align(
-      alignment: alignment,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: NavBarSparkleEffect(show: true, size: size),
-      ),
-    );
-  }
-}
 
 class SettingsHeader extends StatelessWidget {
   final String avatarUrl;
@@ -104,9 +76,6 @@ class SettingsHeader extends StatelessWidget {
                         : Image.network(avatarUrl, fit: BoxFit.cover),
                   ),
                 ),
-                // Sparkle effect cho avatar (VIP)
-                if (isVip)
-                  VipSparkleEffect(show: true, size: 76),
                 // Chữ VIP
                 if (isVip)
                   Positioned(
@@ -164,15 +133,6 @@ class SettingsHeader extends StatelessWidget {
                                     : null,
                               ),
                             ),
-                            // Sparkle effect cho tên (VIP)
-                            if (isVip)
-                              Positioned.fill(
-                                child: VipSparkleEffect(
-                                  show: true,
-                                  size: 50,
-                                  alignment: Alignment.bottomLeft,
-                                ),
-                              ),
                           ],
                         ),
                       ),

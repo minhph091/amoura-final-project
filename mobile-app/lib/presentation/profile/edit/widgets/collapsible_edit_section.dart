@@ -24,6 +24,8 @@ class CollapsibleEditSection extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: isExpanded ? 3 : 1,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Header with icon, title and toggle button
           InkWell(
@@ -43,6 +45,9 @@ class CollapsibleEditSection extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: ProfileTheme.darkPurple,
                       ),
+                      // Đảm bảo text luôn hiển thị theo chiều ngang
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   AnimatedRotation(
@@ -59,17 +64,19 @@ class CollapsibleEditSection extends StatelessWidget {
           ),
 
           // Expandable content
-          AnimatedCrossFade(
-            firstChild: const SizedBox(height: 0),
-            secondChild: Padding(
-              padding: const EdgeInsets.all(16),
-              child: child,
+          ClipRect(
+            child: AnimatedCrossFade(
+              firstChild: const SizedBox(height: 0, width: double.infinity),
+              secondChild: Padding(
+                padding: const EdgeInsets.all(16),
+                child: child,
+              ),
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
+              sizeCurve: Curves.easeInOut,
             ),
-            crossFadeState: isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 300),
-            sizeCurve: Curves.easeInOut,
           ),
         ],
       ),

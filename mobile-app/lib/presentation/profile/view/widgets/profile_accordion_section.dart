@@ -91,12 +91,17 @@ class _ProfileAccordionSectionState extends State<ProfileAccordionSection> with 
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
             leading: Icon(widget.icon, color: Theme.of(context).colorScheme.primary),
             title: Text(
               widget.title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              // Đảm bảo text luôn hiển thị theo chiều ngang
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
             trailing: AnimatedRotation(
               turns: isExpanded ? 0.5 : 0,
@@ -105,34 +110,36 @@ class _ProfileAccordionSectionState extends State<ProfileAccordionSection> with 
             ),
             onTap: () => widget.controller.toggle(widget.sectionKey),
           ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: hasTabs
-                ? Column(
-              children: [
-                if (widget.tabTitles != null)
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: Theme.of(context).colorScheme.primary,
-                    unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
-                    indicatorColor: Theme.of(context).colorScheme.primary,
-                    tabs: widget.tabTitles!
-                        .map((t) => Tab(text: t))
-                        .toList(),
+          ClipRect(
+            child: AnimatedCrossFade(
+              firstChild: const SizedBox(height: 0, width: double.infinity),
+              secondChild: hasTabs
+                  ? Column(
+                children: [
+                  if (widget.tabTitles != null)
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: Theme.of(context).colorScheme.primary,
+                      unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
+                      indicatorColor: Theme.of(context).colorScheme.primary,
+                      tabs: widget.tabTitles!
+                          .map((t) => Tab(text: t))
+                          .toList(),
+                    ),
+                  SizedBox(
+                    height: 240,
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: widget.tabs!,
+                    ),
                   ),
-                SizedBox(
-                  height: 240,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: widget.tabs!,
-                  ),
-                ),
-              ],
-            )
-                : widget.child,
-            crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 250),
-            sizeCurve: Curves.easeInOut,
+                ],
+              )
+                  : widget.child,
+              crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 250),
+              sizeCurve: Curves.easeInOut,
+            ),
           ),
         ],
       ),

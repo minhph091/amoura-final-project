@@ -122,17 +122,6 @@ class RegisterForm extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          if (viewModel.errorMessage != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              viewModel.errorMessage!,
-              style: TextStyle(
-                color: theme.colorScheme.error,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

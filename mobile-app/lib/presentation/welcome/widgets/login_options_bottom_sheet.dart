@@ -29,20 +29,6 @@ class LoginOptionsBottomSheet extends StatelessWidget {
         'color': AppColors.secondary,
         'route': AppRoutes.loginWithEmailOtp,
       },
-      {
-        'label': 'Google',
-        'icon': FontAwesomeIcons.google,
-        'color': Colors.red,
-        'route': null, // Will be handled in onTap
-        'action': 'google',
-      },
-      {
-        'label': 'Facebook',
-        'icon': FontAwesomeIcons.facebookF,
-        'color': Colors.blue,
-        'route': null, // Will be handled in onTap
-        'action': 'facebook',
-      },
     ];
 
     return BackdropFilter(

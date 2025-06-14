@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../main_navigator/widgets/nav_bar_sparkle_effect.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String? avatarUrl;
@@ -66,7 +65,7 @@ class ProfileHeader extends StatelessWidget {
                 fit: BoxFit.cover,
                 colorFilter: isVip
                     ? ColorFilter.mode(
-                  Colors.black.withOpacity(0.12),
+                  Colors.black.withValues(alpha: 0.12),
                   BlendMode.darken,
                 )
                     : null,
@@ -137,8 +136,6 @@ class ProfileHeader extends StatelessWidget {
                       : Image.network(avatarUrl!, fit: BoxFit.cover),
                 ),
               ),
-              if (isVip)
-                NavBarSparkleEffect(show: true, size: avatarSize),
               if (isVip)
                 Positioned(
                   bottom: 2,
