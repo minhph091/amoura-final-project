@@ -289,14 +289,14 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
             ...?widget.viewModel.profile?['photos']?.where((p) => p['type'] == 'highlight').map((photo) =>
                 _buildPhotoItem(
                   isExisting: true,
-                  path: photo['url'],
+                  path: fixLocalhostUrl(photo['url']),
                   onRemove: () {
                     if (photo['id'] != null) {
                       widget.viewModel.removeExistingPhoto(photo['id'] as int);
                       setState(() {});
                     }
                   },
-                  onView: () => _viewPhoto(photo['url'], true),
+                  onView: () => _viewPhoto(fixLocalhostUrl(photo['url']), true),
                   photoId: photo['id'] as int?,
                   type: photo['type'],
                 )),
@@ -478,5 +478,12 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
         ),
       ),
     );
+  }
+
+  String fixLocalhostUrl(String? url) {
+    if (url == null) return '';
+    return url
+        .replaceAll('http://localhost:', 'http://10.0.2.2:')
+        .replaceAll('http://127.0.0.1:', 'http://10.0.2.2:');
   }
 }

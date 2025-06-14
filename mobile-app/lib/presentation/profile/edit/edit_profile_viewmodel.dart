@@ -408,12 +408,12 @@ class EditProfileViewModel extends ChangeNotifier {
 
       // 4. Upload highlight mới nếu có
       for (final path in additionalPhotos) {
-        // Kiểm tra định dạng file
         if (!await _isValidImageFile(path)) {
           throw 'Invalid image file format for highlight';
         }
         await profileApi.uploadHighlight(path);
       }
+      await reloadProfile();
       additionalPhotos.clear();
 
       // Chỉ gửi firstName, lastName vào /user

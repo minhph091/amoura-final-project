@@ -41,6 +41,13 @@ class ProfileService {
         );
         profileData['avatarUrl'] = avatar != null ? fixLocalhostUrl(avatar['url']) : null;
         profileData['coverUrl'] = cover != null ? fixLocalhostUrl(cover['url']) : null;
+
+        // Thêm đoạn này để map galleryPhotos
+        final highlights = photos
+            .where((p) => p['type'] == 'highlight')
+            .map((p) => fixLocalhostUrl(p['url']))
+            .toList();
+        profileData['galleryPhotos'] = highlights;
       }
       
       return profileData;
