@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:amoura/data/repositories/user_repository.dart';
 import '../../../../../core/utils/validation_util.dart';
 
 enum ChangeEmailStage {
@@ -8,6 +9,9 @@ enum ChangeEmailStage {
 }
 
 class ChangeEmailViewModel extends ChangeNotifier {
+  final UserRepository userRepository;
+  ChangeEmailViewModel({required this.userRepository});
+
   // Controllers
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -73,16 +77,13 @@ class ChangeEmailViewModel extends ChangeNotifier {
     _setLoading(true);
 
     try {
-      // TODO: Kết nối API để gửi yêu cầu đổi email (sẽ được code sau)
-      await Future.delayed(const Duration(seconds: 1)); // Giả lập API call
-
+      // Gọi API thực tế
+      await userRepository.requestEmailChange(emailController.text.trim());
       // Nếu thành công, hiển thị form OTP
       _currentStage = ChangeEmailStage.enterOtp;
       _emailError = null;
       _startOtpTimer();
-
       notifyListeners();
-
       // Hiển thị thông báo gửi OTP thành công
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -94,7 +95,7 @@ class ChangeEmailViewModel extends ChangeNotifier {
       }
     } catch (e) {
       // Xử lý lỗi
-      _emailError = "Failed to send verification code. Please try again.";
+      _emailError = e.toString();
       notifyListeners();
     } finally {
       _setLoading(false);
@@ -104,22 +105,17 @@ class ChangeEmailViewModel extends ChangeNotifier {
   // Xác thực OTP và hoàn tất đổi email
   Future<void> verifyOtpAndChangeEmail(BuildContext context) async {
     final otp = otpController.text.trim();
-
     if (ValidationUtil.validateOtp(otp) != null) {
       _otpError = ValidationUtil.validateOtp(otp);
       notifyListeners();
       return;
     }
-
     _setLoading(true);
-
     try {
-      // TODO: Kết nối API để xác thực OTP và đổi email (sẽ được code sau)
-      await Future.delayed(const Duration(seconds: 2)); // Giả lập API call
-
+      // Gọi API thực tế
+      await userRepository.confirmEmailChange(otp);
       // Reset các trạng thái
       _resetState();
-
       // Nếu thành công, hiển thị thông báo và quay về
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,13 +125,11 @@ class ChangeEmailViewModel extends ChangeNotifier {
             backgroundColor: Colors.green,
           ),
         );
-
-        // Quay về màn hình trước đó
         Navigator.of(context).pop();
       }
     } catch (e) {
       // Xử lý lỗi
-      _otpError = "Invalid OTP. Please check and try again.";
+      _otpError = e.toString();
       notifyListeners();
     } finally {
       _setLoading(false);

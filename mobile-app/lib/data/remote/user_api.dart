@@ -45,4 +45,44 @@ class UserApi {
       throw Exception('Failed to change password: $e');
     }
   }
+
+  // Gửi yêu cầu đổi email, trả về message hoặc lỗi
+  Future<Map<String, dynamic>> requestEmailChange(String newEmail) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.changeEmailRequest,
+        data: {'newEmail': newEmail},
+      );
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to request email change');
+      }
+    } on DioException catch (e) {
+      print('Error requesting email change: \\${e.response?.statusCode} - \\${e.response?.data}');
+      throw Exception(e.response?.data['message'] ?? 'Failed to request email change');
+    } catch (e) {
+      print('Unexpected error in requestEmailChange: $e');
+      throw Exception('Failed to request email change: $e');
+    }
+  }
+
+  // Xác nhận đổi email bằng OTP
+  Future<void> confirmEmailChange(String otpCode) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.changeEmailConfirm,
+        data: {'otpCode': otpCode},
+      );
+      if (response.statusCode != 200) {
+        throw Exception(response.data['message'] ?? 'Failed to confirm email change');
+      }
+    } on DioException catch (e) {
+      print('Error confirming email change: \\${e.response?.statusCode} - \\${e.response?.data}');
+      throw Exception(e.response?.data['message'] ?? 'Failed to confirm email change');
+    } catch (e) {
+      print('Unexpected error in confirmEmailChange: $e');
+      throw Exception('Failed to confirm email change: $e');
+    }
+  }
 }

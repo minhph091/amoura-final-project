@@ -26,4 +26,7 @@ class ApiEndpoints {
   static String deleteHighlight(int photoId) => '$highlightsBase/$photoId';
 
   static const String user = '/user';
+
+  static const String changeEmailRequest = '/user/change-email/request';
+  static const String changeEmailConfirm = '/user/change-email/confirm';
 }

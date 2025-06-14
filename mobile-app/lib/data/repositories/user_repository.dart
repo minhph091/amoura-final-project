@@ -12,4 +12,12 @@ class UserRepository {
   Future<void> changePassword({required String currentPassword, required String newPassword}) async {
     await _userApi.changePassword(currentPassword: currentPassword, newPassword: newPassword);
   }
+
+  Future<Map<String, dynamic>> requestEmailChange(String newEmail) async {
+    return await _userApi.requestEmailChange(newEmail);
+  }
+
+  Future<void> confirmEmailChange(String otpCode) async {
+    await _userApi.confirmEmailChange(otpCode);
+  }
 }

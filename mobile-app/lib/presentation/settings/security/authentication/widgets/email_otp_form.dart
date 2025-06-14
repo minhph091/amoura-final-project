@@ -39,14 +39,14 @@ class EmailOtpForm extends StatelessWidget {
           const SizedBox(height: 32),
           OtpInputForm(
             otpLength: 6,
-            onSubmit: (otp) => viewModel.verifyOtpAndChangeEmail(context),
+            onSubmit: (otp) {
+              viewModel.otpController.text = otp;
+              viewModel.verifyOtpAndChangeEmail(context);
+            },
             resendAvailable: viewModel.canResend,
             onResend: () => viewModel.resendOtp(context),
             remainingSeconds: viewModel.remainingSeconds,
             errorMessage: viewModel.otpError,
-            // onOtpChanged: (value) {
-            //   viewModel.otpController.text = value;
-            // },
           ),
           const SizedBox(height: 32),
           Center(

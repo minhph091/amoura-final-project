@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:amoura/data/repositories/user_repository.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
 import 'change_email_viewmodel.dart';
 import 'email_password_form.dart';
@@ -11,8 +12,9 @@ class ChangeEmailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userRepository = Provider.of<UserRepository>(context, listen: false);
     return ChangeNotifierProvider(
-      create: (_) => ChangeEmailViewModel(),
+      create: (_) => ChangeEmailViewModel(userRepository: userRepository),
       child: AppGradientBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
