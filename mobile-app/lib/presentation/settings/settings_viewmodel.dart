@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../domain/usecases/auth/logout_usecase.dart';
 import '../../core/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../profile/view/profile_viewmodel.dart';
 
 class SettingsViewModel extends ChangeNotifier {
   final LogoutUseCase _logoutUseCase = GetIt.I<LogoutUseCase>();
@@ -11,7 +13,7 @@ class SettingsViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  Future<void> logout() async {
+  Future<void> logout(BuildContext context) async {
     try {
       print('Starting logout process');
       _isLoading = true;
@@ -31,6 +33,7 @@ class SettingsViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       print('Logout process completed, isLoading set to false'); // Log xác nhận hoàn thành
+      Provider.of<ProfileViewModel>(context, listen: false).clearProfile();
     }
   }
 }

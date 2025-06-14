@@ -7,6 +7,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../login_viewmodel.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/language/app_localizations.dart';
+import '../../../profile/view/profile_viewmodel.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -90,7 +91,8 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
               onPressed: viewModel.isLoading
                   ? null
                   : () => viewModel.onLoginPressed(
-                        onSuccess: () {
+                        onSuccess: () async {
+                          await Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             '/mainNavigator',

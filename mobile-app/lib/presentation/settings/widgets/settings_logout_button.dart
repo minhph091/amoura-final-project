@@ -66,7 +66,7 @@ class SettingsLogoutButton extends StatelessWidget {
     if (result == true) {
       print('User confirmed logout, proceeding with logout process'); // Log thêm
       try {
-        await viewModel.logout();
+        await viewModel.logout(context);
         print('Logout successful, navigating to WelcomeView'); // Log xác nhận logout thành công
         Navigator.pushNamedAndRemoveUntil(
           context,

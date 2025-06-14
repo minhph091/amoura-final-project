@@ -47,4 +47,9 @@ class ProfileViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void clearProfile() {
+    profile = null;
+    notifyListeners();
+  }
 }
