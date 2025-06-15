@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../setup/theme/setup_profile_theme.dart';
-import 'theme/profile_theme.dart';
 
-class ProfileAvatarCover extends StatelessWidget {
+class ProfileAvatarCover extends StatefulWidget {
   final String? avatarUrl;
   final String? coverUrl;
   final VoidCallback? onEditAvatar;
@@ -19,38 +18,64 @@ class ProfileAvatarCover extends StatelessWidget {
   });
 
   @override
+  State<ProfileAvatarCover> createState() => _ProfileAvatarCoverState();
+}
+
+class _ProfileAvatarCoverState extends State<ProfileAvatarCover> {
+  // Control the scroll position of the cover photo
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (coverUrl != null)
+        if (widget.coverUrl != null)
           Stack(
             children: [
-              GestureDetector(
-                onTap: onViewCover,
+              // Container to clip the scrollable cover and maintain a fixed height
+              SizedBox(
+                height: 180,
+                width: double.infinity,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    coverUrl!,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 180,
-                      color: ProfileTheme.darkPurple.withOpacity(0.1),
-                      child: Center(child: Icon(Icons.image, size: 50, color: ProfileTheme.darkPurple)),
+                  child: GestureDetector(
+                    onTap: widget.onViewCover,
+                    // Make the image scrollable
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: const BouncingScrollPhysics(),
+                      child: Image.network(
+                        widget.coverUrl!,
+                        width: double.infinity,
+                        // Using a taller height to allow scrolling
+                        height: 300,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 180,
+                          color: ProfileTheme.darkPurple.withValues(alpha: 0.1),
+                          child: Center(child: Icon(Icons.image, size: 50, color: ProfileTheme.darkPurple)),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-              if (onEditCover != null)
+              if (widget.onEditCover != null)
                 Positioned(
                   right: 8,
                   top: 8,
                   child: CircleAvatar(
-                    backgroundColor: Colors.white.withOpacity(0.8),
+                    backgroundColor: Colors.white.withValues(alpha: 0.8),
                     child: IconButton(
                       icon: Icon(Icons.edit, color: ProfileTheme.darkPink),
-                      onPressed: onEditCover,
+                      onPressed: widget.onEditCover,
                     ),
                   ),
                 ),
@@ -66,14 +91,14 @@ class ProfileAvatarCover extends StatelessWidget {
                 backgroundColor: Colors.white,
                 child: CircleAvatar(
                   radius: 52,
-                  backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-                  backgroundColor: ProfileTheme.lightPink.withOpacity(0.2),
-                  child: avatarUrl == null
+                  backgroundImage: widget.avatarUrl != null ? NetworkImage(widget.avatarUrl!) : null,
+                  backgroundColor: ProfileTheme.lightPink.withValues(alpha: 0.2),
+                  child: widget.avatarUrl == null
                       ? Icon(Icons.person, size: 60, color: ProfileTheme.darkPink)
                       : null,
                 ),
               ),
-              if (onEditAvatar != null)
+              if (widget.onEditAvatar != null)
                 Positioned(
                   right: 0,
                   bottom: 0,
@@ -83,7 +108,7 @@ class ProfileAvatarCover extends StatelessWidget {
                     child: IconButton(
                       padding: EdgeInsets.zero,
                       icon: Icon(Icons.edit, color: ProfileTheme.darkPink, size: 20),
-                      onPressed: onEditAvatar,
+                      onPressed: widget.onEditAvatar,
                     ),
                   ),
                 ),

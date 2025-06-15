@@ -2,10 +2,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import '../../setup/theme/setup_profile_theme.dart';
+import '../../../shared/widgets/image_source_bottom_sheet.dart';
 import '../edit_profile_viewmodel.dart';
+import '../../setup/theme/setup_profile_theme.dart';
 
 class EditProfileAvatarCoverSection extends StatefulWidget {
   final EditProfileViewModel viewModel;
@@ -39,23 +41,7 @@ class _EditProfileAvatarCoverSectionState extends State<EditProfileAvatarCoverSe
   }
 
   Future<void> _pickImage(bool isAvatar) async {
-    final source = await showDialog<ImageSource>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Select Image Source', style: TextStyle(color: ProfileTheme.darkPurple)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, ImageSource.camera),
-            child: Text('Camera', style: TextStyle(color: ProfileTheme.darkPink)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, ImageSource.gallery),
-            child: Text('Gallery', style: TextStyle(color: ProfileTheme.darkPink)),
-          ),
-        ],
-      ),
-    );
+    final source = await ImageSourceBottomSheet.show(context);
 
     if (source == null) return;
     if (!await _requestPermissions(source)) return;

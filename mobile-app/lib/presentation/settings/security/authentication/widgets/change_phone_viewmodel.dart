@@ -1,12 +1,7 @@
 // filepath: c:\amoura-final-project\mobile-app\lib\presentation\settings\security\authentication\widgets\change_phone_viewmodel.dart
 import 'package:flutter/material.dart';
-import 'package:amoura/data/repositories/user_repository.dart';
-import '../../../../../core/utils/validation_util.dart';
 
 class ChangePhoneViewModel extends ChangeNotifier {
-  final UserRepository userRepository;
-  ChangePhoneViewModel({required this.userRepository});
-
   // Controllers
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -40,7 +35,8 @@ class ChangePhoneViewModel extends ChangeNotifier {
 
     try {
       // TODO: Call actual API to change phone number
-      // await userRepository.changePhoneNumber(phoneController.text.trim(), passwordController.text);
+      // This is where you would integrate with your user service/repository
+      // For now, we'll simulate a successful API call
       await Future.delayed(const Duration(seconds: 1)); // Simulate API call
 
       // Show success message

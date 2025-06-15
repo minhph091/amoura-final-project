@@ -492,35 +492,57 @@ class HeightSelector extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Custom styled slider
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  trackHeight: 4,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                  activeTrackColor: const Color(0xFF9C27B0),
-                  inactiveTrackColor: const Color(0xFF9C27B0).withOpacity(0.2),
-                  thumbColor: const Color(0xFFE91E63),
-                  overlayColor: const Color(0xFFE91E63).withOpacity(0.2),
-                  valueIndicatorColor: const Color(0xFF9C27B0),
-                  valueIndicatorTextStyle: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+              // Numeric input field
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      initialValue: currentHeight.toString(),
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your height',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF9C27B0), width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        isDense: true,
+                        suffixIcon: Container(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: const Text(
+                            'cm',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF666666),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                      ),
+                      onChanged: (value) {
+                        if (value.isNotEmpty) {
+                          int? heightValue = int.tryParse(value);
+                          if (heightValue != null && heightValue >= 140 && heightValue <= 220) {
+                            step6ViewModel.setHeight(heightValue);
+                          }
+                        }
+                      },
+                    ),
                   ),
-                  showValueIndicator: ShowValueIndicator.always,
-                ),
-                child: Slider(
-                  value: currentHeight.toDouble(),
-                  min: 140,
-                  max: 220,
-                  divisions: 80,
-                  label: '$currentHeight cm',
-                  onChanged: (value) {
-                    step6ViewModel.setHeight(value.round());
-                  },
-                ),
+                ],
               ),
+              const SizedBox(height: 8),
               // Height range indicators
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
@@ -528,15 +550,7 @@ class HeightSelector extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '140cm',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF666666),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      '220cm',
+                      'Valid range: 140-220 cm',
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF666666),
@@ -552,4 +566,4 @@ class HeightSelector extends StatelessWidget {
       ],
     );
   }
-} 
+}
