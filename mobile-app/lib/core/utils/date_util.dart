@@ -33,6 +33,22 @@ class DateUtil {
     }
   }
 
+  // Parses a date string in "dd/MM/yyyy" format into a [DateTime] object.
+  // Returns `null` if the input is invalid or parsing fails.
+  static DateTime? parseDDMMYYYY(String? str) {
+    if (str == null || str.isEmpty) return null;
+    try {
+      final parts = str.split('/');
+      if (parts.length != 3) return null;
+      final day = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final year = int.parse(parts[2]);
+      return DateTime(year, month, day);
+    } catch (_) {
+      return null;
+    }
+  }
+
   // Checks whether the given [date] is today's date.
   static bool isToday(DateTime date) {
     final now = DateTime.now();

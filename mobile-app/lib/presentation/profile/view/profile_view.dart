@@ -14,6 +14,7 @@ import '../shared/profile_lifestyle.dart';
 import '../shared/profile_interests_languages.dart';
 import 'widgets/profile_action_menu.dart';
 import 'profile_viewmodel.dart';
+import '../edit/edit_profile_view.dart';
 
 class ProfileView extends StatefulWidget {
   final bool isMyProfile;
@@ -68,7 +69,12 @@ class _ProfileViewState extends State<ProfileView> {
                 icon: Icon(Icons.edit, color: ProfileTheme.darkPink),
                 tooltip: 'Edit Profile',
                 onPressed: () {
-                  Navigator.of(context).pushNamed('/edit-profile', arguments: Provider.of<ProfileViewModel>(context, listen: false).profile);
+                  final profile = Provider.of<ProfileViewModel>(context, listen: false).profile;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => EditProfileView(profile: profile),
+                    ),
+                  );
                 },
               )
             else

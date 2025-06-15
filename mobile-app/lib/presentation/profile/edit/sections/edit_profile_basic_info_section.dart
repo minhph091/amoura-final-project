@@ -193,6 +193,12 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
                 // Use cached error text
                 errorText: _dobError ? _dobErrorText : null,
                 style: ProfileTheme.getInputTextStyle(context),
+                onSaved: (value) {
+                  final picked = DateUtil.parseDDMMYYYY(_dobController.text);
+                  if (picked != null) {
+                    widget.viewModel.updateDateOfBirth(picked);
+                  }
+                },
               ),
             ),
           ),

@@ -48,6 +48,9 @@ class ProfileFieldDisplay extends StatelessWidget {
               Text(
                 value?.isNotEmpty == true ? value! : '-',
                 style: ProfileTheme.getInputTextStyle(context),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
               ),
           trailing: editable
               ? IconButton(
