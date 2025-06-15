@@ -1,16 +1,16 @@
 -- Insert 10 users with Vietnamese names
 INSERT INTO users (username, password_hash, email, phone_number, first_name, last_name, role_id, status, created_at)
 VALUES
-    ('nguyen_van_an', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'nguyen.van.an@example.com', '+84901234501', 'Văn An', 'Nguyễn', 1, 'active', CURRENT_TIMESTAMP),
-    ('tran_thi_bich', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'tran.thi.bich@example.com', '+84901234502', 'Thị Bích', 'Trần', 1, 'active', CURRENT_TIMESTAMP),
-    ('le_hoang_cuong', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'le.hoang.cuong@example.com', '+84901234503', 'Hoàng Cương', 'Lê', 1, 'active', CURRENT_TIMESTAMP),
-    ('pham_minh_duc', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'pham.minh.duc@example.com', '+84901234504', 'Minh Đức', 'Phạm', 1, 'active', CURRENT_TIMESTAMP),
-    ('vu_thi_hoa', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'vu.thi.hoa@example.com', '+84901234505', 'Thị Hoa', 'Vũ', 1, 'active', CURRENT_TIMESTAMP),
-    ('do_quang_huy', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'do.quang.huy@example.com', '+84901234506', 'Quang Huy', 'Đỗ', 1, 'active', CURRENT_TIMESTAMP),
-    ('hoang_thi_lan', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'hoang.thi.lan@example.com', '+84901234507', 'Thị Lan', 'Hoàng', 1, 'active', CURRENT_TIMESTAMP),
-    ('bui_van_manh', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'bui.van.manh@example.com', '+84901234508', 'Văn Mạnh', 'Bùi', 1, 'active', CURRENT_TIMESTAMP),
-    ('ngo_thi_ngoc', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'ngo.thi.ngoc@example.com', '+84901234509', 'Thị Ngọc', 'Ngô', 1, 'active', CURRENT_TIMESTAMP),
-    ('dang_duc_thang', '$2a$10$32znSOcJWH78XPiB7JbzSedhiEHNHBW.nMOH6B.xi/W/KDCqVomn', 'dang.duc.thang@example.com', '+84901234510', 'Đức Thắng', 'Đặng', 1, 'active', CURRENT_TIMESTAMP);
+    ('nguyen_van_an', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'nguyen.van.an@example.com', '+84901234501', 'Văn An', 'Nguyễn', 1, 'active', CURRENT_TIMESTAMP),
+    ('tran_thi_bich', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'tran.thi.bich@example.com', '+84901234502', 'Thị Bích', 'Trần', 1, 'active', CURRENT_TIMESTAMP),
+    ('le_hoang_cuong', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'le.hoang.cuong@example.com', '+84901234503', 'Hoàng Cương', 'Lê', 1, 'active', CURRENT_TIMESTAMP),
+    ('pham_minh_duc', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'pham.minh.duc@example.com', '+84901234504', 'Minh Đức', 'Phạm', 1, 'active', CURRENT_TIMESTAMP),
+    ('vu_thi_hoa', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'vu.thi.hoa@example.com', '+84901234505', 'Thị Hoa', 'Vũ', 1, 'active', CURRENT_TIMESTAMP),
+    ('do_quang_huy', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'do.quang.huy@example.com', '+84901234506', 'Quang Huy', 'Đỗ', 1, 'active', CURRENT_TIMESTAMP),
+    ('hoang_thi_lan', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'hoang.thi.lan@example.com', '+84901234507', 'Thị Lan', 'Hoàng', 1, 'active', CURRENT_TIMESTAMP),
+    ('bui_van_manh', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'bui.van.manh@example.com', '+84901234508', 'Văn Mạnh', 'Bùi', 1, 'active', CURRENT_TIMESTAMP),
+    ('ngo_thi_ngoc', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'ngo.thi.ngoc@example.com', '+84901234509', 'Thị Ngọc', 'Ngô', 1, 'active', CURRENT_TIMESTAMP),
+    ('dang_duc_thang', '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO', 'dang.duc.thang@example.com', '+84901234510', 'Đức Thắng', 'Đặng', 1, 'active', CURRENT_TIMESTAMP);
 
 -- Insert profiles for the 10 users
 INSERT INTO profiles (user_id, date_of_birth, height, body_type_id, sex, orientation_id, job_industry_id, drink_status_id, smoke_status_id, interested_in_new_language, education_level_id, drop_out, location_preference, bio)
