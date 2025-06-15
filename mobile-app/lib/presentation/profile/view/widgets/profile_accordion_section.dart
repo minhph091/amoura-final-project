@@ -74,42 +74,46 @@ class _ProfileAccordionSectionState extends State<ProfileAccordionSection> with 
     final isExpanded = widget.controller.currentOpenKey == widget.sectionKey;
     final hasTabs = widget.tabs != null && widget.tabs!.length > 1;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeInOut,
+    return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          if (isExpanded)
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.07),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-        ],
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      elevation: isExpanded ? 3 : 1,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          ListTile(
-            leading: Icon(widget.icon, color: Theme.of(context).colorScheme.primary),
-            title: Text(
-              widget.title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              // Đảm bảo text luôn hiển thị theo chiều ngang
-              softWrap: true,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-            trailing: AnimatedRotation(
-              turns: isExpanded ? 0.5 : 0,
-              duration: const Duration(milliseconds: 180),
-              child: const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
-            ),
+          // Header with icon, title and toggle button
+          InkWell(
             onTap: () => widget.controller.toggle(widget.sectionKey),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(widget.icon, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      // Đảm bảo text luôn hiển thị theo chiều ngang
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
+                  ),
+                ],
+              ),
+            ),
           ),
+
+          // Expandable content
           ClipRect(
             child: AnimatedCrossFade(
               firstChild: const SizedBox(height: 0, width: double.infinity),
@@ -135,7 +139,10 @@ class _ProfileAccordionSectionState extends State<ProfileAccordionSection> with 
                   ),
                 ],
               )
-                  : widget.child,
+                  : Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: widget.child,
+                    ),
               crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 250),
               sizeCurve: Curves.easeInOut,

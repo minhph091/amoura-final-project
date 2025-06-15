@@ -1,97 +1,99 @@
 import 'package:flutter/material.dart';
+import '../../setup/theme/setup_profile_theme.dart';
+import 'report_form_dialog.dart';
 
-class ProfileActionMenu extends StatelessWidget {
-  final VoidCallback onReport;
-  final VoidCallback onBlock;
-  final VoidCallback? onUnblock;
-  final bool isBlocked;
-
-  const ProfileActionMenu({
-    Key? key,
-    required this.onReport,
-    required this.onBlock,
-    this.onUnblock,
-    this.isBlocked = false,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header with handle
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // Report option
-          ListTile(
-            leading: Icon(
-              Icons.flag_outlined,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            title: Text(
-              'Report Profile',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                fontWeight: FontWeight.w500,
+Future<void> showProfileActionMenu(BuildContext context, dynamic profile) async {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle indicator
+            Container(
+              height: 4,
+              width: 40,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            onTap: onReport,
-          ),
 
-          // Block/Unblock option
-          if (isBlocked && onUnblock != null)
+            // Báo cáo hồ sơ
             ListTile(
-              leading: const Icon(
-                Icons.block_outlined,
-                color: Colors.blue,
-              ),
-              title: const Text(
-                'Unblock Profile',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              onTap: onUnblock,
-            )
-          else
+              leading: const Icon(Icons.report_outlined, color: Colors.red),
+              title: const Text('Báo cáo hồ sơ'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showReportDialog(context, profile);
+              },
+            ),
+
+            // Chặn hồ sơ
             ListTile(
-              leading: const Icon(
-                Icons.block_outlined,
-                color: Colors.red,
-              ),
-              title: const Text(
-                'Block Profile',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              onTap: onBlock,
+              leading: const Icon(Icons.block, color: Colors.grey),
+              title: const Text('Chặn hồ sơ'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showBlockConfirmationDialog(context, profile);
+              },
             ),
 
-          // Cancel option
-          ListTile(
-            leading: Icon(
-              Icons.close,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
+            // Hủy
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('Hủy'),
+              onTap: () => Navigator.pop(ctx),
             ),
-            title: const Text('Cancel'),
-            onTap: () => Navigator.of(context).pop(),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _showBlockConfirmationDialog(BuildContext context, dynamic profile) async {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Chặn người dùng'),
+      content: const Text('Bạn có muốn chặn người này không?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Hủy'),
+        ),
+        TextButton(
+          onPressed: () {
+            // Xử lý logic chặn người dùng ở đây
+            // Trong th���c tế, bạn sẽ gọi API hoặc cập nhật Provider
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Đã chặn người dùng thành công')),
+            );
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red,
           ),
+          child: const Text('Chặn'),
+        ),
+      ],
+    ),
+  );
+}
 
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
+Future<void> _showReportDialog(BuildContext context, dynamic profile) async {
+  showDialog(
+    context: context,
+    builder: (context) => const ReportFormDialog(),
+    barrierDismissible: false,
+  );
 }

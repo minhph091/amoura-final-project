@@ -2,21 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
-import '../discovery_viewmodel.dart';
-import 'rewind_button.dart';
 
 class ActionButtonsRow extends StatelessWidget {
-  final Function? onLike;
-  final Function? onDislike;
-  final Function? onRewind;
-
-  const ActionButtonsRow({
-    super.key,
-    this.onLike,
-    this.onDislike,
-    this.onRewind,
-  });
+  const ActionButtonsRow({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,52 +14,36 @@ class ActionButtonsRow extends StatelessWidget {
       end: Alignment.bottomRight,
     );
 
-    final viewModel = Provider.of<DiscoveryViewModel>(context);
-
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 82),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Rewind button with VIP integration
-          RewindButton(
-            onRewind: () {
-              if (onRewind != null) {
-                onRewind!();
-              }
-            },
+          _AnimatedActionButton(
+            icon: FontAwesomeIcons.arrowRotateLeft,
+            size: 68,
+            iconSize: 22,
+            gradient: lightGradient,
+            iconColor: const Color(0xFF364F6B),
+            glowColor: const Color(0xFF364F6B),
           ),
-
-          // Dislike button
+          _AnimatedActionButton(
+            icon: FontAwesomeIcons.heart,
+            size: 82,
+            iconSize: 26,
+            gradient: lightGradient,
+            iconColor: const Color(0xFFFC5185),
+            glowColor: const Color(0xFFFC5185),
+            isGlow: true,
+            isBreathing: true,
+          ),
           _AnimatedActionButton(
             icon: FontAwesomeIcons.xmark,
             size: 68,
-            iconSize: 26,
+            iconSize: 24,
             gradient: lightGradient,
-            iconColor: Colors.red.shade400,
-            glowColor: Colors.red.shade400,
-            onTap: () {
-              if (onDislike != null) {
-                onDislike!();
-              }
-              viewModel.dislikeCurrentProfile();
-            },
-          ),
-
-          // Like button
-          _AnimatedActionButton(
-            icon: FontAwesomeIcons.heart,
-            size: 68,
-            iconSize: 26,
-            gradient: lightGradient,
-            iconColor: Colors.green.shade400,
-            glowColor: Colors.green.shade400,
-            onTap: () {
-              if (onLike != null) {
-                onLike!();
-              }
-              viewModel.likeCurrentProfile();
-            },
+            iconColor: const Color(0xFFFC5185),
+            glowColor: const Color(0xFFFC5185),
           ),
         ],
       ),
@@ -88,7 +60,6 @@ class _AnimatedActionButton extends StatefulWidget {
   final Color glowColor;
   final bool isGlow;
   final bool isBreathing;
-  final Function? onTap;
 
   const _AnimatedActionButton({
     required this.icon,
@@ -99,7 +70,6 @@ class _AnimatedActionButton extends StatefulWidget {
     required this.glowColor,
     this.isGlow = false,
     this.isBreathing = false,
-    this.onTap,
   });
 
   @override
@@ -233,11 +203,7 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
               borderRadius: BorderRadius.circular(widget.size / 2),
               splashColor: widget.iconColor.withValues(alpha: 0.18),
               highlightColor: widget.iconColor.withValues(alpha: 0.08),
-              onTap: () {
-                if (widget.onTap != null) {
-                  widget.onTap!();
-                }
-              },
+              onTap: () {},
               onTapDown: _onTapDown,
               onTapUp: _onTapUp,
               onTapCancel: _onTapCancel,
