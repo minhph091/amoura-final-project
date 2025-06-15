@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../shared/widgets/app_gradient_background.dart';
+import 'block_list/block_list_view.dart';
 import 'legal_resources/legal_resources_view.dart';
 import 'settings_viewmodel.dart';
 import 'widgets/settings_header.dart';
@@ -17,8 +18,9 @@ import '../profile/view/profile_view.dart';
 import '../profile/edit/edit_profile_view.dart';
 import 'security/security_view.dart';
 import 'notification_settings/notification_settings_view.dart';
-import 'subscription/plan_list/plan_list_view.dart';
+import '../subscription/subscription_plans_view.dart';
 import '../profile/view/profile_viewmodel.dart';
+import '../../infrastructure/services/blocking_service.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -31,7 +33,7 @@ class SettingsView extends StatelessWidget {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: const Text('Settings'),
+            title: Center(child: const Text('Settings')),
             backgroundColor: Colors.transparent,
             elevation: 0,
           ),
@@ -83,6 +85,18 @@ class SettingsView extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const NotificationSettingsView()),
                 ),
               ),
+              SettingsTile(
+                icon: Icons.block_outlined,
+                title: 'Block List',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ChangeNotifierProvider(
+                      create: (_) => BlockingService(),
+                      child: const BlockListView(),
+                    ),
+                  ),
+                ),
+              ),
               const SettingsDivider(),
               const SettingsSectionTitle(title: 'App Experience'),
               Consumer<ThemeModeController>(
@@ -96,7 +110,7 @@ class SettingsView extends StatelessWidget {
                 icon: Icons.subscriptions_outlined,
                 title: 'Subscription Plans',
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const planListView()),
+                  MaterialPageRoute(builder: (_) => const SubscriptionPlansView()),
                 ),
               ),
               const SettingsDivider(),

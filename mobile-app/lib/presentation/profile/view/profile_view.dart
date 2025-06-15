@@ -40,6 +40,56 @@ class _ProfileViewState extends State<ProfileView> {
     });
   }
 
+  void showProfileActionMenu(BuildContext context, Map<String, dynamic>? profile) {
+    if (profile == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => ProfileActionMenu(
+        onReport: () {
+          Navigator.pop(context);
+          // Navigate to report profile screen
+          Navigator.of(context).pushNamed('/profile/report', arguments: profile['userId']);
+        },
+        onBlock: () {
+          Navigator.pop(context);
+          _showBlockConfirmationDialog(context, profile);
+        },
+      ),
+    );
+  }
+
+  void _showBlockConfirmationDialog(BuildContext context, Map<String, dynamic> profile) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Block this user?'),
+        content: const Text('You won\'t see this user again, and they won\'t be able to contact you.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Implement block user logic here
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('User blocked successfully')),
+              );
+              // Optionally navigate back to previous screen
+              Navigator.of(context).pop();
+            },
+            child: const Text('Block', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();

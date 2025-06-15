@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'main_navigator_viewmodel.dart';
 import 'widgets/nav_bar_item.dart';
 import '../discovery/discovery_view.dart';
+import '../match/liked_users/liked_users_view.dart';
+import '../chat/chat_list/chat_list_view.dart';
+import '../notification/notification_view.dart';
 import '../settings/settings_view.dart';
 
 class MainNavigatorView extends StatelessWidget {
@@ -18,11 +21,11 @@ class MainNavigatorView extends StatelessWidget {
             body: IndexedStack(
               index: vm.currentIndex,
               children: [
-                const DiscoveryView(), // Discovery screen
-                const Placeholder(), // Placeholder for Favorites
-                const Placeholder(), // Placeholder for Chats
-                const Placeholder(), // Placeholder for Notifications
-                const SettingsView(), // Settings screen
+                const DiscoveryView(),
+                const LikedUsersView(),
+                const ChatListView(),
+                const NotificationView(),
+                const SettingsView(),
               ],
             ),
             bottomNavigationBar: BottomAppBar(

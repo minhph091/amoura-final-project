@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import '../../config/theme/text_styles.dart';
-// Không cần import info_content_helpers.dart ở đây vì CommonInfoView không tự gọi chúng
 
 class CommonInfoView extends StatefulWidget {
   final String appBarTitle;
