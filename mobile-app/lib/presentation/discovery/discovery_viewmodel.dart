@@ -58,13 +58,6 @@ class DiscoveryViewModel extends ChangeNotifier {
     }
   }
 
-  void superLikeCurrentProfile() {
-    if (_currentProfileIndex < _profiles.length) {
-      // Handle super like logic here
-      _moveToNextProfile();
-    }
-  }
-
   void rewindLastProfile() {
     if (_rewindService != null && _rejectedProfiles.isNotEmpty) {
       final lastRejected = _rejectedProfiles.removeLast();

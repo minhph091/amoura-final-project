@@ -10,14 +10,12 @@ class ActionButtonsRow extends StatelessWidget {
   final Function? onLike;
   final Function? onDislike;
   final Function? onRewind;
-  final Function? onSuperLike;
 
   const ActionButtonsRow({
     super.key,
     this.onLike,
     this.onDislike,
     this.onRewind,
-    this.onSuperLike,
   });
 
   @override
@@ -73,22 +71,6 @@ class ActionButtonsRow extends StatelessWidget {
                 onLike!();
               }
               viewModel.likeCurrentProfile();
-            },
-          ),
-
-          // Super like button
-          _AnimatedActionButton(
-            icon: FontAwesomeIcons.star,
-            size: 68,
-            iconSize: 22,
-            gradient: lightGradient,
-            iconColor: const Color(0xFF3FC1C9),
-            glowColor: const Color(0xFF3FC1C9),
-            onTap: () {
-              if (onSuperLike != null) {
-                onSuperLike!();
-              }
-              viewModel.superLikeCurrentProfile();
             },
           ),
         ],

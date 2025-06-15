@@ -87,6 +87,7 @@ class LikedUsersView extends StatelessWidget {
         return LikedUserCard(
           user: user,
           onTap: () => viewModel.navigateToUserProfile(context, user),
+          onLike: () => viewModel.likeUser(context, user),
         ).animate().fadeIn(duration: 300.ms, delay: (50 * index).ms).slideY(
               begin: 0.2,
               end: 0,
