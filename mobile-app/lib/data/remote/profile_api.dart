@@ -141,11 +141,29 @@ class ProfileApi {
   }
 
   Future<void> deleteAvatar() async {
-    await _apiClient.dio.delete(ApiEndpoints.deleteAvatar);
+    try {
+      final response = await _apiClient.dio.delete(ApiEndpoints.deleteAvatar);
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete avatar: ${response.statusCode}');
+      }
+      print('Delete avatar response: ${response.statusCode}');
+    } catch (e) {
+      print('Error in deleteAvatar: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteCover() async {
-    await _apiClient.dio.delete(ApiEndpoints.deleteCover);
+    try {
+      final response = await _apiClient.dio.delete(ApiEndpoints.deleteCover);
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete cover: ${response.statusCode}');
+      }
+      print('Delete cover response: ${response.statusCode}');
+    } catch (e) {
+      print('Error in deleteCover: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteHighlight(int photoId) async {

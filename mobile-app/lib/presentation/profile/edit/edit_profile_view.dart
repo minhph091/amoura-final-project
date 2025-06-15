@@ -94,17 +94,29 @@ class _EditProfileViewState extends State<EditProfileView> {
 
       try {
         await _viewModel.saveProfile(); // API call to update profile data
-        // Comment: This line sends the updated profile data to the backend via the API
+        
         if (mounted) {
+          // Reload lại profile khi quay về Settings
+          final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+          await profileVM.loadProfile();
+          
+          // Xóa cache hình ảnh cho avatar và cover
+          if (_viewModel.avatarUrl != null) {
+            imageCache.evict(NetworkImage(_viewModel.avatarUrl!));
+          }
+          if (_viewModel.coverUrl != null) {
+            imageCache.evict(NetworkImage(_viewModel.coverUrl!));
+          }
+          
+          // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Profile updated successfully"),
               backgroundColor: Colors.green,
             ),
           );
-          // Reload lại profile khi quay về Settings
-          final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
-          await profileVM.loadProfile();
+          
+          // Pop back to previous screen
           Navigator.of(context).pop();
         }
       } catch (e) {

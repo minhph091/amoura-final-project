@@ -80,6 +80,8 @@ class EditProfileViewModel extends ChangeNotifier {
   }
 
   void _initFromProfile() {
+    if (profile == null) return;
+
     // Lưu id cho orientation
     orientation = profile?['orientation'] != null
         ? (profile!['orientation'] as Map<String, dynamic>)['id']?.toString()
@@ -189,6 +191,18 @@ class EditProfileViewModel extends ChangeNotifier {
 
   // MARK: Update methods
 
+  void updateGender(String value) {
+    sex = value;
+    hasChanges = true;
+    notifyListeners();
+  }
+
+  void updateOrientation(String value) {
+    orientation = value;
+    hasChanges = true;
+    notifyListeners();
+  }
+
   void updateFirstName(String value) {
     firstName = value;
     hasChanges = true;
@@ -203,44 +217,6 @@ class EditProfileViewModel extends ChangeNotifier {
 
   void updateDateOfBirth(DateTime value) {
     dateOfBirth = value;
-    hasChanges = true;
-    notifyListeners();
-  }
-
-  void updateGender(String value) {
-    sex = value;
-    hasChanges = true;
-    notifyListeners();
-  }
-
-  void updateOrientation(String value) {
-    orientation = value;
-    hasChanges = true;
-    notifyListeners();
-  }
-
-  void updateAvatar(String path) {
-    avatarPath = path;
-    hasChanges = true;
-    notifyListeners();
-  }
-
-  void updateCover(String path) {
-    coverPath = path;
-    hasChanges = true;
-    notifyListeners();
-  }
-
-  void updateLocation({String? city, String? state, String? country}) {
-    this.city = city ?? this.city;
-    this.state = state ?? this.state;
-    this.country = country ?? this.country;
-    hasChanges = true;
-    notifyListeners();
-  }
-
-  void updateLocationPreference(int value) {
-    locationPreference = value;
     hasChanges = true;
     notifyListeners();
   }
@@ -332,6 +308,32 @@ class EditProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateLocation({String? city, String? state, String? country}) {
+    this.city = city ?? this.city;
+    this.state = state ?? this.state;
+    this.country = country ?? this.country;
+    hasChanges = true;
+    notifyListeners();
+  }
+
+  void updateLocationPreference(int value) {
+    locationPreference = value;
+    hasChanges = true;
+    notifyListeners();
+  }
+
+  void updateAvatar(String path) {
+    avatarPath = path;
+    hasChanges = true;
+    notifyListeners();
+  }
+
+  void updateCover(String path) {
+    coverPath = path;
+    hasChanges = true;
+    notifyListeners();
+  }
+
   void addPhoto(String path) {
     additionalPhotos.add(path);
     hasChanges = true;
@@ -380,10 +382,20 @@ class EditProfileViewModel extends ChangeNotifier {
 
       // 1. Upload avatar nếu có thay đổi
       if (avatarPath != null) {
-        // Kiểm tra định dạng file
         if (!await _isValidImageFile(avatarPath!)) {
           throw 'Invalid image file format for avatar';
         }
+        // Xóa avatar cũ trước khi upload mới
+        if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+          try {
+            await profileApi.deleteAvatar();
+            print('Successfully deleted old avatar');
+          } catch (e) {
+            print('Error deleting old avatar: $e');
+            // Không throw error ở đây vì có thể avatar cũ đã bị xóa
+          }
+        }
+        // Upload avatar mới
         final url = await profileApi.uploadAvatar(avatarPath!);
         avatarUrl = url;
         avatarPath = null;
@@ -391,10 +403,20 @@ class EditProfileViewModel extends ChangeNotifier {
 
       // 2. Upload cover nếu có thay đổi
       if (coverPath != null) {
-        // Kiểm tra định dạng file
         if (!await _isValidImageFile(coverPath!)) {
           throw 'Invalid image file format for cover';
         }
+        // Xóa cover cũ trước khi upload mới
+        if (coverUrl != null && coverUrl!.isNotEmpty) {
+          try {
+            await profileApi.deleteCover();
+            print('Successfully deleted old cover');
+          } catch (e) {
+            print('Error deleting old cover: $e');
+            // Không throw error ở đây vì có thể cover cũ đã bị xóa
+          }
+        }
+        // Upload cover mới
         final url = await profileApi.uploadCover(coverPath!);
         coverUrl = url;
         coverPath = null;
@@ -413,7 +435,6 @@ class EditProfileViewModel extends ChangeNotifier {
         }
         await profileApi.uploadHighlight(path);
       }
-      await reloadProfile();
       additionalPhotos.clear();
 
       // Chỉ gửi firstName, lastName vào /user
@@ -433,6 +454,7 @@ class EditProfileViewModel extends ChangeNotifier {
       List<int> interestIdList = selectedInterestIds?.map((id) => int.tryParse(id)).whereType<int>().toList() ?? [];
       List<int> languageIdList = selectedLanguageIds?.map((id) => int.tryParse(id)).whereType<int>().toList() ?? [];
 
+      // Tạo profileData với dữ liệu mới nhất từ các biến của ViewModel
       final Map<String, dynamic> profileData = {
         'dateOfBirth': dateOfBirth?.toIso8601String(),
         'sex': sex,
@@ -454,7 +476,6 @@ class EditProfileViewModel extends ChangeNotifier {
         'interestedInNewLanguage': interestedInNewLanguage,
         'bio': bio,
       };
-      profileData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
 
       // Gọi update user nếu có thay đổi
       if (userData.isNotEmpty) {
@@ -462,22 +483,24 @@ class EditProfileViewModel extends ChangeNotifier {
         await updateUserUseCase.execute(userData: userData);
       }
 
-      // Gọi update profile nếu có thay đổi
-      if (profileData.isNotEmpty) {
-        final updateProfileUseCase = GetIt.I<UpdateProfileUseCase>();
-        await updateProfileUseCase.execute(
-          sessionToken: accessToken,
-          profileData: profileData,
-        );
-      }
+      // Gọi update profile với toàn bộ dữ liệu mới
+      final updateProfileUseCase = GetIt.I<UpdateProfileUseCase>();
+      await updateProfileUseCase.execute(
+        sessionToken: accessToken,
+        profileData: profileData,
+      );
 
       // Sau khi update, load lại profile để đồng bộ dữ liệu mới nhất
       final profileService = GetIt.I<ProfileService>();
       profile = await profileService.getProfile();
       _originalProfile = _deepCopy(profile!);
       _initFromProfile();
+      
       hasChanges = false;
       successMessage = "Profile updated successfully";
+      
+      // Notify listeners after all updates are complete
+      notifyListeners();
     } catch (e) {
       error = e.toString();
       throw error!;
@@ -537,13 +560,24 @@ class EditProfileViewModel extends ChangeNotifier {
     try {
       isLoading = true;
       notifyListeners();
+      
+      // Delete old avatar if exists
       if (avatarUrl != null && avatarUrl!.isNotEmpty) {
         await profileApi.deleteAvatar();
       }
+      
+      // Upload new avatar
       final url = await profileApi.uploadAvatar(filePath);
+      
+      // Update local state
       avatarUrl = url;
       avatarPath = null;
+      
+      // Update profile data
       await reloadProfile();
+      
+      hasChanges = true;
+      notifyListeners();
     } catch (e) {
       error = 'Failed to upload avatar: $e';
       notifyListeners();
@@ -559,13 +593,24 @@ class EditProfileViewModel extends ChangeNotifier {
     try {
       isLoading = true;
       notifyListeners();
+      
+      // Delete old cover if exists
       if (coverUrl != null && coverUrl!.isNotEmpty) {
         await profileApi.deleteCover();
       }
+      
+      // Upload new cover
       final url = await profileApi.uploadCover(filePath);
+      
+      // Update local state
       coverUrl = url;
       coverPath = null;
+      
+      // Update profile data
       await reloadProfile();
+      
+      hasChanges = true;
+      notifyListeners();
     } catch (e) {
       error = 'Failed to upload cover: $e';
       notifyListeners();
