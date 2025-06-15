@@ -2,12 +2,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import '../../subscription/widgets/vip_upgrade_dialog.dart';
+import '../discovery_viewmodel.dart';
+import '../../../infrastructure/services/subscription_service.dart';
 
 class ActionButtonsRow extends StatelessWidget {
   const ActionButtonsRow({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final vm = Provider.of<DiscoveryViewModel>(context);
+    final subscriptionService = Provider.of<SubscriptionService>(context);
+
     const lightGradient = LinearGradient(
       colors: [Colors.white, Color(0xFFF5F6FA)],
       begin: Alignment.topLeft,
@@ -26,6 +33,18 @@ class ActionButtonsRow extends StatelessWidget {
             gradient: lightGradient,
             iconColor: const Color(0xFF364F6B),
             glowColor: const Color(0xFF364F6B),
+            onTap: () {
+              if (subscriptionService.isVip) {
+                vm.rewindLastProfile();
+              } else {
+                VipUpgradeDialog.show(
+                  context: context,
+                  feature: 'Quay lại người đã bỏ qua',
+                  description: 'Đã bỏ lỡ một người có vẻ phù hợp với bạn? Nâng cấp lên Amoura VIP để quay lại người vừa vuốt trái và nhiều tính năng độc quyền khác.',
+                  icon: Icons.replay,
+                );
+              }
+            },
           ),
           _AnimatedActionButton(
             icon: FontAwesomeIcons.heart,
@@ -36,6 +55,7 @@ class ActionButtonsRow extends StatelessWidget {
             glowColor: const Color(0xFFFC5185),
             isGlow: true,
             isBreathing: true,
+            onTap: () => vm.likeCurrentProfile(),
           ),
           _AnimatedActionButton(
             icon: FontAwesomeIcons.xmark,
@@ -44,6 +64,7 @@ class ActionButtonsRow extends StatelessWidget {
             gradient: lightGradient,
             iconColor: const Color(0xFFFC5185),
             glowColor: const Color(0xFFFC5185),
+            onTap: () => vm.dislikeCurrentProfile(),
           ),
         ],
       ),
@@ -60,6 +81,7 @@ class _AnimatedActionButton extends StatefulWidget {
   final Color glowColor;
   final bool isGlow;
   final bool isBreathing;
+  final VoidCallback onTap;
 
   const _AnimatedActionButton({
     required this.icon,
@@ -70,6 +92,7 @@ class _AnimatedActionButton extends StatefulWidget {
     required this.glowColor,
     this.isGlow = false,
     this.isBreathing = false,
+    required this.onTap,
   });
 
   @override
@@ -203,7 +226,7 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
               borderRadius: BorderRadius.circular(widget.size / 2),
               splashColor: widget.iconColor.withValues(alpha: 0.18),
               highlightColor: widget.iconColor.withValues(alpha: 0.08),
-              onTap: () {},
+              onTap: widget.onTap,
               onTapDown: _onTapDown,
               onTapUp: _onTapUp,
               onTapCancel: _onTapCancel,

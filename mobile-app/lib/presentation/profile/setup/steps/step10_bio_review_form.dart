@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/image_source_bottom_sheet.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';

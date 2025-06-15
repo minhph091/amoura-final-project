@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../shared/widgets/app_gradient_background.dart';
 import 'notification_viewmodel.dart';
 import 'widgets/notification_item.dart';
 
 class NotificationView extends StatefulWidget {
-  const NotificationView({Key? key}) : super(key: key);
+  const NotificationView({super.key});
 
   @override
   State<NotificationView> createState() => _NotificationViewState();
@@ -183,7 +182,7 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -231,8 +230,6 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
         if (notification.url != null) {
           // Navigate to a web view or deep link
         }
-        break;
-      default:
         break;
     }
   }

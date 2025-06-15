@@ -1,30 +1,12 @@
-// filepath: c:\amoura-final-project\mobile-app\lib\domain\models\settings\blocked_user.dart
-import 'package:flutter/foundation.dart';
-
-/// Model class representing a blocked user in the application
+// Model class representing a blocked user in the application
 class BlockedUser {
-  /// Unique identifier for the blocked user
   final String id;
-
-  /// The user's display name
   final String name;
-
-  /// The user's age
   final int age;
-
-  /// The user's location
   final String location;
-
-  /// URL to the user's profile photo
   final String photoUrl;
-
-  /// When the user was blocked
   final DateTime blockedAt;
-
-  /// Brief description or reason for blocking (optional)
   final String? blockReason;
-
-  /// Distance from user (if available)
   final double? distance;
 
   const BlockedUser({
@@ -38,7 +20,7 @@ class BlockedUser {
     this.distance,
   });
 
-  /// Create a BlockedUser from JSON data
+  // Create a BlockedUser from JSON data
   factory BlockedUser.fromJson(Map<String, dynamic> json) {
     return BlockedUser(
       id: json['id'] as String,
@@ -52,7 +34,7 @@ class BlockedUser {
     );
   }
 
-  /// Convert BlockedUser to JSON
+  // Convert BlockedUser to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -66,7 +48,7 @@ class BlockedUser {
     };
   }
 
-  /// Create a copy of BlockedUser with optional new values
+  // Create a copy of BlockedUser with optional new values
   BlockedUser copyWith({
     String? id,
     String? name,

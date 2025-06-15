@@ -2,7 +2,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../../shared/widgets/image_source_bottom_sheet.dart';
@@ -96,7 +95,7 @@ class _EditProfileAvatarCoverSectionState extends State<EditProfileAvatarCoverSe
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
-                color: ProfileTheme.darkPurple.withOpacity(0.1),
+                color: ProfileTheme.darkPurple.withValues(alpha: 0.1),
               ),
               child: widget.viewModel.coverPath != null
                   ? ClipRRect(
@@ -135,7 +134,7 @@ class _EditProfileAvatarCoverSectionState extends State<EditProfileAvatarCoverSe
               right: 16,
               top: 16,
               child: CircleAvatar(
-                backgroundColor: Colors.white.withOpacity(0.8),
+                backgroundColor: Colors.white.withValues(alpha: 0.8),
                 child: IconButton(
                   icon: Icon(Icons.edit, color: ProfileTheme.darkPink),
                   onPressed: () => _pickImage(false),
@@ -159,7 +158,7 @@ class _EditProfileAvatarCoverSectionState extends State<EditProfileAvatarCoverSe
                 ),
                 child: CircleAvatar(
                   radius: 60,
-                  backgroundColor: ProfileTheme.lightPink.withOpacity(0.2),
+                  backgroundColor: ProfileTheme.lightPink.withValues(alpha: 0.2),
                   backgroundImage: _getAvatarProvider(),
                   child: _showDefaultAvatar()
                       ? Icon(Icons.person, size: 60, color: ProfileTheme.darkPink)

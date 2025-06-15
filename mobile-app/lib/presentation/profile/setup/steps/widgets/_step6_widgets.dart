@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/setup_profile_theme.dart';
 import '../../stepmodel/step6_viewmodel.dart';
 
@@ -40,7 +39,7 @@ class AppearanceHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 'Your Appearance',
-                style: ProfileTheme.getTitleStyle(context)?.copyWith(
+                style: ProfileTheme.getTitleStyle(context).copyWith(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                   foreground: Paint()
@@ -55,7 +54,7 @@ class AppearanceHeader extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'Help others get to know the beautiful you better ✨',
-          style: ProfileTheme.getDescriptionStyle(context)?.copyWith(
+          style: ProfileTheme.getDescriptionStyle(context).copyWith(
             fontSize: 15,
             height: 1.4,
             color: const Color(0xFF666666),

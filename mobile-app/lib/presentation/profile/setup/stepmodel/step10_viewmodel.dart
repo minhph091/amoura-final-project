@@ -1,10 +1,8 @@
 // lib/presentation/profile/setup/stepmodel/step10_viewmodel.dart
 import 'dart:io';
-import 'package:flutter/material.dart';
 import '../../../../core/services/setup_profile_service.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import 'base_step_viewmodel.dart';
-import '../setup_profile_viewmodel.dart';
 
 class Step10ViewModel extends BaseStepViewModel {
   String? bio; // User's bio

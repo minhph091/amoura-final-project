@@ -5,7 +5,7 @@ import '../../stepmodel/step3_viewmodel.dart';
 
 class OrientationHeader extends StatelessWidget {
   const OrientationHeader({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -24,7 +24,7 @@ class OrientationHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF6B9D).withOpacity(0.3),
+                    color: const Color(0xFFFF6B9D).withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -40,7 +40,7 @@ class OrientationHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 'Your Romantic Orientation',
-                style: ProfileTheme.getTitleStyle(context)?.copyWith(
+                style: ProfileTheme.getTitleStyle(context).copyWith(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   foreground: Paint()
@@ -55,7 +55,7 @@ class OrientationHeader extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           'Help us find your perfect match by sharing who makes your heart flutter 💕',
-          style: ProfileTheme.getDescriptionStyle(context)?.copyWith(
+          style: ProfileTheme.getDescriptionStyle(context).copyWith(
             fontSize: 16,
             height: 1.5,
             color: const Color(0xFF666666),
@@ -68,7 +68,7 @@ class OrientationHeader extends StatelessWidget {
 
 class OrientationLoadingState extends StatelessWidget {
   const OrientationLoadingState({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -79,8 +79,8 @@ class OrientationLoadingState extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFFFF6B9D).withOpacity(0.1),
-                  const Color(0xFFD81B60).withOpacity(0.1),
+                  const Color(0xFFFF6B9D).withValues(alpha: 0.1),
+                  const Color(0xFFD81B60).withValues(alpha: 0.1),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -116,9 +116,9 @@ class OrientationErrorState extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.red.withOpacity(0.3)),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -146,14 +146,14 @@ class OrientationErrorState extends StatelessWidget {
 
 class OrientationEmptyState extends StatelessWidget {
   const OrientationEmptyState({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: const Color(0xFF666666).withOpacity(0.1),
+          color: const Color(0xFF666666).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -202,10 +202,10 @@ class OrientationCards extends StatelessWidget {
           final index = entry.key;
           final option = entry.value;
           final isSelected = step3ViewModel.orientationId == option['value'];
-          
+
           // Debug: Track selection state
           print('🎯 Option ${option['label']}: isSelected=$isSelected (orientationId=${step3ViewModel.orientationId}, optionValue=${option['value']})');
-          
+
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             child: OrientationCard(
@@ -291,7 +291,7 @@ class OrientationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orientationData = _getOrientationData(option['label']!);
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -306,19 +306,19 @@ class OrientationCard extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: isSelected
                     ? LinearGradient(
-                        colors: [
-                          orientationData['primaryColor'] as Color,
-                          orientationData['secondaryColor'] as Color,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
+                  colors: [
+                    orientationData['primaryColor'] as Color,
+                    orientationData['secondaryColor'] as Color,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
                     : LinearGradient(
-                        colors: [
-                          Colors.white,
-                          const Color(0xFFFAFAFA),
-                        ],
-                      ),
+                  colors: [
+                    Colors.white,
+                    const Color(0xFFFAFAFA),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
@@ -329,13 +329,13 @@ class OrientationCard extends StatelessWidget {
                 boxShadow: [
                   if (isSelected)
                     BoxShadow(
-                      color: (orientationData['primaryColor'] as Color).withOpacity(0.3),
+                      color: (orientationData['primaryColor'] as Color).withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   if (!isSelected)
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -348,8 +348,8 @@ class OrientationCard extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.white.withOpacity(0.2)
-                          : (orientationData['primaryColor'] as Color).withOpacity(0.1),
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : (orientationData['primaryColor'] as Color).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -361,7 +361,7 @@ class OrientationCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 20),
-                  
+
                   // Text Content
                   Expanded(
                     child: Column(
@@ -381,7 +381,7 @@ class OrientationCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             color: isSelected
-                                ? Colors.white.withOpacity(0.9)
+                                ? Colors.white.withValues(alpha: 0.9)
                                 : const Color(0xFF666666),
                             height: 1.3,
                           ),
@@ -389,14 +389,14 @@ class OrientationCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   // Selection Indicator
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.white.withOpacity(0.2)
+                          ? Colors.white.withValues(alpha: 0.2)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(12),
                     ),

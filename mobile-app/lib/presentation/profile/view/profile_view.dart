@@ -28,7 +28,7 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  String? _expandedSection;
+  String? _expandedSection = 'basic'; // Default to expand the basic info section
 
   void _toggleSection(String section) {
     setState(() {
@@ -135,20 +135,6 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                     ),
 
-                  // Bio & Photos
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ProfileBioPhotos(
-                      bio: profile['bio'] as String?,
-                      galleryPhotos: (profile['galleryPhotos'] as List<dynamic>?)?.cast<String>(),
-                      onViewPhoto: (url) {
-                        // Navigate to photo viewer
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
                   // Basic Information (Collapsible)
                   CollapsibleSection(
                     title: "Basic Information",
@@ -168,6 +154,20 @@ class _ProfileViewState extends State<ProfileView> {
                           : null,
                     ),
                   ),
+
+                  // Bio & Photos
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ProfileBioPhotos(
+                      bio: profile['bio'] as String?,
+                      galleryPhotos: (profile['galleryPhotos'] as List<dynamic>?)?.cast<String>(),
+                      onViewPhoto: (url) {
+                        // Navigate to photo viewer
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
 
                   // Appearance
                   CollapsibleSection(

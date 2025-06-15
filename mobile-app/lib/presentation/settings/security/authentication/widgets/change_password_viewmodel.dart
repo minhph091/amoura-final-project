@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:amoura/data/repositories/user_repository.dart';
-import 'package:provider/provider.dart';
 
 class ChangePasswordViewModel extends ChangeNotifier {
   final UserRepository userRepository;

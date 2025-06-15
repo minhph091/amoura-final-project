@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/services/setup_profile_service.dart';
 import 'base_step_viewmodel.dart';
-import '../setup_profile_viewmodel.dart';
 
 class Step9ViewModel extends BaseStepViewModel {
   List<String>? selectedInterestIds; // Danh sách ID sở thích được chọn

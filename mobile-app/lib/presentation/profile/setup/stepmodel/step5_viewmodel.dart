@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'base_step_viewmodel.dart';
-import '../setup_profile_viewmodel.dart';
 
 class Step5ViewModel extends BaseStepViewModel {
   String? city;

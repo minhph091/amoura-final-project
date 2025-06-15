@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/services/setup_profile_service.dart';
 import 'base_step_viewmodel.dart';
-import '../setup_profile_viewmodel.dart';
 
 class Step3ViewModel extends BaseStepViewModel {
   String? orientationId; // id dạng String

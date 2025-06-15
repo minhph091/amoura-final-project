@@ -1,6 +1,5 @@
 // lib/presentation/shared/widgets/otp_input_form.dart
 import 'package:flutter/material.dart';
-import '../../../../config/theme/app_colors.dart';
 
 class OtpInputForm extends StatefulWidget {
   final int otpLength;

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/profile/smoke_drink_constants.dart';
-import '../../../../core/constants/profile/pet_constants.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../setup/theme/setup_profile_theme.dart';
 import '../edit_profile_viewmodel.dart';

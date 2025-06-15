@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/setup_profile_theme.dart';
 import '../../stepmodel/step7_viewmodel.dart';
-import '../../../../shared/widgets/profile_option_selector.dart';
 import '../../../../shared/widgets/custom_dropdown.dart';
 
 class JobEducationHeader extends StatelessWidget {
   const JobEducationHeader({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -26,7 +24,7 @@ class JobEducationHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF6B73FF).withOpacity(0.3),
+                    color: const Color(0xFF6B73FF).withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -42,7 +40,7 @@ class JobEducationHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 'Your Career & Education',
-                style: ProfileTheme.getTitleStyle(context)?.copyWith(
+                style: ProfileTheme.getTitleStyle(context).copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   foreground: Paint()
@@ -57,7 +55,7 @@ class JobEducationHeader extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'Share your professional journey to connect with like-minded people 💼',
-          style: ProfileTheme.getDescriptionStyle(context)?.copyWith(
+          style: ProfileTheme.getDescriptionStyle(context).copyWith(
             fontSize: 15,
             height: 1.4,
             color: const Color(0xFF666666),
@@ -70,7 +68,7 @@ class JobEducationHeader extends StatelessWidget {
 
 class JobEducationLoadingState extends StatelessWidget {
   const JobEducationLoadingState({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -79,8 +77,8 @@ class JobEducationLoadingState extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color(0xFF6B73FF).withOpacity(0.1),
-              const Color(0xFF9B59B6).withOpacity(0.1),
+              const Color(0xFF6B73FF).withValues(alpha: 0.1),
+              const Color(0xFF9B59B6).withValues(alpha: 0.1),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
@@ -113,7 +111,7 @@ class JobIndustrySelector extends StatelessWidget {
   final Function(bool)? onToggleExpanded;
 
   const JobIndustrySelector({
-    super.key, 
+    super.key,
     required this.step7ViewModel,
     this.onToggleExpanded,
   });
@@ -143,7 +141,7 @@ class JobIndustrySelector extends StatelessWidget {
           onChanged: (value) {
             if (value != null) {
               final option = step7ViewModel.jobIndustryOptions.firstWhere(
-                (opt) => opt['value'] == value,
+                    (opt) => opt['value'] == value,
                 orElse: () => {'value': '', 'label': ''},
               );
               step7ViewModel.setJobIndustry(value, option['label']!);
@@ -200,7 +198,7 @@ class EducationLevelSelector extends StatelessWidget {
   final Function(bool)? onToggleExpanded;
 
   const EducationLevelSelector({
-    super.key, 
+    super.key,
     required this.step7ViewModel,
     this.onToggleExpanded,
   });
@@ -230,7 +228,7 @@ class EducationLevelSelector extends StatelessWidget {
           onChanged: (value) {
             if (value != null) {
               final option = step7ViewModel.educationLevelOptions.firstWhere(
-                (opt) => opt['value'] == value,
+                    (opt) => opt['value'] == value,
                 orElse: () => {'value': '', 'label': ''},
               );
               step7ViewModel.setEducationLevel(value, option['label']!);
@@ -288,7 +286,7 @@ class DropoutSwitch extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -300,8 +298,8 @@ class DropoutSwitch extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: (step7ViewModel.dropOut ?? false)
-                  ? const Color(0xFFFF9800).withOpacity(0.1)
-                  : const Color(0xFFE0E0E0).withOpacity(0.5),
+                  ? const Color(0xFFFF9800).withValues(alpha: 0.1)
+                  : const Color(0xFFE0E0E0).withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -329,9 +327,9 @@ class DropoutSwitch extends StatelessWidget {
             value: step7ViewModel.dropOut ?? false,
             onChanged: (value) => step7ViewModel.setDropOut(value),
             activeColor: const Color(0xFFFF9800),
-            activeTrackColor: const Color(0xFFFF9800).withOpacity(0.3),
+            activeTrackColor: const Color(0xFFFF9800).withValues(alpha: 0.3),
             inactiveThumbColor: const Color(0xFFE0E0E0),
-            inactiveTrackColor: const Color(0xFFE0E0E0).withOpacity(0.5),
+            inactiveTrackColor: const Color(0xFFE0E0E0).withValues(alpha: 0.5),
           ),
         ],
       ),
