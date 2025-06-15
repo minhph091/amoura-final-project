@@ -1,0 +1,42 @@
+{
+    "best_model_name": "LightGBM_tuned",
+    "saved_filename": "../models/best_overall_model.joblib",
+    "validation_metrics": {
+        "accuracy": 0.6352675207234363,
+        "precision": 0.4774693583273252,
+        "recall": 0.9981160512434062,
+        "f1": 0.6459400146305779,
+        "roc_auc": 0.7474138650678137
+    },
+    "parameters": {
+        "boosting_type": "gbdt",
+        "class_weight": "balanced",
+        "colsample_bytree": 1.0,
+        "importance_type": "split",
+        "learning_rate": 0.01,
+        "max_depth": -1,
+        "min_child_samples": 20,
+        "min_child_weight": 0.001,
+        "min_split_gain": 0.0,
+        "n_estimators": 200,
+        "n_jobs": -1,
+        "num_leaves": 20,
+        "objective": null,
+        "random_state": 42,
+        "reg_alpha": 0.0,
+        "reg_lambda": 0.0,
+        "subsample": 1.0,
+        "subsample_for_bin": 200000,
+        "subsample_freq": 0
+    },
+    "tuning_details": {
+        "best_cv_params": {
+            "learning_rate": 0.01,
+            "max_depth": -1,
+            "n_estimators": 200,
+            "num_leaves": 20
+        },
+        "best_cv_score": 0.7375430798623915,
+        "cv_scoring_metric": "roc_auc"
+    }
+}
