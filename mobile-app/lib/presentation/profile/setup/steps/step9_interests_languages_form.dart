@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/shake_widget.dart';
-import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step9_viewmodel.dart';

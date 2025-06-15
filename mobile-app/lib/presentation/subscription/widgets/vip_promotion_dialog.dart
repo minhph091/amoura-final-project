@@ -46,7 +46,7 @@ class VipPromotionDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               spreadRadius: 5,
             ),
@@ -59,7 +59,7 @@ class VipPromotionDialog extends StatelessWidget {
               width: 70,
               height: 70,
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -82,7 +82,7 @@ class VipPromotionDialog extends StatelessWidget {
               description,
               style: TextStyle(
                 fontSize: 16,
-                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
               ),
               textAlign: TextAlign.center,
             ),
@@ -101,7 +101,7 @@ class VipPromotionDialog extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withOpacity(0.8),
+                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
                 ],
               ),
               shape: RoundedRectangleBorder(
@@ -116,7 +116,7 @@ class VipPromotionDialog extends StatelessWidget {
               child: Text(
                 'Maybe Later',
                 style: TextStyle(
-                  color: Theme.of(context).primaryColor.withOpacity(0.8),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.8),
                 ),
               ),
             ),

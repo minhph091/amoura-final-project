@@ -16,6 +16,7 @@ class Message {
   final bool isEdited;
   final DateTime? editedAt;
   final Map<String, String> reactions;
+  final bool isPinned;
 
   Message({
     required this.id,
@@ -35,6 +36,7 @@ class Message {
     this.isEdited = false,
     this.editedAt,
     this.reactions = const {},
+    this.isPinned = false,
   });
 
   Message copyWith({
@@ -55,6 +57,7 @@ class Message {
     bool? isEdited,
     DateTime? editedAt,
     Map<String, String>? reactions,
+    bool? isPinned,
   }) {
     return Message(
       id: id ?? this.id,
@@ -74,6 +77,7 @@ class Message {
       isEdited: isEdited ?? this.isEdited,
       editedAt: editedAt ?? this.editedAt,
       reactions: reactions ?? this.reactions,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../setup/theme/setup_profile_theme.dart';
-import 'theme/profile_theme.dart';
 import 'widgets/expandable_text.dart';
 
 class ProfileBioPhotos extends StatelessWidget {
@@ -48,7 +47,7 @@ class ProfileBioPhotos extends StatelessWidget {
           ),
           const SizedBox(height: 18),
         ],
-        if (galleryPhotos != null) ...[
+        if (galleryPhotos != null && galleryPhotos!.isNotEmpty) ...[
           Row(
             children: [
               Icon(Icons.photo_library, color: ProfileTheme.darkPink),
@@ -63,60 +62,76 @@ class ProfileBioPhotos extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: galleryPhotos!.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, i) {
-                final url = galleryPhotos![i];
-                return Stack(
-                  children: [
-                    GestureDetector(
-                      onTap: onViewPhoto != null ? () => onViewPhoto!(url) : null,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: ProfileTheme.darkPurple.withOpacity(0.3)),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            url,
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              width: 100,
-                              height: 100,
-                              color: ProfileTheme.lightPink.withOpacity(0.2),
-                              child: Icon(Icons.image_not_supported, color: ProfileTheme.darkPink),
-                            ),
+          // Replace the horizontal list with a grid view similar to edit profile
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1,
+            padding: EdgeInsets.zero,
+            children: galleryPhotos!.asMap().entries.map((entry) {
+              final i = entry.key;
+              final url = entry.value;
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  GestureDetector(
+                    onTap: onViewPhoto != null ? () => onViewPhoto!(url) : null,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: ProfileTheme.lightPurple),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          url,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: ProfileTheme.lightPink.withValues(alpha: 0.2),
+                            child: Icon(Icons.image_not_supported, color: ProfileTheme.darkPink),
                           ),
                         ),
                       ),
                     ),
-                    if (editable && onRemovePhoto != null)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: GestureDetector(
-                          onTap: () => onRemovePhoto!(i),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.all(2),
-                            child: Icon(Icons.close, color: ProfileTheme.darkPink, size: 16),
+                  ),
+                  if (editable && onRemovePhoto != null)
+                    Positioned(
+                      top: -8,
+                      right: -8,
+                      child: GestureDetector(
+                        onTap: () => onRemovePhoto!(i),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 2,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
+                          child: Icon(Icons.close, color: Colors.red, size: 18),
                         ),
                       ),
-                  ],
-                );
-              },
-            ),
+                    ),
+                ],
+              );
+            }).toList(),
           ),
         ],
       ],

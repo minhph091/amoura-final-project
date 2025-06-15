@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/utils/date_util.dart';
 import '../../../../core/constants/profile/sex_constants.dart';
-import '../../../../core/constants/profile/orientation_constants.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/shake_widget.dart';
 import '../../setup/theme/setup_profile_theme.dart';
@@ -324,7 +323,7 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(10),
-          color: isSelected ? ProfileTheme.darkPink.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? ProfileTheme.darkPink.withValues(alpha: 0.1) : Colors.transparent,
         ),
         child: Stack(
           children: [

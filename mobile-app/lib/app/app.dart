@@ -8,7 +8,6 @@ import '../config/language/language_controller.dart';
 import '../config/theme/app_theme.dart';
 import '../presentation/settings/theme/theme_mode_controller.dart';
 import 'routes/app_pages.dart';
-import 'routes/app_routes.dart';
 
 class AmouraApp extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;

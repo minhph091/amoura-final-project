@@ -2,13 +2,14 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:dotted_border/dotted_border.dart';
+import '../../../shared/widgets/image_source_bottom_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
-import '../../setup/theme/setup_profile_theme.dart';
 import '../edit_profile_viewmodel.dart';
+import '../../setup/theme/setup_profile_theme.dart';
 
 class EditProfileBioPhotosSection extends StatefulWidget {
   final EditProfileViewModel viewModel;
@@ -68,28 +69,7 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
       return;
     }
 
-    final source = await showDialog<ImageSource>(
-      context: context,
-      builder: (context) =>
-          AlertDialog(
-            title: Text('Select Image Source',
-                style: TextStyle(color: ProfileTheme.darkPurple)),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, ImageSource.camera),
-                child: Text(
-                    'Camera', style: TextStyle(color: ProfileTheme.darkPink)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, ImageSource.gallery),
-                child: Text(
-                    'Gallery', style: TextStyle(color: ProfileTheme.darkPink)),
-              ),
-            ],
-          ),
-    );
+    final source = await ImageSourceBottomSheet.show(context);
 
     if (source == null) return;
     if (!await _requestPermissions(source)) return;
@@ -324,7 +304,7 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
                   (index) =>
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),

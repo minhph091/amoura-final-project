@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
-import 'call_button.dart';
 
-/// Header widget for the chat detail screen
+// Header widget for the chat detail screen
 class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
   final String matchId;
   final String matchName;
   final String matchAvatar;
   final String? matchStatus;
+  final String? matchUsername;
   final VoidCallback? onBackPressed;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onInfoTap;
+  final VoidCallback? onCallTap;
+  final VoidCallback? onVideoCallTap;
 
   const ChatHeader({
-    Key? key,
+    super.key,
     required this.matchId,
     required this.matchName,
     required this.matchAvatar,
     this.matchStatus,
+    this.matchUsername,
     this.onBackPressed,
     this.onProfileTap,
-  }) : super(key: key);
+    this.onInfoTap,
+    this.onCallTap,
+    this.onVideoCallTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +81,18 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          if (matchUsername != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              '@$matchUsername',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                           if (matchStatus != null) ...[
                             const SizedBox(height: 2),
                             Text(
@@ -98,151 +117,33 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Voice call button
+                IconButton(
+                  icon: const Icon(Icons.call),
+                  onPressed: onCallTap,
+                  tooltip: 'Voice Call',
+                  splashRadius: 24,
+                ),
+
                 // Video call button
-                CallButton(
-                  matchId: matchId,
-                  matchName: matchName,
-                  matchAvatar: matchAvatar,
-                  isVideoCall: true,
-                  size: 40,
-                  backgroundColor: Colors.transparent,
-                  iconColor: Theme.of(context).iconTheme.color,
+                IconButton(
+                  icon: const Icon(Icons.videocam),
+                  onPressed: onVideoCallTap,
+                  tooltip: 'Video Call',
+                  splashRadius: 24,
                 ),
 
-                // Audio call button
-                CallButton(
-                  matchId: matchId,
-                  matchName: matchName,
-                  matchAvatar: matchAvatar,
-                  isVideoCall: false,
-                  size: 40,
-                  backgroundColor: Colors.transparent,
-                  iconColor: Theme.of(context).iconTheme.color,
-                ),
-
-                // More options menu
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) {
-                    // Handle menu item selection
-                    _handleMenuItemSelected(context, value);
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'profile',
-                      child: Row(
-                        children: [
-                          Icon(Icons.person),
-                          SizedBox(width: 8),
-                          Text('View Profile'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'block',
-                      child: Row(
-                        children: [
-                          Icon(Icons.block),
-                          SizedBox(width: 8),
-                          Text('Block User'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'report',
-                      child: Row(
-                        children: [
-                          Icon(Icons.flag),
-                          SizedBox(width: 8),
-                          Text('Report'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'unmatch',
-                      child: Row(
-                        children: [
-                          Icon(Icons.close),
-                          SizedBox(width: 8),
-                          Text('Unmatch'),
-                        ],
-                      ),
-                    ),
-                  ],
+                // Info button
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: onInfoTap,
+                  tooltip: 'Chat Information',
+                  splashRadius: 24,
                 ),
               ],
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _handleMenuItemSelected(BuildContext context, String value) {
-    switch (value) {
-      case 'profile':
-        if (onProfileTap != null) {
-          onProfileTap!();
-        }
-        break;
-      case 'block':
-        _showConfirmationDialog(
-          context,
-          'Block User',
-          'Are you sure you want to block this user? You will no longer receive messages from them.',
-          'Block',
-          () {
-            // TODO: Implement block functionality
-            Navigator.of(context).pop(); // Close dialog
-            Navigator.of(context).pop(); // Go back to chat list
-          },
-        );
-        break;
-      case 'report':
-        // Navigate to report screen
-        // TODO: Implement report functionality
-        break;
-      case 'unmatch':
-        _showConfirmationDialog(
-          context,
-          'Unmatch',
-          'Are you sure you want to unmatch with this user? This action cannot be undone.',
-          'Unmatch',
-          () {
-            // TODO: Implement unmatch functionality
-            Navigator.of(context).pop(); // Close dialog
-            Navigator.of(context).pop(); // Go back to chat list
-          },
-        );
-        break;
-    }
-  }
-
-  void _showConfirmationDialog(
-    BuildContext context,
-    String title,
-    String message,
-    String confirmText,
-    VoidCallback onConfirm,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: onConfirm,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: Text(confirmText),
-          ),
-        ],
       ),
     );
   }
@@ -258,11 +159,11 @@ class SimpleChatHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBackPressed;
 
   const SimpleChatHeader({
-    Key? key,
+    super.key,
     required this.matchName,
     required this.matchAvatar,
     this.onBackPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -1,14 +1,11 @@
 // lib/presentation/profile/setup/steps/widgets/_step8_widgets.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/setup_profile_theme.dart';
 import '../../stepmodel/step8_viewmodel.dart';
-import '../../../../shared/widgets/profile_option_selector.dart';
-import '../../../../shared/widgets/custom_dropdown.dart';
 
 class LifestyleHeader extends StatelessWidget {
   const LifestyleHeader({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -27,7 +24,7 @@ class LifestyleHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF9C27B0).withOpacity(0.25),
+                    color: const Color(0xFF9C27B0).withValues(alpha: 0.25),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -39,7 +36,7 @@ class LifestyleHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 'Your Lifestyle',
-                style: ProfileTheme.getTitleStyle(context)?.copyWith(
+                style: ProfileTheme.getTitleStyle(context).copyWith(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                   foreground: Paint()
@@ -54,7 +51,7 @@ class LifestyleHeader extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           'Share your lifestyle to find your perfect match 💫',
-          style: ProfileTheme.getDescriptionStyle(context)?.copyWith(
+          style: ProfileTheme.getDescriptionStyle(context).copyWith(
             fontSize: 15,
             height: 1.4,
             color: const Color(0xFF666666),
@@ -67,7 +64,7 @@ class LifestyleHeader extends StatelessWidget {
 
 class LifestyleLoadingState extends StatelessWidget {
   const LifestyleLoadingState({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -76,8 +73,8 @@ class LifestyleLoadingState extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color(0xFF9C27B0).withOpacity(0.1),
-              const Color(0xFFE91E63).withOpacity(0.1),
+              const Color(0xFF9C27B0).withValues(alpha: 0.1),
+              const Color(0xFFE91E63).withValues(alpha: 0.1),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
@@ -408,7 +405,7 @@ class PetSelector extends StatelessWidget {
                               boxShadow: [
                                 if (isSelected)
                                   BoxShadow(
-                                    color: const Color(0xFFE91E63).withOpacity(0.13),
+                                    color: const Color(0xFFE91E63).withValues(alpha: 0.13),
                                     blurRadius: 6,
                                     spreadRadius: 1,
                                   )
@@ -420,7 +417,7 @@ class PetSelector extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: (petData['color'] as Color).withOpacity(0.15),
+                                    color: (petData['color'] as Color).withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(

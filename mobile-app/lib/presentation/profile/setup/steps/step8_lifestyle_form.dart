@@ -1,7 +1,6 @@
 // lib/presentation/profile/setup/steps/step8_lifestyle_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step8_viewmodel.dart';
@@ -41,35 +40,35 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
           // Header Section - Compact
           const LifestyleHeader(),
           const SizedBox(height: 16),
-          
+
           // Content Section - Fixed layout without scroll
           Expanded(
             child: step8ViewModel.isLoading
                 ? const LifestyleLoadingState()
                 : step8ViewModel.errorMessage != null
-                    ? _buildErrorState(step8ViewModel.errorMessage!)
-                    : step8ViewModel.drinkStatusOptions.isEmpty || 
-                      step8ViewModel.smokeStatusOptions.isEmpty || 
-                      step8ViewModel.petOptions.isEmpty
-                        ? _buildEmptyState()
-                        : Column(
-                            children: [
-                              // Drink Status Selector
-                              DrinkStatusSelector(step8ViewModel: step8ViewModel),
-                              const SizedBox(height: 10),
-                              
-                              // Smoke Status Selector
-                              SmokeStatusSelector(step8ViewModel: step8ViewModel),
-                              const SizedBox(height: 12),
-                              
-                              // Pet Selector - Compact design
-                              Expanded(
-                                child: PetSelector(step8ViewModel: step8ViewModel),
-                              ),
-                            ],
-                          ),
+                ? _buildErrorState(step8ViewModel.errorMessage!)
+                : step8ViewModel.drinkStatusOptions.isEmpty ||
+                step8ViewModel.smokeStatusOptions.isEmpty ||
+                step8ViewModel.petOptions.isEmpty
+                ? _buildEmptyState()
+                : Column(
+              children: [
+                // Drink Status Selector
+                DrinkStatusSelector(step8ViewModel: step8ViewModel),
+                const SizedBox(height: 10),
+
+                // Smoke Status Selector
+                SmokeStatusSelector(step8ViewModel: step8ViewModel),
+                const SizedBox(height: 12),
+
+                // Pet Selector - Compact design
+                Expanded(
+                  child: PetSelector(step8ViewModel: step8ViewModel),
+                ),
+              ],
+            ),
           ),
-          
+
           // Next Button - Always visible at bottom
           SetupProfileButton(
             text: 'Next',
@@ -88,9 +87,9 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
         padding: const EdgeInsets.all(16),
         margin: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.red.withOpacity(0.3)),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -122,7 +121,7 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
         padding: const EdgeInsets.all(16),
         margin: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF666666).withOpacity(0.1),
+          color: const Color(0xFF666666).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

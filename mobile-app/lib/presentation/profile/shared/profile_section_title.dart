@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../setup/theme/setup_profile_theme.dart';
-import 'theme/profile_theme.dart';
 
 class ProfileSectionTitle extends StatelessWidget {
   final String title;

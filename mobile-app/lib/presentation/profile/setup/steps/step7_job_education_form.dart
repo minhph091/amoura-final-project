@@ -1,7 +1,6 @@
 // lib/presentation/profile/setup/steps/step7_job_education_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step7_viewmodel.dart';

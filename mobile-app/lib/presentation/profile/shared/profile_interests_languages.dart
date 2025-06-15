@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../setup/theme/setup_profile_theme.dart';
 import 'profile_field_display.dart';
-import 'theme/profile_theme.dart';
 
 class ProfileInterestsLanguages extends StatelessWidget {
   final List<String>? interests;

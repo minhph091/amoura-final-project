@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/image_source_bottom_sheet.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -51,16 +51,7 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
   }
 
   Future<ImageSource?> _showImageSourceDialog() async {
-    return showDialog<ImageSource>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Image Source'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, ImageSource.camera), child: const Text('Camera')),
-          TextButton(onPressed: () => Navigator.pop(context, ImageSource.gallery), child: const Text('Gallery')),
-        ],
-      ),
-    );
+    return ImageSourceBottomSheet.show(context);
   }
 
   Future<void> _pickAndUploadImage(Step10ViewModel viewModel, ImageSource source) async {
@@ -166,18 +157,77 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                 Text("Write a short introduction and upload up to 4 vertical or square photos (max 2MB, 512x512).",
                     style: ProfileTheme.getDescriptionStyle(context)),
                 const SizedBox(height: 18),
-                AppTextField(
-                  labelText: "Your Bio",
-                  labelStyle: ProfileTheme.getLabelStyle(context),
-                  hintText: "Tell us about yourself...",
-                  prefixIcon: Icons.edit_note,
-                  prefixIconColor: ProfileTheme.darkPink,
-                  maxLines: 5,
-                  maxLength: 1000,
-                  initialValue: step10ViewModel.bio,
-                  onSaved: (v) => step10ViewModel.setBio(v ?? ''),
-                  validator: (value) => value != null && value.length > 1000 ? "Bio must not exceed 1000 characters." : null,
-                  style: ProfileTheme.getInputTextStyle(context),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          child: TextFormField(
+                            initialValue: step10ViewModel.bio,
+                            maxLines: 5,
+                            maxLength: 1000,
+                            onChanged: (v) => step10ViewModel.setBio(v),
+                            onSaved: (v) => step10ViewModel.setBio(v ?? ''),
+                            validator: (value) => value != null && value.length > 1000
+                              ? "Bio must not exceed 1000 characters."
+                              : null,
+                            style: ProfileTheme.getInputTextStyle(context),
+                            decoration: InputDecoration(
+                              hintText: "Share something about yourself...",
+                              hintStyle: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 14,
+                              ),
+                              // Remove the prefix icon - will add it as a positioned widget
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: ProfileTheme.darkPink),
+                              ),
+                              contentPadding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
+                              // Remove the built-in counter
+                              counterText: '',
+                            ),
+                          ),
+                        ),
+                        // Position the icon at the top-left corner
+                        Positioned(
+                          top: 16,
+                          left: 16,
+                          child: Icon(
+                            Icons.edit_note,
+                            color: ProfileTheme.darkPink,
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Custom character counter below the text field
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, right: 8),
+                      child: Align(
+                        alignment: Alignment.bottomRight,
+                        child: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: TextEditingController(text: step10ViewModel.bio ?? ''),
+                          builder: (context, value, child) {
+                            final currentLength = step10ViewModel.bio?.length ?? 0;
+                            return Text(
+                              '$currentLength/1000 characters',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: currentLength > 1000 ? Colors.red : Colors.grey.shade600,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 22),
                 Text("Your Photos (${step10ViewModel.additionalPhotos.length}/$maxAdditionalPhotos)",

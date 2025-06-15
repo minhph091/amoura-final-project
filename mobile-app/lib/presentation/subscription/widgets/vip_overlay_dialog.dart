@@ -19,7 +19,7 @@ class VipOverlayDialog extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      color: Colors.black.withOpacity(0.7),
+      color: Colors.black.withValues(alpha: 0.7),
       child: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -29,7 +29,7 @@ class VipOverlayDialog extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 spreadRadius: 5,
                 blurRadius: 15,
                 offset: const Offset(0, 5),
@@ -43,7 +43,7 @@ class VipOverlayDialog extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -99,7 +99,7 @@ class VipOverlayDialog extends StatelessWidget {
                 child: Text(
                   'Maybe Later',
                   style: TextStyle(
-                    color: theme.colorScheme.primary.withOpacity(0.8),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.8),
                     fontSize: 14,
                   ),
                 ),

@@ -1,33 +1,19 @@
 // filepath: c:\amoura-final-project\mobile-app\lib\domain\models\settings\blocked_message.dart
-import 'package:flutter/foundation.dart';
 
-/// Model class representing a blocked message in the application
+// Model class representing a blocked message in the application
 class BlockedMessage {
-  /// Unique identifier for the blocked message
+  // Unique identifier for the blocked message
   final String id;
-
-  /// The user's name who sent the blocked message
   final String userName;
-
-  /// The user's age
   final int age;
-
-  /// User's location information
   final String location;
-
-  /// URL to the user's profile photo
   final String userPhotoUrl;
-
-  /// The content of the blocked message
   final String messageContent;
 
-  /// When the message was sent
   final DateTime timestamp;
 
-  /// Unique identifier of the user who sent the message
   final String userId;
 
-  /// The last message in the conversation
   String get lastMessage => messageContent;
 
   const BlockedMessage({
@@ -41,7 +27,7 @@ class BlockedMessage {
     required this.userId,
   });
 
-  /// Create a BlockedMessage from JSON data
+  // Create a BlockedMessage from JSON data
   factory BlockedMessage.fromJson(Map<String, dynamic> json) {
     return BlockedMessage(
       id: json['id'] as String,
@@ -55,7 +41,7 @@ class BlockedMessage {
     );
   }
 
-  /// Convert BlockedMessage to JSON
+  // Convert BlockedMessage to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -69,7 +55,7 @@ class BlockedMessage {
     };
   }
 
-  /// Create a copy of BlockedMessage with optional new values
+  // Create a copy of BlockedMessage with optional new values
   BlockedMessage copyWith({
     String? id,
     String? userName,

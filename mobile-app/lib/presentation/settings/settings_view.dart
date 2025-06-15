@@ -36,6 +36,7 @@ class SettingsView extends StatelessWidget {
             title: Center(child: const Text('Settings')),
             backgroundColor: Colors.transparent,
             elevation: 0,
+            automaticallyImplyLeading: false,
           ),
           body: ListView(
             padding: const EdgeInsets.only(bottom: 24),

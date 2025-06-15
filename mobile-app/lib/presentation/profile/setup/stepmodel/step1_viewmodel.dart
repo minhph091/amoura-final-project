@@ -1,8 +1,6 @@
 // lib/presentation/profile/setup/stepmodel/step1_viewmodel.dart
-import 'package:flutter/material.dart';
 import '../../../../core/utils/validation_util.dart';
 import 'base_step_viewmodel.dart';
-import '../setup_profile_viewmodel.dart';
 
 class Step1ViewModel extends BaseStepViewModel {
   String? firstName;

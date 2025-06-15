@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../setup/theme/setup_profile_theme.dart';
 import 'profile_field_display.dart';
-import 'theme/profile_theme.dart';
 
 class ProfileBasicInfo extends StatelessWidget {
   final String? firstName;
@@ -30,23 +29,7 @@ class ProfileBasicInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ProfileFieldDisplay(
-          label: 'Full Name',
-          value: [firstName, lastName].where((e) => e != null && e.isNotEmpty).join(' '),
-          icon: Icons.person,
-          editable: editable,
-          iconColor: ProfileTheme.darkPink,
-          required: true,
-          onEdit: onEdit != null ? () => onEdit!("name") : null,
-        ),
-        ProfileFieldDisplay(
-          label: 'Username',
-          value: username,
-          icon: Icons.account_circle,
-          iconColor: ProfileTheme.darkPink,
-          editable: editable,
-          onEdit: onEdit != null ? () => onEdit!("username") : null,
-        ),
+        // Removed duplicate Full Name and Username fields since they're shown in the header
         ProfileFieldDisplay(
           label: 'Birthday',
           value: dob != null ? "${dob!.day.toString().padLeft(2, '0')}/${dob!.month.toString().padLeft(2, '0')}/${dob!.year}" : null,

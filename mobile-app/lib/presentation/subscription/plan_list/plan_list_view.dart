@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme/app_colors.dart';
-import '../../../domain/models/subscription/subscription_plan.dart';
 import '../../../infrastructure/services/subscription_service.dart';
 import '../../shared/widgets/app_button.dart';
 import '../../shared/widgets/gradient_container.dart';

@@ -1,14 +1,6 @@
 // lib/presentation/profile/edit/edit_profile_viewmodel.dart
 import 'package:flutter/material.dart';
 import '../../../../core/utils/validation_util.dart';
-import '../../../../core/constants/profile/body_type_constants.dart';
-import '../../../../core/constants/profile/job_constants.dart';
-import '../../../../core/constants/profile/education_constants.dart';
-import '../../../../core/constants/profile/smoke_drink_constants.dart';
-import '../../../../core/constants/profile/pet_constants.dart';
-import '../../../../core/constants/profile/interest_constants.dart';
-import '../../../../core/constants/profile/language_constants.dart';
-import '../../../../core/constants/profile/orientation_constants.dart';
 import 'package:get_it/get_it.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../domain/usecases/auth/update_profile_usecase.dart';
@@ -16,7 +8,6 @@ import '../../../../core/services/profile_service.dart';
 import '../../../../domain/usecases/user/update_user_usecase.dart';
 import '../../../../data/remote/profile_api.dart';
 import 'dart:io';
-import 'package:image/image.dart';
 
 class EditProfileViewModel extends ChangeNotifier {
   // Profile data received from ProfileService as a Map

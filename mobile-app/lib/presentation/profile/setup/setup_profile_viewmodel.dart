@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../../domain/usecases/auth/register_usecase.dart';
 import '../../../domain/usecases/auth/update_profile_usecase.dart';
-import '../../../core/utils/date_util.dart';
-import '../../../core/utils/validation_util.dart';
 import 'stepmodel/base_step_viewmodel.dart';
 import 'stepmodel/step1_viewmodel.dart';
 import 'stepmodel/step2_viewmodel.dart';

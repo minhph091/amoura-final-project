@@ -1,9 +1,7 @@
 // lib/presentation/profile/setup/stepmodel/step2_viewmodel.dart
-import 'package:flutter/material.dart';
 import '../../../../core/utils/date_util.dart';
 import '../../../../core/utils/validation_util.dart';
 import 'base_step_viewmodel.dart';
-import '../setup_profile_viewmodel.dart';
 
 class Step2ViewModel extends BaseStepViewModel {
   DateTime? dateOfBirth;

@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/profile/language_constants.dart';
-import '../../../../core/constants/profile/interest_constants.dart';
-import '../../../shared/widgets/profile_option_selector.dart';
 import '../../setup/theme/setup_profile_theme.dart';
 import '../edit_profile_viewmodel.dart';
 
@@ -235,7 +232,7 @@ class _InterestItem extends StatelessWidget {
             color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
             width: isSelected ? 2 : 1,
           ),
-          color: isSelected ? ProfileTheme.darkPink.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? ProfileTheme.darkPink.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Stack(

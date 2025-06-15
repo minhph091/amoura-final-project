@@ -11,7 +11,6 @@ import '../../../../core/services/setup_profile_service.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/services/auth_service.dart';
 import 'base_step_viewmodel.dart';
-import '../setup_profile_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 
 class Step4ViewModel extends BaseStepViewModel {

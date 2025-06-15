@@ -4,6 +4,7 @@ import '../../widgets/settings_tile.dart';
 import 'authentication_viewmodel.dart';
 import 'widgets/change_password_view.dart';
 import 'widgets/change_email_view.dart';
+import 'widgets/change_phone_view.dart';
 
 class AuthenticationView extends StatelessWidget {
   const AuthenticationView({super.key});
@@ -26,6 +27,11 @@ class AuthenticationView extends StatelessWidget {
           icon: Icons.email_outlined,
           title: 'Change Email',
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangeEmailView())),
+        ),
+        SettingsTile(
+          icon: Icons.phone_android,
+          title: 'Change Phone Number',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePhoneView())),
         ),
       ],
     );
