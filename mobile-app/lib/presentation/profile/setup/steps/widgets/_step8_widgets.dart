@@ -11,46 +11,16 @@ class LifestyleHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF9C27B0), Color(0xFFE91E63)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF9C27B0).withValues(alpha: 0.25),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.favorite, color: Colors.white, size: 28),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                'Your Lifestyle',
-                style: ProfileTheme.getTitleStyle(context).copyWith(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  foreground: Paint()
-                    ..shader = const LinearGradient(
-                      colors: [Color(0xFF9C27B0), Color(0xFFE91E63)],
-                    ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
         Text(
-          'Share your lifestyle to find your perfect match 💫',
+          'Your Lifestyle',
+          style: ProfileTheme.getTitleStyle(context).copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Share your lifestyle to find your perfect match ✨',
           style: ProfileTheme.getDescriptionStyle(context).copyWith(
             fontSize: 15,
             height: 1.4,
