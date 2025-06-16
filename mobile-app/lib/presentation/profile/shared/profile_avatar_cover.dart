@@ -7,6 +7,7 @@ class ProfileAvatarCover extends StatefulWidget {
   final VoidCallback? onEditAvatar;
   final VoidCallback? onEditCover;
   final VoidCallback? onViewCover;
+  final VoidCallback? onViewAvatar;
 
   const ProfileAvatarCover({
     super.key,
@@ -15,6 +16,7 @@ class ProfileAvatarCover extends StatefulWidget {
     this.onEditAvatar,
     this.onEditCover,
     this.onViewCover,
+    this.onViewAvatar,
   });
 
   @override
@@ -86,16 +88,19 @@ class _ProfileAvatarCoverState extends State<ProfileAvatarCover> {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              CircleAvatar(
-                radius: 55,
-                backgroundColor: Colors.white,
+              GestureDetector(
+                onTap: widget.onViewAvatar,
                 child: CircleAvatar(
-                  radius: 52,
-                  backgroundImage: widget.avatarUrl != null ? NetworkImage(widget.avatarUrl!) : null,
-                  backgroundColor: ProfileTheme.lightPink.withValues(alpha: 0.2),
-                  child: widget.avatarUrl == null
-                      ? Icon(Icons.person, size: 60, color: ProfileTheme.darkPink)
-                      : null,
+                  radius: 55,
+                  backgroundColor: Colors.white,
+                  child: CircleAvatar(
+                    radius: 52,
+                    backgroundImage: widget.avatarUrl != null ? NetworkImage(widget.avatarUrl!) : null,
+                    backgroundColor: ProfileTheme.lightPink.withValues(alpha: 0.2),
+                    child: widget.avatarUrl == null
+                        ? Icon(Icons.person, size: 60, color: ProfileTheme.darkPink)
+                        : null,
+                  ),
                 ),
               ),
               if (widget.onEditAvatar != null)

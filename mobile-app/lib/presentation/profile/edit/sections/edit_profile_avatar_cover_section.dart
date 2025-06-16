@@ -7,6 +7,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../../shared/widgets/image_source_bottom_sheet.dart';
 import '../edit_profile_viewmodel.dart';
 import '../../setup/theme/setup_profile_theme.dart';
+import '../../../shared/widgets/photo_viewer.dart';
 
 class EditProfileAvatarCoverSection extends StatefulWidget {
   final EditProfileViewModel viewModel;
@@ -87,47 +88,55 @@ class _EditProfileAvatarCoverSectionState extends State<EditProfileAvatarCoverSe
         // Cover Photo
         Stack(
           children: [
-            Container(
-              height: 180,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                color: ProfileTheme.darkPurple.withValues(alpha: 0.1),
-              ),
-              child: widget.viewModel.coverPath != null
-                  ? ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                child: Image.file(
-                  File(widget.viewModel.coverPath!),
-                  width: double.infinity,
-                  height: 180,
-                  fit: BoxFit.cover,
-                ),
-              )
-                  : widget.viewModel.coverUrl != null
-                  ? ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                child: Image.network(
-                  widget.viewModel.coverUrl!,
-                  width: double.infinity,
-                  height: 180,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Center(
-                    child: Icon(Icons.image, size: 50, color: ProfileTheme.darkPurple),
+            GestureDetector(
+              onTap: () {
+                final url = widget.viewModel.coverPath ?? widget.viewModel.coverUrl;
+                if (url != null && url.isNotEmpty) {
+                  showPhotoViewer(context, url, title: 'Cover');
+                }
+              },
+              child: Container(
+                height: 180,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
                   ),
+                  color: ProfileTheme.darkPurple.withValues(alpha: 0.1),
                 ),
-              )
-                  : Center(
-                child: Icon(Icons.image, size: 50, color: ProfileTheme.darkPurple),
+                child: widget.viewModel.coverPath != null
+                    ? ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                  child: Image.file(
+                    File(widget.viewModel.coverPath!),
+                    width: double.infinity,
+                    height: 180,
+                    fit: BoxFit.cover,
+                  ),
+                )
+                    : widget.viewModel.coverUrl != null
+                    ? ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                  child: Image.network(
+                    widget.viewModel.coverUrl!,
+                    width: double.infinity,
+                    height: 180,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Icon(Icons.image, size: 50, color: ProfileTheme.darkPurple),
+                    ),
+                  ),
+                )
+                    : Center(
+                  child: Icon(Icons.image, size: 50, color: ProfileTheme.darkPurple),
+                ),
               ),
             ),
             Positioned(
@@ -151,18 +160,26 @@ class _EditProfileAvatarCoverSectionState extends State<EditProfileAvatarCoverSe
           child: Stack(
             alignment: Alignment.bottomRight,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
-                ),
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundColor: ProfileTheme.lightPink.withValues(alpha: 0.2),
-                  backgroundImage: _getAvatarProvider(),
-                  child: _showDefaultAvatar()
-                      ? Icon(Icons.person, size: 60, color: ProfileTheme.darkPink)
-                      : null,
+              GestureDetector(
+                onTap: () {
+                  final url = widget.viewModel.avatarPath ?? widget.viewModel.avatarUrl;
+                  if (url != null && url.isNotEmpty) {
+                    showPhotoViewer(context, url, title: 'Avatar');
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 4),
+                  ),
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: ProfileTheme.lightPink.withValues(alpha: 0.2),
+                    backgroundImage: _getAvatarProvider(),
+                    child: _showDefaultAvatar()
+                        ? Icon(Icons.person, size: 60, color: ProfileTheme.darkPink)
+                        : null,
+                  ),
                 ),
               ),
               CircleAvatar(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart' as carousel_slider;
 import '../vip_subscription_viewmodel.dart';
 
 class VipPlanCarousel extends StatefulWidget {
@@ -17,19 +16,26 @@ class VipPlanCarousel extends StatefulWidget {
 }
 
 class _VipPlanCarouselState extends State<VipPlanCarousel> {
-  final carousel_slider.CarouselController _carouselController = carousel_slider.CarouselController();
+  final PageController _pageController = PageController(viewportFraction: 0.8);
   List<VipPlan> _plans = [];
-  int _currentIndex = 1; // Default to middle plan (6 months)
+  int _currentIndex = 1;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with the plans directly
     _loadPlans();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pageController.jumpToPage(_currentIndex);
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _loadPlans() {
-    // Hardcoded plans since we can't access the viewModel directly
     _plans = [
       VipPlan(
         id: 'monthly',
@@ -69,40 +75,34 @@ class _VipPlanCarouselState extends State<VipPlanCarousel> {
         ],
       ),
     ];
-
-    // Set current index based on selected plan ID
     _currentIndex = _plans.indexWhere((plan) => plan.id == widget.selectedPlanId);
-    if (_currentIndex < 0) _currentIndex = 1; // Default to middle plan
+    if (_currentIndex < 0) _currentIndex = 1;
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        carousel_slider.CarouselSlider(
-          carouselController: _carouselController,
-          options: carousel_slider.CarouselOptions(
-            aspectRatio: 16/9,
-            viewportFraction: 0.8,
-            enlargeCenterPage: true,
-            enableInfiniteScroll: false,
-            initialPage: _currentIndex,
-            onPageChanged: (index, reason) {
+        SizedBox(
+          height: MediaQuery.of(context).size.width * 0.6,
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
               setState(() {
                 _currentIndex = index;
               });
               widget.onPlanSelected(_plans[index].id);
             },
-            autoPlay: true,
-            autoPlayInterval: const Duration(seconds: 5),
-            autoPlayAnimationDuration: const Duration(milliseconds: 800),
-            autoPlayCurve: Curves.fastOutSlowIn,
-            pauseAutoPlayOnTouch: true,
+            itemCount: _plans.length,
+            itemBuilder: (context, index) {
+              final plan = _plans[index];
+              final bool isSelected = plan.id == widget.selectedPlanId;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: _buildPlanCard(plan, isSelected),
+              );
+            },
           ),
-          items: _plans.map((plan) {
-            final bool isSelected = plan.id == widget.selectedPlanId;
-            return _buildPlanCard(plan, isSelected);
-          }).toList(),
         ),
 
         const SizedBox(height: 24),
@@ -112,7 +112,7 @@ class _VipPlanCarouselState extends State<VipPlanCarousel> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: _plans.asMap().entries.map((entry) {
             return GestureDetector(
-              onTap: () => _carouselController.animateToPage(entry.key),
+              onTap: () => _pageController.jumpToPage(entry.key),
               child: Container(
                 width: 12,
                 height: 12,

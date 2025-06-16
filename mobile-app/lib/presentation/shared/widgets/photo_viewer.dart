@@ -2,45 +2,51 @@
 
 import 'package:flutter/material.dart';
 
-void showPhotoViewer(BuildContext context, String imageUrl, {String? tag, Color backgroundColor = Colors.black}) {
-  Navigator.of(context).push(
-    PageRouteBuilder(
-      pageBuilder: (_, __, ___) => _PhotoViewer(imageUrl: imageUrl, tag: tag, backgroundColor: backgroundColor),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        var tween = Tween(begin: 0.8, end: 1.0).chain(CurveTween(curve: Curves.easeOut));
-        return ScaleTransition(
-          scale: animation.drive(tween),
-          child: child,
-        );
-      },
-      opaque: false,
-      barrierColor: backgroundColor.withValues(alpha: 0.98),
-    ),
-  );
-}
-
-class _PhotoViewer extends StatelessWidget {
-  final String imageUrl;
-  final String? tag;
-  final Color backgroundColor;
-
-  const _PhotoViewer({required this.imageUrl, this.tag, required this.backgroundColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: GestureDetector(
-        onTap: () => Navigator.of(context).pop(),
-        child: Center(
-          child: Hero(
-            tag: tag ?? imageUrl,
-            child: InteractiveViewer(
-              child: Image.network(imageUrl, fit: BoxFit.contain),
+Future<void> showPhotoViewer(BuildContext context, String imageUrl, {String title = 'Photo'}) {
+  return showDialog(
+    context: context,
+    barrierColor: Colors.black.withOpacity(0.7),
+    builder: (_) => Dialog(
+      insetPadding: const EdgeInsets.all(20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppBar(
+            title: Text(title),
+            backgroundColor: Colors.pink,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-        ),
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.7,
+              ),
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 3.0,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Center(
+                    child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

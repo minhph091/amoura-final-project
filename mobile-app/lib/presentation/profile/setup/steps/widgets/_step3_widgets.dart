@@ -11,53 +11,19 @@ class OrientationHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF6B9D), Color(0xFFFF8E8E)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFF6B9D).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.favorite,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                'Your Romantic Orientation',
-                style: ProfileTheme.getTitleStyle(context).copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  foreground: Paint()
-                    ..shader = const LinearGradient(
-                      colors: [Color(0xFFFF6B9D), Color(0xFFD81B60)],
-                    ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
         Text(
-          'Help us find your perfect match by sharing who makes your heart flutter 💕',
+          'Your Orientation',
+          style: ProfileTheme.getTitleStyle(context).copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'This helps us match you with compatible people.\nPlease select your preference.',
           style: ProfileTheme.getDescriptionStyle(context).copyWith(
-            fontSize: 16,
-            height: 1.5,
+            fontSize: 15,
+            height: 1.4,
             color: const Color(0xFF666666),
           ),
         ),

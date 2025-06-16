@@ -15,6 +15,7 @@ import '../shared/profile_interests_languages.dart';
 import 'widgets/profile_action_menu.dart';
 import 'profile_viewmodel.dart';
 import '../edit/edit_profile_view.dart';
+import 'package:amoura/presentation/shared/widgets/photo_viewer.dart';
 
 class ProfileView extends StatefulWidget {
   final bool isMyProfile;
@@ -117,7 +118,12 @@ class _ProfileViewState extends State<ProfileView> {
                     coverUrl: profile['coverUrl'] as String?,
                     onViewCover: () {
                       if (profile['coverUrl'] != null) {
-                        // Implementation for viewing full size cover photo
+                        showPhotoViewer(context, profile['coverUrl'] as String, title: 'Cover');
+                      }
+                    },
+                    onViewAvatar: () {
+                      if (profile['avatarUrl'] != null) {
+                        showPhotoViewer(context, profile['avatarUrl'] as String, title: 'Avatar');
                       }
                     },
                   ),
@@ -168,7 +174,7 @@ class _ProfileViewState extends State<ProfileView> {
                       bio: profile['bio'] as String?,
                       galleryPhotos: (profile['galleryPhotos'] as List<dynamic>?)?.cast<String>(),
                       onViewPhoto: (url) {
-                        // Navigate to photo viewer
+                        showPhotoViewer(context, url, title: 'Photo');
                       },
                     ),
                   ),
