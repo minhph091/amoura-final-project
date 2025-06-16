@@ -1,5 +1,6 @@
 package com.amoura.module.user.dto;
 import com.amoura.module.profile.dto.LocationDTO;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = false)
 public class UpdateProfileRequest {
     private LocalDate dateOfBirth;
 

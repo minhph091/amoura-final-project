@@ -138,6 +138,13 @@ public class ProfileServiceImpl implements ProfileService {
         log.debug("Updating profile for user: {}", email);
         log.debug("Received request: {}", request);
 
+        // Check if request is empty
+        if (isRequestEmpty(request)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                "Request must contain at least one field to update",
+                "EMPTY_REQUEST");
+        }
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
 
@@ -286,6 +293,26 @@ public class ProfileServiceImpl implements ProfileService {
 
         // Use toProfileResponseDTO instead of toDTO to match the GET /me endpoint
         return profileMapper.toProfileResponseDTO(savedProfile, user.getLocation(), photos, interests, languages, pets);
+    }
+
+    private boolean isRequestEmpty(UpdateProfileRequest request) {
+        return request.getDateOfBirth() == null &&
+               request.getHeight() == null &&
+               request.getBodyTypeId() == null &&
+               request.getSex() == null &&
+               request.getOrientationId() == null &&
+               request.getJobIndustryId() == null &&
+               request.getDrinkStatusId() == null &&
+               request.getSmokeStatusId() == null &&
+               request.getInterestedInNewLanguage() == null &&
+               request.getEducationLevelId() == null &&
+               request.getDropOut() == null &&
+               request.getLocationPreference() == null &&
+               request.getBio() == null &&
+               request.getLocation() == null &&
+               (request.getInterestIds() == null || request.getInterestIds().isEmpty()) &&
+               (request.getLanguageIds() == null || request.getLanguageIds().isEmpty()) &&
+               (request.getPetIds() == null || request.getPetIds().isEmpty());
     }
 
     @Override
