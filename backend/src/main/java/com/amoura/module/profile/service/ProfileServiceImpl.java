@@ -70,12 +70,32 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     private void validateRequiredFields(UpdateProfileRequest request) {
+        // Validate sex if provided
         if (request.getSex() != null) {
             Set<String> validSexValues = Set.of("male", "female", "non-binary", "prefer not to say");
             if (!validSexValues.contains(request.getSex().toLowerCase())) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, 
                     "Invalid sex value. Must be one of: " + validSexValues, 
                     "INVALID_SEX");
+            }
+        }
+
+        // Validate date of birth if provided
+        if (request.getDateOfBirth() != null) {
+            LocalDate minDate = LocalDate.now().minusYears(18);
+            if (request.getDateOfBirth().isAfter(minDate)) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "User must be at least 18 years old", 
+                    "INVALID_DATE_OF_BIRTH");
+            }
+        }
+
+        // Validate height if provided
+        if (request.getHeight() != null) {
+            if (request.getHeight() < 100 || request.getHeight() > 250) {
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Height must be between 100cm and 250cm",
+                    "INVALID_HEIGHT");
             }
         }
     }
@@ -114,9 +134,16 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public ProfileDTO updateProfile(String email, UpdateProfileRequest request) {
+    public ProfileResponseDTO updateProfile(String email, UpdateProfileRequest request) {
         log.debug("Updating profile for user: {}", email);
         log.debug("Received request: {}", request);
+
+        // Check if request is empty
+        if (isRequestEmpty(request)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                "Invalid name or field is empty",
+                "ERROR_REQUEST");
+        }
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
@@ -129,8 +156,8 @@ public class ProfileServiceImpl implements ProfileService {
         validateLocation(request.getLocation());
 
         // Update basic profile information
-        if (request.getAge() != null) {
-            profile.setDateOfBirth(LocalDate.now().minusYears(request.getAge()));
+        if (request.getDateOfBirth() != null) {
+            profile.setDateOfBirth(request.getDateOfBirth());
         }
         if (request.getHeight() != null) {
             profile.setHeight(request.getHeight());
@@ -258,12 +285,34 @@ public class ProfileServiceImpl implements ProfileService {
             userPetRepository.saveAll(userPets);
         }
 
+        // Refresh data from database to ensure we have the latest state
         List<UserInterest> interests = userInterestRepository.findByUserId(user.getId());
         List<UserLanguage> languages = userLanguageRepository.findByUserId(user.getId());
         List<UserPet> pets = userPetRepository.findByUserId(user.getId());
         List<Photo> photos = user.getPhotos();
 
-        return profileMapper.toDTO(user, savedProfile, user.getLocation(), photos, interests, languages, pets);
+        // Use toProfileResponseDTO instead of toDTO to match the GET /me endpoint
+        return profileMapper.toProfileResponseDTO(savedProfile, user.getLocation(), photos, interests, languages, pets);
+    }
+
+    private boolean isRequestEmpty(UpdateProfileRequest request) {
+        return request.getDateOfBirth() == null &&
+               request.getHeight() == null &&
+               request.getBodyTypeId() == null &&
+               request.getSex() == null &&
+               request.getOrientationId() == null &&
+               request.getJobIndustryId() == null &&
+               request.getDrinkStatusId() == null &&
+               request.getSmokeStatusId() == null &&
+               request.getInterestedInNewLanguage() == null &&
+               request.getEducationLevelId() == null &&
+               request.getDropOut() == null &&
+               request.getLocationPreference() == null &&
+               request.getBio() == null &&
+               request.getLocation() == null &&
+               (request.getInterestIds() == null || request.getInterestIds().isEmpty()) &&
+               (request.getLanguageIds() == null || request.getLanguageIds().isEmpty()) &&
+               (request.getPetIds() == null || request.getPetIds().isEmpty());
     }
 
     @Override

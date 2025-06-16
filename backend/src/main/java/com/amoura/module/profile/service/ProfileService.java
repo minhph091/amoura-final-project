@@ -7,6 +7,6 @@ import com.amoura.module.user.dto.UpdateProfileRequest;
 
 public interface ProfileService {
     ProfileResponseDTO getProfile(String email);
-    ProfileDTO updateProfile(String email, UpdateProfileRequest request);
+    ProfileResponseDTO updateProfile(String email, UpdateProfileRequest request);
     ProfileOptionsDTO getAllProfileOptions();
 } 
