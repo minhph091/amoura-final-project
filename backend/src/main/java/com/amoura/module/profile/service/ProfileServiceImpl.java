@@ -129,8 +129,15 @@ public class ProfileServiceImpl implements ProfileService {
         validateLocation(request.getLocation());
 
         // Update basic profile information
-        if (request.getAge() != null) {
-            profile.setDateOfBirth(LocalDate.now().minusYears(request.getAge()));
+        if (request.getDateOfBirth() != null) {
+            // Validate that user is at least 18 years old
+            LocalDate minDate = LocalDate.now().minusYears(18);
+            if (request.getDateOfBirth().isAfter(minDate)) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "User must be at least 18 years old", 
+                    "INVALID_DATE_OF_BIRTH");
+            }
+            profile.setDateOfBirth(request.getDateOfBirth());
         }
         if (request.getHeight() != null) {
             profile.setHeight(request.getHeight());
