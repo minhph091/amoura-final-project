@@ -15,6 +15,8 @@ import 'stepmodel/step9_viewmodel.dart';
 import 'stepmodel/step10_viewmodel.dart';
 import '../../../core/services/setup_profile_service.dart';
 import '../../../core/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../view/profile_viewmodel.dart';
 
 class SetupProfileViewModel extends ChangeNotifier {
   final RegisterUseCase _registerUseCase;
@@ -357,6 +359,9 @@ class SetupProfileViewModel extends ChangeNotifier {
       print('Update profile step $step response: $response');
       // Giả định cập nhật thành công nếu không có ngoại lệ, vì API trả về mã 200 và dữ liệu hồ sơ
       print('Profile step $step updated successfully');
+
+      // Cập nhật lại profile vào ProfileViewModel
+      Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
     } catch (e) {
       print('Error updating profile step $step: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -429,6 +434,10 @@ class SetupProfileViewModel extends ChangeNotifier {
         duration: Duration(seconds: 2),
       ),
     );
+    
+    // Cập nhật lại profile vào ProfileViewModel
+    Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
+    
     // Chờ thông báo hiển thị, sau đó chuyển đến màn hình chúc mừng
     await Future.delayed(const Duration(seconds: 2));
     Navigator.pushReplacementNamed(context, '/profileSetupComplete');
