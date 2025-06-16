@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,8 +16,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateProfileRequest {
-
-    @NotNull(message = "Date of birth is required")
     private LocalDate dateOfBirth;
 
     @Min(value = 100, message = "Height must be at least 100cm")

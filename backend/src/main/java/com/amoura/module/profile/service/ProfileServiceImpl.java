@@ -70,12 +70,32 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     private void validateRequiredFields(UpdateProfileRequest request) {
+        // Validate sex if provided
         if (request.getSex() != null) {
             Set<String> validSexValues = Set.of("male", "female", "non-binary", "prefer not to say");
             if (!validSexValues.contains(request.getSex().toLowerCase())) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, 
                     "Invalid sex value. Must be one of: " + validSexValues, 
                     "INVALID_SEX");
+            }
+        }
+
+        // Validate date of birth if provided
+        if (request.getDateOfBirth() != null) {
+            LocalDate minDate = LocalDate.now().minusYears(18);
+            if (request.getDateOfBirth().isAfter(minDate)) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "User must be at least 18 years old", 
+                    "INVALID_DATE_OF_BIRTH");
+            }
+        }
+
+        // Validate height if provided
+        if (request.getHeight() != null) {
+            if (request.getHeight() < 100 || request.getHeight() > 250) {
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Height must be between 100cm and 250cm",
+                    "INVALID_HEIGHT");
             }
         }
     }
@@ -130,13 +150,6 @@ public class ProfileServiceImpl implements ProfileService {
 
         // Update basic profile information
         if (request.getDateOfBirth() != null) {
-            // Validate that user is at least 18 years old
-            LocalDate minDate = LocalDate.now().minusYears(18);
-            if (request.getDateOfBirth().isAfter(minDate)) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, 
-                    "User must be at least 18 years old", 
-                    "INVALID_DATE_OF_BIRTH");
-            }
             profile.setDateOfBirth(request.getDateOfBirth());
         }
         if (request.getHeight() != null) {
