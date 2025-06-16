@@ -114,7 +114,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public ProfileDTO updateProfile(String email, UpdateProfileRequest request) {
+    public ProfileResponseDTO updateProfile(String email, UpdateProfileRequest request) {
         log.debug("Updating profile for user: {}", email);
         log.debug("Received request: {}", request);
 
@@ -265,12 +265,14 @@ public class ProfileServiceImpl implements ProfileService {
             userPetRepository.saveAll(userPets);
         }
 
+        // Refresh data from database to ensure we have the latest state
         List<UserInterest> interests = userInterestRepository.findByUserId(user.getId());
         List<UserLanguage> languages = userLanguageRepository.findByUserId(user.getId());
         List<UserPet> pets = userPetRepository.findByUserId(user.getId());
         List<Photo> photos = user.getPhotos();
 
-        return profileMapper.toDTO(user, savedProfile, user.getLocation(), photos, interests, languages, pets);
+        // Use toProfileResponseDTO instead of toDTO to match the GET /me endpoint
+        return profileMapper.toProfileResponseDTO(savedProfile, user.getLocation(), photos, interests, languages, pets);
     }
 
     @Override

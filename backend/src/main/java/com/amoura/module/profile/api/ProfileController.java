@@ -43,10 +43,10 @@ public class ProfileController {
     @PatchMapping("/me")
     @Operation(summary = "Update current user's profile")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ProfileDTO> updateProfile(
+    public ResponseEntity<ProfileResponseDTO> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request) {
-        ProfileDTO updatedProfile = profileService.updateProfile(userDetails.getUsername(), request);
+        ProfileResponseDTO updatedProfile = profileService.updateProfile(userDetails.getUsername(), request);
         return ResponseEntity.ok(updatedProfile);
     }
 } 
