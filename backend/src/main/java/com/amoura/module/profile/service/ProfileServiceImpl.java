@@ -141,8 +141,8 @@ public class ProfileServiceImpl implements ProfileService {
         // Check if request is empty
         if (isRequestEmpty(request)) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
-                "Request must contain at least one field to update",
-                "EMPTY_REQUEST");
+                "Invalid name or field is empty",
+                "ERROR_REQUEST");
         }
 
         User user = userRepository.findByEmail(email)
