@@ -1,4 +1,4 @@
-import 'package:amoura/presentation/main_navigator/main_navigator_view.dart';
+import 'package:amoura/app/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -26,8 +26,7 @@ class AmouraApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeController.themeMode,
       onGenerateRoute: AppPages.generateRoute,
-      // initialRoute: AppRoutes.splash,
-      home: const MainNavigatorView(),
+      initialRoute: AppRoutes.splash,
       debugShowCheckedModeBanner: false,
 
       // Localization support
