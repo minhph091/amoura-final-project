@@ -37,6 +37,15 @@ class ApiClient {
       },
       onError: (DioException e, handler) async {
         if (e.response?.statusCode == 401) {
+          // Check if this is a login error
+          final data = e.response?.data as Map<String, dynamic>?;
+          final errorCode = data?['errorCode'] as String?;
+          
+          if (errorCode == 'INVALID_CREDENTIALS') {
+            // This is a login error, don't try to refresh token
+            return handler.next(e);
+          }
+          
           try {
             // Lấy RefreshTokenUseCase từ GetIt khi cần
             final refreshTokenUseCase = GetIt.instance<RefreshTokenUseCase>();
