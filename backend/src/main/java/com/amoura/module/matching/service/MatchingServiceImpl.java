@@ -85,9 +85,27 @@ public class MatchingServiceImpl implements MatchingService {
         }
 
         // Kiểm tra đã swipe trước đó chưa
-        Optional<Swipe> existingSwipe = swipeRepository.findByInitiatorAndTargetUser(initiator.getId(), targetUser.getId());
-        if (existingSwipe.isPresent()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Already swiped this user", "ALREADY_SWIPED");
+        Optional<Swipe> existingSwipeOpt = swipeRepository.findByInitiatorAndTargetUser(initiator.getId(), targetUser.getId());
+        if (existingSwipeOpt.isPresent()) {
+            Swipe existingSwipe = existingSwipeOpt.get();
+            // Kiểm tra thời gian tạo swipe
+            if (existingSwipe.getCreatedAt() != null &&
+                existingSwipe.getCreatedAt().isAfter(java.time.LocalDateTime.now().minusHours(1))) {
+                // Cho phép update is_like
+                existingSwipe.setIsLike(request.getIsLike());
+                Swipe updatedSwipe = swipeRepository.save(existingSwipe);
+                // Nếu là like, kiểm tra có match không
+                if (request.getIsLike()) {
+                    return handleLikeSwipe(initiator, targetUser, updatedSwipe);
+                }
+                // Nếu là pass, chỉ trả về swipeId và isMatch
+                return SwipeResponse.builder()
+                        .swipeId(updatedSwipe.getId())
+                        .isMatch(false)
+                        .build();
+            } else {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Already swiped this user more than 1 hour ago", "ALREADY_SWIPED");
+            }
         }
 
         // Tạo swipe mới
@@ -104,7 +122,7 @@ public class MatchingServiceImpl implements MatchingService {
             return handleLikeSwipe(initiator, targetUser, savedSwipe);
         }
 
-        // Nếu là pass, trả về response đơn giản
+        // Nếu là pass, chỉ trả về swipeId và isMatch
         return SwipeResponse.builder()
                 .swipeId(savedSwipe.getId())
                 .isMatch(false)
@@ -116,11 +134,11 @@ public class MatchingServiceImpl implements MatchingService {
         Optional<Swipe> targetUserLike = swipeRepository.findLikeByInitiatorAndTargetUser(targetUser.getId(), initiator.getId());
 
         if (targetUserLike.isPresent()) {
-            // Có match!
+            // Có match
             return createMatch(initiator, targetUser, swipe);
         }
 
-        // Chưa có match
+        // Chưa có match, chỉ trả về swipeId và isMatch
         return SwipeResponse.builder()
                 .swipeId(swipe.getId())
                 .isMatch(false)
@@ -132,20 +150,19 @@ public class MatchingServiceImpl implements MatchingService {
         Match match = Match.builder()
                 .user1(userA)
                 .user2(userB)
-                .status(Match.MatchStatus.ACTIVE)
+                .status(Match.MatchStatus.active)
                 .build();
 
         Match savedMatch = matchRepository.save(match);
-
-        // TODO: Tạo tin nhắn hệ thống
-        // TODO: Gửi thông báo cho cả hai người dùng
 
         String matchMessage = String.format("You and %s have matched! Start chatting now!", userB.getUsername());
 
         return SwipeResponse.builder()
                 .swipeId(swipe.getId())
                 .isMatch(true)
-                .messageId(null) // TODO: ID của tin nhắn hệ thống
+                .matchId(savedMatch.getId())
+                .matchedUserId(userB.getId())
+                .matchedUsername(userB.getUsername())
                 .matchMessage(matchMessage)
                 .build();
     }

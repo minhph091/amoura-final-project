@@ -49,7 +49,7 @@ public class Match {
     }
     
     public enum MatchStatus {
-        ACTIVE,
-        UNMATCHED
+        active,
+        unmatched
     }
 } 
