@@ -1,7 +1,7 @@
 # app/api/v1/api.py
 from fastapi import APIRouter
 
-from ai_service.app.api.v1.endpoints import matches
+from app.api.v1.endpoints import matches
 # from app.api.v1.endpoints import users # Ví dụ nếu có thêm endpoint cho user
 
 api_router_v1 = APIRouter()

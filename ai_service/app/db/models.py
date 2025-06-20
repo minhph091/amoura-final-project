@@ -169,3 +169,16 @@ class UserLanguage(Base):
     user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
     language_id = Column(BigInteger, ForeignKey("languages.id"), primary_key=True)
     __table_args__ = (UniqueConstraint('user_id', 'language_id', name='uq_user_language'),)
+
+
+class Swipe(Base):
+    __tablename__ = "swipes"
+    id = Column(BigInteger, primary_key=True, index=True)
+    initiator = Column(BigInteger, ForeignKey("users.id"))
+    target_user = Column(BigInteger, ForeignKey("users.id"))
+    is_like = Column(Boolean)
+    created_at = Column(TIMESTAMP(timezone=False), server_default=func.now())
+
+    # Add relationships if needed
+    initiator_user = relationship("User", foreign_keys=[initiator], backref="initiated_swipes")
+    target = relationship("User", foreign_keys=[target_user], backref="received_swipes")

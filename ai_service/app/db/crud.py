@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional, Tuple, Any
 
 from . import models  # models.py đã định nghĩa ở Giai đoạn 2
-from ai_service.app import schemas  # schemas.py đã định nghĩa ở Giai đoạn 2
+from app import schemas  # schemas.py đã định nghĩa ở Giai đoạn 2
 
 
 # --- User CRUD ---
@@ -127,3 +127,57 @@ def create_role(db: Session, role: schemas.user.RoleCreate) -> models.Role:  # G
     db.commit()
     db.refresh(db_role)
     return db_role
+
+def has_user_swiped(db: Session, initiator_id: int, target_user_id: int) -> bool:
+    """
+    Check if a user has already swiped (liked or disliked) another user.
+
+    Args:
+        db: Database session
+        initiator_id: ID of the user who initiated the swipe
+        target_user_id: ID of the user who was swiped on
+
+    Returns:
+        True if the user has already swiped on the target user, False otherwise
+    """
+    swipe = db.query(models.Swipe).filter(
+        models.Swipe.initiator == initiator_id,
+        models.Swipe.target_user == target_user_id
+    ).first()
+
+    return swipe is not None
+
+
+def get_non_swiped_user_ids_with_role(db: Session, current_user_id: int, role_name: str = "USER", limit: int = 100) -> \
+List[int]:
+    """
+    Get IDs of users with a specific role that the current user hasn't swiped on yet.
+
+    Args:
+        db: Database session
+        current_user_id: ID of the current user
+        role_name: Role name to filter users by
+        limit: Maximum number of user IDs to return
+
+    Returns:
+        List of user IDs
+    """
+    # Subquery to get all user IDs that the current user has swiped on
+
+    swiped_users_query = db.query(models.Swipe.target_user).filter(
+        models.Swipe.initiator == current_user_id
+    )
+
+    # Query to get all other users with the specified role that haven't been swiped on
+
+    user_ids = db.query(models.User.id). \
+        join(models.Role). \
+        filter(
+        models.Role.name == role_name,
+        models.User.id != current_user_id,
+        ~models.User.id.in_(swiped_users_query)
+    ). \
+        limit(limit). \
+        all()
+
+    return [uid[0] for uid in user_ids]

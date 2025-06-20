@@ -10,7 +10,6 @@ import joblib
 import os
 
 from sklearn.preprocessing import MinMaxScaler  # OneHotEncoder sẽ được tải từ file
-from sklearn.feature_extraction.text import TfidfVectorizer  # TfidfVectorizer sẽ được tải
 from sklearn.metrics.pairwise import cosine_similarity
 
 from nltk.corpus import stopwords
@@ -18,7 +17,6 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from unidecode import unidecode
 from geopy.distance import geodesic
-from collections import Counter
 
 # --- Constants ---
 MODELS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "ml_models")  # Đường dẫn tương đối
