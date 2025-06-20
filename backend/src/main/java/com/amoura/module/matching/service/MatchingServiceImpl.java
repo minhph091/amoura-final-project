@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -163,7 +164,24 @@ public class MatchingServiceImpl implements MatchingService {
                 .build();
     }
 
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     private SwipeResponse createMatch(User userA, User userB, Swipe swipe) {
+        // Kiểm tra xem match đã tồn tại chưa
+        Optional<Match> existingMatch = matchRepository.findActiveMatchByUserIds(userA.getId(), userB.getId());
+        if (existingMatch.isPresent()) {
+            Match match = existingMatch.get();
+            String matchMessage = String.format("You and %s have matched! Start chatting now!", userB.getUsername());
+            
+            return SwipeResponse.builder()
+                    .swipeId(swipe.getId())
+                    .isMatch(true)
+                    .matchId(match.getId())
+                    .matchedUserId(userB.getId())
+                    .matchedUsername(userB.getUsername())
+                    .matchMessage(matchMessage)
+                    .build();
+        }
+
         // Tạo match mới
         Match match = Match.builder()
                 .user1(userA)
