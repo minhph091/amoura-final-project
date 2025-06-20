@@ -24,7 +24,7 @@ public class MatchingController {
 
     private final MatchingService matchingService;
 
-    @GetMapping("/matches")
+    @GetMapping("/recommendations")
     @Operation(summary = "Get recommended users for matching")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<UserRecommendationDTO>> getRecommendedUsers(
