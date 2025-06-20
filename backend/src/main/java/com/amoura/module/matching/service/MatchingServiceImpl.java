@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,20 +60,8 @@ public class MatchingServiceImpl implements MatchingService {
                 .map(swipe -> swipe.getTargetUser().getId())
                 .collect(Collectors.toList());
 
-        // Lọc ra những người dùng đã match
-        List<Long> matchedUserIds = matchRepository.findActiveMatchesByUserId(currentUser.getId())
-                .stream()
-                .map(match -> {
-                    if (match.getUser1().getId().equals(currentUser.getId())) {
-                        return match.getUser2().getId();
-                    } else {
-                        return match.getUser1().getId();
-                    }
-                })
-                .collect(Collectors.toList());
-
         List<User> availableUsers = allUsers.stream()
-                .filter(user -> !swipedUserIds.contains(user.getId()) && !matchedUserIds.contains(user.getId()))
+                .filter(user -> !swipedUserIds.contains(user.getId()))
                 .collect(Collectors.toList());
 
         // Chuyển đổi thành DTO
@@ -97,12 +84,6 @@ public class MatchingServiceImpl implements MatchingService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot swipe yourself", "INVALID_SWIPE");
         }
 
-        // Kiểm tra xem đã match với nhau chưa
-        Optional<Match> existingMatch = matchRepository.findActiveMatchByUserIds(initiator.getId(), targetUser.getId());
-        if (existingMatch.isPresent()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "You have already matched with this user", "ALREADY_MATCHED");
-        }
-
         // Kiểm tra đã swipe trước đó chưa
         Optional<Swipe> existingSwipeOpt = swipeRepository.findByInitiatorAndTargetUser(initiator.getId(), targetUser.getId());
         if (existingSwipeOpt.isPresent()) {
@@ -114,14 +95,7 @@ public class MatchingServiceImpl implements MatchingService {
                 existingSwipe.setIsLike(request.getIsLike());
                 Swipe updatedSwipe = swipeRepository.save(existingSwipe);
                 // Nếu là like, kiểm tra có match không
-                if (request.getIsLike()) {
-                    return handleLikeSwipe(initiator, targetUser, updatedSwipe);
-                }
-                // Nếu là pass, chỉ trả về swipeId và isMatch
-                return SwipeResponse.builder()
-                        .swipeId(updatedSwipe.getId())
-                        .isMatch(false)
-                        .build();
+                return handleLikeSwipe(initiator, targetUser, updatedSwipe);
             } else {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Already swiped this user more than 1 hour ago", "ALREADY_SWIPED");
             }
@@ -137,15 +111,7 @@ public class MatchingServiceImpl implements MatchingService {
         Swipe savedSwipe = swipeRepository.save(swipe);
 
         // Nếu là like, kiểm tra có match không
-        if (request.getIsLike()) {
-            return handleLikeSwipe(initiator, targetUser, savedSwipe);
-        }
-
-        // Nếu là pass, chỉ trả về swipeId và isMatch
-        return SwipeResponse.builder()
-                .swipeId(savedSwipe.getId())
-                .isMatch(false)
-                .build();
+        return handleLikeSwipe(initiator, targetUser, savedSwipe);
     }
 
     private SwipeResponse handleLikeSwipe(User initiator, User targetUser, Swipe swipe) {
@@ -153,8 +119,24 @@ public class MatchingServiceImpl implements MatchingService {
         Optional<Swipe> targetUserLike = swipeRepository.findLikeByInitiatorAndTargetUser(targetUser.getId(), initiator.getId());
 
         if (targetUserLike.isPresent()) {
-            // Có match
-            return createMatch(initiator, targetUser, swipe);
+            // Kiểm tra xem đã có match trước đó chưa
+            Optional<Match> existingMatch = matchRepository.findByUsers(initiator.getId(), targetUser.getId());
+            
+            if (existingMatch.isPresent()) {
+                // Đã có match trước đó, trả về thông tin match hiện tại
+                Match match = existingMatch.get();
+                return SwipeResponse.builder()
+                        .swipeId(swipe.getId())
+                        .isMatch(true)
+                        .matchId(match.getId())
+                        .matchedUserId(targetUser.getId())
+                        .matchedUsername(targetUser.getUsername())
+                        .matchMessage("You already matched with " + targetUser.getUsername() + "!")
+                        .build();
+            } else {
+                // Chưa có match, tạo match mới
+                return createMatch(initiator, targetUser, swipe);
+            }
         }
 
         // Chưa có match, chỉ trả về swipeId và isMatch
@@ -164,24 +146,7 @@ public class MatchingServiceImpl implements MatchingService {
                 .build();
     }
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
     private SwipeResponse createMatch(User userA, User userB, Swipe swipe) {
-        // Kiểm tra xem match đã tồn tại chưa
-        Optional<Match> existingMatch = matchRepository.findActiveMatchByUserIds(userA.getId(), userB.getId());
-        if (existingMatch.isPresent()) {
-            Match match = existingMatch.get();
-            String matchMessage = String.format("You and %s have matched! Start chatting now!", userB.getUsername());
-            
-            return SwipeResponse.builder()
-                    .swipeId(swipe.getId())
-                    .isMatch(true)
-                    .matchId(match.getId())
-                    .matchedUserId(userB.getId())
-                    .matchedUsername(userB.getUsername())
-                    .matchMessage(matchMessage)
-                    .build();
-        }
-
         // Tạo match mới
         Match match = Match.builder()
                 .user1(userA)
