@@ -60,8 +60,20 @@ public class MatchingServiceImpl implements MatchingService {
                 .map(swipe -> swipe.getTargetUser().getId())
                 .collect(Collectors.toList());
 
+        // Lọc ra những người dùng đã match
+        List<Long> matchedUserIds = matchRepository.findActiveMatchesByUserId(currentUser.getId())
+                .stream()
+                .map(match -> {
+                    if (match.getUser1().getId().equals(currentUser.getId())) {
+                        return match.getUser2().getId();
+                    } else {
+                        return match.getUser1().getId();
+                    }
+                })
+                .collect(Collectors.toList());
+
         List<User> availableUsers = allUsers.stream()
-                .filter(user -> !swipedUserIds.contains(user.getId()))
+                .filter(user -> !swipedUserIds.contains(user.getId()) && !matchedUserIds.contains(user.getId()))
                 .collect(Collectors.toList());
 
         // Chuyển đổi thành DTO
@@ -82,6 +94,12 @@ public class MatchingServiceImpl implements MatchingService {
         // Kiểm tra không thể swipe chính mình
         if (initiator.getId().equals(targetUser.getId())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot swipe yourself", "INVALID_SWIPE");
+        }
+
+        // Kiểm tra xem đã match với nhau chưa
+        Optional<Match> existingMatch = matchRepository.findActiveMatchByUserIds(initiator.getId(), targetUser.getId());
+        if (existingMatch.isPresent()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "You have already matched with this user", "ALREADY_MATCHED");
         }
 
         // Kiểm tra đã swipe trước đó chưa
