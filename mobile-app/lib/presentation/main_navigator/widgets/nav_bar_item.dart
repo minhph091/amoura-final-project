@@ -164,7 +164,7 @@ class _NavBarItemState extends State<NavBarItem> with TickerProviderStateMixin {
           widget.onTap();
         }
       },
-      behavior: HitTestBehavior.opaque, // Để đảm bảo vùng chạm bao phủ toàn bộ khu vực
+      behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: double.infinity, // Sử dụng toàn bộ không gian được cấp
         height: 60,

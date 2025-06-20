@@ -36,7 +36,7 @@ class Step3ViewModel extends BaseStepViewModel {
           final id = option['id']?.toString() ?? '0';
           final name = option['name']?.toString() ?? 'Unknown';
           print('Mapped orientation option: id=$id, name=$name');
-          return {'value': id, 'label': name}; // Đảm bảo kiểu Map<String, String>
+          return {'value': id, 'label': name};
         }).toList();
         print('Fetched orientation options: $orientationOptions');
       }

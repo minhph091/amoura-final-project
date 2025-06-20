@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'theme_mode_dialog.dart';
+import 'settings_tile.dart';
 
 class SettingsThemePicker extends StatelessWidget {
   final ThemeMode currentThemeMode;
@@ -15,10 +16,10 @@ class SettingsThemePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.palette_outlined),
-      title: const Text('App Appearance'),
-      subtitle: Text(_subtitle(currentThemeMode)),
+    return SettingsTile(
+      icon: Icons.palette_outlined,
+      title: 'App Appearance',
+      subtitle: _subtitle(currentThemeMode),
       onTap: () async {
         final ThemeMode? picked = await showDialog<ThemeMode>(
           context: context,

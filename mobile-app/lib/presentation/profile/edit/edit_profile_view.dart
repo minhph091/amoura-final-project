@@ -94,12 +94,12 @@ class _EditProfileViewState extends State<EditProfileView> {
 
       try {
         await _viewModel.saveProfile(); // API call to update profile data
-        
+
         if (mounted) {
           // Reload lại profile khi quay về Settings
           final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
           await profileVM.loadProfile();
-          
+
           // Xóa cache hình ảnh cho avatar và cover
           if (_viewModel.avatarUrl != null) {
             imageCache.evict(NetworkImage(_viewModel.avatarUrl!));
@@ -107,7 +107,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           if (_viewModel.coverUrl != null) {
             imageCache.evict(NetworkImage(_viewModel.coverUrl!));
           }
-          
+
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -115,7 +115,7 @@ class _EditProfileViewState extends State<EditProfileView> {
               backgroundColor: Colors.green,
             ),
           );
-          
+
           // Pop back to previous screen
           Navigator.of(context).pop();
         }

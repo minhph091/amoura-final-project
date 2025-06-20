@@ -24,7 +24,7 @@ class SettingsViewModel extends ChangeNotifier {
       // Gọi logout với refreshToken, nếu null thì truyền chuỗi rỗng
       await _logoutUseCase.execute(refreshToken ?? '');
       print('LogoutUseCase executed successfully'); // Log xác nhận gọi API thành công
-      await _authService.clearTokens(); // Đảm bảo xóa token cục bộ
+      await _authService.clearTokens();
       print('Tokens cleared successfully'); // Log xác nhận xóa token
     } catch (e) {
       print('Logout failed in SettingsViewModel: $e'); // Log lỗi chi tiết

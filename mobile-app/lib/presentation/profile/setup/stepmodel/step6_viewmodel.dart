@@ -91,7 +91,7 @@ class Step6ViewModel extends BaseStepViewModel {
 
   @override
   void saveData() {
-    parent.bodyTypeId = int.tryParse(bodyTypeId ?? ''); // Đảm bảo bodyTypeId luôn có giá trị hợp lệ
+    parent.bodyTypeId = int.tryParse(bodyTypeId ?? '');
     parent.bodyType = bodyType;
     parent.height = height;
     parent.profileData['bodyTypeId'] = parent.bodyTypeId; // Lưu bodyTypeId vào profiles
