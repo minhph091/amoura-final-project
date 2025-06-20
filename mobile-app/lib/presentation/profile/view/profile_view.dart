@@ -6,7 +6,8 @@ import '../setup/theme/setup_profile_theme.dart';
 import '../shared/widgets/collapsible_section.dart';
 import '../shared/profile_avatar_cover.dart';
 import '../shared/profile_basic_info.dart';
-import '../shared/profile_bio_photos.dart';
+import '../shared/profile_bio.dart';
+import '../shared/profile_gallery.dart';
 import '../shared/profile_location.dart';
 import '../shared/profile_appearance.dart';
 import '../shared/profile_job_education.dart';
@@ -30,7 +31,7 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  String? _expandedSection = 'basic'; // Default to expand the basic info section
+  String? _expandedSection;
 
   void _toggleSection(String section) {
     setState(() {
@@ -46,7 +47,6 @@ class _ProfileViewState extends State<ProfileView> {
   void initState() {
     super.initState();
     // Trigger profile loading after the first frame is built
-    // Comment: This ensures profile data is loaded from the API when the view is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
     });
@@ -57,13 +57,14 @@ class _ProfileViewState extends State<ProfileView> {
     return AppGradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true, // Allow content to extend behind app bar
         appBar: AppBar(
+          backgroundColor: Colors.transparent, // Completely transparent
+          elevation: 0, // No shadow
           title: Text('Profile', style: TextStyle(
             color: ProfileTheme.darkPurple,
             fontWeight: FontWeight.bold,
           )),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
           actions: [
             if (widget.isMyProfile)
               IconButton(
@@ -112,7 +113,9 @@ class _ProfileViewState extends State<ProfileView> {
               ].join(' ');
 
               return ListView(
+                padding: EdgeInsets.zero, // Ensure cover photo extends to the edge
                 children: [
+                  // Cover photo and avatar
                   ProfileAvatarCover(
                     avatarUrl: profile['avatarUrl'] as String?,
                     coverUrl: profile['coverUrl'] as String?,
@@ -128,8 +131,12 @@ class _ProfileViewState extends State<ProfileView> {
                     },
                   ),
 
+                  // Add space to accommodate the avatar that's positioned above
+                  SizedBox(height: 40),
+
+                  // Fullname with reduced spacing
                   Padding(
-                    padding: const EdgeInsets.only(top: 16, bottom: 8),
+                    padding: const EdgeInsets.only(top: 0, bottom: 4),
                     child: Text(
                       displayName.isNotEmpty ? displayName : '-',
                       style: ProfileTheme.getTitleStyle(context),
@@ -137,9 +144,10 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   ),
 
+                  // Username
                   if (profile['username'] != null)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         '@${profile['username']}',
                         style: TextStyle(color: ProfileTheme.darkPink),
@@ -147,41 +155,76 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                     ),
 
-                  // Basic Information (Collapsible)
-                  CollapsibleSection(
-                    title: "Basic Information",
-                    icon: Icons.person,
-                    initiallyExpanded: _expandedSection == 'basic',
-                    onToggle: () => _toggleSection('basic'),
-                    child: ProfileBasicInfo(
-                      firstName: profile['firstName'] as String?,
-                      lastName: profile['lastName'] as String?,
-                      username: profile['username'] as String?,
-                      dob: profile['dateOfBirth'] != null
-                          ? DateTime.tryParse(profile['dateOfBirth'] as String)
-                          : null,
-                      gender: profile['sex'] as String?,
-                      orientation: profile['orientation'] != null
-                          ? (profile['orientation'] as Map<String, dynamic>)['name'] as String?
-                          : null,
+                  // Bio section - moved here, right after username and without card background
+                  if (profile['bio'] != null && (profile['bio'] as String).isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 16),
+                      child: ProfileBio(
+                        bio: profile['bio'] as String?,
+                      ),
                     ),
-                  ),
 
-                  // Bio & Photos
+                  // Basic Information - horizontal display without icons
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ProfileBioPhotos(
-                      bio: profile['bio'] as String?,
-                      galleryPhotos: (profile['galleryPhotos'] as List<dynamic>?)?.cast<String>(),
-                      onViewPhoto: (url) {
-                        showPhotoViewer(context, url, title: 'Photo');
-                      },
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Card(
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                "Information",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: ProfileTheme.darkPurple,
+                                ),
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                            ProfileBasicInfo(
+                              firstName: profile['firstName'] as String?,
+                              lastName: profile['lastName'] as String?,
+                              username: profile['username'] as String?,
+                              dob: profile['dateOfBirth'] != null
+                                  ? DateTime.tryParse(profile['dateOfBirth'] as String)
+                                  : null,
+                              gender: profile['sex'] as String?,
+                              orientation: profile['orientation'] != null
+                                  ? (profile['orientation'] as Map<String, dynamic>)['name'] as String?
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  // Gallery - initial 2 photos with view all option
+                  if (profile['galleryPhotos'] != null && (profile['galleryPhotos'] as List).isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Card(
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: ProfileGallery(
+                            galleryPhotos: (profile['galleryPhotos'] as List<dynamic>?)?.cast<String>(),
+                            onViewPhoto: (url) {
+                              showPhotoViewer(context, url, title: 'Photo');
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
 
-                  // Appearance
+                  // Other collapsible sections
                   CollapsibleSection(
                     title: "Appearance",
                     icon: Icons.accessibility_new,
@@ -191,7 +234,7 @@ class _ProfileViewState extends State<ProfileView> {
                       bodyType: profile['bodyType'] != null
                           ? (profile['bodyType'] as Map<String, dynamic>)['name'] as String?
                           : null,
-                      height: profile['height'] != null 
+                      height: profile['height'] != null
                           ? int.tryParse(profile['height'].toString())
                           : null,
                     ),

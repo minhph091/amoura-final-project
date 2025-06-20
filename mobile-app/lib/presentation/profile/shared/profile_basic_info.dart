@@ -1,7 +1,6 @@
 // lib/presentation/profile/shared/profile_basic_info.dart
 import 'package:flutter/material.dart';
 import '../setup/theme/setup_profile_theme.dart';
-import 'profile_field_display.dart';
 
 class ProfileBasicInfo extends StatelessWidget {
   final String? firstName;
@@ -27,37 +26,60 @@ class ProfileBasicInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 16.0,
+      runSpacing: 12.0,
       children: [
-        // Removed duplicate Full Name and Username fields since they're shown in the header
-        ProfileFieldDisplay(
-          label: 'Birthday',
-          value: dob != null ? "${dob!.day.toString().padLeft(2, '0')}/${dob!.month.toString().padLeft(2, '0')}/${dob!.year}" : null,
-          icon: Icons.cake_rounded,
-          iconColor: ProfileTheme.darkPink,
-          required: true,
-          editable: editable,
-          onEdit: onEdit != null ? () => onEdit!("dob") : null,
-        ),
-        ProfileFieldDisplay(
-          label: 'Gender',
-          value: gender,
-          icon: Icons.person_outline,
-          iconColor: ProfileTheme.darkPink,
-          required: true,
-          editable: editable,
-          onEdit: onEdit != null ? () => onEdit!("gender") : null,
-        ),
-        ProfileFieldDisplay(
-          label: 'Orientation',
-          value: orientation,
-          icon: Icons.favorite,
-          iconColor: ProfileTheme.darkPink,
-          editable: editable,
-          onEdit: onEdit != null ? () => onEdit!("orientation") : null,
-          showDivider: false,
-        ),
+        _buildInfoChip(context, 'Birthday', _formatDate(dob), 'dob'),
+        _buildInfoChip(context, 'Gender', gender, 'gender'),
+        _buildInfoChip(context, 'Orientation', orientation, 'orientation'),
       ],
     );
+  }
+
+  Widget _buildInfoChip(BuildContext context, String label, String? value, String field) {
+    return InkWell(
+      onTap: editable && onEdit != null ? () => onEdit!(field) : null,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          color: ProfileTheme.lightPink.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: ProfileTheme.darkPink.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: ProfileTheme.darkPurple.withValues(alpha: 0.8),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value ?? '-',
+              style: TextStyle(
+                fontSize: 14,
+                color: ProfileTheme.darkPurple,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _formatDate(DateTime? date) {
+    if (date == null) return null;
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
   }
 }

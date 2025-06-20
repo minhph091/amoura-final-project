@@ -98,7 +98,6 @@ class _ProfileAccordionSectionState extends State<ProfileAccordionSection> with 
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
-                      // Đảm bảo text luôn hiển thị theo chiều ngang
                       softWrap: true,
                       overflow: TextOverflow.ellipsis,
                     ),

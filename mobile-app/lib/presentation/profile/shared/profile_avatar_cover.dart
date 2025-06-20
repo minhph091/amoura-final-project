@@ -24,67 +24,50 @@ class ProfileAvatarCover extends StatefulWidget {
 }
 
 class _ProfileAvatarCoverState extends State<ProfileAvatarCover> {
-  // Control the scroll position of the cover photo
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
       children: [
+        // Cover photo without padding, allowing full view when scrolled
         if (widget.coverUrl != null)
-          Stack(
-            children: [
-              // Container to clip the scrollable cover and maintain a fixed height
-              SizedBox(
-                height: 180,
+          SizedBox(
+            height: 260, // Initial visible height
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: widget.onViewCover,
+              child: Image.network(
+                widget.coverUrl!,
                 width: double.infinity,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: GestureDetector(
-                    onTap: widget.onViewCover,
-                    // Make the image scrollable
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      physics: const BouncingScrollPhysics(),
-                      child: Image.network(
-                        widget.coverUrl!,
-                        width: double.infinity,
-                        // Using a taller height to allow scrolling
-                        height: 300,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 180,
-                          color: ProfileTheme.darkPurple.withValues(alpha: 0.1),
-                          child: Center(child: Icon(Icons.image, size: 50, color: ProfileTheme.darkPurple)),
-                        ),
-                      ),
-                    ),
-                  ),
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter, // Show top part initially
+                errorBuilder: (_, __, ___) => Container(
+                  height: 180,
+                  color: ProfileTheme.darkPurple.withValues(alpha: 0.1),
+                  child: Center(child: Icon(Icons.image, size: 50, color: ProfileTheme.darkPurple)),
                 ),
               ),
-              if (widget.onEditCover != null)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white.withValues(alpha: 0.8),
-                    child: IconButton(
-                      icon: Icon(Icons.edit, color: ProfileTheme.darkPink),
-                      onPressed: widget.onEditCover,
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
-        Transform.translate(
-          offset: const Offset(0, -40),
+
+        // Edit cover button
+        if (widget.onEditCover != null)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: CircleAvatar(
+              backgroundColor: Colors.white.withValues(alpha: 0.8),
+              child: IconButton(
+                icon: Icon(Icons.edit, color: ProfileTheme.darkPink),
+                onPressed: widget.onEditCover,
+              ),
+            ),
+          ),
+
+        // Avatar positioned over the cover
+        Positioned(
+          bottom: -30,
           child: Stack(
             alignment: Alignment.center,
             children: [
