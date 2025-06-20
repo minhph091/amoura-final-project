@@ -8,6 +8,7 @@ import '../../../core/constants/profile/interest_constants.dart';
 import '../../../core/utils/date_util.dart';
 import 'image_carousel.dart';
 import 'user_info_section.dart';
+import 'interest_chip.dart';
 
 class ProfileCard extends StatelessWidget {
   final UserRecommendationModel profile;
@@ -56,82 +57,133 @@ class ProfileCard extends StatelessWidget {
     })
         .toList();
 
-    return LayoutBuilder(
-      builder: (context, constraints) => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: 17,
-            right: 17,
-            top: 16,
-            bottom: 16,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(38),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.14),
-                    blurRadius: 55,
-                    spreadRadius: 12,
-                    offset: const Offset(0, 20),
-                  ),
+    // --- Filter and sort photos: cover first, then up to 4 highlights by uploadedAt ---
+    final coverList = profile.photos.where((p) => p.type == 'profile_cover').toList();
+    final cover = coverList.isNotEmpty ? coverList.first : null;
+    final highlights = profile.photos
+        .where((p) => p.type == 'highlight')
+        .toList()
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final displayPhotos = [
+      if (cover != null) cover,
+      ...highlights.take(4),
+    ];
+
+    // Controller for resetting image index
+    final ImageCarouselController imageController = ImageCarouselController();
+
+    return Stack(
+      children: [
+        // Main image carousel with story progress bar
+        ImageCarousel(
+          key: ValueKey(profile.userId),
+          photos: displayPhotos,
+          showStoryProgress: true,
+          controller: imageController,
+        ),
+        // Overlay user info at the bottom
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withOpacity(0.0),
+                  Colors.black.withOpacity(0.45),
+                  Colors.black.withOpacity(0.85),
                 ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.5, 1.0],
               ),
             ),
-          ),
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(32),
-              child: Stack(
-                children: [
-                  ImageCarousel(photos: profile.photos),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: UserInfoSection(
-                      name: name,
-                      age: age,
-                      location: location,
-                      bio: bio,
-                      interests: interestChips,
-                    ),
-                  ),
-                  Positioned(
-                    top: 22,
-                    right: 26,
-                    child: Material(
-                      shape: const CircleBorder(),
-                      color: Colors.white.withValues(alpha: 0.21),
-                      child: InkWell(
-                        onTap: () {}, // Logic to be implemented by others
-                        borderRadius: BorderRadius.circular(30),
-                        child: Container(
-                          height: 44,
-                          width: 44,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              width: 1.7,
-                            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      name,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 6,
                           ),
-                          child: Icon(
-                            Icons.info_outline_rounded,
-                            size: 26,
-                            color: Colors.blueGrey.shade700,
-                          ),
-                        ),
+                        ],
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$age',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on_outlined,
+                      color: Colors.white70,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      location,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 13),
+                Text(
+                  bio,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 17),
+                Wrap(
+                  spacing: 0,
+                  runSpacing: 0,
+                  children: interestChips
+                      .map<Widget>((interest) => InterestChip(
+                            label: interest.label,
+                            icon: interest.icon,
+                            iconColor: interest.iconColor,
+                            borderColor: interest.borderColor,
+                            gradient: interest.gradient,
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 10),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

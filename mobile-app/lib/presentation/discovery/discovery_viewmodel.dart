@@ -1,6 +1,8 @@
 // lib/presentation/discovery/discovery_viewmodel.dart
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../core/utils/url_transformer.dart';
 import '../../data/models/profile/interest_model.dart';
 import '../../data/models/profile/profile_model.dart';
 import '../../data/models/match/user_recommendation_model.dart';
@@ -38,6 +40,7 @@ class DiscoveryViewModel extends ChangeNotifier {
   bool get hasMoreProfiles => _currentProfileIndex < _recommendations.length - 1;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int get currentProfileIndex => _currentProfileIndex;
 
   /// Set context for showing dialogs
   void setContext(BuildContext context) {
@@ -58,6 +61,9 @@ class DiscoveryViewModel extends ChangeNotifier {
       _currentProfileIndex = 0;
       _isLoading = false;
       notifyListeners();
+
+      // After loading, pre-cache images for a smoother experience
+      _precacheInitialImages();
     } catch (e) {
       _isLoading = false;
       _error = e.toString();
@@ -139,6 +145,8 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_currentProfileIndex < _recommendations.length) {
       _currentProfileIndex++;
       notifyListeners();
+      // Pre-cache images for the upcoming profile
+      _precacheNextImageOnSwipe();
     }
   }
 
@@ -177,5 +185,44 @@ class DiscoveryViewModel extends ChangeNotifier {
       photoUrls: profile.photos.map((p) => p.url).toList(),
       isVip: false,
     );
+  }
+
+  // --- Image Pre-caching Logic ---
+
+  /// Pre-caches images for the first few profiles to ensure a smooth initial experience.
+  void _precacheInitialImages() {
+    if (_context == null || _recommendations.length < 1) return;
+
+    // Cache current (index 0) and next (index 1) profiles
+    final int endIndex = _recommendations.length > 2 ? 2 : _recommendations.length;
+    for (int i = 0; i < endIndex; i++) {
+      _precacheImagesForProfile(i);
+    }
+  }
+
+  /// Pre-caches images for the profile that will be shown after the next one.
+  void _precacheNextImageOnSwipe() {
+    // When the user swipes and `_currentProfileIndex` is updated,
+    // we pre-cache the profile that is now 2 positions away, so it's ready.
+    // e.g., if we are now showing index 1, we pre-cache index 2.
+    final indexToPrecache = _currentProfileIndex + 1;
+
+    if (indexToPrecache < _recommendations.length) {
+      _precacheImagesForProfile(indexToPrecache);
+    }
+  }
+
+  /// Helper method to pre-cache all images for a given profile index.
+  void _precacheImagesForProfile(int profileIndex) {
+    if (_context == null || profileIndex >= _recommendations.length) return;
+
+    final profile = _recommendations[profileIndex];
+    if (profile.photos.isNotEmpty) {
+      for (final photo in profile.photos) {
+        final transformedUrl = UrlTransformer.transform(photo.url);
+        final provider = CachedNetworkImageProvider(transformedUrl);
+        precacheImage(provider, _context!);
+      }
+    }
   }
 }

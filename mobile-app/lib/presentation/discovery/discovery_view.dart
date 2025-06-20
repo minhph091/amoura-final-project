@@ -21,6 +21,8 @@ class DiscoveryView extends StatefulWidget {
 
 class _DiscoveryViewState extends State<DiscoveryView> {
   late DiscoveryViewModel _viewModel;
+  bool _highlightLike = false;
+  bool _highlightPass = false;
 
   @override
   void initState() {
@@ -31,6 +33,17 @@ class _DiscoveryViewState extends State<DiscoveryView> {
     );
     // Load recommendations when screen is created
     _viewModel.loadRecommendations();
+  }
+
+  void _setHighlightLike(bool value) {
+    setState(() {
+      _highlightLike = value;
+    });
+  }
+  void _setHighlightPass(bool value) {
+    setState(() {
+      _highlightPass = value;
+    });
   }
 
   @override
@@ -89,9 +102,12 @@ class _DiscoveryViewState extends State<DiscoveryView> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.0),
-                          child: ActionButtonsRow(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: ActionButtonsRow(
+                            highlightLike: _highlightLike,
+                            highlightPass: _highlightPass,
+                          ),
                         ),
                         SizedBox(height: MediaQuery.of(context).padding.bottom + 10),
                       ],
@@ -157,6 +173,8 @@ class _DiscoveryViewState extends State<DiscoveryView> {
     return SwipeCardStack(
       profile: currentProfile,
       interests: vm.interests,
+      onHighlightLike: _setHighlightLike,
+      onHighlightPass: _setHighlightPass,
     );
   }
 }

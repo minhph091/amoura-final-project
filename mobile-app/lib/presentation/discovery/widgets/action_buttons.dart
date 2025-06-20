@@ -8,7 +8,9 @@ import '../discovery_viewmodel.dart';
 import '../../../infrastructure/services/subscription_service.dart';
 
 class ActionButtonsRow extends StatelessWidget {
-  const ActionButtonsRow({super.key});
+  final bool highlightLike;
+  final bool highlightPass;
+  const ActionButtonsRow({super.key, this.highlightLike = false, this.highlightPass = false});
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,7 @@ class ActionButtonsRow extends StatelessWidget {
             glowColor: const Color(0xFFFC5185),
             isGlow: true,
             isBreathing: true,
+            isHighlighted: highlightLike,
             onTap: () async {
               await vm.likeCurrentProfile();
             },
@@ -66,6 +69,7 @@ class ActionButtonsRow extends StatelessWidget {
             gradient: lightGradient,
             iconColor: const Color(0xFFFC5185),
             glowColor: const Color(0xFFFC5185),
+            isHighlighted: highlightPass,
             onTap: () async {
               await vm.dislikeCurrentProfile();
             },
@@ -85,6 +89,7 @@ class _AnimatedActionButton extends StatefulWidget {
   final Color glowColor;
   final bool isGlow;
   final bool isBreathing;
+  final bool isHighlighted;
   final VoidCallback onTap;
 
   const _AnimatedActionButton({
@@ -96,6 +101,7 @@ class _AnimatedActionButton extends StatefulWidget {
     required this.glowColor,
     this.isGlow = false,
     this.isBreathing = false,
+    this.isHighlighted = false,
     required this.onTap,
   });
 
@@ -191,10 +197,71 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
         final tapScale = _tapScaleAnimation.value;
         final breathScale = widget.isBreathing ? _breathScaleAnimation.value : 1.0;
         final combinedScale = tapScale * breathScale;
-
+        final highlightShadow = widget.isHighlighted
+            ? [
+                BoxShadow(
+                  color: widget.iconColor.withOpacity(0.45),
+                  blurRadius: 36,
+                  spreadRadius: 4,
+                  offset: const Offset(0, 0),
+                ),
+              ]
+            : [];
         return Transform.scale(
           scale: combinedScale,
-          child: child,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                if (widget.isGlow)
+                  BoxShadow(
+                    color: widget.glowColor.withValues(alpha: 0.23),
+                    blurRadius: 33,
+                    spreadRadius: 2.3,
+                    offset: const Offset(0, 9),
+                  ),
+                BoxShadow(
+                  color: widget.glowColor.withValues(alpha: 0.09),
+                  blurRadius: 13,
+                  spreadRadius: 0.9,
+                  offset: const Offset(0, 5),
+                ),
+                ...highlightShadow,
+              ],
+            ),
+            child: Material(
+              shape: const CircleBorder(),
+              elevation: 0,
+              color: Colors.transparent,
+              child: Ink(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: widget.gradient,
+                  boxShadow: const [],
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(widget.size / 2),
+                  splashColor: widget.iconColor.withValues(alpha: 0.18),
+                  highlightColor: widget.iconColor.withValues(alpha: 0.08),
+                  onTap: widget.onTap,
+                  onTapDown: _onTapDown,
+                  onTapUp: _onTapUp,
+                  onTapCancel: _onTapCancel,
+                  child: SizedBox(
+                    width: widget.size,
+                    height: widget.size,
+                    child: Center(
+                      child: Icon(
+                        widget.icon,
+                        color: widget.iconColor,
+                        size: widget.iconSize,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         );
       },
       child: Container(
