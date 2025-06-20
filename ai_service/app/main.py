@@ -3,10 +3,10 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import nltk  # Để tải dữ liệu NLTK
 
-from app.api.v1.api import api_router_v1
-from app.core.config import settings
-from app.db.session import engine  # Để tạo bảng (nếu cần, nhưng Alembic tốt hơn)
-from app.db import base  # Import base để Base.metadata biết về các models
+from ai_service.app.api.v1.api import api_router_v1
+from ai_service.app.core.config import settings
+from ai_service.app.db.session import engine  # Để tạo bảng (nếu cần, nhưng Alembic tốt hơn)
+from ai_service.app.db import base  # Import base để Base.metadata biết về các models
 
 
 # --- NLTK Data Download ---

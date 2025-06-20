@@ -3,11 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Annotated # Annotated cho FastAPI 0.95+
 
-from app import schemas # Schemas từ app/schemas/__init__.py
-from app.services.match_service import MatchService
-from app.ml.predictor import MatchPredictor
-from app.db.session import get_db
-from app.core.config import settings # Để lấy role name (nếu cần config)
+from ai_service.app import schemas # Schemas từ app/schemas/__init__.py
+from ai_service.app.services.match_service import MatchService
+from ai_service.app.ml.predictor import MatchPredictor
+from ai_service.app.db.session import get_db
+from ai_service.app.core.config import settings # Để lấy role name (nếu cần config)
 
 router = APIRouter()
 

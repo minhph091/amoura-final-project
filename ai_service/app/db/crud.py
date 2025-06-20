@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional, Tuple, Any
 
 from . import models  # models.py đã định nghĩa ở Giai đoạn 2
-from app import schemas  # schemas.py đã định nghĩa ở Giai đoạn 2
+from ai_service.app import schemas  # schemas.py đã định nghĩa ở Giai đoạn 2
 
 
 # --- User CRUD ---

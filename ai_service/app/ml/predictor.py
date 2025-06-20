@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any, Tuple, List
 
-from app.ml.preprocessing import (
+from ai_service.app.ml.preprocessing import (
     create_user_feature_vector,
     create_pairwise_features_vector,
     calculate_age,

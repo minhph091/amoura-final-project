@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from fastapi import HTTPException
 
-from app.db import crud, models
-from app.ml.predictor import MatchPredictor
-from app.core.config import settings
-from app.ml.preprocessing import orientation_compatibility  # Import trực tiếp để sử dụng
+from ai_service.app.db import crud, models
+from ai_service.app.ml.predictor import MatchPredictor
+from ai_service.app.core.config import settings
+from ai_service.app.ml.preprocessing import orientation_compatibility  # Import trực tiếp để sử dụng
 
 
 class MatchService:
