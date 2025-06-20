@@ -3,30 +3,66 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/profile/interest_model.dart';
 import '../../data/models/profile/profile_model.dart';
+import '../../data/models/match/user_recommendation_model.dart';
+import '../../data/models/match/swipe_response_model.dart';
 import '../../domain/models/match/liked_user_model.dart';
+import '../../core/services/match_service.dart';
 import '../../infrastructure/services/rewind_service.dart';
+import '../discovery/widgets/match_dialog.dart';
 
 class DiscoveryViewModel extends ChangeNotifier {
-  List<ProfileModel> _profiles = [];
+  List<UserRecommendationModel> _recommendations = [];
   List<InterestModel> _interests = [];
   final RewindService? _rewindService;
   int _currentProfileIndex = 0;
-  final List<ProfileModel> _rejectedProfiles = [];
+  final List<UserRecommendationModel> _rejectedProfiles = [];
+  bool _isLoading = false;
+  String? _error;
+  BuildContext? _context;
 
-  DiscoveryViewModel([this._rewindService]);
+  // Service layer for API operations
+  final MatchService _matchService;
 
-  List<ProfileModel> get profiles => _profiles;
+  DiscoveryViewModel({
+    RewindService? rewindService,
+    MatchService? matchService,
+  }) : _rewindService = rewindService,
+       _matchService = matchService ?? MatchService();
+
+  List<UserRecommendationModel> get recommendations => _recommendations;
   List<InterestModel> get interests => _interests;
-  ProfileModel? get currentProfile =>
-      _profiles.isNotEmpty && _currentProfileIndex < _profiles.length
-          ? _profiles[_currentProfileIndex]
+  UserRecommendationModel? get currentProfile =>
+      _recommendations.isNotEmpty && _currentProfileIndex < _recommendations.length
+          ? _recommendations[_currentProfileIndex]
           : null;
-  bool get hasMoreProfiles => _currentProfileIndex < _profiles.length - 1;
+  bool get hasMoreProfiles => _currentProfileIndex < _recommendations.length - 1;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
 
-  void setProfiles(List<ProfileModel> profiles) {
-    _profiles = profiles;
-    _currentProfileIndex = 0;
+  /// Set context for showing dialogs
+  void setContext(BuildContext context) {
+    _context = context;
+  }
+
+  /// Load recommendations from API
+  /// This method fetches user recommendations from the backend API
+  Future<void> loadRecommendations() async {
+    _isLoading = true;
+    _error = null;
     notifyListeners();
+
+    try {
+      // Call the service layer to get recommendations
+      final recommendations = await _matchService.getRecommendations();
+      _recommendations = recommendations;
+      _currentProfileIndex = 0;
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+    }
   }
 
   void setInterests(List<InterestModel> interests) {
@@ -34,75 +70,112 @@ class DiscoveryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void likeCurrentProfile() {
-    if (_currentProfileIndex < _profiles.length) {
-      // Handle like logic here
+  /// Like current profile
+  /// This method handles the like action and checks for potential matches
+  Future<void> likeCurrentProfile() async {
+    if (_currentProfileIndex >= _recommendations.length) return;
+
+    final currentProfile = _recommendations[_currentProfileIndex];
+    
+    try {
+      // Call the service layer to like the user
+      final response = await _matchService.likeUser(currentProfile.userId);
+      
+      // Handle match if occurred
+      if (response.isMatch) {
+        _handleMatch(response);
+      }
+      
       _moveToNextProfile();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
     }
   }
 
-  void dislikeCurrentProfile() {
-    if (_currentProfileIndex < _profiles.length) {
+  /// Dislike current profile
+  /// This method handles the dislike action and stores rejected profiles for rewind
+  Future<void> dislikeCurrentProfile() async {
+    if (_currentProfileIndex >= _recommendations.length) return;
+
+    final currentProfile = _recommendations[_currentProfileIndex];
+    
+    try {
+      // Call the service layer to dislike the user
+      await _matchService.dislikeUser(currentProfile.userId);
+      
       // Store the rejected profile for potential rewind
-      final rejected = _profiles[_currentProfileIndex];
-      _rejectedProfiles.add(rejected);
+      _rejectedProfiles.add(currentProfile);
 
       // If rewind service is available, add to rewindable users
       if (_rewindService != null) {
-        // Convert ProfileModel to LikedUserModel for rewind service
-        final likedUser = _convertToLikedUserModel(rejected);
+        final likedUser = _convertToLikedUserModel(currentProfile);
         _rewindService.addToRewindable(likedUser);
       }
 
       _moveToNextProfile();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
     }
   }
 
+  /// Rewind last profile (VIP feature)
+  /// This method allows users to go back to the last rejected profile
   void rewindLastProfile() {
     if (_rewindService != null && _rejectedProfiles.isNotEmpty) {
       final lastRejected = _rejectedProfiles.removeLast();
 
       // Insert the rewound profile before the current profile
-      _profiles.insert(_currentProfileIndex, lastRejected);
+      _recommendations.insert(_currentProfileIndex, lastRejected);
 
       // Notify that profiles have changed
       notifyListeners();
     }
   }
 
+  /// Move to the next profile in the stack
   void _moveToNextProfile() {
-    if (_currentProfileIndex < _profiles.length) {
+    if (_currentProfileIndex < _recommendations.length) {
       _currentProfileIndex++;
       notifyListeners();
     }
   }
 
-  // Helper method to convert ProfileModel to LikedUserModel
-  LikedUserModel _convertToLikedUserModel(ProfileModel profile) {
-    // Calculate age from dateOfBirth if available
-    int age = 0;
-    if (profile.dateOfBirth != null) {
-      age = DateTime.now().year - profile.dateOfBirth!.year;
-      // Adjust age if birthday hasn't occurred yet this year
-      if (DateTime.now().month < profile.dateOfBirth!.month ||
-          (DateTime.now().month == profile.dateOfBirth!.month &&
-              DateTime.now().day < profile.dateOfBirth!.day)) {
-        age--;
-      }
+  /// Handle match response
+  /// This method shows the match dialog when a match occurs
+  void _handleMatch(SwipeResponseModel response) {
+    if (_context != null) {
+      showMatchDialog(_context!, response);
     }
+    
+    // Log the match for debugging
+    print('Match occurred! Match ID: ${response.matchId ?? 'N/A'}');
+    print('Matched with: ${response.matchedUsername ?? 'Unknown'}');
+    print('Message: ${response.matchMessage ?? 'No message'}');
+  }
 
+  /// Clear error state
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  /// Convert UserRecommendationModel to LikedUserModel for rewind service
+  /// This helper method ensures compatibility with the rewind service
+  LikedUserModel _convertToLikedUserModel(UserRecommendationModel profile) {
     return LikedUserModel(
-      id: profile.userId.toString(), // Use userId as the id
-      firstName: "User", // Default values since these aren't available in ProfileModel
-      lastName: "${profile.userId}",
-      username: "user_${profile.userId}", // Create a placeholder username
-      age: age,
-      location: "Unknown", // Location isn't directly available in ProfileModel
-      coverImageUrl: "https://example.com/placeholder.jpg", // Placeholder image
-      avatarUrl: "https://example.com/avatar.jpg", // Placeholder avatar
+      id: profile.userId.toString(),
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      username: profile.username,
+      age: profile.age ?? 0,
+      location: profile.location ?? 'Unknown',
+      coverImageUrl: profile.photos.isNotEmpty ? profile.photos.first.url : 'https://example.com/placeholder.jpg',
+      avatarUrl: profile.photos.isNotEmpty ? profile.photos.first.url : 'https://example.com/avatar.jpg',
       bio: profile.bio ?? '',
-      photoUrls: const [], // No photos available in ProfileModel
-      isVip: false, // We don't know from ProfileModel
+      photoUrls: profile.photos.map((p) => p.url).toList(),
+      isVip: false,
     );
   }
 }

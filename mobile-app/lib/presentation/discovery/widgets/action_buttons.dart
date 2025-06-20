@@ -55,7 +55,9 @@ class ActionButtonsRow extends StatelessWidget {
             glowColor: const Color(0xFFFC5185),
             isGlow: true,
             isBreathing: true,
-            onTap: () => vm.likeCurrentProfile(),
+            onTap: () async {
+              await vm.likeCurrentProfile();
+            },
           ),
           _AnimatedActionButton(
             icon: FontAwesomeIcons.xmark,
@@ -64,7 +66,9 @@ class ActionButtonsRow extends StatelessWidget {
             gradient: lightGradient,
             iconColor: const Color(0xFFFC5185),
             glowColor: const Color(0xFFFC5185),
-            onTap: () => vm.dislikeCurrentProfile(),
+            onTap: () async {
+              await vm.dislikeCurrentProfile();
+            },
           ),
         ],
       ),

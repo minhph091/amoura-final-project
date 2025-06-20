@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../data/models/profile/interest_model.dart';
-import '../../../data/models/profile/profile_model.dart';
+import '../../../data/models/match/user_recommendation_model.dart';
 import 'package:amoura/presentation/discovery/widgets/profile_card.dart';
 
 class SwipeCardStack extends StatelessWidget {
-  final ProfileModel profile;
+  final UserRecommendationModel profile;
   final List<InterestModel> interests;
 
   const SwipeCardStack({

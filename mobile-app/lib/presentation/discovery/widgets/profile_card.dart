@@ -2,15 +2,15 @@
 // Discovery profile card, correct vertical layout and scroll.
 
 import 'package:flutter/material.dart';
-import '../../../data/models/profile/profile_model.dart';
 import '../../../data/models/profile/interest_model.dart';
+import '../../../data/models/match/user_recommendation_model.dart';
 import '../../../core/constants/profile/interest_constants.dart';
 import '../../../core/utils/date_util.dart';
 import 'image_carousel.dart';
 import 'user_info_section.dart';
 
 class ProfileCard extends StatelessWidget {
-  final ProfileModel profile;
+  final UserRecommendationModel profile;
   final List<InterestModel> interests;
 
   const ProfileCard({
@@ -21,14 +21,17 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final age = profile.dateOfBirth != null
+    final age = profile.age ?? (profile.dateOfBirth != null
         ? DateUtil.calculateAge(profile.dateOfBirth!)
-        : 0;
-    final location = profile.locationPreference != null
-        ? 'Within ${profile.locationPreference} km'
-        : 'Unknown';
+        : 0);
+    final location = profile.location ?? 'Unknown';
     final bio = profile.bio ?? 'No bio provided';
-    final interestChips = interests
+    final name = profile.fullName;
+    
+    // Use profile's interests if available, otherwise fall back to passed interests
+    final profileInterests = profile.interests.isNotEmpty ? profile.interests : interests;
+    
+    final interestChips = profileInterests
         .map((interest) {
       final interestOption = interestOptions.firstWhere(
             (option) => option['value'] == interest.name,
@@ -81,13 +84,13 @@ class ProfileCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(32),
               child: Stack(
                 children: [
-                  const ImageCarousel(),
+                  ImageCarousel(photos: profile.photos),
                   Positioned(
                     left: 0,
                     right: 0,
                     bottom: 0,
                     child: UserInfoSection(
-                      name: profile.userId.toString(), // Use userId as placeholder for name
+                      name: name,
                       age: age,
                       location: location,
                       bio: bio,

@@ -2,9 +2,17 @@
 // Carousel of user's cover and profile images
 
 import 'package:flutter/material.dart';
+import '../../../data/models/profile/photo_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/utils/url_transformer.dart';
 
 class ImageCarousel extends StatelessWidget {
-  const ImageCarousel({super.key});
+  final List<PhotoModel> photos;
+
+  const ImageCarousel({
+    super.key,
+    required this.photos,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +36,7 @@ class ImageCarousel extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Center(
-              child: Icon(Icons.image, size: 90, color: Color(0xFFB5B6B7)),
-            ),
+            child: _buildImageContent(),
           ),
           Positioned.fill(
             child: Container(
@@ -52,6 +58,41 @@ class ImageCarousel extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildImageContent() {
+    if (photos.isEmpty) {
+      return const Center(
+        child: Icon(Icons.image, size: 90, color: Color(0xFFB5B6B7)),
+      );
+    }
+
+    return PageView.builder(
+      itemCount: photos.length,
+      itemBuilder: (context, index) {
+        final photo = photos[index];
+        final transformedUrl = UrlTransformer.transform(photo.url);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: CachedNetworkImage(
+            imageUrl: transformedUrl,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              color: Colors.grey[300],
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: Colors.grey[300],
+              child: const Center(
+                child: Icon(Icons.error, size: 50, color: Colors.grey),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

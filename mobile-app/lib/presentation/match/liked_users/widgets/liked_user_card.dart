@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../domain/models/match/liked_user_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../discovery/widgets/match_dialog.dart';
+import '../../../../data/models/match/swipe_response_model.dart';
+import '../../../../core/utils/url_transformer.dart';
 
 class LikedUserCard extends StatelessWidget {
   final LikedUserModel user;
@@ -119,8 +121,19 @@ class LikedUserCard extends StatelessWidget {
   Widget _buildLikeButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        // Create a mock SwipeResponseModel for the match dialog
+        // In a real scenario, this would come from the API response
+        final mockMatchResponse = SwipeResponseModel(
+          swipeId: 0, // Mock swipe ID
+          isMatch: true,
+          matchId: 0, // Mock match ID
+          matchedUserId: int.tryParse(user.id) ?? 0,
+          matchedUsername: user.firstName,
+          matchMessage: 'It\'s a match with ${user.firstName}!',
+        );
+        
         // Show match dialog when user likes back
-        showMatchDialog(context).then((_) {
+        showMatchDialog(context, mockMatchResponse).then((_) {
           // Call the onLike callback if provided
           if (onLike != null) {
             onLike!();
@@ -156,8 +169,9 @@ class LikedUserCard extends StatelessWidget {
 
   Widget _buildCoverImage() {
     if (user.coverImageUrl.startsWith('http')) {
+      final transformedUrl = UrlTransformer.transform(user.coverImageUrl);
       return CachedNetworkImage(
-        imageUrl: user.coverImageUrl,
+        imageUrl: transformedUrl,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
           color: Colors.grey[300],

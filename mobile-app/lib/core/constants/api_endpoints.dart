@@ -29,4 +29,9 @@ class ApiEndpoints {
 
   static const String changeEmailRequest = '/user/change-email/request';
   static const String changeEmailConfirm = '/user/change-email/confirm';
+
+  // Matching endpoints
+  static const String getRecommendations = '/matching/recommendations';
+  static const String swipeUser = '/matching/swipe';
+  static const String getMatches = '/matching/matches';
 }
