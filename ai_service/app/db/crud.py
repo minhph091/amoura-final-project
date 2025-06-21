@@ -1,6 +1,6 @@
 # app/db/crud.py
 from sqlalchemy.orm import Session, joinedload
-from typing import List, Optional, Tuple, Any
+from typing import List, Optional, Tuple, Any, Dict
 
 from . import models  # models.py đã định nghĩa ở Giai đoạn 2
 from app import schemas  # schemas.py đã định nghĩa ở Giai đoạn 2
@@ -72,13 +72,23 @@ def get_user_profile_raw_data(db: Session, user_id: int) -> Optional[Tuple[
         models.UserLanguage.user_id == user_id).all()
     language_names = [l[0] for l in languages_q]
 
-    body_type_name = profile.body_type.name if profile and profile.body_type else None
-    orientation_name = profile.orientation.name if profile and profile.orientation else None
-    job_industry_name = profile.job_industry.name if profile and profile.job_industry else None
-    drink_status_name = profile.drink_status.name if profile and profile.drink_status else None
-    smoke_status_name = profile.smoke_status.name if profile and profile.smoke_status else None
-    education_level_name = profile.education_level.name if profile and profile.education_level else None
-
+    # Thêm error handling cho relationship access
+    try:
+        body_type_name = profile.body_type.name if profile and profile.body_type else None
+        orientation_name = profile.orientation.name if profile and profile.orientation else None
+        job_industry_name = profile.job_industry.name if profile and profile.job_industry else None
+        drink_status_name = profile.drink_status.name if profile and profile.drink_status else None
+        smoke_status_name = profile.smoke_status.name if profile and profile.smoke_status else None
+        education_level_name = profile.education_level.name if profile and profile.education_level else None
+    except Exception as e:
+        print(f"Error accessing profile relationships for user {user_id}: {e}")
+        # Fallback values
+        body_type_name = None
+        orientation_name = None
+        job_industry_name = None
+        drink_status_name = None
+        smoke_status_name = None
+        education_level_name = None
     return (
         user,
         profile,
@@ -181,3 +191,58 @@ List[int]:
         all()
 
     return [uid[0] for uid in user_ids]
+
+
+def get_message_history(db: Session, user_id: int, other_user_id: int, limit: int = 50) -> List[models.Message]:
+    """
+    Get the message history between two users, ordered by creation time.
+
+    Args:
+        db: Database session
+        user_id: ID of the first user
+        other_user_id: ID of the second user
+        limit: Maximum number of messages to return
+
+    Returns:
+        List of Message objects representing the conversation history
+    """
+    # Query messages where user_id is sender and other_user_id is receiver
+    # OR user_id is receiver and other_user_id is sender
+    messages = db.query(models.Message).filter(
+        (
+            (models.Message.sender_id == user_id) & 
+            (models.Message.receiver_id == other_user_id)
+        ) | 
+        (
+            (models.Message.sender_id == other_user_id) & 
+            (models.Message.receiver_id == user_id)
+        )
+    ).order_by(models.Message.created_at).limit(limit).all()
+
+    return messages
+
+
+def format_messages_for_ai(messages: List[models.Message], current_user_id: int) -> List[Dict]:
+    """
+    Format a list of Message objects into a format suitable for AI processing.
+
+    Args:
+        messages: List of Message objects
+        current_user_id: ID of the current user to determine message roles
+
+    Returns:
+        List of dictionaries with 'role' and 'content' keys
+    """
+    formatted_messages = []
+
+    for message in messages:
+        # Determine role based on who sent the message
+        # If current user sent the message, it's "user"
+        # If someone else sent the message, it's "assistant"
+        role = "user" if message.sender_id == current_user_id else "assistant"
+        formatted_messages.append({
+            "role": role,
+            "content": message.content
+        })
+
+    return formatted_messages

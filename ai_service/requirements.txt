@@ -6,6 +6,7 @@ email_validator==2.2.0
 fastapi==0.115.12
 geographiclib==2.0
 geopy==2.4.1
+google-generativeai==0.8.3
 h11==0.16.0
 idna==3.10
 joblib==1.5.1
@@ -21,6 +22,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 pytz==2025.2
 regex==2024.11.6
+requests==2.32.3
 scikit-learn==1.6.1
 scipy==1.15.3
 six==1.17.0

@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "amouradb")
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432") # Port mặc định của Postgres
 
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
