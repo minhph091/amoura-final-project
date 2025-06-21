@@ -8,6 +8,7 @@ import com.amoura.module.matching.dto.SwipeResponse;
 import com.amoura.module.matching.dto.UserRecommendationDTO;
 import com.amoura.module.matching.repository.MatchRepository;
 import com.amoura.module.matching.repository.SwipeRepository;
+import com.amoura.module.notification.service.NotificationService;
 import com.amoura.module.profile.domain.Photo;
 import com.amoura.module.profile.dto.InterestDTO;
 import com.amoura.module.profile.dto.PetDTO;
@@ -42,6 +43,7 @@ public class MatchingServiceImpl implements MatchingService {
     private final MatchRepository matchRepository;
     private final UserInterestRepository userInterestRepository;
     private final UserPetRepository userPetRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -157,6 +159,15 @@ public class MatchingServiceImpl implements MatchingService {
         Match savedMatch = matchRepository.save(match);
 
         String matchMessage = String.format("You and %s have matched! Start chatting now!", userB.getUsername());
+
+        // Gửi thông báo match cho cả hai user
+        try {
+            notificationService.sendMatchNotification(userA.getId(), savedMatch.getId(), userB.getUsername());
+            notificationService.sendMatchNotification(userB.getId(), savedMatch.getId(), userA.getUsername());
+            log.info("Sent match notifications to users {} and {}", userA.getId(), userB.getId());
+        } catch (Exception e) {
+            log.error("Failed to send match notifications: {}", e.getMessage());
+        }
 
         return SwipeResponse.builder()
                 .swipeId(swipe.getId())
