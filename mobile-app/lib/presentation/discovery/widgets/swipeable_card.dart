@@ -6,8 +6,10 @@ import 'profile_card.dart';
 class SwipeableCard extends StatefulWidget {
   final UserRecommendationModel profile;
   final List<InterestModel> interests;
+  final String? distance;
   final UserRecommendationModel? nextProfile;
   final List<InterestModel>? nextInterests;
+  final String? nextDistance;
   final VoidCallback? onLike;
   final VoidCallback? onPass;
   final void Function(bool)? onHighlightLike;
@@ -17,8 +19,10 @@ class SwipeableCard extends StatefulWidget {
     super.key,
     required this.profile,
     required this.interests,
+    this.distance,
     this.nextProfile,
     this.nextInterests,
+    this.nextDistance,
     this.onLike,
     this.onPass,
     this.onHighlightLike,
@@ -131,6 +135,7 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
               child: ProfileCard(
                 profile: widget.nextProfile!,
                 interests: widget.nextInterests!,
+                distance: widget.nextDistance,
               ),
             ),
           ),
@@ -150,6 +155,7 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
                       ProfileCard(
                         profile: widget.profile,
                         interests: widget.interests,
+                        distance: widget.distance,
                       ),
                       // Like/Pass highlight overlays
                       if (_highlightLike)

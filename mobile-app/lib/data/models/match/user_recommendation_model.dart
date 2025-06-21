@@ -38,6 +38,21 @@ class UserRecommendationModel {
   });
 
   factory UserRecommendationModel.fromJson(Map<String, dynamic> json) {
+    // Handle latitude/longitude - convert 0.0 to null
+    final rawLat = json['latitude'];
+    final rawLon = json['longitude'];
+    
+    double? latitude;
+    double? longitude;
+    
+    if (rawLat != null && rawLat is num && rawLat != 0.0) {
+      latitude = rawLat.toDouble();
+    }
+    
+    if (rawLon != null && rawLon is num && rawLon != 0.0) {
+      longitude = rawLon.toDouble();
+    }
+    
     return UserRecommendationModel(
       userId: json['userId'] as int,
       username: json['username'] as String,
@@ -51,8 +66,8 @@ class UserRecommendationModel {
       sex: json['sex'] as String?,
       bio: json['bio'] as String?,
       location: json['location'] as String?,
-      latitude: json['latitude'] as double?,
-      longitude: json['longitude'] as double?,
+      latitude: latitude,
+      longitude: longitude,
       interests: (json['interests'] as List<dynamic>?)
           ?.map((e) => InterestModel.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],

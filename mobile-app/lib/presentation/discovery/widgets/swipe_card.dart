@@ -40,6 +40,12 @@ class SwipeCardStack extends StatelessWidget {
         : null;
     final nextInterests = viewModel.interests;
 
+    // Calculate distance for current profile
+    final distance = viewModel.getDistanceToProfile(profile);
+    
+    // Calculate distance for next profile
+    final nextDistance = nextProfile != null ? viewModel.getDistanceToProfile(nextProfile) : null;
+
     return Align(
       alignment: Alignment.topCenter,
       child: SizedBox(
@@ -48,8 +54,10 @@ class SwipeCardStack extends StatelessWidget {
         child: SwipeableCard(
           profile: profile,
           interests: interests,
+          distance: distance,
           nextProfile: nextProfile,
           nextInterests: nextInterests,
+          nextDistance: nextDistance,
           onLike: () => Provider.of<DiscoveryViewModel>(context, listen: false).likeCurrentProfile(),
           onPass: () => Provider.of<DiscoveryViewModel>(context, listen: false).dislikeCurrentProfile(),
           onHighlightLike: onHighlightLike,

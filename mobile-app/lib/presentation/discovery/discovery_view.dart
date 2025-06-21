@@ -11,6 +11,8 @@ import 'discovery_viewmodel.dart';
 import '../../infrastructure/services/subscription_service.dart';
 import '../../infrastructure/services/rewind_service.dart';
 import '../../core/services/match_service.dart';
+import '../../core/services/profile_service.dart';
+import 'discovery_recommendation_cache.dart';
 
 class DiscoveryView extends StatefulWidget {
   const DiscoveryView({super.key});
@@ -30,9 +32,17 @@ class _DiscoveryViewState extends State<DiscoveryView> {
     _viewModel = DiscoveryViewModel(
       rewindService: getIt<RewindService>(),
       matchService: getIt<MatchService>(),
+      profileService: getIt<ProfileService>(),
     );
     // Load recommendations when screen is created
     _viewModel.loadRecommendations();
+    // Precache images for recommendations if available
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final recs = _viewModel.recommendations;
+      if (recs.isNotEmpty) {
+        await RecommendationCache.instance.ensurePrecacheForProfiles(recs, context, count: 5);
+      }
+    });
   }
 
   void _setHighlightLike(bool value) {
@@ -123,6 +133,11 @@ class _DiscoveryViewState extends State<DiscoveryView> {
   }
 
   Widget _buildContent(BuildContext context, DiscoveryViewModel vm) {
+    // Precache images for recommendations if available (on every build, but only if not empty)
+    if (vm.recommendations.isNotEmpty) {
+      RecommendationCache.instance.ensurePrecacheForProfiles(vm.recommendations, context, count: 5);
+    }
+
     if (vm.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -167,7 +182,24 @@ class _DiscoveryViewState extends State<DiscoveryView> {
 
     final currentProfile = vm.currentProfile;
     if (currentProfile == null) {
-      return const Center(child: Text('No more profiles'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('No more profiles'),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 18),
+                textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              onPressed: () => vm.loadRecommendations(forceRefresh: true),
+              child: const Text('Tải lại dữ liệu'),
+            ),
+          ],
+        ),
+      );
     }
 
     return SwipeCardStack(

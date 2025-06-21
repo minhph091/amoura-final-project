@@ -6,6 +6,7 @@ import '../../../data/models/profile/interest_model.dart';
 import '../../../data/models/match/user_recommendation_model.dart';
 import '../../../core/constants/profile/interest_constants.dart';
 import '../../../core/utils/date_util.dart';
+import '../../../core/utils/distance_calculator.dart';
 import 'image_carousel.dart';
 import 'user_info_section.dart';
 import 'interest_chip.dart';
@@ -13,11 +14,13 @@ import 'interest_chip.dart';
 class ProfileCard extends StatelessWidget {
   final UserRecommendationModel profile;
   final List<InterestModel> interests;
+  final String? distance;
 
   const ProfileCard({
     super.key,
     required this.profile,
     required this.interests,
+    this.distance,
   });
 
   @override
@@ -147,6 +150,17 @@ class ProfileCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (distance != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    distance!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 13),
                 Text(
                   bio,

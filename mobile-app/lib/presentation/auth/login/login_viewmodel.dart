@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../../domain/usecases/auth/login_usecase.dart';
 import '../../../core/utils/validation_util.dart';
+import '../../discovery/discovery_recommendation_cache.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();

@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/utils/url_transformer.dart';
+import '../../core/utils/distance_calculator.dart';
 import '../../data/models/profile/interest_model.dart';
 import '../../data/models/profile/profile_model.dart';
 import '../../data/models/match/user_recommendation_model.dart';
 import '../../data/models/match/swipe_response_model.dart';
 import '../../domain/models/match/liked_user_model.dart';
 import '../../core/services/match_service.dart';
+import '../../core/services/profile_service.dart';
 import '../../infrastructure/services/rewind_service.dart';
 import '../discovery/widgets/match_dialog.dart';
+import 'discovery_recommendation_cache.dart';
 
 class DiscoveryViewModel extends ChangeNotifier {
   List<UserRecommendationModel> _recommendations = [];
@@ -22,14 +25,21 @@ class DiscoveryViewModel extends ChangeNotifier {
   String? _error;
   BuildContext? _context;
 
+  // Current user location for distance calculation
+  double? _currentUserLatitude;
+  double? _currentUserLongitude;
+
   // Service layer for API operations
   final MatchService _matchService;
+  final ProfileService _profileService;
 
   DiscoveryViewModel({
     RewindService? rewindService,
     MatchService? matchService,
+    ProfileService? profileService,
   }) : _rewindService = rewindService,
-       _matchService = matchService ?? MatchService();
+       _matchService = matchService ?? MatchService(),
+       _profileService = profileService ?? ProfileService();
 
   List<UserRecommendationModel> get recommendations => _recommendations;
   List<InterestModel> get interests => _interests;
@@ -42,26 +52,102 @@ class DiscoveryViewModel extends ChangeNotifier {
   String? get error => _error;
   int get currentProfileIndex => _currentProfileIndex;
 
+  /// Get current user's location coordinates
+  double? get currentUserLatitude => _currentUserLatitude;
+  double? get currentUserLongitude => _currentUserLongitude;
+
   /// Set context for showing dialogs
   void setContext(BuildContext context) {
     _context = context;
   }
 
+  /// Load current user's profile to get location information
+  Future<void> loadCurrentUserProfile() async {
+    try {
+      final profileData = await _profileService.getProfile();
+      
+      // Extract location data from profile
+      if (profileData['location'] != null && profileData['location'] is Map<String, dynamic>) {
+        final location = profileData['location'] as Map<String, dynamic>;
+        
+        // Handle both null and 0.0 values (backend might return 0.0 instead of null)
+        final lat = location['latitude'];
+        final lon = location['longitude'];
+        
+        if (lat != null && lat is num && lat != 0.0) {
+          _currentUserLatitude = lat.toDouble();
+        }
+        
+        if (lon != null && lon is num && lon != 0.0) {
+          _currentUserLongitude = lon.toDouble();
+        }
+        
+        print('Current user location extracted: $_currentUserLatitude, $_currentUserLongitude');
+      } else {
+        print('No location data found in profile response');
+        print('Profile data keys: ${profileData.keys.toList()}');
+        if (profileData['location'] != null) {
+          print('Location data type: ${profileData['location'].runtimeType}');
+          print('Location data: ${profileData['location']}');
+        }
+      }
+    } catch (e) {
+      print('Error loading current user profile: $e');
+      // Don't throw error, just log it - distance calculation will show "Distance unavailable"
+    }
+  }
+
+  /// Calculate distance between current user and a profile
+  String getDistanceToProfile(UserRecommendationModel profile) {
+    final distance = DistanceCalculator.getDistanceText(
+      _currentUserLatitude,
+      _currentUserLongitude,
+      profile.latitude,
+      profile.longitude,
+    );
+    
+    // Debug logging
+    print('Distance calculation:');
+    print('  Current user: $_currentUserLatitude, $_currentUserLongitude');
+    print('  Profile ${profile.username}: ${profile.latitude}, ${profile.longitude}');
+    print('  Result: $distance');
+    
+    return distance;
+  }
+
   /// Load recommendations from API
   /// This method fetches user recommendations from the backend API
-  Future<void> loadRecommendations() async {
+  Future<void> loadRecommendations({bool forceRefresh = false}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+      // Load current user profile first to get location for distance calculation
+      await loadCurrentUserProfile();
+      
+      // Nếu forceRefresh, clear cache trước khi gọi API
+      if (forceRefresh) {
+        RecommendationCache.instance.clear();
+      }
+      // Check cache first
+      final cached = RecommendationCache.instance.recommendations;
+      if (!forceRefresh && cached != null && cached.isNotEmpty) {
+        _recommendations = cached;
+        _currentProfileIndex = 0;
+        _isLoading = false;
+        notifyListeners();
+        _precacheInitialImages();
+        return;
+      }
       // Call the service layer to get recommendations
       final recommendations = await _matchService.getRecommendations();
       _recommendations = recommendations;
       _currentProfileIndex = 0;
       _isLoading = false;
       notifyListeners();
-
+      // Cache the new recommendations
+      RecommendationCache.instance.setRecommendations(recommendations);
       // After loading, pre-cache images for a smoother experience
       _precacheInitialImages();
     } catch (e) {
