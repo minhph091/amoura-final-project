@@ -1,34 +1,122 @@
+"""
+Message service for Amoura AI Service.
+
+This module provides the MessageService class for handling AI-powered
+message editing using Google Gemini API.
+"""
+
 import google.generativeai as genai
 from typing import List, Optional, Dict
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from app.core.config import settings
+from app.core.config import get_settings
+from app.core.exceptions import ExternalAPIError, DataValidationError
+from app.core.logging import LoggerMixin, get_logger
 from app.db import crud
 
 
-class MessageService:
+class MessageService(LoggerMixin):
+    """
+    Service for AI-powered message editing.
+    
+    This service uses Google Gemini API to provide intelligent
+    message editing capabilities with conversation context awareness.
+    """
+    
     def __init__(self, db: Session):
+        """
+        Initialize MessageService.
+        
+        Args:
+            db: Database session
+        """
         self.db = db
-        # Configure the Gemini API
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-pro')
-
-    def edit_message(self, original_message: str, edit_prompt: str, 
-                     user_id: int, other_user_id: int) -> str:
+        self.settings = get_settings()
+        
+        # Configure Gemini API
+        if not self.settings.GEMINI_API_KEY:
+            raise ValueError("Gemini API key not configured")
+        
+        genai.configure(api_key=self.settings.GEMINI_API_KEY)
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        self.logger.info("MessageService initialized successfully")
+    
+    def edit_message(
+        self, 
+        original_message: str, 
+        edit_prompt: str, 
+        user_id: int, 
+        other_user_id: int
+    ) -> str:
         """
         Edit a message using Gemini AI based on the user's prompt.
-
+        
+        This method:
+        1. Validates both users exist
+        2. Retrieves conversation history from database
+        3. Creates context-aware system prompt
+        4. Uses Gemini AI to edit the message
+        5. Returns the edited message
+        
         Args:
             original_message: The original message to edit
             edit_prompt: The user's instructions for editing
             user_id: ID of the user requesting the edit
             other_user_id: ID of the other user in the conversation
-
+            
         Returns:
             The edited message
+            
+        Raises:
+            HTTPException: If users not found or editing fails
         """
-        # Validate that both users exist
+        self.logger.info(f"Editing message for user {user_id} in conversation with user {other_user_id}")
+        
+        try:
+            # Validate users exist
+            self._validate_users_exist(user_id, other_user_id)
+            
+            # Retrieve conversation history
+            messages = crud.get_message_history(self.db, user_id, other_user_id)
+            conversation_history = crud.format_messages_for_ai(messages, user_id)
+            
+            if not messages:
+                self.logger.warning(f"No conversation history found between users {user_id} and {other_user_id}")
+            
+            # Create system prompt with conversation context
+            system_prompt = self._create_system_prompt(conversation_history)
+            
+            # Create user prompt
+            user_prompt = self._create_user_prompt(original_message, edit_prompt)
+            
+            # Generate edited message using Gemini
+            edited_message = self._generate_edited_message(system_prompt, user_prompt)
+            
+            self.logger.info(f"Successfully edited message for user {user_id}")
+            return edited_message
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            self.logger.error(f"Error editing message: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An error occurred while editing the message. Please try again."
+            )
+    
+    def _validate_users_exist(self, user_id: int, other_user_id: int):
+        """
+        Validate that both users exist in the database.
+        
+        Args:
+            user_id: First user ID
+            other_user_id: Second user ID
+            
+        Raises:
+            HTTPException: If either user not found
+        """
         user = crud.get_user_by_id(self.db, user_id)
         if not user:
             raise HTTPException(
@@ -42,50 +130,14 @@ class MessageService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Other user with ID {other_user_id} not found."
             )
-
-        # Always retrieve conversation history from database
-        messages = crud.get_message_history(self.db, user_id, other_user_id)
-        conversation_history = crud.format_messages_for_ai(messages, user_id)
-
-        # Check if there's any conversation history (optional validation)
-        if not messages:
-            print(f"Warning: No conversation history found between user {user_id} and user {other_user_id}")
-
-        # Create system prompt
-        system_prompt = self._create_system_prompt(conversation_history)
-
-        # Create the prompt for Gemini
-        user_prompt = f"""
-        Original message: {original_message}
-
-        Edit instructions: {edit_prompt}
-        
-        Please provide only the edited message without any explanations or additional text.
-        """
-
-        try:
-            # Generate the response from Gemini
-            response = self.model.generate_content(
-                [
-                    {"role": "system", "parts": [system_prompt]},
-                    {"role": "user", "parts": [user_prompt]}
-                ]
-            )
-
-            # Return the edited message
-            return response.text.strip()
-        except Exception as e:
-            # Log the error for debugging
-            print(f"Error generating response from Gemini: {e}")
-            raise Exception("Failed to generate edited message. Please try again.")
-
+    
     def _create_system_prompt(self, conversation_history: Optional[List[Dict]] = None) -> str:
         """
-        Create a system prompt for Gemini based on the conversation history.
-
+        Create a system prompt for Gemini based on conversation context.
+        
         Args:
             conversation_history: Optional conversation history for context
-
+            
         Returns:
             The system prompt
         """
@@ -116,12 +168,159 @@ class MessageService:
         - If the user's instructions conflict with dating best practices, prioritize the user's instructions
         - Don't add emojis unless they were in the original message or specifically requested
         """
-
+        
         if conversation_history and len(conversation_history) > 0:
             system_prompt += """
 
             CONVERSATION CONTEXT:
             You have access to the conversation history to understand the context and tone of the ongoing conversation. Use this to ensure your edit maintains consistency with the conversation flow and relationship dynamic.
             """
-
+        
         return system_prompt
+    
+    def _create_user_prompt(self, original_message: str, edit_prompt: str) -> str:
+        """
+        Create the user prompt for Gemini.
+        
+        Args:
+            original_message: The original message to edit
+            edit_prompt: The user's instructions for editing
+            
+        Returns:
+            The user prompt
+        """
+        return f"""
+        Original message: {original_message}
+
+        Edit instructions: {edit_prompt}
+        
+        Please provide only the edited message without any explanations or additional text.
+        """
+    
+    def _generate_edited_message(self, system_prompt: str, user_prompt: str) -> str:
+        """
+        Generate edited message using Gemini AI.
+        
+        Args:
+            system_prompt: System prompt for context
+            user_prompt: User prompt with original message and instructions
+            
+        Returns:
+            The edited message
+            
+        Raises:
+            ExternalAPIError: If Gemini API call fails
+        """
+        try:
+            # Combine system prompt and user prompt since Gemini doesn't support system role
+            combined_prompt = f"{system_prompt}\n\n{user_prompt}"
+            
+            response = self.model.generate_content(combined_prompt)
+            
+            edited_message = response.text.strip()
+            
+            if not edited_message:
+                raise ExternalAPIError(
+                    api_name="Gemini",
+                    error="Generated message is empty"
+                )
+            
+            return edited_message
+            
+        except Exception as e:
+            self.logger.error(f"Error generating response from Gemini: {e}")
+            raise ExternalAPIError(
+                api_name="Gemini",
+                error=f"Failed to generate edited message: {e}"
+            )
+    
+    def get_conversation_suggestions(self, user_id: int, other_user_id: int) -> List[str]:
+        """
+        Get conversation topic suggestions based on user profiles and conversation history.
+        
+        Args:
+            user_id: ID of the user requesting suggestions
+            other_user_id: ID of the other user in the conversation
+            
+        Returns:
+            List of conversation topic suggestions
+            
+        Raises:
+            HTTPException: If users not found or suggestions generation fails
+        """
+        self.logger.info(f"Generating conversation suggestions for user {user_id} with user {other_user_id}")
+        
+        try:
+            # Validate users exist
+            self._validate_users_exist(user_id, other_user_id)
+            
+            # Get user profiles for context
+            user_profile = crud.get_user_profile_raw_data(self.db, user_id)
+            other_user_profile = crud.get_user_profile_raw_data(self.db, other_user_id)
+            
+            # Get conversation history
+            messages = crud.get_message_history(self.db, user_id, other_user_id)
+            
+            # Create prompt for suggestions
+            suggestion_prompt = self._create_suggestion_prompt(
+                user_profile, other_user_profile, messages
+            )
+            
+            # Generate suggestions using Gemini
+            response = self.model.generate_content(suggestion_prompt)
+            suggestions_text = response.text.strip()
+            
+            # Parse suggestions (assuming they're separated by newlines or bullet points)
+            suggestions = [
+                suggestion.strip() 
+                for suggestion in suggestions_text.split('\n') 
+                if suggestion.strip()
+            ]
+            
+            self.logger.info(f"Generated {len(suggestions)} conversation suggestions")
+            return suggestions[:5]  # Limit to 5 suggestions
+            
+        except Exception as e:
+            self.logger.error(f"Error generating conversation suggestions: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate conversation suggestions"
+            )
+    
+    def _create_suggestion_prompt(
+        self, 
+        user_profile: tuple, 
+        other_user_profile: tuple, 
+        messages: List
+    ) -> str:
+        """
+        Create prompt for generating conversation suggestions.
+        
+        Args:
+            user_profile: Current user's profile data
+            other_user_profile: Other user's profile data
+            messages: Conversation history
+            
+        Returns:
+            Prompt for generating suggestions
+        """
+        prompt = """
+        You are a dating coach helping users find engaging conversation topics. 
+        Based on the user profiles and conversation history, suggest 3-5 specific, 
+        engaging conversation starters or topics that would be interesting to discuss.
+        
+        Focus on:
+        - Common interests
+        - Unique aspects of their profiles
+        - Questions that encourage detailed responses
+        - Topics that show genuine interest
+        
+        Return only the suggestions, one per line, without numbering or bullet points.
+        """
+        
+        # Add profile context if available
+        if user_profile and other_user_profile:
+            prompt += f"\n\nUser interests: {user_profile[4] if len(user_profile) > 4 else 'Not specified'}"
+            prompt += f"\nOther user interests: {other_user_profile[4] if len(other_user_profile) > 4 else 'Not specified'}"
+        
+        return prompt

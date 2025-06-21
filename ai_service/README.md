@@ -1,102 +1,125 @@
 # Amoura AI Service
 
-This is the backend AI Service module for the Amoura online dating application. This module is built with FastAPI and is responsible for providing APIs for the application's Artificial Intelligence (AI) based features, including:
+A professional FastAPI-based microservice for AI-powered features in the Amoura dating application. This service provides intelligent matching, message editing, and content moderation capabilities with enterprise-grade architecture.
 
-*   **AI Matching Support:** Suggest suitable matches, display common interests.
-*   **AI Communication Behavior Analysis:** Analyze message sentiment, suggest conversation topics.
-*   **AI Content Moderation & User Safety (E4):** Filter inappropriate user names, uploads photos.
+## 🚀 Features
 
-This module is designed to operate independently or as a microservice, interacting with the main backend of the Amoura application.
+- **🤖 AI-Powered Matching**: ML-based user compatibility prediction
+- **✏️ Smart Message Editing**: AI-assisted message improvement using Google Gemini
+- **🛡️ Content Moderation**: Filter inappropriate content and user uploads
+- **📊 Conversation Analysis**: Sentiment analysis and conversation insights
+- **🔒 Enterprise Security**: Proper authentication, validation, and error handling
+- **📈 Monitoring & Logging**: Comprehensive logging and health monitoring
 
-## 📂 Directory Structure
+## 🏗️ Architecture
 
-```text
-amoura_ai_service/
-├── app/                                # Main source code of the FastAPI application
-│   ├── __init__.py
-│   ├── main.py                         # Entry point for FastAPI app
-│   ├── dependencies.py                 # Shared dependencies and utilities
-│   ├── api/                            # API routers and endpoints
+The service follows clean architecture principles with:
+
+- **Layered Architecture**: Clear separation between API, services, and data layers
+- **Dependency Injection**: Proper dependency management with FastAPI
+- **Error Handling**: Comprehensive exception handling with custom error types
+- **Logging**: Structured logging with configurable levels
+- **Configuration Management**: Environment-based configuration with validation
+- **Type Safety**: Full type hints and Pydantic validation
+
+## 📂 Project Structure
+
+```
+ai_service/
+├── app/                                # Main application code
+│   ├── __init__.py                     # Package initialization
+│   ├── main.py                         # FastAPI application entry point
+│   ├── dependencies.py                 # Dependency injection
+│   │
+│   ├── api/                            # API layer
 │   │   ├── __init__.py
 │   │   └── v1/
 │   │       ├── __init__.py
-│   │       ├── api.py                  # Aggregation of v1 routers
-│   │       └── endpoints/              # Endpoint route handlers
+│   │       ├── api.py                  # API router aggregation
+│   │       └── endpoints/              # Endpoint handlers
 │   │           ├── __init__.py
-│   │           └── matches.py          # Match-related endpoints
+│   │           ├── matches.py          # Match-related endpoints
+│   │           └── messages.py         # Message-related endpoints
 │   │
-│   ├── core/                           # Configuration and settings
+│   ├── core/                           # Core application components
 │   │   ├── __init__.py
-│   │   └── config.py
+│   │   ├── config.py                   # Configuration management
+│   │   ├── exceptions.py               # Custom exceptions
+│   │   └── logging.py                  # Logging configuration
 │   │
-│   ├── db/                             # Database utilities and session setup
+│   ├── db/                             # Database layer
 │   │   ├── __init__.py
-│   │   ├── base.py                     # Base database configuration
+│   │   ├── base.py                     # Database base configuration
 │   │   ├── crud.py                     # CRUD operations
 │   │   ├── models.py                   # SQLAlchemy models
 │   │   └── session.py                  # Database session management
 │   │
-│   ├── ml/                             # Machine learning models and utilities
+│   ├── ml/                             # Machine learning components
 │   │   ├── __init__.py
-│   │   ├── predictor.py               # ML model prediction logic
-│   │   └── preprocessing.py           # Data preprocessing utilities
+│   │   ├── predictor.py                # ML model predictor
+│   │   └── preprocessing.py            # Data preprocessing utilities
 │   │
-│   ├── schemas/                        # Pydantic models for request/response
+│   ├── schemas/                        # Pydantic models
 │   │   ├── __init__.py
-│   │   ├── match.py                   # Match-related schemas
-│   │   └── user.py                    # User-related schemas
+│   │   ├── match.py                    # Match-related schemas
+│   │   └── message.py                  # Message-related schemas
 │   │
-│   └── services/                       # Core logic and orchestration layer
+│   └── services/                       # Business logic layer
 │       ├── __init__.py
-│       └── match_service.py           # Match service implementation
+│       ├── match_service.py            # Match service implementation
+│       └── message_service.py          # Message service implementation
 │
-├── ml_models/                          # Trained ML models storage
-│   ├── best_model_summary.json        # Summary of model performance metrics and configuration
-│   └── best_overall_model.joblib      # The main trained matching model
+├── ml_models/                          # Trained ML models
+│   ├── best_model_summary.json         # Model performance metrics
+│   ├── best_overall_model.joblib       # Main trained model
+│   └── [other model files...]          # Preprocessors and scalers
 │
-├── test/                               # Unit and integration tests
+├── test/                               # Test suite
 │   └── __init__.py
 │
-├── .env                                # Environment variables (local use)
-├── .env.example                        # Template environment config
-├── .gitignore                          # Git ignore rules
-├── README.md                           # Project description and instructions
-└── requirements.txt                    # List of Python dependencies
-
+├── env.example                         # Environment variables template
+├── requirements.txt                    # Python dependencies
+└── README.md                           # This file
 ```
+
+## 🛠️ Technology Stack
+
+- **Framework**: FastAPI 0.115+
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **ML**: scikit-learn, LightGBM, NLTK
+- **AI**: Google Gemini API
+- **Validation**: Pydantic with custom validators
+- **Logging**: Python logging with structured output
+- **Testing**: pytest (recommended)
+
 ## 📋 Prerequisites
 
-*   Python 3.12+
-*   Pip (Python package installer)
-*   Git
+- Python 3.12+
+- PostgreSQL 12+
+- Google Gemini API key
+- Git
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### 1. Clone Repository
+### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/vvtruong27/amoura_ai_service
+git clone <repository-url>
 cd ai_service
 ```
-### 2. Create and Activate Virtual Environment
 
-It's recommended to use a virtual environment to manage project dependencies.
-
-**For Windows:**
+### 2. Create Virtual Environment
 
 ```bash
+# Create virtual environment
 python -m venv .venv
+
+# Activate (Windows)
 .\.venv\Scripts\activate
-```
 
-**For macOS/Linux:**
-
-```bash
-python3 -m venv .venv
+# Activate (macOS/Linux)
 source .venv/bin/activate
 ```
-
-After activation, you'll see (.venv) at the beginning of the command line.
 
 ### 3. Install Dependencies
 
@@ -104,40 +127,177 @@ After activation, you'll see (.venv) at the beginning of the command line.
 pip install -r requirements.txt
 ```
 
-The requirements.txt file contains a list of all Python libraries needed for the project.
-
-### 4. Configure Environment Variables
+### 4. Configure Environment
 
 ```bash
-cp .env.example .env
+# Copy environment template
+cp env.example .env
+
+# Edit .env with your configuration
+nano .env
 ```
 
-Open the .env file and update the necessary values (e.g., API keys for third-party AI services if any, paths to models, etc.).
+Required environment variables:
+- `POSTGRES_SERVER`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- `GEMINI_API_KEY`
+- `MATCH_PROBABILITY_THRESHOLD` (default: 0.5)
 
-### 5. Run the Application (Development)
+### 5. Run the Application
 
 ```bash
-uvicorn app.main:app --reload
+# Development mode
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Production mode
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-*   **app.main:app:** Points to the FastAPI app instance in the app/main.py file.
-*   **--reload:** Automatically reloads the server when code changes (only for development).
+### 6. Verify Installation
 
-After the server starts, you can access the application at: http://localhost:8000
+Visit the API documentation:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
 
-## 📖 API Documentation (Swagger UI & ReDoc)
+## 📚 API Documentation
 
-FastAPI automatically generates interactive API documentation. Once the application is running, you can access:
+### Match Endpoints
 
-* **Swagger UI**: http://localhost:8000/docs
-* **ReDoc:** http://localhost:8000/redoc
+#### Get Potential Matches
+```http
+GET /api/v1/users/{user_id}/potential-matches?limit=10
+```
 
-Here, you can view all endpoints, request/response schemas, and test the API directly.
+Returns potential matches for a user based on ML predictions.
 
-## 🧪 Running Tests
+#### Get Match Probability
+```http
+GET /api/v1/users/{user1_id}/match-probability/{user2_id}
+```
 
-The project uses pytest for testing. To run all tests:
+Returns match probability between two specific users.
+
+### Message Endpoints
+
+#### Edit Message
+```http
+POST /api/v1/messages/edit
+Content-Type: application/json
+
+{
+  "original_message": "Hey, how are you?",
+  "edit_prompt": "Make it more engaging",
+  "user_id": 1,
+  "other_user_id": 2
+}
+```
+
+Uses AI to improve messages based on conversation context.
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ENVIRONMENT` | Environment (development/production) | `development` |
+| `DEBUG` | Enable debug mode | `false` |
+| `LOG_LEVEL` | Logging level | `INFO` |
+| `POSTGRES_SERVER` | PostgreSQL server host | `localhost` |
+| `POSTGRES_USER` | PostgreSQL username | `youruser` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | `yourpassword` |
+| `POSTGRES_DB` | PostgreSQL database name | `amouradb` |
+| `POSTGRES_PORT` | PostgreSQL port | `5432` |
+| `GEMINI_API_KEY` | Google Gemini API key | (required) |
+| `MATCH_PROBABILITY_THRESHOLD` | ML match threshold | `0.5` |
+
+### Logging
+
+The service uses structured logging with configurable levels:
+
+```python
+# Example log output
+2024-01-15 10:30:45,123 - app.services.match_service - INFO - Found 5 potential matches for user 123
+2024-01-15 10:30:46,456 - app.ml.predictor - DEBUG - Predicted match probability: 0.85
+```
+
+## 🧪 Testing
 
 ```bash
+# Run all tests
 pytest
+
+# Run with coverage
+pytest --cov=app
+
+# Run specific test file
+pytest test/test_matches.py
 ```
+
+## 📊 Monitoring
+
+### Health Check
+```http
+GET /health
+```
+
+Returns service health status including:
+- Service status
+- Version information
+- Environment details
+- Timestamp
+
+### Metrics
+The service includes request timing headers (`X-Process-Time`) for performance monitoring.
+
+## 🔒 Security
+
+- Input validation with Pydantic
+- SQL injection protection via SQLAlchemy
+- Environment-based configuration
+- Proper error handling without information leakage
+- CORS configuration for production
+
+## 🚀 Deployment
+
+### Docker (Recommended)
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Production Considerations
+
+1. **Environment Variables**: Use proper secrets management
+2. **Database**: Use connection pooling and read replicas
+3. **Logging**: Configure external log aggregation
+4. **Monitoring**: Set up health checks and alerting
+5. **Security**: Configure CORS, rate limiting, and authentication
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with proper tests
+4. Ensure all tests pass
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the API documentation at `/docs`
+- Review the logs for debugging information

@@ -1,66 +1,186 @@
-# app/main.py
-from fastapi import FastAPI
+"""
+Main FastAPI application for Amoura AI Service.
+
+This module initializes the FastAPI application with proper configuration,
+middleware, and lifecycle management.
+"""
+
+import nltk
 from contextlib import asynccontextmanager
-import nltk  # Để tải dữ liệu NLTK
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import time
 
+from app.core.config import get_settings
+from app.core.logging import setup_logging, get_logger
+from app.core.exceptions import AmouraAIException, handle_exception
 from app.api.v1.api import api_router_v1
-from app.core.config import settings
 
 
-# --- NLTK Data Download ---
-# Hàm này nên được gọi một lần. Trong production, nó có thể nằm trong Dockerfile
-# hoặc một script setup riêng.
+# Setup logging
+logger = get_logger(__name__)
+
 
 def download_nltk_data():
+    """Download required NLTK data for text processing."""
     try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        nltk.download('punkt', quiet=True)
+        # Check and download required NLTK data
+        required_data = ['punkt', 'stopwords', 'wordnet']
+        
+        for data_name in required_data:
+            try:
+                nltk.data.find(f'tokenizers/{data_name}' if data_name == 'punkt' else f'corpora/{data_name}')
+                logger.debug(f"NLTK data '{data_name}' already available")
+            except LookupError:
+                logger.info(f"Downloading NLTK data: {data_name}")
+                nltk.download(data_name, quiet=True)
+                logger.info(f"NLTK data '{data_name}' downloaded successfully")
+        
+        logger.info("All required NLTK data verified/downloaded")
+    except Exception as e:
+        logger.error(f"Failed to download NLTK data: {e}")
+        raise
 
-    try:
-        nltk.data.find('corpora/stopwords')
-    except LookupError:
-        nltk.download('stopwords', quiet=True)
-
-    try:
-        nltk.data.find('corpora/wordnet')
-    except LookupError:
-        nltk.download('wordnet', quiet=True)
-
-    print("NLTK data checked/downloaded.")
-
-# --- Lifespan Events (cho FastAPI 0.90+) ---
-# Dùng để thực hiện các tác vụ khi khởi động và tắt ứng dụng
-# Ví dụ: tải model ML, kết nối DB, tải dữ liệu NLTK
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Code to run on app startup
-    print("Application startup...")
-    download_nltk_data()
-    # base.Base.metadata.create_all(bind=engine) # Tạo bảng nếu chưa có, Alembic tốt hơn cho production
-
-    # Khởi tạo MatchPredictor ở đây nếu muốn quản lý tập trung
-    # app.state.match_predictor = MatchPredictor()
-    # sau đó trong dependency get_match_service, bạn có thể lấy từ request.app.state.match_predictor
-    # Hiện tại, MatchPredictor đang được khởi tạo ở global scope của matches.py
-
-    print(f"Match probability threshold set to: {settings.MATCH_PROBABILITY_THRESHOLD}")
+    """
+    Application lifespan manager for startup and shutdown events.
+    
+    Handles:
+    - NLTK data download
+    - Service initialization
+    - Cleanup on shutdown
+    """
+    # Startup
+    logger.info("Starting Amoura AI Service...")
+    
+    try:
+        # Download NLTK data
+        download_nltk_data()
+        
+        # Log configuration
+        settings = get_settings()
+        logger.info(f"Match probability threshold: {settings.MATCH_PROBABILITY_THRESHOLD}")
+        logger.info(f"Environment: {'Development' if settings.is_development else 'Production'}")
+        
+        logger.info("Amoura AI Service started successfully")
+        
+    except Exception as e:
+        logger.error(f"Failed to start application: {e}")
+        raise
+    
     yield
-    # Code to run on app shutdown
-    print("Application shutdown...")
+    
+    # Shutdown
+    logger.info("Shutting down Amoura AI Service...")
 
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    lifespan=lifespan
-)
+def create_app() -> FastAPI:
+    """
+    Create and configure the FastAPI application.
+    
+    Returns:
+        Configured FastAPI application instance
+    """
+    settings = get_settings()
+    
+    # Create FastAPI app
+    app = FastAPI(
+        title=settings.PROJECT_NAME,
+        version=settings.VERSION,
+        description="AI-powered features for Amoura dating application",
+        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        docs_url="/docs" if settings.is_development else None,
+        redoc_url="/redoc" if settings.is_development else None,
+        lifespan=lifespan
+    )
+    
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Configure appropriately for production
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    # Add request timing middleware
+    @app.middleware("http")
+    async def add_process_time_header(request: Request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        response.headers["X-Process-Time"] = str(process_time)
+        return response
+    
+    # Add exception handlers
+    @app.exception_handler(AmouraAIException)
+    async def amoura_exception_handler(request: Request, exc: AmouraAIException):
+        logger.error(f"AmouraAIException: {exc.message}", extra=exc.details)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "message": exc.message,
+                "error_code": exc.error_code,
+                "details": exc.details
+            }
+        )
+    
+    @app.exception_handler(Exception)
+    async def general_exception_handler(request: Request, exc: Exception):
+        logger.error(f"Unhandled exception: {exc}", exc_info=True)
+        http_exc = handle_exception(exc)
+        return JSONResponse(
+            status_code=http_exc.status_code,
+            content=http_exc.detail
+        )
+    
+    # Include API routers
+    app.include_router(api_router_v1, prefix=settings.API_V1_STR)
+    
+    return app
 
-# Include router API v1 với prefix chung là /api/v1
-# Router con matches.router đã có path đầy đủ "/users/{user_id}/potential-matches"
-app.include_router(api_router_v1, prefix=settings.API_V1_STR)
+
+# Create app instance
+app = create_app()
+
 
 @app.get("/", tags=["Root"])
 async def read_root():
-    return {"message": f"Welcome to {settings.PROJECT_NAME}!"}
+    """Health check endpoint."""
+    return {
+        "message": f"Welcome to {get_settings().PROJECT_NAME}!",
+        "version": get_settings().VERSION,
+        "status": "healthy"
+    }
+
+
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """Detailed health check endpoint."""
+    settings = get_settings()
+    
+    health_status = {
+        "status": "healthy",
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "environment": "development" if settings.is_development else "production",
+        "timestamp": time.time()
+    }
+    
+    return health_status
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    settings = get_settings()
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.is_development,
+        log_level=settings.LOG_LEVEL.lower()
+    )
