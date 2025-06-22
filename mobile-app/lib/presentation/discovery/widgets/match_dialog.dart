@@ -1,10 +1,18 @@
 // lib/presentation/discovery/widgets/match_dialog.dart
 // Dialog to show when a match occurs.
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/url_transformer.dart';
 import '../../../data/models/match/swipe_response_model.dart';
+import '../../../data/models/match/user_recommendation_model.dart';
 
-Future<void> showMatchDialog(BuildContext context, SwipeResponseModel matchResponse) async {
+Future<void> showMatchDialog(
+  BuildContext context,
+  SwipeResponseModel matchResponse,
+  UserRecommendationModel matchedProfile,
+  String? currentUserAvatarUrl,
+) async {
   await showDialog(
     context: context,
     barrierDismissible: false,
@@ -20,17 +28,16 @@ Future<void> showMatchDialog(BuildContext context, SwipeResponseModel matchRespo
             Text(
               'It\'s a Match!',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.pink,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.pink,
+                  ),
             ),
             const SizedBox(height: 12),
-            if (matchResponse.matchMessage != null)
-              Text(
-                matchResponse.matchMessage!,
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
+            Text(
+              'You and ${matchedProfile.fullName} have matched! Start chatting now!',
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -38,7 +45,17 @@ Future<void> showMatchDialog(BuildContext context, SwipeResponseModel matchRespo
                 CircleAvatar(
                   radius: 28,
                   backgroundColor: Colors.blueGrey,
-                  child: Icon(Icons.person, color: Colors.white, size: 28),
+                  backgroundImage: currentUserAvatarUrl != null &&
+                          currentUserAvatarUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(
+                          UrlTransformer.transform(currentUserAvatarUrl),
+                        )
+                      : null,
+                  child: currentUserAvatarUrl == null ||
+                          currentUserAvatarUrl.isEmpty
+                      ? const Icon(Icons.person,
+                          color: Colors.white, size: 28)
+                      : null,
                 ),
                 const SizedBox(width: 16),
                 const Icon(Icons.favorite, color: Colors.pink, size: 24),
@@ -46,14 +63,22 @@ Future<void> showMatchDialog(BuildContext context, SwipeResponseModel matchRespo
                 CircleAvatar(
                   radius: 28,
                   backgroundColor: Colors.pinkAccent,
-                  child: Text(
-                    matchResponse.matchedUsername?.substring(0, 1).toUpperCase() ?? '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  backgroundImage: matchedProfile.photos.isNotEmpty
+                      ? CachedNetworkImageProvider(
+                          UrlTransformer.transform(
+                              matchedProfile.photos.first.url),
+                        )
+                      : null,
+                  child: matchedProfile.photos.isEmpty
+                      ? Text(
+                          matchedProfile.firstName.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
                 ),
               ],
             ),

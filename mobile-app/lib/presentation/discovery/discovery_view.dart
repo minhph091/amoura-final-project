@@ -133,11 +133,6 @@ class _DiscoveryViewState extends State<DiscoveryView> {
   }
 
   Widget _buildContent(BuildContext context, DiscoveryViewModel vm) {
-    // Precache images for recommendations if available (on every build, but only if not empty)
-    if (vm.recommendations.isNotEmpty) {
-      RecommendationCache.instance.ensurePrecacheForProfiles(vm.recommendations, context, count: 5);
-    }
-
     if (vm.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -195,7 +190,7 @@ class _DiscoveryViewState extends State<DiscoveryView> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               onPressed: () => vm.loadRecommendations(forceRefresh: true),
-              child: const Text('Tải lại dữ liệu'),
+              child: const Text('Reload Data'),
             ),
           ],
         ),

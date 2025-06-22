@@ -52,6 +52,7 @@ class SwipeCardStack extends StatelessWidget {
         width: double.infinity,
         height: cardHeight,
         child: SwipeableCard(
+          key: ValueKey('swipeable_${profile.userId}'),
           profile: profile,
           interests: interests,
           distance: distance,

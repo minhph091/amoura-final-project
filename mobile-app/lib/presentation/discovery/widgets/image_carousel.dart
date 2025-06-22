@@ -17,12 +17,14 @@ class ImageCarousel extends StatefulWidget {
   final List<PhotoModel> photos;
   final bool showStoryProgress;
   final ImageCarouselController? controller;
+  final String? uniqueKey;
 
   const ImageCarousel({
     super.key,
     required this.photos,
     this.showStoryProgress = false,
     this.controller,
+    this.uniqueKey,
   });
 
   @override
@@ -43,7 +45,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
   @override
   void didUpdateWidget(covariant ImageCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.photos != oldWidget.photos) {
+    if (widget.photos != oldWidget.photos || widget.uniqueKey != oldWidget.uniqueKey) {
       _resetToFirstImage();
     }
     widget.controller?._reset = _resetToFirstImage;
@@ -100,6 +102,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
                 final photo = widget.photos[index];
                 final transformedUrl = UrlTransformer.transform(photo.url);
                 return CachedNetworkImage(
+                  key: ValueKey('${widget.uniqueKey}_${photo.id}_$index'),
                   imageUrl: transformedUrl,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(

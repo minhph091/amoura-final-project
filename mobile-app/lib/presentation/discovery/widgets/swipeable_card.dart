@@ -133,6 +133,7 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
             child: Transform.translate(
               offset: Offset(0, nextCardOffset),
               child: ProfileCard(
+                key: ValueKey('next_profile_${widget.nextProfile!.userId}'),
                 profile: widget.nextProfile!,
                 interests: widget.nextInterests!,
                 distance: widget.nextDistance,
@@ -153,6 +154,7 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
                   child: Stack(
                     children: [
                       ProfileCard(
+                        key: ValueKey('current_profile_${widget.profile.userId}'),
                         profile: widget.profile,
                         interests: widget.interests,
                         distance: widget.distance,

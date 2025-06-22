@@ -28,6 +28,12 @@ class DiscoveryViewModel extends ChangeNotifier {
   // Current user location for distance calculation
   double? _currentUserLatitude;
   double? _currentUserLongitude;
+  
+  // Current user ID to filter out own profile
+  int? _currentUserId;
+
+  // Current user avatar
+  String? _currentUserAvatarUrl;
 
   // Service layer for API operations
   final MatchService _matchService;
@@ -55,6 +61,12 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Get current user's location coordinates
   double? get currentUserLatitude => _currentUserLatitude;
   double? get currentUserLongitude => _currentUserLongitude;
+  
+  /// Get current user ID
+  int? get currentUserId => _currentUserId;
+
+  /// Get current user avatar URL
+  String? get currentUserAvatarUrl => _currentUserAvatarUrl;
 
   /// Set context for showing dialogs
   void setContext(BuildContext context) {
@@ -65,6 +77,18 @@ class DiscoveryViewModel extends ChangeNotifier {
   Future<void> loadCurrentUserProfile() async {
     try {
       final profileData = await _profileService.getProfile();
+      
+      // Extract current user ID
+      if (profileData['userId'] != null) {
+        _currentUserId = profileData['userId'] as int;
+        // Set current user ID in cache for filtering
+        RecommendationCache.instance.setCurrentUserId(_currentUserId);
+      }
+      
+      // Extract current user avatar
+      if (profileData['avatarUrl'] != null) {
+        _currentUserAvatarUrl = profileData['avatarUrl'] as String;
+      }
       
       // Extract location data from profile
       if (profileData['location'] != null && profileData['location'] is Map<String, dynamic>) {
@@ -106,12 +130,6 @@ class DiscoveryViewModel extends ChangeNotifier {
       profile.longitude,
     );
     
-    // Debug logging
-    print('Distance calculation:');
-    print('  Current user: $_currentUserLatitude, $_currentUserLongitude');
-    print('  Profile ${profile.username}: ${profile.latitude}, ${profile.longitude}');
-    print('  Result: $distance');
-    
     return distance;
   }
 
@@ -126,14 +144,14 @@ class DiscoveryViewModel extends ChangeNotifier {
       // Load current user profile first to get location for distance calculation
       await loadCurrentUserProfile();
       
-      // Nếu forceRefresh, clear cache trước khi gọi API
+      // If forceRefresh, clear cache before calling API
       if (forceRefresh) {
         RecommendationCache.instance.clear();
       }
       // Check cache first
       final cached = RecommendationCache.instance.recommendations;
       if (!forceRefresh && cached != null && cached.isNotEmpty) {
-        _recommendations = cached;
+        _recommendations = _filterOutCurrentUser(cached);
         _currentProfileIndex = 0;
         _isLoading = false;
         notifyListeners();
@@ -142,12 +160,12 @@ class DiscoveryViewModel extends ChangeNotifier {
       }
       // Call the service layer to get recommendations
       final recommendations = await _matchService.getRecommendations();
-      _recommendations = recommendations;
+      _recommendations = _filterOutCurrentUser(recommendations);
       _currentProfileIndex = 0;
       _isLoading = false;
       notifyListeners();
       // Cache the new recommendations
-      RecommendationCache.instance.setRecommendations(recommendations);
+      RecommendationCache.instance.setRecommendations(_recommendations);
       // After loading, pre-cache images for a smoother experience
       _precacheInitialImages();
     } catch (e) {
@@ -155,6 +173,21 @@ class DiscoveryViewModel extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
     }
+  }
+
+  /// Filter out current user's profile from recommendations
+  List<UserRecommendationModel> _filterOutCurrentUser(List<UserRecommendationModel> recommendations) {
+    if (_currentUserId == null) {
+      return recommendations;
+    }
+    
+    final filtered = recommendations.where((profile) => profile.userId != _currentUserId).toList();
+    
+    if (filtered.length != recommendations.length) {
+      print('Filtered out current user profile (ID: $_currentUserId) from recommendations');
+    }
+    
+    return filtered;
   }
 
   void setInterests(List<InterestModel> interests) {
@@ -175,7 +208,7 @@ class DiscoveryViewModel extends ChangeNotifier {
       
       // Handle match if occurred
       if (response.isMatch) {
-        _handleMatch(response);
+        _handleMatch(response, currentProfile);
       }
       
       _moveToNextProfile();
@@ -238,15 +271,10 @@ class DiscoveryViewModel extends ChangeNotifier {
 
   /// Handle match response
   /// This method shows the match dialog when a match occurs
-  void _handleMatch(SwipeResponseModel response) {
+  void _handleMatch(SwipeResponseModel response, UserRecommendationModel matchedProfile) {
     if (_context != null) {
-      showMatchDialog(_context!, response);
+      showMatchDialog(_context!, response, matchedProfile, _currentUserAvatarUrl);
     }
-    
-    // Log the match for debugging
-    print('Match occurred! Match ID: ${response.matchId ?? 'N/A'}');
-    print('Matched with: ${response.matchedUsername ?? 'Unknown'}');
-    print('Message: ${response.matchMessage ?? 'No message'}');
   }
 
   /// Clear error state

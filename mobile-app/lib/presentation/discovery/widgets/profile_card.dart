@@ -83,6 +83,7 @@ class ProfileCard extends StatelessWidget {
           photos: displayPhotos,
           showStoryProgress: true,
           controller: imageController,
+          uniqueKey: 'profile_${profile.userId}',
         ),
         // Overlay user info at the bottom
         Positioned(

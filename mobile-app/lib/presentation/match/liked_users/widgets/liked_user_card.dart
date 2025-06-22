@@ -1,9 +1,13 @@
+import 'package:amoura/app/di/injection.dart';
+import 'package:amoura/core/services/profile_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../domain/models/match/liked_user_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../discovery/widgets/match_dialog.dart';
 import '../../../../data/models/match/swipe_response_model.dart';
 import '../../../../core/utils/url_transformer.dart';
+import '../../../../data/models/match/user_recommendation_model.dart';
+import '../../../../data/models/profile/photo_model.dart';
 
 class LikedUserCard extends StatelessWidget {
   final LikedUserModel user;
@@ -120,7 +124,7 @@ class LikedUserCard extends StatelessWidget {
 
   Widget _buildLikeButton(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         // Create a mock SwipeResponseModel for the match dialog
         // In a real scenario, this would come from the API response
         final mockMatchResponse = SwipeResponseModel(
@@ -131,9 +135,34 @@ class LikedUserCard extends StatelessWidget {
           matchedUsername: user.firstName,
           matchMessage: 'It\'s a match with ${user.firstName}!',
         );
-        
+
+        final matchedProfile = UserRecommendationModel(
+          userId: int.tryParse(user.id) ?? 0,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          age: user.age,
+          bio: user.bio,
+          location: user.location,
+          photos: user.photoUrls
+              .map((url) => PhotoModel(
+                    id: 0, // Mock ID
+                    userId: int.tryParse(user.id) ?? 0, // Mock user ID
+                    path: url, // Correct parameter name
+                    type: 'highlight', // Mock type
+                    createdAt: DateTime.now(), // Mock date
+                  ))
+              .toList(),
+          interests: [], // Not available in LikedUserModel, provide empty list
+          pets: [], // Not available in LikedUserModel, provide empty list
+        );
+        // Get current user's avatar
+        final profileService = getIt<ProfileService>();
+        final profileData = await profileService.getProfile();
+        final currentUserAvatarUrl = profileData['avatarUrl'] as String?;
         // Show match dialog when user likes back
-        showMatchDialog(context, mockMatchResponse).then((_) {
+        showMatchDialog(context, mockMatchResponse, matchedProfile, currentUserAvatarUrl)
+            .then((_) {
           // Call the onLike callback if provided
           if (onLike != null) {
             onLike!();
