@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../setup/theme/setup_profile_theme.dart';
 import '../edit_profile_viewmodel.dart';
@@ -36,46 +38,90 @@ class _EditProfileLocationSectionState extends State<EditProfileLocationSection>
     super.dispose();
   }
 
-  void _requestLocation() async {
-    // Show a loading indicator
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Row(
-        children: [
-          SizedBox(
-            width: 20, height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text('Requesting location...')
-        ],
-      )),
-    );
-
-    // This would typically be a real location request
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      // Here we would update with real location data
-      // For the demo, we'll use placeholder values
-      setState(() {
-        _cityController.text = 'New York';
-        _stateController.text = 'NY';
-        _countryController.text = 'United States';
-
-        widget.viewModel.updateLocation(
-          city: 'New York',
-          state: 'NY',
-          country: 'United States',
-        );
-      });
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  Future<void> _requestLocation() async {
+    try {
+      // 1. Show a loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location updated successfully')),
+        SnackBar(
+          content: Row(
+            children: const [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Requesting location...'),
+            ],
+          ),
+        ),
       );
+
+      // 2. Check for permissions and service status
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw 'Location services are disabled.';
+      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw 'Location permissions are denied.';
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        throw 'Location permissions are permanently denied.';
+      }
+
+      // 3. Get the current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // 4. Reverse geocode to get address details
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (mounted && placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        final city = place.subAdministrativeArea ?? 'Unknown City';
+        final state = place.administrativeArea ?? 'Unknown State';
+        final country = place.country ?? 'Unknown Country';
+
+        // 5. Update UI and ViewModel
+        setState(() {
+          _cityController.text = city;
+          _stateController.text = state;
+          _countryController.text = country;
+
+          widget.viewModel.updateLocation(
+            city: city,
+            state: state,
+            country: country,
+            latitude: position.latitude,
+            longitude: position.longitude,
+          );
+        });
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location updated successfully')),
+        );
+      } else {
+        throw 'Could not get address from coordinates.';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to get location: $e')),
+        );
+      }
     }
   }
 

@@ -9,7 +9,9 @@ class ApiEndpoints {
   static const String requestLoginOtp = '/auth/login/otp/request';
   static const String checkEmailAvailability = '/auth/email-available';
   static const String requestPasswordReset = '/auth/password/reset/request';
+  static const String verifyPasswordResetOtp = '/auth/password/reset/verify-otp';
   static const String resetPassword = '/auth/password/reset';
+  static const String resendPasswordResetOtp = '/auth/password/reset/resend-otp';
   static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh';
 

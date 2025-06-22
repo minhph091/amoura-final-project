@@ -189,7 +189,7 @@ class AuthApi {
         data: {'email': email},
       );
       final data = response.data as Map<String, dynamic>;
-      if (data['message'] == null) {
+      if (data['sessionToken'] == null) {
         throw ApiException('Could not send password reset OTP');
       }
       return data;
@@ -198,23 +198,59 @@ class AuthApi {
     }
   }
 
-  Future<Map<String, dynamic>> resetPassword({
-    required String email,
+  Future<Map<String, dynamic>> verifyPasswordResetOtp({
+    required String sessionToken,
     required String otpCode,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.verifyPasswordResetOtp,
+        data: {
+          'sessionToken': sessionToken,
+          'otpCode': otpCode,
+        },
+      );
+      final data = response.data as Map<String, dynamic>;
+      if (data['status'] != 'VERIFIED') {
+        throw ApiException(data['message'] ?? 'Invalid OTP code');
+      }
+      return data;
+    } on DioException catch (e) {
+      throw ApiException(_handleDioError(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword({
+    required String sessionToken,
     required String newPassword,
   }) async {
     try {
       final response = await _apiClient.post(
         ApiEndpoints.resetPassword,
         data: {
-          'email': email,
-          'otpCode': otpCode,
+          'sessionToken': sessionToken,
           'newPassword': newPassword,
         },
       );
       final data = response.data as Map<String, dynamic>;
       if (data['message'] == null) {
         throw ApiException('Could not reset password');
+      }
+      return data;
+    } on DioException catch (e) {
+      throw ApiException(_handleDioError(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> resendPasswordResetOtp({required String sessionToken}) async {
+    try {
+      final response = await _apiClient.post(
+        '${ApiEndpoints.resendPasswordResetOtp}?sessionToken=$sessionToken',
+        data: {},
+      );
+      final data = response.data as Map<String, dynamic>;
+      if (data['message'] == null) {
+        throw ApiException('Could not resend password reset OTP');
       }
       return data;
     } on DioException catch (e) {

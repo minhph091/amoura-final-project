@@ -103,12 +103,10 @@ class UserInfoSection extends StatelessWidget {
             runSpacing: 0,
             children: interests
                 .map((interest) => InterestChip(
-              label: interest.label,
-              icon: interest.icon,
-              iconColor: interest.iconColor,
-              borderColor: interest.borderColor,
-              gradient: interest.gradient,
-            ))
+                      label: interest.label,
+                      icon: interest.icon,
+                      iconColor: interest.iconColor,
+                    ))
                 .toList(),
           ),
         ],

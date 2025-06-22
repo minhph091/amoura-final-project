@@ -6,9 +6,14 @@ import '../../../../core/utils/validation_util.dart';
 import '../../../../config/theme/app_colors.dart';
 
 class ResetEmailForm extends StatefulWidget {
-  final void Function(String email) onSend;
+  final Future<void> Function(String email) onSend;
+  final bool isLoading;
 
-  const ResetEmailForm({super.key, required this.onSend});
+  const ResetEmailForm({
+    super.key, 
+    required this.onSend,
+    this.isLoading = false,
+  });
 
   @override
   State<ResetEmailForm> createState() => _ResetEmailFormState();
@@ -37,9 +42,9 @@ class _ResetEmailFormState extends State<ResetEmailForm> with SingleTickerProvid
     super.dispose();
   }
 
-  void _onSubmit() {
+  Future<void> _onSubmit() async {
     if (_formKey.currentState?.validate() == true) {
-      widget.onSend(_emailController.text.trim());
+      await widget.onSend(_emailController.text.trim());
     } else {
       _shakeController.forward(from: 0);
     }
@@ -62,6 +67,7 @@ class _ResetEmailFormState extends State<ResetEmailForm> with SingleTickerProvid
               hintText: "Enter your email",
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              readOnly: widget.isLoading,
               prefixIcon: Icons.email_outlined,
               prefixIconColor: Theme.of(context).colorScheme.primary,
               onChanged: (_) => setState(() {}),
@@ -69,8 +75,8 @@ class _ResetEmailFormState extends State<ResetEmailForm> with SingleTickerProvid
             ),
             const SizedBox(height: 16),
             AppButton(
-              text: "Send Code",
-              onPressed: _onSubmit,
+              text: widget.isLoading ? "Sending..." : "Send Code",
+              onPressed: widget.isLoading ? null : _onSubmit,
               gradient: LinearGradient(
                 colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
                 begin: Alignment.centerLeft,

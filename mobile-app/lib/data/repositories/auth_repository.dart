@@ -100,15 +100,29 @@ class AuthRepository {
     return await _authApi.requestPasswordReset(email: email);
   }
 
-  Future<Map<String, dynamic>> resetPassword({
-    required String email,
+  Future<Map<String, dynamic>> verifyPasswordResetOtp({
+    required String sessionToken,
     required String otpCode,
+  }) async {
+    return await _authApi.verifyPasswordResetOtp(
+      sessionToken: sessionToken,
+      otpCode: otpCode,
+    );
+  }
+
+  Future<Map<String, dynamic>> resetPassword({
+    required String sessionToken,
     required String newPassword,
   }) async {
     return await _authApi.resetPassword(
-      email: email,
-      otpCode: otpCode,
+      sessionToken: sessionToken,
       newPassword: newPassword,
     );
+  }
+
+  Future<Map<String, dynamic>> resendPasswordResetOtp({
+    required String sessionToken,
+  }) async {
+    return await _authApi.resendPasswordResetOtp(sessionToken: sessionToken);
   }
 }

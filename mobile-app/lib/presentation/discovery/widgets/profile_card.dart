@@ -25,20 +25,23 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final age = profile.age ?? (profile.dateOfBirth != null
-        ? DateUtil.calculateAge(profile.dateOfBirth!)
-        : 0);
-    final location = profile.location ?? 'Unknown';
-    final bio = profile.bio ?? 'No bio provided';
+    final ageText = profile.age != null
+        ? ', ${profile.age}'
+        : (profile.dateOfBirth != null
+            ? ', ${DateUtil.calculateAge(profile.dateOfBirth!)}'
+            : '');
+    final displayLocation = distance ?? profile.location ?? 'Unknown';
+    final bio =
+        profile.bio?.isNotEmpty == true ? profile.bio! : 'Always ready for an adventure!';
     final name = profile.fullName;
-    
+
     // Use profile's interests if available, otherwise fall back to passed interests
-    final profileInterests = profile.interests.isNotEmpty ? profile.interests : interests;
-    
-    final interestChips = profileInterests
-        .map((interest) {
+    final profileInterests =
+        profile.interests.isNotEmpty ? profile.interests : interests;
+
+    final interestChips = profileInterests.map((interest) {
       final interestOption = interestOptions.firstWhere(
-            (option) => option['value'] == interest.name,
+        (option) => option['value'] == interest.name,
         orElse: () => {
           'label': interest.name,
           'icon': Icons.interests,
@@ -57,11 +60,11 @@ class ProfileCard extends StatelessWidget {
           ],
         ),
       );
-    })
-        .toList();
+    }).toList();
 
     // --- Filter and sort photos: cover first, then up to 4 highlights by uploadedAt ---
-    final coverList = profile.photos.where((p) => p.type == 'profile_cover').toList();
+    final coverList =
+        profile.photos.where((p) => p.type == 'profile_cover').toList();
     final cover = coverList.isNotEmpty ? coverList.first : null;
     final highlights = profile.photos
         .where((p) => p.type == 'highlight')
@@ -83,7 +86,7 @@ class ProfileCard extends StatelessWidget {
           photos: displayPhotos,
           showStoryProgress: true,
           controller: imageController,
-          uniqueKey: 'profile_${profile.userId}',
+          uniqueKey: 'profile_${profile.userId}', // Add unique key to prevent flickering
         ),
         // Overlay user info at the bottom
         Positioned(
@@ -91,47 +94,34 @@ class ProfileCard extends StatelessWidget {
           right: 0,
           bottom: 0,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Colors.black.withOpacity(0.0),
-                  Colors.black.withOpacity(0.45),
-                  Colors.black.withOpacity(0.85),
+                  Colors.black.withOpacity(0.9),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                stops: const [0.0, 0.5, 1.0],
+                stops: const [0.5, 1.0],
               ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      name,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                Text(
+                  '$name$ageText',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         shadows: [
                           Shadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withOpacity(0.5),
                             blurRadius: 6,
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$age',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -139,61 +129,45 @@ class ProfileCard extends StatelessWidget {
                     const Icon(
                       Icons.location_on_outlined,
                       color: Colors.white70,
-                      size: 18,
+                      size: 16,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      location,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      displayLocation,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                   ],
                 ),
-                if (distance != null) ...[
-                  const SizedBox(height: 4),
+                if (bio.isNotEmpty) ...[
+                  const SizedBox(height: 12),
                   Text(
-                    distance!,
+                    bio,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14,
-                    ),
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 15,
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-                const SizedBox(height: 13),
-                Text(
-                  bio,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 17,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 4,
-                      ),
-                    ],
+                const SizedBox(height: 16),
+                if (interestChips.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: interestChips
+                        .map<Widget>((interest) => InterestChip(
+                              label: interest.label,
+                              icon: interest.icon,
+                              iconColor: interest.iconColor,
+                            ))
+                        .toList(),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 17),
-                Wrap(
-                  spacing: 0,
-                  runSpacing: 0,
-                  children: interestChips
-                      .map<Widget>((interest) => InterestChip(
-                            label: interest.label,
-                            icon: interest.icon,
-                            iconColor: interest.iconColor,
-                            borderColor: interest.borderColor,
-                            gradient: interest.gradient,
-                          ))
-                      .toList(),
-                ),
-                const SizedBox(height: 10),
+                // Add padding at the bottom to push content up
+                const SizedBox(height: 90),
               ],
             ),
           ),

@@ -3,20 +3,22 @@ import 'package:flutter/material.dart';
 
 class OtpInputForm extends StatefulWidget {
   final int otpLength;
-  final Function(String) onSubmit;
+  final Future<void> Function(String)? onSubmit;
   final bool resendAvailable;
   final VoidCallback? onResend;
   final int? remainingSeconds;
   final String? errorMessage;
+  final bool isLoading;
 
   const OtpInputForm({
     Key? key,
     this.otpLength = 6,
-    required this.onSubmit,
+    this.onSubmit,
     this.resendAvailable = false,
     this.onResend,
     this.remainingSeconds,
     this.errorMessage,
+    this.isLoading = false,
   }) : super(key: key);
 
   @override
@@ -27,6 +29,7 @@ class _OtpInputFormState extends State<OtpInputForm> {
   late List<String> _otpDigits;
   late List<FocusNode> _focusNodes;
   late List<TextEditingController> _controllers;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -51,9 +54,27 @@ class _OtpInputFormState extends State<OtpInputForm> {
     }
 
     final otp = _otpDigits.join();
-    if (otp.length == widget.otpLength && otp.trim().isNotEmpty) {
+    if (otp.length == widget.otpLength && otp.trim().isNotEmpty && !_isSubmitting) {
       print('Submitting OTP: $otp');
-      widget.onSubmit(otp);
+      _submitOtp(otp);
+    }
+  }
+
+  Future<void> _submitOtp(String otp) async {
+    if (widget.onSubmit == null || _isSubmitting) return;
+    
+    setState(() {
+      _isSubmitting = true;
+    });
+    
+    try {
+      await widget.onSubmit!(otp);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
   }
 
@@ -86,6 +107,7 @@ class _OtpInputFormState extends State<OtpInputForm> {
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 maxLength: 1,
+                enabled: !_isSubmitting,
                 style: theme.textTheme.titleMedium,
                 decoration: InputDecoration(
                   counterText: '',
@@ -101,6 +123,12 @@ class _OtpInputFormState extends State<OtpInputForm> {
           }),
         ),
         const SizedBox(height: 20),
+        // Hiển thị loading indicator khi đang submit
+        if (_isSubmitting) ...[
+          const SizedBox(height: 12),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 12),
+        ],
         // Hiển thị bộ đếm ngược hoặc nút Resend OTP
         if (widget.remainingSeconds != null && !widget.resendAvailable)
           Text(
@@ -110,9 +138,9 @@ class _OtpInputFormState extends State<OtpInputForm> {
               fontSize: 14,
             ),
           )
-        else if (widget.resendAvailable)
+        else if (widget.resendAvailable && !_isSubmitting)
           TextButton(
-            onPressed: widget.onResend,
+            onPressed: widget.isLoading ? null : widget.onResend,
             child: Text(
               'Resend OTP',
               style: TextStyle(
@@ -121,20 +149,6 @@ class _OtpInputFormState extends State<OtpInputForm> {
               ),
             ),
           ),
-        // Hiển thị thông báo lỗi hoặc thành công
-        if (widget.errorMessage != null) ...[
-          const SizedBox(height: 12),
-          Text(
-            widget.errorMessage!,
-            style: TextStyle(
-              color: widget.errorMessage!.contains('A new OTP has been sent')
-                  ? colorScheme.primary
-                  : colorScheme.error,
-              fontSize: 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ],
     );
   }

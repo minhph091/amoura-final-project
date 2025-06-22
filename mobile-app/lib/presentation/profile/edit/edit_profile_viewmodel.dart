@@ -29,6 +29,8 @@ class EditProfileViewModel extends ChangeNotifier {
   String? city;
   String? state;
   String? country;
+  double? latitude;
+  double? longitude;
   int? locationPreference;
 
   String? bodyType;
@@ -143,6 +145,12 @@ class EditProfileViewModel extends ChangeNotifier {
         : null;
     country = profile?['location'] != null 
         ? (profile!['location'] as Map<String, dynamic>)['country'] as String? 
+        : null;
+    latitude = profile?['location'] != null 
+        ? (profile!['location'] as Map<String, dynamic>)['latitude'] as double? 
+        : null;
+    longitude = profile?['location'] != null 
+        ? (profile!['location'] as Map<String, dynamic>)['longitude'] as double? 
         : null;
     locationPreference = profile?['locationPreference'] as int? ?? 10;
     interestedInNewLanguage = profile?['interestedInNewLanguage'] as bool? ?? false;
@@ -299,10 +307,18 @@ class EditProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateLocation({String? city, String? state, String? country}) {
-    this.city = city ?? this.city;
-    this.state = state ?? this.state;
-    this.country = country ?? this.country;
+  void updateLocation({
+    String? city,
+    String? state,
+    String? country,
+    double? latitude,
+    double? longitude,
+  }) {
+    if (city != null) this.city = city;
+    if (state != null) this.state = state;
+    if (country != null) this.country = country;
+    if (latitude != null) this.latitude = latitude;
+    if (longitude != null) this.longitude = longitude;
     hasChanges = true;
     notifyListeners();
   }
@@ -352,24 +368,48 @@ class EditProfileViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Validate required fields
-      final firstNameError = validateFirstName(firstName);
-      final lastNameError = validateLastName(lastName);
-      final dobError = validateDob();
-      final genderError = validateGender();
-      final interestsError = validateInterests();
-
-      if (firstNameError != null || lastNameError != null || dobError != null ||
-          genderError != null || interestsError != null) {
-        throw 'Please fill all required fields correctly';
+      final authService = GetIt.I<AuthService>();
+      final sessionToken = await authService.getAccessToken();
+      if (sessionToken == null) {
+        throw Exception("User is not authenticated");
       }
 
-      // Lấy access token
-      final authService = GetIt.I<AuthService>();
-      final accessToken = await authService.getAccessToken();
-      if (accessToken == null) throw 'Authentication required. Please log in again.';
+      // Prepare the data map for the API
+      final Map<String, dynamic> data = {
+        'dateOfBirth': dateOfBirth?.toIso8601String(),
+        'sex': sex,
+        'orientationId': orientation != null ? int.tryParse(orientation!) : null,
+        // Group location data into a nested map
+        'location': {
+          'city': city,
+          'state': state,
+          'country': country,
+          'latitude': latitude,
+          'longitude': longitude,
+        },
+        'locationPreference': locationPreference,
+        'bodyTypeId': bodyType != null ? int.tryParse(bodyType!) : null,
+        'height': height,
+        'jobIndustryId': jobIndustry != null ? int.tryParse(jobIndustry!) : null,
+        'educationLevelId': educationLevel != null ? int.tryParse(educationLevel!) : null,
+        'dropOut': dropOut,
+        'drinkStatusId': drinkStatus != null ? int.tryParse(drinkStatus!) : null,
+        'smokeStatusId': smokeStatus != null ? int.tryParse(smokeStatus!) : null,
+        'petIds': selectedPets?.map((id) => int.tryParse(id)).whereType<int>().toList(),
+        'interestIds': selectedInterestIds?.map((id) => int.tryParse(id)).whereType<int>().toList(),
+        'languageIds': selectedLanguageIds?.map((id) => int.tryParse(id)).whereType<int>().toList(),
+        'interestedInNewLanguage': interestedInNewLanguage,
+        'bio': bio,
+      };
 
-      final profileApi = GetIt.I<ProfileApi>();
+      // Remove null values to avoid sending empty fields
+      data.removeWhere((key, value) => value == null);
+      if (data['location'] is Map) {
+        (data['location'] as Map).removeWhere((key, value) => value == null);
+      }
+
+      // Get the use case
+      final updateProfileUseCase = GetIt.I<UpdateProfileUseCase>();
 
       // 1. Upload avatar nếu có thay đổi
       if (avatarPath != null) {
@@ -379,7 +419,7 @@ class EditProfileViewModel extends ChangeNotifier {
         // Xóa avatar cũ trước khi upload mới
         if (avatarUrl != null && avatarUrl!.isNotEmpty) {
           try {
-            await profileApi.deleteAvatar();
+            await GetIt.I<ProfileApi>().deleteAvatar();
             print('Successfully deleted old avatar');
           } catch (e) {
             print('Error deleting old avatar: $e');
@@ -387,7 +427,7 @@ class EditProfileViewModel extends ChangeNotifier {
           }
         }
         // Upload avatar mới
-        final url = await profileApi.uploadAvatar(avatarPath!);
+        final url = await GetIt.I<ProfileApi>().uploadAvatar(avatarPath!);
         avatarUrl = url;
         avatarPath = null;
       }
@@ -400,7 +440,7 @@ class EditProfileViewModel extends ChangeNotifier {
         // Xóa cover cũ trước khi upload mới
         if (coverUrl != null && coverUrl!.isNotEmpty) {
           try {
-            await profileApi.deleteCover();
+            await GetIt.I<ProfileApi>().deleteCover();
             print('Successfully deleted old cover');
           } catch (e) {
             print('Error deleting old cover: $e');
@@ -408,14 +448,14 @@ class EditProfileViewModel extends ChangeNotifier {
           }
         }
         // Upload cover mới
-        final url = await profileApi.uploadCover(coverPath!);
+        final url = await GetIt.I<ProfileApi>().uploadCover(coverPath!);
         coverUrl = url;
         coverPath = null;
       }
 
       // 3. Xóa highlight nếu có
       for (final id in removedHighlightIds) {
-        await profileApi.deleteHighlight(id);
+        await GetIt.I<ProfileApi>().deleteHighlight(id);
       }
       removedHighlightIds.clear();
 
@@ -424,61 +464,14 @@ class EditProfileViewModel extends ChangeNotifier {
         if (!await _isValidImageFile(path)) {
           throw 'Invalid image file format for highlight';
         }
-        await profileApi.uploadHighlight(path);
+        await GetIt.I<ProfileApi>().uploadHighlight(path);
       }
       additionalPhotos.clear();
 
-      // Chỉ gửi firstName, lastName vào /user
-      final Map<String, dynamic> userData = {
-        if (firstName != null) 'firstName': firstName,
-        if (lastName != null) 'lastName': lastName,
-      };
-
-      // Chuyển các trường id sang int
-      int? bodyTypeId = bodyType != null ? int.tryParse(bodyType!) : null;
-      int? jobIndustryId = jobIndustry != null ? int.tryParse(jobIndustry!) : null;
-      int? educationLevelId = educationLevel != null ? int.tryParse(educationLevel!) : null;
-      int? orientationId = orientation != null ? int.tryParse(orientation!) : null;
-      int? drinkStatusId = drinkStatus != null ? int.tryParse(drinkStatus!) : null;
-      int? smokeStatusId = smokeStatus != null ? int.tryParse(smokeStatus!) : null;
-      List<int> petIdList = selectedPets?.map((id) => int.tryParse(id)).whereType<int>().toList() ?? [];
-      List<int> interestIdList = selectedInterestIds?.map((id) => int.tryParse(id)).whereType<int>().toList() ?? [];
-      List<int> languageIdList = selectedLanguageIds?.map((id) => int.tryParse(id)).whereType<int>().toList() ?? [];
-
-      // Tạo profileData với dữ liệu mới nhất từ các biến của ViewModel
-      final Map<String, dynamic> profileData = {
-        'dateOfBirth': dateOfBirth?.toIso8601String(),
-        'sex': sex,
-        'orientationId': orientationId,
-        'city': city,
-        'state': state,
-        'country': country,
-        'locationPreference': locationPreference,
-        'bodyTypeId': bodyTypeId,
-        'height': height,
-        'jobIndustryId': jobIndustryId,
-        'educationLevelId': educationLevelId,
-        'dropOut': dropOut,
-        'drinkStatusId': drinkStatusId,
-        'smokeStatusId': smokeStatusId,
-        'petIds': petIdList,
-        'interestIds': interestIdList,
-        'languageIds': languageIdList,
-        'interestedInNewLanguage': interestedInNewLanguage,
-        'bio': bio,
-      };
-
-      // Gọi update user nếu có thay đổi
-      if (userData.isNotEmpty) {
-        final updateUserUseCase = GetIt.I<UpdateUserUseCase>();
-        await updateUserUseCase.execute(userData: userData);
-      }
-
       // Gọi update profile với toàn bộ dữ liệu mới
-      final updateProfileUseCase = GetIt.I<UpdateProfileUseCase>();
       await updateProfileUseCase.execute(
-        sessionToken: accessToken,
-        profileData: profileData,
+        sessionToken: sessionToken,
+        profileData: data,
       );
 
       // Sau khi update, load lại profile để đồng bộ dữ liệu mới nhất

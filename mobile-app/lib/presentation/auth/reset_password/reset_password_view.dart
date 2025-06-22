@@ -71,29 +71,44 @@ class ResetPasswordView extends StatelessWidget {
                             ),
                           ),
                         const SizedBox(height: 28),
-                        if (viewModel.isLoading)
-                          const CircularProgressIndicator()
-                        else if (viewModel.hasVerifiedOtp)
-                          NewPasswordForm(
-                            onSubmit: (password) async {
-                              final success = await viewModel.resetPassword(password);
-                              if (success) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(viewModel.errorMessage ?? 'Password reset successfully'),
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
+                        if (viewModel.hasVerifiedOtp)
+                          Column(
+                            children: [
+                              NewPasswordForm(
+                                isLoading: viewModel.isLoading,
+                                onSubmit: (password) async {
+                                  final success = await viewModel.resetPassword(password);
+                                  if (success) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Password reset successfully'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                    Navigator.pushReplacementNamed(context, '/login');
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(viewModel.errorMessage ?? 'Failed to reset password'),
+                                        backgroundColor: Theme.of(context).colorScheme.error,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                              if (viewModel.errorMessage != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: Text(
+                                    viewModel.errorMessage!,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.error,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                );
-                                Navigator.pushReplacementNamed(context, '/login');
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(viewModel.errorMessage ?? 'Failed to reset password'),
-                                    backgroundColor: Theme.of(context).colorScheme.error,
-                                  ),
-                                );
-                              }
-                            },
+                                ),
+                            ],
                           )
                         else if (viewModel.hasSentEmail)
                           OtpInputForm(
@@ -102,19 +117,22 @@ class ResetPasswordView extends StatelessWidget {
                             resendAvailable: true,
                             onResend: viewModel.onResendOtp,
                             errorMessage: viewModel.errorMessage,
+                            isLoading: viewModel.isLoading,
                           )
                         else
                           ResetEmailForm(
+                            isLoading: viewModel.isLoading,
                             onSend: (email) => viewModel.onSendEmail(email),
                           ),
-                        if (viewModel.errorMessage != null &&
-                            (!viewModel.hasSentEmail || viewModel.hasVerifiedOtp))
+                        if (viewModel.errorMessage != null && !viewModel.hasVerifiedOtp)
                           Padding(
                             padding: const EdgeInsets.only(top: 12),
                             child: Text(
                               viewModel.errorMessage!,
                               style: TextStyle(
-                                color: viewModel.errorMessage!.contains('successfully')
+                                color: viewModel.errorMessage!.contains('successfully') ||
+                                        viewModel.errorMessage!.contains('A new OTP has been sent') ||
+                                        viewModel.errorMessage!.contains('has been sent to your email')
                                     ? Theme.of(context).colorScheme.primary
                                     : Theme.of(context).colorScheme.error,
                                 fontSize: 14,

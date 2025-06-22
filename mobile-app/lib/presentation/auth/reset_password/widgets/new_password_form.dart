@@ -5,9 +5,14 @@ import '../../../../core/utils/validation_util.dart';
 import '../../../../config/theme/app_colors.dart';
 
 class NewPasswordForm extends StatefulWidget {
-  final void Function(String password) onSubmit;
+  final Future<void> Function(String password) onSubmit;
+  final bool isLoading;
 
-  const NewPasswordForm({super.key, required this.onSubmit});
+  const NewPasswordForm({
+    super.key, 
+    required this.onSubmit,
+    this.isLoading = false,
+  });
 
   @override
   State<NewPasswordForm> createState() => _NewPasswordFormState();
@@ -40,7 +45,7 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
     super.dispose();
   }
 
-  void _onSubmit() {
+  Future<void> _onSubmit() async {
     if (_formKey.currentState?.validate() == true) {
       if (_passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -48,7 +53,7 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
         );
         return;
       }
-      widget.onSubmit(_passwordController.text);
+      await widget.onSubmit(_passwordController.text);
     } else {
       _shakeController.forward(from: 0);
     }
@@ -72,11 +77,12 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
               controller: _passwordController,
               keyboardType: TextInputType.visiblePassword,
               obscureText: _obscurePassword,
+              readOnly: widget.isLoading,
               prefixIcon: Icons.lock_outline,
               prefixIconColor: Theme.of(context).colorScheme.primary,
               suffixIcon: IconButton(
                 icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                onPressed: widget.isLoading ? null : () => setState(() => _obscurePassword = !_obscurePassword),
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               onChanged: (_) => setState(() {}),
@@ -89,11 +95,12 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
               controller: _confirmPasswordController,
               keyboardType: TextInputType.visiblePassword,
               obscureText: _obscureConfirmPassword,
+              readOnly: widget.isLoading,
               prefixIcon: Icons.lock_outline,
               prefixIconColor: Theme.of(context).colorScheme.primary,
               suffixIcon: IconButton(
                 icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                onPressed: widget.isLoading ? null : () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               onChanged: (_) => setState(() {}),
@@ -101,8 +108,8 @@ class _NewPasswordFormState extends State<NewPasswordForm> with SingleTickerProv
             ),
             const SizedBox(height: 24),
             AppButton(
-              text: "Reset Password",
-              onPressed: _onSubmit,
+              text: widget.isLoading ? "Resetting..." : "Reset Password",
+              onPressed: widget.isLoading ? null : _onSubmit,
               gradient: LinearGradient(
                 colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
                 begin: Alignment.centerLeft,

@@ -1,10 +1,12 @@
 // lib/presentation/splash/splash_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../config/theme/app_colors.dart';
 import '../../core/constants/asset_path.dart';
 import '../../core/services/auth_service.dart';
 import '../../app/routes/app_routes.dart';
+import '../profile/view/profile_viewmodel.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -36,10 +38,30 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
   }
 
   Future<void> _navigateAfterDelay() async {
-    final authService = AuthService();
-    final isAuthenticated = await authService.isAuthenticated();
-
+    // Wait for animations to complete and for services to be available
     await Future.delayed(const Duration(milliseconds: 1700));
+    
+    // Use the ProfileViewModel to check authentication status
+    // This is more reliable as it validates the token against the backend
+    final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
+    final authService = AuthService();
+    
+    bool isAuthenticated = false;
+    try {
+      // Check if a token exists first to avoid unnecessary API calls
+      final hasToken = await authService.isAuthenticated();
+      if (hasToken) {
+        // loadProfile will throw an exception if the token is invalid or expired
+        await profileViewModel.loadProfile(); 
+        isAuthenticated = profileViewModel.profile != null;
+      }
+    } catch (e) {
+      // If loading profile fails (e.g., 401 Unauthorized), the token is invalid.
+      // Clear the invalid tokens.
+      await authService.clearTokens();
+      isAuthenticated = false;
+      print('Splash Screen: Invalid token, navigating to login. Error: $e');
+    }
 
     if (mounted) {
       if (isAuthenticated) {

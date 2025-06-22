@@ -10,7 +10,8 @@ import '../../../infrastructure/services/subscription_service.dart';
 class ActionButtonsRow extends StatelessWidget {
   final bool highlightLike;
   final bool highlightPass;
-  const ActionButtonsRow({super.key, this.highlightLike = false, this.highlightPass = false});
+  const ActionButtonsRow(
+      {super.key, this.highlightLike = false, this.highlightPass = false});
 
   @override
   Widget build(BuildContext context) {
@@ -22,19 +23,38 @@ class ActionButtonsRow extends StatelessWidget {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
+    
+    // Define new vibrant colors & gradients
+    const likeColor = Color(0xFFE91E63);
+    const passColor = Color(0xFFD32F2F);
+    const rewindColor = Color(0xFF757575);
+
+    const likeHighlightGradient = LinearGradient(
+      colors: [Color(0xFFF857A6), Color(0xFFFF5858)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+    const passHighlightGradient = LinearGradient(
+      colors: [Color(0xFFF44336), Color(0xFFB71C1C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 82),
+      constraints: const BoxConstraints(maxHeight: 90),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _AnimatedActionButton(
             icon: FontAwesomeIcons.arrowRotateLeft,
             size: 68,
             iconSize: 22,
             gradient: lightGradient,
-            iconColor: const Color(0xFF364F6B),
-            glowColor: const Color(0xFF364F6B),
+            iconColor: rewindColor,
+            glowColor: rewindColor,
+            isDimmed: highlightLike || highlightPass,
             onTap: () {
               if (subscriptionService.isVip) {
                 vm.rewindLastProfile();
@@ -42,7 +62,8 @@ class ActionButtonsRow extends StatelessWidget {
                 VipUpgradeDialog.show(
                   context: context,
                   feature: 'Quay lại người đã bỏ qua',
-                  description: 'Đã bỏ lỡ một người có vẻ phù hợp với bạn? Nâng cấp lên Amoura VIP để quay lại người vừa vuốt trái và nhiều tính năng độc quyền khác.',
+                  description:
+                      'Đã bỏ lỡ một người có vẻ phù hợp với bạn? Nâng cấp lên Amoura VIP để quay lại người vừa vuốt trái và nhiều tính năng độc quyền khác.',
                   icon: Icons.replay,
                 );
               }
@@ -53,11 +74,13 @@ class ActionButtonsRow extends StatelessWidget {
             size: 82,
             iconSize: 26,
             gradient: lightGradient,
-            iconColor: const Color(0xFFFC5185),
-            glowColor: const Color(0xFFFC5185),
+            iconColor: likeColor,
+            glowColor: likeColor,
             isGlow: true,
             isBreathing: true,
             isHighlighted: highlightLike,
+            isDimmed: highlightPass,
+            highlightedGradient: likeHighlightGradient,
             onTap: () async {
               await vm.likeCurrentProfile();
             },
@@ -67,9 +90,11 @@ class ActionButtonsRow extends StatelessWidget {
             size: 68,
             iconSize: 24,
             gradient: lightGradient,
-            iconColor: const Color(0xFFFC5185),
-            glowColor: const Color(0xFFFC5185),
+            iconColor: passColor,
+            glowColor: passColor,
             isHighlighted: highlightPass,
+            isDimmed: highlightLike,
+            highlightedGradient: passHighlightGradient,
             onTap: () async {
               await vm.dislikeCurrentProfile();
             },
@@ -90,6 +115,8 @@ class _AnimatedActionButton extends StatefulWidget {
   final bool isGlow;
   final bool isBreathing;
   final bool isHighlighted;
+  final bool isDimmed;
+  final Gradient? highlightedGradient;
   final VoidCallback onTap;
 
   const _AnimatedActionButton({
@@ -102,6 +129,8 @@ class _AnimatedActionButton extends StatefulWidget {
     this.isGlow = false,
     this.isBreathing = false,
     this.isHighlighted = false,
+    this.isDimmed = false,
+    this.highlightedGradient,
     required this.onTap,
   });
 
@@ -120,16 +149,14 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
   void initState() {
     super.initState();
 
-    // Controller cho hiệu ứng nhấn, giá trị nằm trong [0, 1]
     _tapController = AnimationController(
       duration: const Duration(milliseconds: 170),
       vsync: this,
       lowerBound: 0.0,
       upperBound: 1.0,
-      value: 0.5, // Giá trị ban đầu tương ứng với scale 1.0
+      value: 0.5,
     );
 
-    // Controller cho hiệu ứng thở (chỉ cho icon trái tim)
     _breathController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -138,7 +165,6 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
       _breathController.repeat(reverse: true);
     }
 
-    // Animation cho hiệu ứng nhấn, ánh xạ từ [0, 1] sang [0.93, 1.12]
     _tapScaleAnimation = Tween<double>(begin: 0.93, end: 1.12).animate(
       CurvedAnimation(
         parent: _tapController,
@@ -146,175 +172,10 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
       ),
     );
 
-    // Animation cho hiệu ứng thở
     _breathScaleAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
       CurvedAnimation(
         parent: _breathController,
         curve: Curves.easeInOut,
-      ),
-    );
-  }
-
-  void _onTapDown(_) {
-    if (!widget.isBreathing) {
-      _tapController.animateTo(
-        0.0, // Tương ứng với scale 0.93
-        duration: const Duration(milliseconds: 70),
-      );
-    }
-  }
-
-  void _onTapUp(_) {
-    if (!widget.isBreathing) {
-      _tapController
-          .animateTo(
-        1.0, // Tương ứng với scale 1.12
-        duration: const Duration(milliseconds: 120),
-      )
-          .then((_) {
-        _tapController.animateTo(
-          0.5, // Trở về scale 1.0
-          duration: const Duration(milliseconds: 100),
-        );
-      });
-    }
-  }
-
-  void _onTapCancel() {
-    if (!widget.isBreathing) {
-      _tapController.animateTo(
-        0.5, // Trở về scale 1.0
-        duration: const Duration(milliseconds: 90),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_tapController, _breathController]),
-      builder: (context, child) {
-        final tapScale = _tapScaleAnimation.value;
-        final breathScale = widget.isBreathing ? _breathScaleAnimation.value : 1.0;
-        final combinedScale = tapScale * breathScale;
-        final highlightShadow = widget.isHighlighted
-            ? [
-                BoxShadow(
-                  color: widget.iconColor.withOpacity(0.45),
-                  blurRadius: 36,
-                  spreadRadius: 4,
-                  offset: const Offset(0, 0),
-                ),
-              ]
-            : [];
-        return Transform.scale(
-          scale: combinedScale,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                if (widget.isGlow)
-                  BoxShadow(
-                    color: widget.glowColor.withValues(alpha: 0.23),
-                    blurRadius: 33,
-                    spreadRadius: 2.3,
-                    offset: const Offset(0, 9),
-                  ),
-                BoxShadow(
-                  color: widget.glowColor.withValues(alpha: 0.09),
-                  blurRadius: 13,
-                  spreadRadius: 0.9,
-                  offset: const Offset(0, 5),
-                ),
-                ...highlightShadow,
-              ],
-            ),
-            child: Material(
-              shape: const CircleBorder(),
-              elevation: 0,
-              color: Colors.transparent,
-              child: Ink(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: widget.gradient,
-                  boxShadow: const [],
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(widget.size / 2),
-                  splashColor: widget.iconColor.withValues(alpha: 0.18),
-                  highlightColor: widget.iconColor.withValues(alpha: 0.08),
-                  onTap: widget.onTap,
-                  onTapDown: _onTapDown,
-                  onTapUp: _onTapUp,
-                  onTapCancel: _onTapCancel,
-                  child: SizedBox(
-                    width: widget.size,
-                    height: widget.size,
-                    child: Center(
-                      child: Icon(
-                        widget.icon,
-                        color: widget.iconColor,
-                        size: widget.iconSize,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            if (widget.isGlow)
-              BoxShadow(
-                color: widget.glowColor.withValues(alpha: 0.23),
-                blurRadius: 33,
-                spreadRadius: 2.3,
-                offset: const Offset(0, 9),
-              ),
-            BoxShadow(
-              color: widget.glowColor.withValues(alpha: 0.09),
-              blurRadius: 13,
-              spreadRadius: 0.9,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Material(
-          shape: const CircleBorder(),
-          elevation: 0,
-          color: Colors.transparent,
-          child: Ink(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: widget.gradient,
-              boxShadow: const [],
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(widget.size / 2),
-              splashColor: widget.iconColor.withValues(alpha: 0.18),
-              highlightColor: widget.iconColor.withValues(alpha: 0.08),
-              onTap: widget.onTap,
-              onTapDown: _onTapDown,
-              onTapUp: _onTapUp,
-              onTapCancel: _onTapCancel,
-              child: SizedBox(
-                width: widget.size,
-                height: widget.size,
-                child: Center(
-                  child: Icon(
-                    widget.icon,
-                    color: widget.iconColor,
-                    size: widget.iconSize,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -324,5 +185,146 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
     _tapController.dispose();
     _breathController.dispose();
     super.dispose();
+  }
+
+  void _onTapDown(_) {
+    if (!widget.isBreathing) {
+      _tapController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 70),
+      );
+    }
+  }
+
+  void _onTapUp(_) {
+    if (!widget.isBreathing) {
+      _tapController
+          .animateTo(
+        1.0,
+        duration: const Duration(milliseconds: 120),
+      )
+          .then((_) {
+        _tapController.animateTo(
+          0.5,
+          duration: const Duration(milliseconds: 100),
+        );
+      });
+    }
+  }
+
+  void _onTapCancel() {
+    if (!widget.isBreathing) {
+      _tapController.animateTo(
+        0.5,
+        duration: const Duration(milliseconds: 90),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double targetScale = 1.0;
+    if (widget.isHighlighted) {
+      targetScale = 1.25;
+    } else if (widget.isDimmed) {
+      targetScale = 0.8;
+    }
+    
+    final double targetOpacity = widget.isDimmed ? 0.0 : 1.0;
+    
+    final Gradient backgroundGradient;
+    final Color iconColor;
+    final List<BoxShadow> boxShadow;
+
+    if (widget.isHighlighted) {
+      backgroundGradient = widget.highlightedGradient ??
+          LinearGradient(colors: [widget.iconColor, widget.iconColor]);
+      iconColor = Colors.white;
+      boxShadow = [
+        BoxShadow(
+          color: widget.iconColor.withOpacity(0.7),
+          blurRadius: 30,
+          spreadRadius: 5,
+        ),
+      ];
+    } else {
+      backgroundGradient = widget.gradient;
+      iconColor = widget.iconColor;
+      boxShadow = [
+        if (widget.isGlow)
+          BoxShadow(
+            color: widget.glowColor.withOpacity(0.23),
+            blurRadius: 33,
+            spreadRadius: 2.3,
+            offset: const Offset(0, 9),
+          ),
+        BoxShadow(
+          color: widget.glowColor.withOpacity(0.09),
+          blurRadius: 13,
+          spreadRadius: 0.9,
+          offset: const Offset(0, 5),
+        ),
+      ];
+    }
+
+    return AnimatedScale(
+      scale: targetScale,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      child: AnimatedOpacity(
+        opacity: targetOpacity,
+        duration: const Duration(milliseconds: 200),
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_tapController, _breathController]),
+          builder: (context, child) {
+            final tapScale = _tapScaleAnimation.value;
+            final breathScale =
+                widget.isBreathing ? _breathScaleAnimation.value : 1.0;
+            final combinedScale = tapScale * breathScale;
+            
+            return Transform.scale(
+              scale: combinedScale,
+              child: Container(
+                width: widget.size,
+                height: widget.size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: backgroundGradient,
+                  boxShadow: boxShadow,
+                ),
+                child: Material(
+                  shape: const CircleBorder(),
+                  elevation: 0,
+                  color: Colors.transparent,
+                  child: Ink(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.transparent,
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(widget.size / 2),
+                      splashColor: iconColor.withOpacity(0.3),
+                      highlightColor: iconColor.withOpacity(0.15),
+                      onTap:
+                          widget.isDimmed ? null : widget.onTap,
+                      onTapDown: _onTapDown,
+                      onTapUp: _onTapUp,
+                      onTapCancel: _onTapCancel,
+                      child: Center(
+                        child: FaIcon(
+                          widget.icon,
+                          size: widget.iconSize,
+                          color: iconColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

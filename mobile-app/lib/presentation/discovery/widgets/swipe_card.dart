@@ -25,13 +25,6 @@ class SwipeCardStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final appBarHeight = kToolbarHeight + media.padding.top + 18;
-    final actionButtonsHeight = 126.0;
-    final verticalMargin = 20.0;
-
-    final cardHeight = media.size.height - appBarHeight - actionButtonsHeight - verticalMargin;
-
     // Get next profile for peeking effect
     final nextProfileIndex = Provider.of<DiscoveryViewModel>(context, listen: false).currentProfileIndex + 1;
     final viewModel = Provider.of<DiscoveryViewModel>(context, listen: false);
@@ -48,22 +41,18 @@ class SwipeCardStack extends StatelessWidget {
 
     return Align(
       alignment: Alignment.topCenter,
-      child: SizedBox(
-        width: double.infinity,
-        height: cardHeight,
-        child: SwipeableCard(
-          key: ValueKey('swipeable_${profile.userId}'),
-          profile: profile,
-          interests: interests,
-          distance: distance,
-          nextProfile: nextProfile,
-          nextInterests: nextInterests,
-          nextDistance: nextDistance,
-          onLike: () => Provider.of<DiscoveryViewModel>(context, listen: false).likeCurrentProfile(),
-          onPass: () => Provider.of<DiscoveryViewModel>(context, listen: false).dislikeCurrentProfile(),
-          onHighlightLike: onHighlightLike,
-          onHighlightPass: onHighlightPass,
-        ),
+      child: SwipeableCard(
+        key: ValueKey('swipeable_${profile.userId}'),
+        profile: profile,
+        interests: interests,
+        distance: distance,
+        nextProfile: nextProfile,
+        nextInterests: nextInterests,
+        nextDistance: nextDistance,
+        onLike: () => Provider.of<DiscoveryViewModel>(context, listen: false).likeCurrentProfile(),
+        onPass: () => Provider.of<DiscoveryViewModel>(context, listen: false).dislikeCurrentProfile(),
+        onHighlightLike: onHighlightLike,
+        onHighlightPass: onHighlightPass,
       ),
     );
   }

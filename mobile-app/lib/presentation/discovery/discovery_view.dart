@@ -75,52 +75,53 @@ class _DiscoveryViewState extends State<DiscoveryView> {
             child: Scaffold(
               backgroundColor: Colors.transparent,
               body: SafeArea(
-                child: Stack(
+                child: Column(
                   children: [
-                    Column(
-                      children: [
-                        const SizedBox(height: 18),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Amoura',
-                                style: GoogleFonts.pacifico(
-                                  fontSize: 28,
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.filter_alt_outlined,
-                                  size: 28,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                tooltip: 'Filter',
-                                onPressed: () => showFilterDialog(context),
-                              ),
-                            ],
+                    const SizedBox(height: 18),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Amoura',
+                            style: GoogleFonts.pacifico(
+                              fontSize: 28,
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: Padding(
+                          IconButton(
+                            icon: Icon(
+                              Icons.filter_alt_outlined,
+                              size: 28,
+                              color: theme.colorScheme.primary,
+                            ),
+                            tooltip: 'Filter',
+                            onPressed: () => showFilterDialog(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: _buildContent(context, vm),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          child: ActionButtonsRow(
-                            highlightLike: _highlightLike,
-                            highlightPass: _highlightPass,
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 20.0),
+                              child: ActionButtonsRow(
+                                highlightLike: _highlightLike,
+                                highlightPass: _highlightPass,
+                              ),
+                            ),
                           ),
-                        ),
-                        SizedBox(height: MediaQuery.of(context).padding.bottom + 10),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),

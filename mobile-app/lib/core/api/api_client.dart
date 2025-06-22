@@ -73,19 +73,10 @@ class ApiClient {
     ));
   }
 
-  void _handleError(DioException e) {
-    if (e.response != null) {
-      throw Exception('Error: ${e.response?.statusCode} - ${e.response?.data}');
-    } else {
-      throw Exception('Network error: ${e.message}');
-    }
-  }
-
   Future<Response> post(String path, {dynamic data}) async {
     try {
       return await dio.post(path, data: data);
-    } on DioException catch (e) {
-      _handleError(e);
+    } on DioException {
       rethrow;
     }
   }
@@ -93,8 +84,7 @@ class ApiClient {
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
       return await dio.get(path, queryParameters: queryParameters);
-    } on DioException catch (e) {
-      _handleError(e);
+    } on DioException {
       rethrow;
     }
   }
@@ -102,8 +92,7 @@ class ApiClient {
   Future<Response> patch(String path, {dynamic data}) async {
     try {
       return await dio.patch(path, data: data);
-    } on DioException catch (e) {
-      _handleError(e);
+    } on DioException {
       rethrow;
     }
   }
@@ -144,11 +133,7 @@ class ApiClient {
           },
         ),
       );
-    } on DioException catch (e) {
-      if (e.response?.data != null) {
-        throw Exception('${e.response?.data['message'] ?? e.message}');
-      }
-      _handleError(e);
+    } on DioException {
       rethrow;
     }
   }

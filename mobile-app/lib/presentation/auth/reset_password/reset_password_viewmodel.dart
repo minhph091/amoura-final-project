@@ -12,9 +12,9 @@ class ResetPasswordViewModel extends ChangeNotifier {
   bool hasSentEmail = false;
   bool hasVerifiedOtp = false;
   String? sentEmail;
+  String? sessionToken;
   bool isLoading = false;
   String? errorMessage;
-  String? _storedOtp;
 
   final int otpLength;
   final AuthRepository _authRepository = GetIt.I<AuthRepository>();
@@ -37,31 +37,53 @@ class ResetPasswordViewModel extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      await _authRepository.requestPasswordReset(email: email);
+      final response = await _authRepository.requestPasswordReset(email: email);
       sentEmail = email;
+      sessionToken = response['sessionToken'];
       hasSentEmail = true;
+      errorMessage = null;
     } catch (e) {
-      errorMessage = 'Could not send password reset request. Please try again.';
+      errorMessage = e.toString().replaceAll('Exception: ', '');
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
-  void onVerifyOtp(String otp) {
+  Future<void> onVerifyOtp(String otp) async {
     if (otp.length != otpLength) {
       errorMessage = 'Invalid OTP, please check again';
       notifyListeners();
       return;
     }
-    _storedOtp = otp;
-    hasVerifiedOtp = true;
+    
+    if (sessionToken == null) {
+      errorMessage = 'Invalid state. Please start over.';
+      notifyListeners();
+      return;
+    }
+
+    isLoading = true;
     errorMessage = null;
     notifyListeners();
+    
+    try {
+      await _authRepository.verifyPasswordResetOtp(
+        sessionToken: sessionToken!,
+        otpCode: otp,
+      );
+      hasVerifiedOtp = true;
+      errorMessage = null;
+    } catch (e) {
+      errorMessage = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> resetPassword(String newPassword) async {
-    if (sentEmail == null || _storedOtp == null) {
+    if (sessionToken == null) {
       errorMessage = 'Invalid state. Please start over.';
       notifyListeners();
       return false;
@@ -71,16 +93,13 @@ class ResetPasswordViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       await _authRepository.resetPassword(
-        email: sentEmail!,
-        otpCode: _storedOtp!,
+        sessionToken: sessionToken!,
         newPassword: newPassword,
       );
-      errorMessage = 'Password reset successfully';
       notifyListeners();
       return true;
     } catch (e) {
-      errorMessage = 'Failed to reset password. Please try again.';
-      hasVerifiedOtp = false;
+      errorMessage = e.toString().replaceAll('Exception: ', '');
       notifyListeners();
       return false;
     } finally {
@@ -90,15 +109,15 @@ class ResetPasswordViewModel extends ChangeNotifier {
   }
 
   Future<void> onResendOtp() async {
-    if (sentEmail != null) {
+    if (sessionToken != null) {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
       try {
-        await _authRepository.requestPasswordReset(email: sentEmail!);
+        await _authRepository.resendPasswordResetOtp(sessionToken: sessionToken!);
         errorMessage = 'A new OTP has been sent to your email';
       } catch (e) {
-        errorMessage = 'Could not resend OTP. Please try again.';
+        errorMessage = e.toString().replaceAll('Exception: ', '');
       } finally {
         isLoading = false;
         notifyListeners();
