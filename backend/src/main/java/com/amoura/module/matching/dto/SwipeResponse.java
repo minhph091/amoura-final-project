@@ -15,6 +15,7 @@ public class SwipeResponse {
     private Long swipeId;
     private Boolean isMatch;
     private Long matchId;
+    private Long chatRoomId;
     private Long matchedUserId;
     private String matchedUsername;
     private String matchMessage;

@@ -1,6 +1,8 @@
 package com.amoura.module.matching.service;
 
 import com.amoura.common.exception.ApiException;
+import com.amoura.module.chat.dto.ChatRoomDTO;
+import com.amoura.module.chat.service.ChatService;
 import com.amoura.module.matching.domain.Match;
 import com.amoura.module.matching.domain.Swipe;
 import com.amoura.module.matching.dto.SwipeRequest;
@@ -44,6 +46,7 @@ public class MatchingServiceImpl implements MatchingService {
     private final UserInterestRepository userInterestRepository;
     private final UserPetRepository userPetRepository;
     private final NotificationService notificationService;
+    private final ChatService chatService;
 
     @Override
     @Transactional(readOnly = true)
@@ -127,10 +130,14 @@ public class MatchingServiceImpl implements MatchingService {
             if (existingMatch.isPresent()) {
                 // Đã có match trước đó, trả về thông tin match hiện tại
                 Match match = existingMatch.get();
+                // Lấy hoặc tạo chat room cho match hiện tại
+                ChatRoomDTO chatRoom = chatService.createOrGetChatRoom(initiator.getId(), targetUser.getId());
+                
                 return SwipeResponse.builder()
                         .swipeId(swipe.getId())
                         .isMatch(true)
                         .matchId(match.getId())
+                        .chatRoomId(chatRoom.getId())
                         .matchedUserId(targetUser.getId())
                         .matchedUsername(targetUser.getUsername())
                         .matchMessage("You already matched with " + targetUser.getUsername() + "!")
@@ -158,6 +165,9 @@ public class MatchingServiceImpl implements MatchingService {
 
         Match savedMatch = matchRepository.save(match);
 
+        // Tạo chat room cho match mới
+        ChatRoomDTO chatRoom = chatService.createOrGetChatRoom(userA.getId(), userB.getId());
+
         String matchMessage = String.format("You and %s have matched! Start chatting now!", userB.getUsername());
 
         // Gửi thông báo match cho cả hai user
@@ -173,6 +183,7 @@ public class MatchingServiceImpl implements MatchingService {
                 .swipeId(swipe.getId())
                 .isMatch(true)
                 .matchId(savedMatch.getId())
+                .chatRoomId(chatRoom.getId())
                 .matchedUserId(userB.getId())
                 .matchedUsername(userB.getUsername())
                 .matchMessage(matchMessage)
