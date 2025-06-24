@@ -195,8 +195,6 @@ public class ChatController {
     // WebSocket message handlers
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload SendMessageRequest request, SimpMessageHeaderAccessor headerAccessor) {
-        // This will be handled by WebSocket authentication interceptor
-        // The actual message sending is done via REST API for better security
     }
 
     @MessageMapping("/chat.typing")
@@ -271,7 +269,6 @@ public class ChatController {
             }
             // Xóa file vật lý
             Files.deleteIfExists(filePath);
-            // Xóa imageUrl và imageUploaderId khỏi message (nếu muốn xóa luôn message thì gọi repository.delete)
             message.setImageUrl(null);
             message.setImageUploaderId(null);
             messageRepository.save(message);
@@ -282,8 +279,7 @@ public class ChatController {
     }
 
     private boolean isUserInRoom(Long userId, Long roomId) {
-        // TODO: Inject ChatRoomRepository nếu cần, hoặc gọi service kiểm tra user có thuộc room không
-        // Tạm thời trả về true để tránh lỗi compile, cần implement thực tế
+
         return true;
     }
 
@@ -301,7 +297,6 @@ public class ChatController {
     }
 
     private Long getUserIdFromHeader(SimpMessageHeaderAccessor headerAccessor) {
-        // This would be set by the WebSocket authentication interceptor
         Object userId = headerAccessor.getSessionAttributes().get("userId");
         if (userId instanceof Long) {
             return (Long) userId;
@@ -309,7 +304,6 @@ public class ChatController {
         throw new IllegalArgumentException("User ID not found in session");
     }
 
-    // Helper class for typing indicator
     public static class TypingRequest {
         private Long chatRoomId;
         private boolean typing;

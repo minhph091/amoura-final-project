@@ -99,6 +99,37 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public MessageDTO sendMessage(SendMessageRequest request, Long senderId) {
+        // Validate message type and content
+        switch (request.getMessageType()) {
+            case TEXT:
+                if (request.getContent() == null || request.getContent().trim().isEmpty()) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Text message must have content");
+                }
+                if (request.getImageUrl() != null) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Text message should not have imageUrl");
+                }
+                break;
+            case IMAGE:
+                if (request.getImageUrl() == null || request.getImageUrl().trim().isEmpty()) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Image message must have imageUrl");
+                }
+                break;
+            case AUDIO:
+            case VIDEO:
+            case FILE:
+                if (request.getImageUrl() == null || request.getImageUrl().trim().isEmpty()) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "This message type must have a file url (imageUrl)");
+                }
+                break;
+            case EMOJI:
+                if (request.getContent() == null || request.getContent().trim().isEmpty()) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Emoji message must have content (emoji code)");
+                }
+                break;
+            case SYSTEM:
+                throw new ApiException(HttpStatus.FORBIDDEN, "User cannot send system message");
+        }
+
         ChatRoom chatRoom = chatRoomRepository.findById(request.getChatRoomId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chat room not found"));
 
