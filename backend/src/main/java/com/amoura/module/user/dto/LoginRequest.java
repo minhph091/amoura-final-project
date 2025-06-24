@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
 
 @Data
 @Builder
@@ -14,6 +15,7 @@ import jakarta.validation.constraints.NotBlank;
 public class LoginRequest {
 
     // Email hoặc phone
+    @Email(message = "Invalid email format")
     private String email;
     private String phoneNumber;
 
