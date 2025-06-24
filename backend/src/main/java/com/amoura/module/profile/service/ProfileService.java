@@ -9,4 +9,5 @@ public interface ProfileService {
     ProfileResponseDTO getProfile(String email);
     ProfileResponseDTO updateProfile(String email, UpdateProfileRequest request);
     ProfileOptionsDTO getAllProfileOptions();
+    ProfileResponseDTO getProfileById(Long userId);
 } 
