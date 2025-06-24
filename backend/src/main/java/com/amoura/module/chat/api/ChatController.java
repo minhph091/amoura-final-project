@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -205,7 +206,7 @@ public class ChatController {
         chatService.sendTypingIndicator(request.getChatRoomId(), senderId, request.isTyping());
     }
 
-    @PostMapping("/upload-image")
+    @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload image for chat message")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> uploadChatImage(@RequestParam("file") MultipartFile file,
@@ -214,20 +215,33 @@ public class ChatController {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("File is empty");
         }
+        
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             return ResponseEntity.badRequest().body("File must be an image");
         }
+        
+        // Validate chat room access
+        try {
+            Long userId = getUserId(userDetails);
+            ChatRoomDTO chatRoom = chatService.getChatRoomById(chatRoomId, userId);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied to this chat room");
+        }
+        
         try {
             Path roomDir = Paths.get(uploadDir, "chat", chatRoomId.toString());
             if (!Files.exists(roomDir)) {
                 Files.createDirectories(roomDir);
             }
+            
             String filename = System.currentTimeMillis() + getFileExtension(file.getOriginalFilename());
             Path filePath = roomDir.resolve(filename);
             Files.copy(file.getInputStream(), filePath);
+            
             String relativePath = "chat/" + chatRoomId + "/" + filename;
             String imageUrl = baseUrl + "/" + relativePath;
+            
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body("Failed to upload image");
