@@ -3,12 +3,11 @@
 Match-related API endpoints for Amoura AI Service.
 
 This module provides endpoints for user matching functionality including
-potential match discovery and match probability calculation.
+potential match discovery.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
-from sqlalchemy.orm import Session
-from typing import List, Annotated
+from typing import Annotated
 
 from app import schemas
 from app.core.logging import get_logger

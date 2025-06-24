@@ -7,13 +7,12 @@ operations including potential match discovery and compatibility analysis.
 """
 
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from fastapi import HTTPException, status
 
 from app.core.config import get_settings
-from app.core.exceptions import DataValidationError, DatabaseError, PredictionError
 from app.core.logging import LoggerMixin, get_logger
-from app.db import crud, models
+from app.db import crud
 from app.ml.predictor import MatchPredictor
 from app.ml.preprocessing import orientation_compatibility
 
@@ -227,45 +226,3 @@ class MatchService(LoggerMixin):
                 continue
         
         return potential_matches_ids
-    
-    def get_match_probability(self, user1_id: int, user2_id: int) -> float:
-        """
-        Get match probability between two specific users.
-        
-        Args:
-            user1_id: First user ID
-            user2_id: Second user ID
-            
-        Returns:
-            Match probability between 0.0 and 1.0
-            
-        Raises:
-            HTTPException: If users not found or prediction fails
-        """
-        self.logger.info(f"Calculating match probability between users {user1_id} and {user2_id}")
-        
-        try:
-            # Get user data
-            user1_data_tuple = self._get_user_data(user1_id)
-            user2_data_tuple = self._get_user_data(user2_id)
-            
-            # Predict match probability
-            match_proba = self.predictor.predict_match_proba(
-                user1_data_tuple=user1_data_tuple,
-                user2_data_tuple=user2_data_tuple
-            )
-            
-            self.logger.info(
-                f"Match probability between users {user1_id} and {user2_id}: {match_proba:.4f}"
-            )
-            
-            return match_proba
-            
-        except HTTPException:
-            raise
-        except Exception as e:
-            self.logger.error(f"Error calculating match probability: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to calculate match probability"
-            )

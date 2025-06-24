@@ -131,13 +131,6 @@ def get_role_by_name(db: Session, name: str) -> Optional[models.Role]:
     return db.query(models.Role).filter(models.Role.name == name).first()
 
 
-def create_role(db: Session, role: schemas.user.RoleCreate) -> models.Role:  # Giả sử có RoleCreate schema
-    db_role = models.Role(name=role.name, description=role.description)
-    db.add(db_role)
-    db.commit()
-    db.refresh(db_role)
-    return db_role
-
 def has_user_swiped(db: Session, initiator_id: int, target_user_id: int) -> bool:
     """
     Check if a user has already swiped (liked or disliked) another user.

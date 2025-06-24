@@ -1,9 +1,7 @@
 from pydantic import BaseModel, Field, validator
-from typing import Optional
 
 
 class MessageEditRequest(BaseModel):
-    message_id: Optional[int] = Field(None, description="ID of the message to edit (optional)")
     original_message: str = Field(..., min_length=1, max_length=2000, description="The original message to edit")
     edit_prompt: str = Field(..., min_length=1, max_length=500, description="User's instructions for editing the message")
     user_id: int = Field(..., description="ID of the user requesting the edit")

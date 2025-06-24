@@ -149,7 +149,7 @@ app = create_app()
 
 @app.get("/", tags=["Root"])
 async def read_root():
-    """Health check endpoint."""
+    """Welcome and basic health check endpoint."""
     return {
         "message": f"Welcome to {get_settings().PROJECT_NAME}!",
         "version": get_settings().VERSION,
@@ -159,7 +159,7 @@ async def read_root():
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Detailed health check endpoint."""
+    """Detailed health check endpoint for monitoring and system status."""
     settings = get_settings()
     
     health_status = {

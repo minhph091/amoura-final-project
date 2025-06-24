@@ -6,12 +6,12 @@ message editing using Google Gemini API.
 """
 
 import google.generativeai as genai
-from typing import List, Optional, Dict
+from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.core.config import get_settings
-from app.core.exceptions import ExternalAPIError, DataValidationError
+from app.core.exceptions import ExternalAPIError
 from app.core.logging import LoggerMixin, get_logger
 from app.db import crud
 
@@ -233,94 +233,3 @@ class MessageService(LoggerMixin):
                 api_name="Gemini",
                 error=f"Failed to generate edited message: {e}"
             )
-    
-    def get_conversation_suggestions(self, user_id: int, other_user_id: int) -> List[str]:
-        """
-        Get conversation topic suggestions based on user profiles and conversation history.
-        
-        Args:
-            user_id: ID of the user requesting suggestions
-            other_user_id: ID of the other user in the conversation
-            
-        Returns:
-            List of conversation topic suggestions
-            
-        Raises:
-            HTTPException: If users not found or suggestions generation fails
-        """
-        self.logger.info(f"Generating conversation suggestions for user {user_id} with user {other_user_id}")
-        
-        try:
-            # Validate users exist
-            self._validate_users_exist(user_id, other_user_id)
-            
-            # Get user profiles for context
-            user_profile = crud.get_user_profile_raw_data(self.db, user_id)
-            other_user_profile = crud.get_user_profile_raw_data(self.db, other_user_id)
-            
-            # Get conversation history
-            messages = crud.get_message_history(self.db, user_id, other_user_id)
-            
-            # Create prompt for suggestions
-            suggestion_prompt = self._create_suggestion_prompt(
-                user_profile, other_user_profile, messages
-            )
-            
-            # Generate suggestions using Gemini
-            response = self.model.generate_content(suggestion_prompt)
-            suggestions_text = response.text.strip()
-            
-            # Parse suggestions (assuming they're separated by newlines or bullet points)
-            suggestions = [
-                suggestion.strip() 
-                for suggestion in suggestions_text.split('\n') 
-                if suggestion.strip()
-            ]
-            
-            self.logger.info(f"Generated {len(suggestions)} conversation suggestions")
-            return suggestions[:5]  # Limit to 5 suggestions
-            
-        except Exception as e:
-            self.logger.error(f"Error generating conversation suggestions: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to generate conversation suggestions"
-            )
-    
-    def _create_suggestion_prompt(
-        self, 
-        user_profile: tuple, 
-        other_user_profile: tuple, 
-        messages: List
-    ) -> str:
-        """
-        Create prompt for generating conversation suggestions.
-        
-        Args:
-            user_profile: Current user's profile data
-            other_user_profile: Other user's profile data
-            messages: Conversation history
-            
-        Returns:
-            Prompt for generating suggestions
-        """
-        prompt = """
-        You are a dating coach helping users find engaging conversation topics. 
-        Based on the user profiles and conversation history, suggest 3-5 specific, 
-        engaging conversation starters or topics that would be interesting to discuss.
-        
-        Focus on:
-        - Common interests
-        - Unique aspects of their profiles
-        - Questions that encourage detailed responses
-        - Topics that show genuine interest
-        
-        Return only the suggestions, one per line, without numbering or bullet points.
-        """
-        
-        # Add profile context if available
-        if user_profile and other_user_profile:
-            prompt += f"\n\nUser interests: {user_profile[4] if len(user_profile) > 4 else 'Not specified'}"
-            prompt += f"\nOther user interests: {other_user_profile[4] if len(other_user_profile) > 4 else 'Not specified'}"
-        
-        return prompt
