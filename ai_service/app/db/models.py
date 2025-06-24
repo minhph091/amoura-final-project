@@ -150,6 +150,7 @@ class Location(Base):
     country = Column(String(255))
     state = Column(String(255))
     city = Column(String(255))
+    version = Column(Integer, default=0)
     created_at = Column(TIMESTAMP(timezone=False), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=False), onupdate=func.now())
 
@@ -214,3 +215,16 @@ class Swipe(Base):
 
     initiator_user = relationship("User", foreign_keys=[initiator], backref="initiated_swipes")
     target = relationship("User", foreign_keys=[target_user], backref="received_swipes")
+
+class Match(Base):
+    __tablename__ = "matches"
+    id = Column(BigInteger, primary_key=True, index=True)
+    user1_id = Column(BigInteger, ForeignKey("users.id"))
+    user2_id = Column(BigInteger, ForeignKey("users.id"))
+    status = Column(String(20))  # 'active', 'unmatched'
+    matched_at = Column(TIMESTAMP(timezone=False), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=False), onupdate=func.now())
+    __table_args__ = (UniqueConstraint('user1_id', 'user2_id', name='uq_match_pair'),)
+
+    user1 = relationship("User", foreign_keys=[user1_id], backref="matches_as_user1")
+    user2 = relationship("User", foreign_keys=[user2_id], backref="matches_as_user2")

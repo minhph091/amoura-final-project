@@ -116,21 +116,12 @@ def get_all_other_user_ids_with_role(db: Session, current_user_id: int, role_nam
     return [uid[0] for uid in user_ids]
 
 
-# --- Helper functions for reference tables (body_type, orientation, etc.) ---
-# Bạn có thể thêm các hàm CRUD cho các bảng tham chiếu này nếu cần
-# Ví dụ:
-def get_body_type_by_name(db: Session, name: str) -> Optional[models.BodyType]:
-    return db.query(models.BodyType).filter(models.BodyType.name == name).first()
-
-
-# ... các hàm tương tự cho Orientation, JobIndustry, DrinkStatus, SmokeStatus, EducationLevel
-# ... cũng như Pet, Interest, Language nếu bạn cần tạo mới chúng khi user nhập.
-
-# --- Role CRUD (Ví dụ) ---
+# --- Role CRUD ---
 def get_role_by_name(db: Session, name: str) -> Optional[models.Role]:
     return db.query(models.Role).filter(models.Role.name == name).first()
 
 
+# --- Swipe CRUD ---
 def has_user_swiped(db: Session, initiator_id: int, target_user_id: int) -> bool:
     """
     Check if a user has already swiped (liked or disliked) another user.
@@ -166,13 +157,11 @@ List[int]:
         List of user IDs
     """
     # Subquery to get all user IDs that the current user has swiped on
-
     swiped_users_query = db.query(models.Swipe.target_user).filter(
         models.Swipe.initiator == current_user_id
     )
 
     # Query to get all other users with the specified role that haven't been swiped on
-
     user_ids = db.query(models.User.id). \
         join(models.Role). \
         filter(
@@ -186,6 +175,7 @@ List[int]:
     return [uid[0] for uid in user_ids]
 
 
+# --- Message CRUD ---
 def get_message_history(db: Session, user_id: int, other_user_id: int, limit: int = 50) -> List[models.Message]:
     """
     Get the message history between two users, ordered by creation time.
