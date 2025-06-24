@@ -26,8 +26,8 @@ def get_message_service(
     **Required fields:**
     - original_message: The message to be edited
     - edit_prompt: User's instructions for editing the message
-    - user_id: ID of the user requesting the edit
-    - other_user_id: ID of the other user in the conversation
+    - sender_id: ID of the user requesting the edit
+    - receiver_id: ID of the other user in the conversation
     
     **Features:**
     - Conversation history is automatically retrieved from the database
@@ -45,8 +45,8 @@ async def edit_message(
     **Parameters:**
     - **original_message**: The original message to edit (required)
     - **edit_prompt**: The user's instructions for editing (required)
-    - **user_id**: ID of the user requesting the edit (required)
-    - **other_user_id**: ID of the other user in the conversation (required)
+    - **sender_id**: ID of the user requesting the edit (required)
+    - **receiver_id**: ID of the other user in the conversation (required)
     
     **Returns:**
     - **edited_message**: The AI-edited message
@@ -71,8 +71,8 @@ async def edit_message(
         edited_message = message_service.edit_message(
             original_message=request.original_message.strip(),
             edit_prompt=request.edit_prompt.strip(),
-            user_id=request.user_id,
-            other_user_id=request.other_user_id
+            user_id=request.sender_id,
+            other_user_id=request.receiver_id
         )
 
         return schemas.message.MessageEditResponse(

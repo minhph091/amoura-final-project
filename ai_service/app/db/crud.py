@@ -1,22 +1,14 @@
 # app/db/crud.py
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import select
 from typing import List, Optional, Tuple, Any, Dict
 
-from . import models  # models.py đã định nghĩa ở Giai đoạn 2
-from app import schemas  # schemas.py đã định nghĩa ở Giai đoạn 2
+from . import models
 
 
 # --- User CRUD ---
 def get_user_by_id(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
-
-
-def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.username == username).first()
-
-
-def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]:
-    return db.query(models.User).offset(skip).limit(limit).all()
 
 
 def get_user_role_name(db: Session, user_id: int) -> Optional[str]:
@@ -105,43 +97,7 @@ def get_user_profile_raw_data(db: Session, user_id: int) -> Optional[Tuple[
     )
 
 
-def get_all_other_user_ids_with_role(db: Session, current_user_id: int, role_name: str = "USER") -> List[int]:
-    """
-    Lấy ID của tất cả user khác có vai trò (role_name) cụ thể.
-    """
-    user_ids = db.query(models.User.id). \
-        join(models.Role). \
-        filter(models.Role.name == role_name, models.User.id != current_user_id). \
-        all()
-    return [uid[0] for uid in user_ids]
-
-
-# --- Role CRUD ---
-def get_role_by_name(db: Session, name: str) -> Optional[models.Role]:
-    return db.query(models.Role).filter(models.Role.name == name).first()
-
-
 # --- Swipe CRUD ---
-def has_user_swiped(db: Session, initiator_id: int, target_user_id: int) -> bool:
-    """
-    Check if a user has already swiped (liked or disliked) another user.
-
-    Args:
-        db: Database session
-        initiator_id: ID of the user who initiated the swipe
-        target_user_id: ID of the user who was swiped on
-
-    Returns:
-        True if the user has already swiped on the target user, False otherwise
-    """
-    swipe = db.query(models.Swipe).filter(
-        models.Swipe.initiator == initiator_id,
-        models.Swipe.target_user == target_user_id
-    ).first()
-
-    return swipe is not None
-
-
 def get_non_swiped_user_ids_with_role(db: Session, current_user_id: int, role_name: str = "USER", limit: int = 100) -> \
 List[int]:
     """
@@ -229,3 +185,96 @@ def format_messages_for_ai(messages: List[models.Message], current_user_id: int)
         })
 
     return formatted_messages
+
+
+def get_backup_recommendations(
+    db: Session, 
+    current_user_id: int, 
+    limit: int = 10
+) -> List[int]:
+    """
+    Lấy danh sách ID người dùng backup dựa trên giới tính và orientation.
+    
+    Args:
+        db: Database session
+        current_user_id: ID của người dùng hiện tại
+        limit: Số lượng recommendations tối đa
+        
+    Returns:
+        List of user IDs
+    """
+    # Lấy thông tin người dùng hiện tại
+    current_user_data = get_user_profile_raw_data(db, current_user_id)
+    if not current_user_data:
+        return []
+    
+    user, profile, location, pet_names, interest_names, language_names, body_type_name, orientation_name, job_industry_name, drink_status_name, smoke_status_name, education_level_name = current_user_data
+    
+    if not profile or not profile.sex or not orientation_name:
+        return []
+    
+    # Lấy danh sách user đã swipe
+    swiped_user_ids = select(models.Swipe.target_user).where(
+        models.Swipe.initiator == current_user_id
+    )
+    
+    # Query để lấy người dùng phù hợp về giới tính và orientation
+    # Sử dụng logic đồng nhất với ML preprocessing và dữ liệu thực tế
+    compatible_sex = None
+    compatible_orientation = None
+    
+    sex_lower = profile.sex.lower()
+    orientation_lower = orientation_name.lower()
+    
+    if orientation_lower == "straight":
+        if sex_lower == "male":
+            compatible_sex = "female"
+            compatible_orientation = "straight"
+        elif sex_lower == "female":
+            compatible_sex = "male"
+            compatible_orientation = "straight"
+        elif sex_lower == "non-binary":
+            # Non-binary straight có thể match với male/female straight
+            compatible_sex = None  # Không filter theo sex
+            compatible_orientation = "straight"
+    elif orientation_lower == "homosexual":
+        # Homosexual tìm cùng giới tính
+        compatible_sex = sex_lower  # Cùng giới tính
+        compatible_orientation = "homosexual"
+    elif orientation_lower == "bisexual":
+        # Bisexual có thể match với tất cả
+        compatible_sex = None
+        compatible_orientation = None
+    elif orientation_lower == "prefer not to say":
+        # Prefer not to say chỉ match với bisexual hoặc prefer not to say
+        compatible_sex = None
+        compatible_orientation = None  # Sẽ filter sau
+    else:
+        # Trường hợp khác, không filter
+        compatible_sex = None
+        compatible_orientation = None
+    
+    # Query cơ bản
+    query = db.query(models.User.id).join(models.Profile).join(models.Orientation).filter(
+        models.User.id != current_user_id,
+        models.User.status == "active",
+        ~models.User.id.in_(swiped_user_ids)
+    )
+    
+    # Thêm filter theo giới tính nếu có
+    if compatible_sex:
+        query = query.filter(models.Profile.sex == compatible_sex)
+    
+    # Thêm filter theo orientation nếu có
+    if compatible_orientation:
+        query = query.filter(models.Orientation.name == compatible_orientation)
+    elif orientation_lower == "prefer not to say":
+        # Prefer not to say chỉ match với bisexual hoặc prefer not to say
+        query = query.filter(
+            models.Orientation.name.in_(["bisexual", "prefer not to say"])
+        )
+    
+    # Lấy kết quả
+    user_ids = query.limit(limit).all()
+    
+    return [uid[0] for uid in user_ids]

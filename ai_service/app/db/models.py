@@ -175,23 +175,12 @@ class UserLanguage(Base):
     language_id = Column(BigInteger, ForeignKey("languages.id"), primary_key=True)
     __table_args__ = (UniqueConstraint('user_id', 'language_id', name='uq_user_language'),)
 
-class MessageType(Base):
-    __tablename__ = "message_types"
-    id = Column(BigInteger, primary_key=True, index=True)
-    name = Column(String(255))
-    description = Column(String(255))
-    created_at = Column(TIMESTAMP(timezone=False), server_default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=False), onupdate=func.now())
-
-    messages = relationship("Message", back_populates="message_type")
-
 class Message(Base):
     __tablename__ = "messages"
     id = Column(BigInteger, primary_key=True, index=True)
     sender_id = Column(BigInteger, ForeignKey("users.id"))
     receiver_id = Column(BigInteger, ForeignKey("users.id"))
     content = Column(Text)
-    message_type_id = Column(BigInteger, ForeignKey("message_types.id"))
     is_read = Column(Boolean, default=False)
     read_at = Column(TIMESTAMP(timezone=False))
     is_edited = Column(Boolean, default=False)
@@ -203,7 +192,6 @@ class Message(Base):
 
     sender = relationship("User", foreign_keys=[sender_id], backref="sent_messages")
     receiver = relationship("User", foreign_keys=[receiver_id], backref="received_messages")
-    message_type = relationship("MessageType", back_populates="messages")
 
 class Swipe(Base):
     __tablename__ = "swipes"

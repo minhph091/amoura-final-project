@@ -121,13 +121,16 @@ def _is_interested(sex_a: str | None, orientation_a: str | None, sex_b: str | No
         if (sex_a_lower == 'male' and sex_b_lower == 'female') or \
                 (sex_a_lower == 'female' and sex_b_lower == 'male'):
             return True
-        if sex_a_lower == 'non-binary' and sex_b_lower != 'non-binary':  # Giả định
+        if sex_a_lower == 'non-binary' and sex_b_lower in ['male', 'female']:
             return True
         return False
     elif orientation_a_lower == 'homosexual':
         return sex_a_lower == sex_b_lower
     elif orientation_a_lower == 'bisexual':
         return True
+    elif orientation_a_lower == 'prefer not to say':
+        # Prefer not to say chỉ thích bisexual hoặc prefer not to say
+        return orientation_a_lower in ['bisexual', 'prefer not to say']
     return False
 
 

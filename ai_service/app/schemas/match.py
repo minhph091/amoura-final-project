@@ -17,4 +17,16 @@ class PotentialMatchResponse(BaseModel):
                 "user_id": 1,
                 "potential_match_ids": [2, 3, 5, 8, 12]
             }
+        }
+
+class BackupRecommendationsResponse(BaseModel):
+    user_ids: List[int] = Field(..., description="List of compatible user IDs")
+    total_count: int = Field(..., description="Total number of recommendations returned")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "user_ids": [3, 5, 8, 12, 15],
+                "total_count": 5
+            }
         } 

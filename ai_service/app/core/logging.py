@@ -91,32 +91,4 @@ class LoggerMixin:
     @property
     def logger(self) -> logging.Logger:
         """Get logger for this class."""
-        return get_logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
-
-
-def log_function_call(func):
-    """
-    Decorator to log function calls with parameters and execution time.
-    
-    Usage:
-        @log_function_call
-        def my_function(param1, param2):
-            return result
-    """
-    def wrapper(*args, **kwargs):
-        func_logger = get_logger(f"{func.__module__}.{func.__name__}")
-        
-        # Log function call
-        func_logger.debug(
-            f"Calling {func.__name__} with args={args}, kwargs={kwargs}"
-        )
-        
-        try:
-            result = func(*args, **kwargs)
-            func_logger.debug(f"{func.__name__} completed successfully")
-            return result
-        except Exception as e:
-            func_logger.error(f"{func.__name__} failed with error: {e}")
-            raise
-    
-    return wrapper 
+        return get_logger(f"{self.__class__.__module__}.{self.__class__.__name__}") 

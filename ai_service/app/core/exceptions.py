@@ -46,17 +46,6 @@ class PredictionError(AmouraAIException):
         )
 
 
-class DataValidationError(AmouraAIException):
-    """Raised when input data validation fails."""
-    
-    def __init__(self, field: str, value: Any, reason: str):
-        super().__init__(
-            message=f"Data validation failed for field '{field}': {reason}",
-            error_code="DATA_VALIDATION_ERROR",
-            details={"field": field, "value": value, "reason": reason}
-        )
-
-
 class ExternalAPIError(AmouraAIException):
     """Raised when external API calls fail."""
     
@@ -65,17 +54,6 @@ class ExternalAPIError(AmouraAIException):
             message=f"External API '{api_name}' call failed: {error}",
             error_code="EXTERNAL_API_ERROR",
             details={"api_name": api_name, "original_error": error, "status_code": status_code}
-        )
-
-
-class DatabaseError(AmouraAIException):
-    """Raised when database operations fail."""
-    
-    def __init__(self, operation: str, error: str):
-        super().__init__(
-            message=f"Database operation '{operation}' failed: {error}",
-            error_code="DATABASE_ERROR",
-            details={"operation": operation, "original_error": error}
         )
 
 
@@ -104,9 +82,7 @@ def convert_to_http_exception(exception: AmouraAIException) -> HTTPException:
     error_code_mapping = {
         "MODEL_LOAD_ERROR": status.HTTP_503_SERVICE_UNAVAILABLE,
         "PREDICTION_ERROR": status.HTTP_500_INTERNAL_SERVER_ERROR,
-        "DATA_VALIDATION_ERROR": status.HTTP_400_BAD_REQUEST,
         "EXTERNAL_API_ERROR": status.HTTP_502_BAD_GATEWAY,
-        "DATABASE_ERROR": status.HTTP_500_INTERNAL_SERVER_ERROR,
         "CONFIGURATION_ERROR": status.HTTP_500_INTERNAL_SERVER_ERROR,
     }
     

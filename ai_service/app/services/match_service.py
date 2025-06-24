@@ -2,15 +2,14 @@
 """
 Match service for Amoura AI Service.
 
-This module provides the MatchService class for handling user matching
-operations including potential match discovery and compatibility analysis.
+This module provides the MatchService class for handling AI-powered
+match predictions using machine learning models.
 """
 
-from sqlalchemy.orm import Session
 from typing import List
+from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from app.core.config import get_settings
 from app.core.logging import LoggerMixin, get_logger
 from app.db import crud
 from app.ml.predictor import MatchPredictor
@@ -19,26 +18,25 @@ from app.ml.preprocessing import orientation_compatibility
 
 class MatchService(LoggerMixin):
     """
-    Service for handling user matching operations.
+    Service for AI-powered match predictions.
     
-    This service coordinates between the database layer and ML predictor
-    to provide intelligent match recommendations.
+    This service uses machine learning models to predict potential
+    matches between users based on their profiles and preferences.
     """
     
-    def __init__(self, db: Session, predictor: MatchPredictor):
+    def __init__(self, db: Session, predictor=None, match_threshold: float = 0.5):
         """
         Initialize MatchService.
         
         Args:
             db: Database session
-            predictor: ML predictor instance
+            predictor: MatchPredictor instance
+            match_threshold: Threshold for considering a match valid
         """
         self.db = db
         self.predictor = predictor
-        self.settings = get_settings()
-        self.match_threshold = self.settings.MATCH_PROBABILITY_THRESHOLD
-        
-        self.logger.info(f"MatchService initialized with threshold: {self.match_threshold}")
+        self.match_threshold = match_threshold
+        self.logger.info("MatchService initialized successfully")
     
     def get_potential_matches(self, current_user_id: int, limit: int = 10) -> List[int]:
         """
@@ -226,3 +224,27 @@ class MatchService(LoggerMixin):
                 continue
         
         return potential_matches_ids
+
+    def get_backup_recommendations(self, user_id: int, limit: int = 10) -> List[int]:
+        """
+        Lấy danh sách ID người dùng backup dựa trên giới tính và orientation.
+        
+        Args:
+            user_id: ID của người dùng hiện tại
+            limit: Số lượng recommendations tối đa
+            
+        Returns:
+            List of user IDs
+        """
+        self.logger.info(f"Getting backup recommendations for user {user_id}")
+        
+        try:
+            # Lấy backup recommendations
+            user_ids = crud.get_backup_recommendations(self.db, user_id, limit)
+            
+            self.logger.info(f"Found {len(user_ids)} backup recommendations for user {user_id}")
+            return user_ids
+            
+        except Exception as e:
+            self.logger.error(f"Error getting backup recommendations for user {user_id}: {e}")
+            return []

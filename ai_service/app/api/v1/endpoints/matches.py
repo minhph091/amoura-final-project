@@ -105,3 +105,65 @@ async def get_potential_matches_for_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An unexpected error occurred while processing matches for user {user_id}."
         )
+
+@router.get(
+    "/users/{user_id}/backup-recommendations",
+    response_model=schemas.match.BackupRecommendationsResponse,
+    summary="Get backup user IDs based on gender and orientation",
+    description="""
+    Get backup user IDs when AI predictions are exhausted.
+    This endpoint filters users based on gender and orientation compatibility.
+    
+    **Use case:** When a user has swiped on all AI-predicted matches,
+    this provides additional user IDs to swipe on based on basic compatibility.
+    
+    **Filtering logic:**
+    - Straight male → Straight female
+    - Straight female → Straight male  
+    - Homosexual → Same gender
+    - Bisexual → All compatible orientations
+    
+    **Parameters:**
+    - user_id: ID of the user requesting recommendations (path parameter)
+    - limit: Number of recommendations to return (query parameter, default: 10, max: 50)
+    """
+)
+async def get_backup_recommendations(
+    match_service: MatchServiceDep,
+    user_id: int = Path(..., gt=0, description="ID of the user requesting recommendations"),
+    limit: int = Query(10, ge=1, le=50, description="Number of recommendations to return")
+):
+    """
+    Get backup user IDs based on gender and orientation compatibility.
+    
+    This endpoint is used when the AI prediction system has no more matches
+    to suggest, providing users with additional user IDs to swipe on based
+    on basic demographic compatibility.
+    
+    **Parameters:**
+    - **user_id**: ID of the user requesting recommendations (required, path parameter)
+    - **limit**: Maximum number of recommendations to return (optional, query parameter, default: 10)
+    
+    **Returns:**
+    - **user_ids**: List of compatible user IDs
+    - **total_count**: Total number of recommendations returned
+    
+    **Note:** Only returns user IDs that haven't been swiped on yet.
+    """
+    try:
+        user_ids = match_service.get_backup_recommendations(
+            user_id=user_id,
+            limit=limit
+        )
+        
+        return schemas.match.BackupRecommendationsResponse(
+            user_ids=user_ids,
+            total_count=len(user_ids)
+        )
+        
+    except Exception as e:
+        print(f"Error getting backup recommendations: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while getting backup recommendations. Please try again."
+        )
