@@ -10,6 +10,9 @@ import '../../../core/utils/distance_calculator.dart';
 import 'image_carousel.dart';
 import 'user_info_section.dart';
 import 'interest_chip.dart';
+import 'profile_detail_bottom_sheet.dart';
+import 'package:provider/provider.dart';
+import '../../profile/view/profile_viewmodel.dart';
 
 class ProfileCard extends StatelessWidget {
   final UserRecommendationModel profile;
@@ -112,18 +115,59 @@ class ProfileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '$name$ageText',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.5),
-                              blurRadius: 6,
-                            ),
-                          ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '$name$ageText',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                          overflow: TextOverflow.ellipsis,
                         ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.info_outline, color: Colors.white, size: 28),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) {
+                              final profileViewModel = Provider.of<ProfileViewModel?>(context, listen: false);
+                              final profileData = profileViewModel?.profile;
+                              return ProfileDetailBottomSheet(
+                                profile: profileData ?? {
+                                  'bio': profile.bio ?? '',
+                                  'height': profile.height != null ? profile.height.toString() : '-',
+                                  'sex': profile.sex ?? '',
+                                  'location': profile.location != null ? {'city': profile.location} : null,
+                                  'interests': interests.map((e) => {'name': e.name}).toList(),
+                                  'pets': profile.pets.map((e) => {'name': e.name}).toList(),
+                                  'orientation': null,
+                                  'jobIndustry': null,
+                                  'educationLevel': null,
+                                  'languages': [],
+                                  'drinkStatus': null,
+                                  'smokeStatus': null,
+                                },
+                                distance: distance,
+                              );
+                            },
+                          );
+                        },
+                        tooltip: 'Xem thông tin chi tiết',
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -155,19 +199,6 @@ class ProfileCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                  const SizedBox(height: 16),
-                  if (interestChips.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: interestChips
-                          .map<Widget>((interest) => InterestChip(
-                                label: interest.label,
-                                icon: interest.icon,
-                                iconColor: interest.iconColor,
-                              ))
-                          .toList(),
-                    ),
                   // Add padding at the bottom to push content up
                   const SizedBox(height: 90),
                 ],
