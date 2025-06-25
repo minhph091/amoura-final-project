@@ -16,49 +16,68 @@ import java.util.Optional;
 public interface MessageRepository extends JpaRepository<Message, Long> {
     
     @Query("SELECT m FROM Message m WHERE m.chatRoom.id = :chatRoomId " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId) " +
            "ORDER BY m.createdAt DESC")
-    List<Message> findByChatRoomIdOrderByCreatedAtDesc(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+    List<Message> findByChatRoomIdOrderByCreatedAtDesc(@Param("chatRoomId") Long chatRoomId, 
+                                                      @Param("userId") Long userId, 
+                                                      Pageable pageable);
     
     @Query("SELECT m FROM Message m WHERE m.chatRoom.id = :chatRoomId " +
            "AND m.id < :cursor " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId) " +
            "ORDER BY m.createdAt DESC")
     List<Message> findByChatRoomIdAndCursorOrderByCreatedAtDesc(
             @Param("chatRoomId") Long chatRoomId, 
-            @Param("cursor") Long cursor, 
+            @Param("cursor") Long cursor,
+            @Param("userId") Long userId,
             Pageable pageable);
     
     @Query("SELECT m FROM Message m WHERE m.chatRoom.id = :chatRoomId " +
            "AND m.id > :cursor " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId) " +
            "ORDER BY m.createdAt ASC")
     List<Message> findByChatRoomIdAndCursorOrderByCreatedAtAsc(
             @Param("chatRoomId") Long chatRoomId, 
-            @Param("cursor") Long cursor, 
+            @Param("cursor") Long cursor,
+            @Param("userId") Long userId,
             Pageable pageable);
     
     @Query("SELECT m FROM Message m WHERE m.chatRoom.id = :chatRoomId " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId) " +
            "ORDER BY m.createdAt DESC")
-    List<Message> findLatestMessagesByChatRoomId(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+    List<Message> findLatestMessagesByChatRoomId(@Param("chatRoomId") Long chatRoomId, 
+                                                @Param("userId") Long userId, 
+                                                Pageable pageable);
     
     @Query("SELECT COUNT(m) FROM Message m WHERE m.chatRoom.id = :chatRoomId " +
-           "AND m.sender.id != :userId AND m.isRead = false")
+           "AND m.sender.id != :userId AND m.isRead = false " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId)")
     Long countUnreadMessagesByChatRoomIdAndUserId(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
     
     @Query("SELECT m FROM Message m WHERE m.chatRoom.id = :chatRoomId " +
-           "AND m.sender.id != :userId AND m.isRead = false")
+           "AND m.sender.id != :userId AND m.isRead = false " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId)")
     List<Message> findUnreadMessagesByChatRoomIdAndUserId(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
     
     @Modifying
     @Query("UPDATE Message m SET m.isRead = true, m.readAt = :readAt " +
-           "WHERE m.chatRoom.id = :chatRoomId AND m.sender.id != :userId AND m.isRead = false")
+           "WHERE m.chatRoom.id = :chatRoomId AND m.sender.id != :userId AND m.isRead = false " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId)")
     void markMessagesAsRead(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId, @Param("readAt") LocalDateTime readAt);
     
-    @Query("SELECT m FROM Message m WHERE m.id = :messageId AND m.chatRoom.id = :chatRoomId")
-    Optional<Message> findByIdAndChatRoomId(@Param("messageId") Long messageId, @Param("chatRoomId") Long chatRoomId);
+    @Query("SELECT m FROM Message m WHERE m.id = :messageId AND m.chatRoom.id = :chatRoomId " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId)")
+    Optional<Message> findByIdAndChatRoomId(@Param("messageId") Long messageId, 
+                                           @Param("chatRoomId") Long chatRoomId,
+                                           @Param("userId") Long userId);
     
-    @Query("SELECT MAX(m.createdAt) FROM Message m WHERE m.chatRoom.id = :chatRoomId")
-    Optional<LocalDateTime> findLastMessageTimeByChatRoomId(@Param("chatRoomId") Long chatRoomId);
+    @Query("SELECT MAX(m.createdAt) FROM Message m WHERE m.chatRoom.id = :chatRoomId " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId)")
+    Optional<LocalDateTime> findLastMessageTimeByChatRoomId(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
 
-    Optional<Message> findByImageUrl(String imageUrl);
+    @Query("SELECT m FROM Message m WHERE m.imageUrl = :imageUrl " +
+           "AND m.id NOT IN (SELECT v.messageId FROM UserMessageVisibility v WHERE v.userId = :userId)")
+    Optional<Message> findByImageUrl(@Param("imageUrl") String imageUrl, @Param("userId") Long userId);
 
     @Query("""
     SELECT m FROM Message m

@@ -259,7 +259,7 @@ public class ChatController {
         Path filePath = Paths.get(uploadDir, relativePath);
         try {
             // Tìm message chứa imageUrl này
-            var messageOpt = messageRepository.findByImageUrl(imageUrl);
+            var messageOpt = messageRepository.findByImageUrl(imageUrl, userId);
             if (messageOpt.isEmpty()) {
                 return ResponseEntity.status(404).body("Message with this image not found");
             }

@@ -67,6 +67,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public List<ChatRoomDTO> getUserChatRooms(Long userId, CursorPaginationRequest request) {
+        // For now, we'll use simple pagination since ChatRoom doesn't have cursor-based pagination implemented
+        // In a real implementation, you might want to add cursor-based pagination for chat rooms
         Pageable pageable = PageRequest.of(0, request.getLimit());
         List<ChatRoom> chatRooms = chatRoomRepository.findByUserIdOrderByUpdatedAtDesc(userId, pageable);
         return chatMapper.toChatRoomDTOList(chatRooms);
@@ -163,18 +165,78 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public CursorPaginationResponse<MessageDTO> getChatMessages(Long chatRoomId, Long userId, CursorPaginationRequest request) {
-        Pageable pageable = PageRequest.of(0, request.getLimit());
-        List<Message> messages = messageRepository.findVisibleMessagesForUser(chatRoomId, userId, pageable);
-        List<MessageDTO> messageDTOs = messages.stream().map(msg -> {
-            MessageDTO dto = chatMapper.toMessageDTO(msg);
-            return dto;
-        }).toList();
+        // Validate chat room access
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Chat room not found"));
+
+        if (!chatRoom.getUser1().getId().equals(userId) && !chatRoom.getUser2().getId().equals(userId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied to this chat room");
+        }
+
+        List<Message> messages;
+        Long nextCursor = null;
+        Long previousCursor = null;
+        boolean hasNext = false;
+        boolean hasPrevious = false;
+
+        if (request.getCursor() == null) {
+            // First page - get latest messages
+            messages = messageRepository.findVisibleMessagesForUser(chatRoomId, userId, 
+                    PageRequest.of(0, request.getLimit() + 1)); // +1 to check if there are more
+            
+            if (messages.size() > request.getLimit()) {
+                hasNext = true;
+                messages = messages.subList(0, request.getLimit());
+            }
+            
+            if (!messages.isEmpty()) {
+                nextCursor = messages.get(messages.size() - 1).getId();
+            }
+        } else {
+            // Subsequent pages
+            if ("NEXT".equalsIgnoreCase(request.getDirection())) {
+                // Get messages before cursor (older messages)
+                messages = messageRepository.findByChatRoomIdAndCursorOrderByCreatedAtDesc(
+                        chatRoomId, request.getCursor(), userId,
+                        PageRequest.of(0, request.getLimit() + 1));
+                
+                if (messages.size() > request.getLimit()) {
+                    hasNext = true;
+                    messages = messages.subList(0, request.getLimit());
+                }
+                
+                if (!messages.isEmpty()) {
+                    nextCursor = messages.get(messages.size() - 1).getId();
+                    previousCursor = messages.get(0).getId();
+                }
+            } else {
+                // Get messages after cursor (newer messages)
+                messages = messageRepository.findByChatRoomIdAndCursorOrderByCreatedAtAsc(
+                        chatRoomId, request.getCursor(), userId,
+                        PageRequest.of(0, request.getLimit() + 1));
+                
+                if (messages.size() > request.getLimit()) {
+                    hasPrevious = true;
+                    messages = messages.subList(0, request.getLimit());
+                }
+                
+                if (!messages.isEmpty()) {
+                    nextCursor = messages.get(messages.size() - 1).getId();
+                    previousCursor = messages.get(0).getId();
+                }
+            }
+        }
+
+        List<MessageDTO> messageDTOs = messages.stream()
+                .map(chatMapper::toMessageDTO)
+                .toList();
+
         return CursorPaginationResponse.<MessageDTO>builder()
                 .data(messageDTOs)
-                .nextCursor(null)
-                .previousCursor(null)
-                .hasNext(false)
-                .hasPrevious(false)
+                .nextCursor(nextCursor)
+                .previousCursor(previousCursor)
+                .hasNext(hasNext)
+                .hasPrevious(hasPrevious)
                 .totalCount(messageDTOs.size())
                 .build();
     }
@@ -222,6 +284,7 @@ public class ChatServiceImpl implements ChatService {
                 .type("TYPING")
                 .chatRoomId(chatRoomId)
                 .senderId(senderId)
+                .content(isTyping ? "true" : "false")
                 .timestamp(LocalDateTime.now())
                 .build();
 
@@ -234,6 +297,7 @@ public class ChatServiceImpl implements ChatService {
                 .type("READ_RECEIPT")
                 .chatRoomId(chatRoomId)
                 .senderId(userId)
+                .content("read")
                 .timestamp(LocalDateTime.now())
                 .build();
 
