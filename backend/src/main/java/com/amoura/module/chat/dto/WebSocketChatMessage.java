@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WebSocketChatMessage {
-    private String type; // MESSAGE, TYPING, READ_RECEIPT, etc.
+    private String type; // MESSAGE, TYPING, READ_RECEIPT, MESSAGE_RECALLED, etc.
     private Long chatRoomId;
     private Long messageId;
     private Long senderId;
@@ -24,4 +24,6 @@ public class WebSocketChatMessage {
     private LocalDateTime timestamp;
     private Boolean isRead;
     private String imageUrl;
+    private Boolean recalled;
+    private LocalDateTime recalledAt;
 } 

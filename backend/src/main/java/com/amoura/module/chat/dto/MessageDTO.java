@@ -27,4 +27,5 @@ public class MessageDTO {
     private String imageUrl;
     private Long imageUploaderId;
     private Boolean recalled;
+    private LocalDateTime recalledAt;
 } 

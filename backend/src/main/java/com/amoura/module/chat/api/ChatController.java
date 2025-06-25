@@ -32,6 +32,7 @@ import com.amoura.module.chat.domain.Message;
 import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import com.amoura.common.exception.ApiException;
 
 @RestController
 @RequestMapping("/chat")
@@ -175,21 +176,12 @@ public class ChatController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> recallMessage(@PathVariable Long messageId, @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
-        Optional<Message> messageOpt = messageRepository.findById(messageId);
-        if (messageOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        try {
+            chatService.recallMessage(messageId, userId);
+            return ResponseEntity.ok().build();
+        } catch (ApiException e) {
+            return ResponseEntity.status(e.getStatus()).build();
         }
-        Message message = messageOpt.get();
-        if (!message.getSender().getId().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        if (message.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(30))) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        message.setRecalled(true);
-        message.setRecalledAt(LocalDateTime.now());
-        messageRepository.save(message);
-        return ResponseEntity.ok().build();
     }
 
     // WebSocket message handlers
@@ -202,6 +194,17 @@ public class ChatController {
         // Handle typing indicator via WebSocket
         Long senderId = getUserIdFromHeader(headerAccessor);
         chatService.sendTypingIndicator(request.getChatRoomId(), senderId, request.isTyping());
+    }
+
+    @MessageMapping("/chat.recallMessage")
+    public void recallMessageViaWebSocket(@Payload RecallMessageRequest request, SimpMessageHeaderAccessor headerAccessor) {
+
+        Long senderId = getUserIdFromHeader(headerAccessor);
+        try {
+            chatService.recallMessage(request.getMessageId(), senderId);
+        } catch (ApiException e) {
+
+        }
     }
 
     @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -259,7 +262,7 @@ public class ChatController {
         Path filePath = Paths.get(uploadDir, relativePath);
         try {
             // Tìm message chứa imageUrl này
-            var messageOpt = messageRepository.findByImageUrl(imageUrl);
+            var messageOpt = messageRepository.findByImageUrl(imageUrl, userId);
             if (messageOpt.isEmpty()) {
                 return ResponseEntity.status(404).body("Message with this image not found");
             }
@@ -322,6 +325,18 @@ public class ChatController {
 
         public void setTyping(boolean typing) {
             this.typing = typing;
+        }
+    }
+
+    public static class RecallMessageRequest {
+        private Long messageId;
+
+        public Long getMessageId() {
+            return messageId;
+        }
+
+        public void setMessageId(Long messageId) {
+            this.messageId = messageId;
         }
     }
 } 
