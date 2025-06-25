@@ -6,6 +6,7 @@ import com.amoura.module.chat.dto.ChatRoomDTO;
 import com.amoura.module.chat.dto.MessageDTO;
 import com.amoura.module.profile.service.PhotoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,6 +15,8 @@ import java.util.stream.Collectors;
 @Component
 public class ChatMapper {
     private final PhotoService photoService;
+    @Value("${file.storage.local.base-url}")
+    private String baseUrl;
 
     @Autowired
     public ChatMapper(PhotoService photoService) {
@@ -80,6 +83,14 @@ public class ChatMapper {
             var avatar = photoService.getUserAvatarById(message.getSender().getId());
             senderAvatar = avatar != null ? avatar.getUrl() : null;
         }
+        String imageUrl = null;
+        if (message.getImageUrl() != null && !message.getImageUrl().isEmpty()) {
+            if (message.getImageUrl().startsWith("http")) {
+                imageUrl = message.getImageUrl();
+            } else {
+                imageUrl = baseUrl + "/" + message.getImageUrl();
+            }
+        }
         
         return MessageDTO.builder()
                 .id(message.getId())
@@ -93,7 +104,7 @@ public class ChatMapper {
                 .readAt(message.getReadAt())
                 .createdAt(message.getCreatedAt())
                 .updatedAt(message.getUpdatedAt())
-                .imageUrl(message.getImageUrl())
+                .imageUrl(imageUrl)
                 .imageUploaderId(message.getImageUploaderId())
                 .recalled(message.getRecalled() != null ? message.getRecalled() : false)
                 .recalledAt(message.getRecalledAt())

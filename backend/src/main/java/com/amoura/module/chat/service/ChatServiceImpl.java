@@ -148,7 +148,9 @@ public class ChatServiceImpl implements ChatService {
                 .content(request.getContent())
                 .messageType(request.getMessageType())
                 .isRead(false)
-                .imageUrl(request.getImageUrl())
+                .imageUrl(request.getImageUrl() != null && request.getImageUrl().startsWith("http")
+                    ? request.getImageUrl().substring(request.getImageUrl().indexOf("/chat/"))
+                    : request.getImageUrl())
                 .imageUploaderId(request.getImageUrl() != null ? senderId : null)
                 .build();
 

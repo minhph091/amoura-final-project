@@ -216,12 +216,10 @@ public class ChatController {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("File is empty");
         }
-        
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             return ResponseEntity.badRequest().body("File must be an image");
         }
-        
         // Validate chat room access
         try {
             Long userId = getUserId(userDetails);
@@ -229,20 +227,17 @@ public class ChatController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied to this chat room");
         }
-        
         try {
             Path roomDir = Paths.get(uploadDir, "chat", chatRoomId.toString());
             if (!Files.exists(roomDir)) {
                 Files.createDirectories(roomDir);
             }
-            
             String filename = System.currentTimeMillis() + getFileExtension(file.getOriginalFilename());
             Path filePath = roomDir.resolve(filename);
             Files.copy(file.getInputStream(), filePath);
-            
             String relativePath = "chat/" + chatRoomId + "/" + filename;
             String imageUrl = baseUrl + "/" + relativePath;
-            
+            // Trả về URL đầy đủ cho client, nhưng client sẽ gửi relativePath khi gửi message
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body("Failed to upload image");
@@ -258,11 +253,17 @@ public class ChatController {
         if (imageUrl == null || !imageUrl.contains("/chat/")) {
             return ResponseEntity.badRequest().body("Invalid imageUrl");
         }
-        String relativePath = imageUrl.substring(imageUrl.indexOf("/chat/"));
+        // Nếu client gửi URL đầy đủ, parse lấy relative path
+        String relativePath = imageUrl;
+        if (imageUrl.startsWith(baseUrl)) {
+            relativePath = imageUrl.substring(baseUrl.length() + 1); // +1 để bỏ dấu '/'
+        } else if (imageUrl.startsWith("/")) {
+            relativePath = imageUrl.substring(1);
+        }
         Path filePath = Paths.get(uploadDir, relativePath);
         try {
-            // Tìm message chứa imageUrl này
-            var messageOpt = messageRepository.findByImageUrl(imageUrl, userId);
+            // Tìm message chứa relativePath này
+            var messageOpt = messageRepository.findByImageUrl(relativePath, userId);
             if (messageOpt.isEmpty()) {
                 return ResponseEntity.status(404).body("Message with this image not found");
             }
