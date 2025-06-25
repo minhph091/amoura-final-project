@@ -21,9 +21,11 @@ public interface ChatService {
     CursorPaginationResponse<MessageDTO> getChatMessages(Long chatRoomId, Long userId, CursorPaginationRequest request);
     void markMessagesAsRead(Long chatRoomId, Long userId);
     Long getUnreadMessageCount(Long chatRoomId, Long userId);
+    void recallMessage(Long messageId, Long userId);
     
     // WebSocket operations
     void sendMessageToChatRoom(Long chatRoomId, MessageDTO message);
     void sendTypingIndicator(Long chatRoomId, Long senderId, boolean isTyping);
     void sendReadReceipt(Long chatRoomId, Long userId);
+    void sendMessageRecalledNotification(Long chatRoomId, Long messageId, Long senderId);
 } 

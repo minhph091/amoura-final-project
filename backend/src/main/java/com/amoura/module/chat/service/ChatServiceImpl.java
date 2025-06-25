@@ -260,6 +260,42 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    public void recallMessage(Long messageId, Long userId) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Message not found"));
+
+        if (!message.getSender().getId().equals(userId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You can only recall your own messages");
+        }
+
+        if (message.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(30))) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Messages can only be recalled within 30 minutes");
+        }
+
+        message.setRecalled(true);
+        message.setRecalledAt(LocalDateTime.now());
+        messageRepository.save(message);
+
+        // Send WebSocket notification to all users in the chat room
+        sendMessageRecalledNotification(message.getChatRoom().getId(), messageId, userId);
+    }
+
+    @Override
+    public void sendMessageRecalledNotification(Long chatRoomId, Long messageId, Long senderId) {
+        WebSocketChatMessage wsMessage = WebSocketChatMessage.builder()
+                .type("MESSAGE_RECALLED")
+                .chatRoomId(chatRoomId)
+                .messageId(messageId)
+                .senderId(senderId)
+                .timestamp(LocalDateTime.now())
+                .recalled(true)
+                .recalledAt(LocalDateTime.now())
+                .build();
+
+        messagingTemplate.convertAndSend("/topic/chat/" + chatRoomId, wsMessage);
+    }
+
+    @Override
     public void sendMessageToChatRoom(Long chatRoomId, MessageDTO message) {
         WebSocketChatMessage wsMessage = WebSocketChatMessage.builder()
                 .type("MESSAGE")
@@ -273,6 +309,8 @@ public class ChatServiceImpl implements ChatService {
                 .timestamp(message.getCreatedAt())
                 .isRead(message.getIsRead())
                 .imageUrl(message.getImageUrl())
+                .recalled(message.getRecalled())
+                .recalledAt(message.getRecalledAt())
                 .build();
 
         messagingTemplate.convertAndSend("/topic/chat/" + chatRoomId, wsMessage);

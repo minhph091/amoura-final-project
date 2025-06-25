@@ -96,6 +96,7 @@ public class ChatMapper {
                 .imageUrl(message.getImageUrl())
                 .imageUploaderId(message.getImageUploaderId())
                 .recalled(message.getRecalled() != null ? message.getRecalled() : false)
+                .recalledAt(message.getRecalledAt())
                 .build();
     }
     
