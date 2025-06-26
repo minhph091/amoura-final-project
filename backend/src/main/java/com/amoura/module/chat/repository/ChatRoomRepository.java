@@ -32,4 +32,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query("SELECT COUNT(cr) FROM ChatRoom cr WHERE " +
            "(cr.user1.id = :userId OR cr.user2.id = :userId) AND cr.isActive = true")
     Long countActiveChatRoomsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT c.id FROM ChatRoom c WHERE c.user1.id = :userId OR c.user2.id = :userId")
+    List<Long> findChatRoomIdsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT COUNT(c) > 0 FROM ChatRoom c WHERE c.id = :chatRoomId AND (c.user1.id = :userId OR c.user2.id = :userId)")
+    boolean isUserInChatRoom(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
 } 

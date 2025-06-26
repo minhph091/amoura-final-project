@@ -3,6 +3,7 @@ package com.amoura.module.profile.mapper;
 import com.amoura.module.profile.domain.*;
 import com.amoura.module.profile.dto.*;
 import com.amoura.module.user.domain.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -12,6 +13,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class ProfileMapper {
+
+    @Value("${file.storage.local.base-url}")
+    private String baseUrl;
 
     public ProfileDTO toDTO(User user, Profile profile, Location location,
                           List<Photo> photos, List<UserInterest> interests,
@@ -229,13 +233,19 @@ public class ProfileMapper {
         // Add photos
         if (photos != null && !photos.isEmpty()) {
             List<PhotoDTO> photoDTOs = photos.stream()
-                    .map(photo -> PhotoDTO.builder()
-                            .id(photo.getId())
-                            .url(photo.getPath())
-                            .type(photo.getType())
-                            .uploadedAt(photo.getCreatedAt())
-                            .build())
-                    .collect(Collectors.toList());
+                .map(photo -> {
+                    String url = photo.getPath();
+                    if (url != null && !url.isEmpty() && !url.startsWith("http")) {
+                        url = baseUrl + "/" + url;
+                    }
+                    return PhotoDTO.builder()
+                        .id(photo.getId())
+                        .url(url)
+                        .type(photo.getType())
+                        .uploadedAt(photo.getCreatedAt())
+                        .build();
+                })
+                .collect(Collectors.toList());
 
             builder.photos(photoDTOs);
         }
