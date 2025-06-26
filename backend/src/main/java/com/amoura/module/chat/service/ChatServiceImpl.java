@@ -348,12 +348,10 @@ public class ChatServiceImpl implements ChatService {
         if (imageUrl == null || imageUrl.trim().isEmpty()) {
             return null;
         }
-        
         // Nếu URL bắt đầu bằng http và chứa /chat/, lấy phần relative path
         if (imageUrl.startsWith("http") && imageUrl.contains("/chat/")) {
             int chatIndex = imageUrl.indexOf("/chat/");
             String relativePath = imageUrl.substring(chatIndex + 1); // +1 để bỏ dấu / đầu
-            log.debug("Processing image URL: {} -> {}", imageUrl, relativePath);
             return relativePath;
         }
         
