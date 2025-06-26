@@ -244,7 +244,7 @@ public class ChatController {
             Path filePath = roomDir.resolve(filename);
             Files.copy(file.getInputStream(), filePath);
             String relativePath = "chat/" + chatRoomId + "/" + filename;
-            String imageUrl = baseUrl + relativePath;
+            String imageUrl = baseUrl + "/" + relativePath;
             // Trả về URL đầy đủ cho client, nhưng client sẽ gửi relativePath khi gửi message
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
