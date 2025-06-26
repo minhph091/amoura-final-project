@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static java.rmi.server.LogStream.log;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -327,7 +329,7 @@ public class ChatServiceImpl implements ChatService {
                 .content(isTyping ? "true" : "false")
                 .timestamp(LocalDateTime.now())
                 .build();
-
+        log("Send typing");
         messagingTemplate.convertAndSend("/topic/chat/" + chatRoomId, wsMessage);
     }
 

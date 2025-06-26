@@ -33,6 +33,9 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import com.amoura.common.exception.ApiException;
+import java.security.Principal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/chat")
@@ -43,6 +46,7 @@ public class ChatController {
     private final ChatService chatService;
     private final MessageRepository messageRepository;
     private final UserMessageVisibilityRepository userMessageVisibilityRepository;
+    private static final Logger log = LoggerFactory.getLogger(ChatController.class);
 
     @Value("${file.storage.local.upload-dir}")
     private String uploadDir;
@@ -187,6 +191,10 @@ public class ChatController {
     // WebSocket message handlers
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload SendMessageRequest request, SimpMessageHeaderAccessor headerAccessor) {
+        // Handle message sending via WebSocket
+        Long senderId = getUserIdFromHeader(headerAccessor);
+        MessageDTO message = chatService.sendMessage(request, senderId);
+        // Message will be broadcasted via sendMessageToChatRoom in ChatService
     }
 
     @MessageMapping("/chat.typing")
@@ -301,11 +309,23 @@ public class ChatController {
     }
 
     private Long getUserIdFromHeader(SimpMessageHeaderAccessor headerAccessor) {
+        // Thử lấy từ session attributes trước
         Object userId = headerAccessor.getSessionAttributes().get("userId");
         if (userId instanceof Long) {
             return (Long) userId;
         }
-        throw new IllegalArgumentException("User ID not found in session");
+        
+        // Nếu không có trong session attributes, thử lấy từ Principal
+        Principal principal = headerAccessor.getUser();
+        if (principal != null && principal.getName() != null) {
+            try {
+                return Long.parseLong(principal.getName());
+            } catch (NumberFormatException e) {
+                log.warn("Invalid user ID format in principal: {}", principal.getName());
+            }
+        }
+        
+        throw new IllegalArgumentException("User ID not found in session or principal");
     }
 
     public static class TypingRequest {
