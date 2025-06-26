@@ -40,6 +40,8 @@ public class AuthServiceImpl implements AuthService {
     private final OtpService otpService;
     private final UserService userService;
 
+    private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!*()_])(?=\\S+$).{8,}$";
+
     @Override
     public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
         // Đầu tiên xác thực người dùng (không sử dụng @Transactional)
@@ -108,6 +110,9 @@ public class AuthServiceImpl implements AuthService {
         if (password == null || password.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Password is required", "PASSWORD_REQUIRED");
         }
+        if (!password.matches(PASSWORD_PATTERN)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters, contain uppercase and lowercase letters, a number, and a special character.", "INVALID_PASSWORD_FORMAT");
+        }
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
@@ -140,6 +145,9 @@ public class AuthServiceImpl implements AuthService {
 
         if (password == null || password.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Password is required", "PASSWORD_REQUIRED");
+        }
+        if (!password.matches(PASSWORD_PATTERN)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters, contain uppercase and lowercase letters, a number, and a special character.", "INVALID_PASSWORD_FORMAT");
         }
 
         User user = userRepository.findByPhoneNumber(phoneNumber)

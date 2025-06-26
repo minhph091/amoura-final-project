@@ -30,6 +30,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
             String uploadAbsolutePath = uploadPath.toFile().getAbsolutePath();
             log.info("Configuring static resource handler for upload directory: {}", uploadAbsolutePath);
 
+            // Map /api/files/** to the upload directory
+            registry.addResourceHandler("/api/files/**")
+                    .addResourceLocations("file:" + uploadAbsolutePath + "/");
+            
+            // Also keep the old mapping for backward compatibility
             registry.addResourceHandler("/files/**")
                     .addResourceLocations("file:" + uploadAbsolutePath + "/");
         } catch (IOException e) {
