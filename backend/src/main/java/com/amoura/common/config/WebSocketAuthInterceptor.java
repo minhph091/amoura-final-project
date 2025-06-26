@@ -40,6 +40,10 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 };
                 
                 accessor.setUser(principal);
+                
+                // Set userId vào session attributes để ChatController có thể lấy được
+                accessor.getSessionAttributes().put("userId", userId);
+                
                 log.info("WebSocket authenticated for user: {} (ID: {})", username, userId);
             } else {
                 log.warn("WebSocket authentication failed - invalid token");
