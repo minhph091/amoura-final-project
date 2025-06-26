@@ -290,12 +290,6 @@ public class ChatController {
         }
     }
 
-    @GetMapping("/test-file-access")
-    @Operation(summary = "Test file access")
-    public ResponseEntity<String> testFileAccess() {
-        return ResponseEntity.ok("File access test endpoint is working. Base URL: " + baseUrl);
-    }
-
     private boolean isUserInRoom(Long userId, Long roomId) {
 
         return true;

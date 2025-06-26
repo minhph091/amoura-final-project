@@ -44,7 +44,6 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/files/**").permitAll()
                         .requestMatchers("/api/files/**").permitAll()
-                        .requestMatchers("/chat/test-file-access").permitAll()
                         .requestMatchers("/files/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/profile/public/**").permitAll()
 
