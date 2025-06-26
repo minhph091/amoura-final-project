@@ -150,9 +150,7 @@ public class ChatServiceImpl implements ChatService {
                 .content(request.getContent())
                 .messageType(request.getMessageType())
                 .isRead(false)
-                .imageUrl(request.getImageUrl() != null && request.getImageUrl().startsWith("http")
-                    ? request.getImageUrl().substring(request.getImageUrl().indexOf("/chat/"))
-                    : request.getImageUrl())
+                .imageUrl(processImageUrl(request.getImageUrl()))
                 .imageUploaderId(request.getImageUrl() != null ? senderId : null)
                 .build();
 
@@ -344,5 +342,23 @@ public class ChatServiceImpl implements ChatService {
                 .build();
 
         messagingTemplate.convertAndSend("/topic/chat/" + chatRoomId, wsMessage);
+    }
+
+    private String processImageUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            return null;
+        }
+        
+        // Nếu URL bắt đầu bằng http và chứa /chat/, lấy phần relative path
+        if (imageUrl.startsWith("http") && imageUrl.contains("/chat/")) {
+            int chatIndex = imageUrl.indexOf("/chat/");
+            String relativePath = imageUrl.substring(chatIndex);
+            log.debug("Processing image URL: {} -> {}", imageUrl, relativePath);
+            return relativePath;
+        }
+        
+        // Nếu đã là relative path hoặc URL khác, giữ nguyên
+        log.debug("Keeping image URL as is: {}", imageUrl);
+        return imageUrl;
     }
 } 
