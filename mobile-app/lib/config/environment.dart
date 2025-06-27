@@ -9,7 +9,7 @@ class EnvironmentConfig {
       case Environment.dev:
         return 'http://10.0.2.2:8080/api';
       case Environment.staging:
-        return 'https://staging.api.amoura.com';
+        return 'http://150.95.109.13:8080/api';
       case Environment.prod:
         return 'https://api.amoura.com';
     }
