@@ -157,22 +157,68 @@ CREATE TABLE users_languages (
                                  PRIMARY KEY (user_id, language_id)
 );
 
--- --- Bảng chức năng chính (Nhắn tin, Tương tác, Gọi điện) ---
-CREATE TABLE messages (
-                          id BIGSERIAL PRIMARY KEY,
-                          sender_id BIGINT REFERENCES users(id),
-                          receiver_id BIGINT REFERENCES users(id),
-                          content TEXT,
-                          message_type_id BIGINT REFERENCES message_types(id),
-                          is_read BOOLEAN DEFAULT FALSE,
-                          read_at TIMESTAMP WITHOUT TIME ZONE,
-                          is_edited BOOLEAN DEFAULT FALSE,
-                          edited_at TIMESTAMP WITHOUT TIME ZONE,
-                          is_recalled BOOLEAN DEFAULT FALSE,
-                          recalled_at TIMESTAMP WITHOUT TIME ZONE,
-                          created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                          updated_at TIMESTAMP WITHOUT TIME ZONE
+
+-- Create chat_rooms table
+CREATE TABLE chat_rooms (
+    id BIGSERIAL PRIMARY KEY,
+    user1_id BIGINT NOT NULL,
+    user2_id BIGINT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    CONSTRAINT fk_chat_rooms_user1 FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_chat_rooms_user2 FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT unique_chat_room_users UNIQUE (user1_id, user2_id)
 );
+
+-- --- Bảng chức năng chính (Nhắn tin, Tương tác, Gọi điện) ---
+-- Create messages table
+CREATE TABLE messages (
+    id BIGSERIAL PRIMARY KEY,
+    chat_room_id BIGINT NOT NULL,
+    sender_id BIGINT NOT NULL,
+    content TEXT NOT NULL,
+    message_type VARCHAR(20) NOT NULL DEFAULT 'TEXT',
+    is_read BOOLEAN NOT NULL DEFAULT false,
+    read_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    image_url VARCHAR(512),
+    image_uploader_id BIGINT,
+    recalled BOOLEAN DEFAULT FALSE,
+    recalled_at TIMESTAMP,
+    CONSTRAINT fk_messages_chat_room FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+-- Create indexes for better performance
+CREATE INDEX idx_chat_rooms_user1 ON chat_rooms(user1_id);
+CREATE INDEX idx_chat_rooms_user2 ON chat_rooms(user2_id);
+CREATE INDEX idx_chat_rooms_active ON chat_rooms(is_active);
+CREATE INDEX idx_chat_rooms_updated_at ON chat_rooms(updated_at DESC);
+
+CREATE INDEX idx_messages_chat_room_id ON messages(chat_room_id);
+CREATE INDEX idx_messages_sender_id ON messages(sender_id);
+CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
+CREATE INDEX idx_messages_unread ON messages(chat_room_id, sender_id, is_read) WHERE is_read = false;
+
+-- Add trigger to update chat_room updated_at when message is inserted
+CREATE OR REPLACE FUNCTION update_chat_room_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE chat_rooms 
+    SET updated_at = CURRENT_TIMESTAMP 
+    WHERE id = NEW.chat_room_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_chat_room_updated_at
+    AFTER INSERT ON messages
+    FOR EACH ROW
+    EXECUTE FUNCTION update_chat_room_updated_at(); 
 
 CREATE TABLE user_message_visibilities (
                                            user_id BIGINT REFERENCES users(id),

@@ -29,7 +29,7 @@ public class MatchingController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<UserRecommendationDTO>> getRecommendedUsers(
             @AuthenticationPrincipal UserDetails userDetails) {
-        List<UserRecommendationDTO> recommendations = matchingService.getRecommendedUsers(userDetails.getUsername());
+        List<UserRecommendationDTO> recommendations = matchingService.getRecommendedUsers(getUserEmail(userDetails));
         return ResponseEntity.ok(recommendations);
     }
 
@@ -39,7 +39,12 @@ public class MatchingController {
     public ResponseEntity<SwipeResponse> swipeUser(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody SwipeRequest request) {
-        SwipeResponse response = matchingService.swipeUser(userDetails.getUsername(), request);
+        SwipeResponse response = matchingService.swipeUser(getUserEmail(userDetails), request);
         return ResponseEntity.ok(response);
+    }
+
+    private String getUserEmail(UserDetails userDetails) {
+        // CustomUserDetails stores email as username
+        return userDetails.getUsername();
     }
 } 

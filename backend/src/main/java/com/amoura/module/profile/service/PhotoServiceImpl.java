@@ -241,14 +241,13 @@ public class PhotoServiceImpl implements PhotoService {
             // Save file
             Files.copy(file.getInputStream(), filePath);
 
-            // Create photo record with correct URL path
+            // Chỉ lưu relative path vào DB
             String relativePath = "users/" + user.getId() + "/" + filename;
             Photo photo = Photo.builder()
                     .user(user)
-                    .path(baseUrl + "/" + relativePath)
+                    .path(relativePath)
                     .type(type)
                     .build();
-
             Photo savedPhoto = photoRepository.save(photo);
             return toDTO(savedPhoto);
 
@@ -269,7 +268,7 @@ public class PhotoServiceImpl implements PhotoService {
     private void deletePhoto(Photo photo) {
         try {
             // Delete file from storage
-            String relativePath = photo.getPath().substring(baseUrl.length() + 1);
+            String relativePath = photo.getPath();
             Path filePath = Paths.get(uploadDir, relativePath);
             Files.deleteIfExists(filePath);
 
@@ -284,9 +283,17 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     private PhotoDTO toDTO(Photo photo) {
+        String url = null;
+        if (photo.getPath() != null && !photo.getPath().isEmpty()) {
+            if (photo.getPath().startsWith("http")) {
+                url = photo.getPath();
+            } else {
+                url = baseUrl + "/" + photo.getPath();
+            }
+        }
         return PhotoDTO.builder()
                 .id(photo.getId())
-                .url(photo.getPath())
+                .url(url)
                 .type(photo.getType())
                 .uploadedAt(photo.getCreatedAt())
                 .build();
