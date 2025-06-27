@@ -14,7 +14,7 @@ import 'infrastructure/services/rewind_service.dart';
 import 'infrastructure/services/subscription_service.dart';
 import 'infrastructure/services/likes_service.dart';
 
-void main() async {
+Future<void> runMain() async {
   WidgetsFlutterBinding.ensureInitialized();
   await configureDependencies(navigatorKey);
 
@@ -26,7 +26,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ProfileViewModel()..loadProfile()),
         Provider<UserRepository>(create: (_) => GetIt.I<UserRepository>()),
 
-        // Thêm các service cho VIP features
+        // VIP features
         ChangeNotifierProvider(create: (_) => SubscriptionService()),
         ChangeNotifierProvider(create: (_) => RewindService()),
         ChangeNotifierProvider(create: (_) => LikesService()),
