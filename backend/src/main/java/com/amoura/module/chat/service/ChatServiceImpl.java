@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.rmi.server.LogStream.log;
 
@@ -49,7 +50,7 @@ public class ChatServiceImpl implements ChatService {
                 chatRoom.setIsActive(true);
                 chatRoom = chatRoomRepository.save(chatRoom);
             }
-            return chatMapper.toChatRoomDTO(chatRoom);
+            return chatMapper.toChatRoomDTO(chatRoom, userId1);
         }
 
         User user1 = userRepository.findById(userId1)
@@ -69,11 +70,12 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public List<ChatRoomDTO> getUserChatRooms(Long userId, CursorPaginationRequest request) {
-        // For now, we'll use simple pagination since ChatRoom doesn't have cursor-based pagination implemented
-        // In a real implementation, you might want to add cursor-based pagination for chat rooms
         Pageable pageable = PageRequest.of(0, request.getLimit());
         List<ChatRoom> chatRooms = chatRoomRepository.findByUserIdOrderByUpdatedAtDesc(userId, pageable);
-        return chatMapper.toChatRoomDTOList(chatRooms);
+        
+        return chatRooms.stream()
+                .map(chatRoom -> chatMapper.toChatRoomDTO(chatRoom, userId))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -85,7 +87,7 @@ public class ChatServiceImpl implements ChatService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Access denied to this chat room");
         }
 
-        return chatMapper.toChatRoomDTO(chatRoom);
+        return chatMapper.toChatRoomDTO(chatRoom, userId);
     }
 
     @Override
