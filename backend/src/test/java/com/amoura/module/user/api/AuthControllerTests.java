@@ -16,17 +16,6 @@ public class AuthControllerTests {
         RestAssured.port = 8080;
     }
 
-    private void printPrettyJson(Response response) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            Object json = mapper.readValue(response.asString(), Object.class);
-            ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
-            System.out.println("Response body:\n" + writer.writeValueAsString(json));
-        } catch (Exception e) {
-            System.out.println("Raw response:\n" + response.asString());
-        }
-    }
-
     @Test
     @DisplayName(" Đăng nhập với tài khoản hợp lệ")
     public void testLoginWithValidCredentials() {
@@ -43,8 +32,6 @@ public class AuthControllerTests {
                 .body(body)
                 .when()
                 .post("/api/auth/login");
-
-        printPrettyJson(response);
 
         Assertions.assertEquals(200, response.getStatusCode(), "Sai mã trạng thái");
         Assertions.assertNotNull(response.jsonPath().getString("accessToken"), "accessToken không được null");
@@ -65,8 +52,6 @@ public class AuthControllerTests {
                 .body(body)
                 .when()
                 .post("/api/auth/login");
-
-        printPrettyJson(response);
 
         Assertions.assertEquals(400, response.getStatusCode(), "API phải trả về 400 khi thiếu email");
         Assertions.assertEquals("EMAIL_REQUIRED", response.jsonPath().getString("errorCode"));
@@ -90,7 +75,6 @@ public class AuthControllerTests {
                 .when()
                 .post("/api/auth/login");
 
-        printPrettyJson(response);
 
         Assertions.assertEquals(400, response.getStatusCode(), "Sai định dạng email phải trả về 400");
         Assertions.assertEquals("VALIDATION_ERROR", response.jsonPath().getString("errorCode"));
@@ -112,7 +96,6 @@ public class AuthControllerTests {
                 .when()
                 .post("/api/auth/login");
 
-        printPrettyJson(response);
 
         Assertions.assertEquals(400, response.getStatusCode(), "Thiếu mật khẩu phải trả về 400");
         Assertions.assertEquals("PASSWORD_REQUIRED", response.jsonPath().getString("errorCode"));
