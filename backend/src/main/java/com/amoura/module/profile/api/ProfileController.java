@@ -49,4 +49,12 @@ public class ProfileController {
         ProfileResponseDTO updatedProfile = profileService.updateProfile(userDetails.getUsername(), request);
         return ResponseEntity.ok(updatedProfile);
     }
+
+    @GetMapping("/{userId}")
+    @Operation(summary = "Get profile of a specific user by ID")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ProfileResponseDTO> getProfileById(@PathVariable Long userId) {
+        ProfileResponseDTO profile = profileService.getProfileById(userId);
+        return ResponseEntity.ok(profile);
+    }
 } 
