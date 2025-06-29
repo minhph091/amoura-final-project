@@ -101,20 +101,23 @@ class _ImageCarouselState extends State<ImageCarousel> {
               itemBuilder: (context, index) {
                 final photo = widget.photos[index];
                 final transformedUrl = UrlTransformer.transform(photo.url);
-                return CachedNetworkImage(
-                  key: ValueKey('${widget.uniqueKey}_${photo.id}_$index'),
-                  imageUrl: transformedUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: CircularProgressIndicator(),
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: CachedNetworkImage(
+                    key: ValueKey('${widget.uniqueKey}_${photo.id}_$index'),
+                    imageUrl: transformedUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
                     ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(Icons.error, size: 50, color: Colors.grey),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.error, size: 50, color: Colors.grey),
+                      ),
                     ),
                   ),
                 );

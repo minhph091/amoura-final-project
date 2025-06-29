@@ -10,6 +10,9 @@ import '../../../core/utils/distance_calculator.dart';
 import 'image_carousel.dart';
 import 'user_info_section.dart';
 import 'interest_chip.dart';
+import 'profile_detail_bottom_sheet.dart';
+import 'package:provider/provider.dart';
+import '../../profile/view/profile_viewmodel.dart';
 
 class ProfileCard extends StatelessWidget {
   final UserRecommendationModel profile;
@@ -78,101 +81,132 @@ class ProfileCard extends StatelessWidget {
     // Controller for resetting image index
     final ImageCarouselController imageController = ImageCarouselController();
 
-    return Stack(
-      children: [
-        // Main image carousel with story progress bar
-        ImageCarousel(
-          key: ValueKey(profile.userId),
-          photos: displayPhotos,
-          showStoryProgress: true,
-          controller: imageController,
-          uniqueKey: 'profile_${profile.userId}', // Add unique key to prevent flickering
-        ),
-        // Overlay user info at the bottom
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.black.withOpacity(0.0),
-                  Colors.black.withOpacity(0.9),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.5, 1.0],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$name$ageText',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Stack(
+        children: [
+          // Main image carousel with story progress bar
+          ImageCarousel(
+            key: ValueKey(profile.userId),
+            photos: displayPhotos,
+            showStoryProgress: true,
+            controller: imageController,
+            uniqueKey: 'profile_${profile.userId}', // Add unique key to prevent flickering
+          ),
+          // Overlay user info at the bottom
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.0),
+                    Colors.black.withOpacity(0.9),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.5, 1.0],
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      color: Colors.white70,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '$name$ageText',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.info_outline, color: Colors.white, size: 28),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) {
+                              final profileViewModel = Provider.of<ProfileViewModel?>(context, listen: false);
+                              final profileData = profileViewModel?.profile;
+                              return ProfileDetailBottomSheet(
+                                profile: profileData ?? {
+                                  'bio': profile.bio ?? '',
+                                  'height': profile.height != null ? profile.height.toString() : '-',
+                                  'sex': profile.sex ?? '',
+                                  'location': profile.location != null ? {'city': profile.location} : null,
+                                  'interests': interests.map((e) => {'name': e.name}).toList(),
+                                  'pets': profile.pets.map((e) => {'name': e.name}).toList(),
+                                  'orientation': null,
+                                  'jobIndustry': null,
+                                  'educationLevel': null,
+                                  'languages': [],
+                                  'drinkStatus': null,
+                                  'smokeStatus': null,
+                                },
+                                distance: distance,
+                              );
+                            },
+                          );
+                        },
+                        tooltip: 'Xem thông tin chi tiết',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        displayLocation,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ],
+                  ),
+                  if (bio.isNotEmpty) ...[
+                    const SizedBox(height: 12),
                     Text(
-                      displayLocation,
+                      bio,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 15,
                           ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-                if (bio.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    bio,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 15,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  // Add padding at the bottom to push content up
+                  const SizedBox(height: 90),
                 ],
-                const SizedBox(height: 16),
-                if (interestChips.isNotEmpty)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: interestChips
-                        .map<Widget>((interest) => InterestChip(
-                              label: interest.label,
-                              icon: interest.icon,
-                              iconColor: interest.iconColor,
-                            ))
-                        .toList(),
-                  ),
-                // Add padding at the bottom to push content up
-                const SizedBox(height: 90),
-              ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
