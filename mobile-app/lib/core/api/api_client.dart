@@ -157,8 +157,11 @@ class ApiClient {
         options: Options(
           contentType: 'multipart/form-data',
           headers: {
-            'Accept': 'application/json',
+            // Chat upload API returns plain text, not JSON
+            'Accept': path.contains('chat/upload-image') ? 'text/plain' : 'application/json',
           },
+          // Disable automatic JSON parsing for chat upload
+          responseType: path.contains('chat/upload-image') ? ResponseType.plain : ResponseType.json,
         ),
       );
     } on DioException {

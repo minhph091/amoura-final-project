@@ -13,6 +13,7 @@ class MessageInput extends StatefulWidget {
   final String? editingText;
   final Function() onCancelEdit;
   final FocusNode? focusNode;
+  final Function(bool)? onTypingChanged; // Callback cho typing indicator
 
   const MessageInput({
     super.key,
@@ -27,6 +28,7 @@ class MessageInput extends StatefulWidget {
     this.editingText,
     required this.onCancelEdit,
     this.focusNode,
+    this.onTypingChanged,
   });
 
   @override
@@ -38,11 +40,20 @@ class _MessageInputState extends State<MessageInput> {
   final FocusNode _focusNode = FocusNode();
   bool _showSendButton = false;
   bool _showEmojiPicker = false;
+  bool _isTyping = false; // Track typing state
 
   @override
   void initState() {
     super.initState();
     _messageController.addListener(_onTextChanged);
+    
+    // Listen to focus changes để stop typing khi lose focus
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus && _isTyping) {
+        _isTyping = false;
+        widget.onTypingChanged?.call(false);
+      }
+    });
 
     // Initialize with editing text if provided
     if (widget.isEditing && widget.editingText != null) {
@@ -75,14 +86,29 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   void _onTextChanged() {
+    final hasText = _messageController.text.trim().isNotEmpty;
+    final shouldShowTyping = hasText && _focusNode.hasFocus;
+    
     setState(() {
-      _showSendButton = _messageController.text.trim().isNotEmpty;
+      _showSendButton = hasText;
     });
+    
+    // Send typing indicator khi có text và focus
+    if (shouldShowTyping != _isTyping) {
+      _isTyping = shouldShowTyping;
+      widget.onTypingChanged?.call(_isTyping);
+    }
   }
 
   void _handleSend() {
     final message = _messageController.text.trim();
     if (message.isNotEmpty) {
+      // Stop typing indicator trước khi send
+      if (_isTyping) {
+        _isTyping = false;
+        widget.onTypingChanged?.call(false);
+      }
+      
       widget.onSendMessage(message);
       _messageController.clear();
       setState(() {
@@ -115,57 +141,114 @@ class _MessageInputState extends State<MessageInput> {
 
   Widget _buildReplyOrEditBanner() {
     return Container(
-      padding: const EdgeInsets.all(8.0),
-      margin: const EdgeInsets.only(bottom: 4.0),
+      padding: const EdgeInsets.all(12.0),
+      margin: const EdgeInsets.only(bottom: 6.0, left: 8.0, right: 8.0),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        border: Border(
-          left: BorderSide(
-            color: widget.isEditing ? Colors.amber : Colors.blue,
-            width: 4.0,
-          ),
+        gradient: widget.isEditing 
+            ? LinearGradient(
+                colors: [Colors.amber.shade50, Colors.amber.shade100],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: [const Color(0xFFFF6B9D).withValues(alpha: 0.1), Colors.pink.shade50],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: widget.isEditing 
+              ? Colors.amber.withValues(alpha: 0.3)
+              : const Color(0xFFFF6B9D).withValues(alpha: 0.3),
+          width: 1.0,
         ),
       ),
       child: Row(
         children: [
+          // Reply/Edit indicator line
+          Container(
+            width: 3.0,
+            height: 40.0,
+            decoration: BoxDecoration(
+              color: widget.isEditing ? Colors.amber : const Color(0xFFFF6B9D),
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          ),
+          const SizedBox(width: 12.0),
+          
+          // Reply icon
+          Icon(
+            widget.isEditing ? Icons.edit : Icons.reply,
+            size: 18.0,
+            color: widget.isEditing ? Colors.amber.shade700 : const Color(0xFFFF6B9D),
+          ),
+          const SizedBox(width: 8.0),
+          
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  widget.isEditing ? 'Editing Message' : 'Replying to',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.0,
+                  widget.isEditing ? '✏️ Editing message' : '💬 Replying to message',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11.0,
+                    color: widget.isEditing ? Colors.amber.shade700 : const Color(0xFFFF6B9D),
+                    letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(height: 2.0),
-                Text(
-                  widget.isEditing
-                      ? widget.editingText ?? ''
-                      : widget.replyingTo ?? '',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    color: Colors.grey.shade700,
+                const SizedBox(height: 4.0),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(8.0),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Text(
+                    widget.isEditing
+                        ? widget.editingText ?? ''
+                        : widget.replyingTo ?? '',
+                    style: TextStyle(
+                      fontSize: 13.0,
+                      color: Colors.grey.shade600,
+                      height: 1.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: widget.isEditing
-                ? widget.onCancelEdit
-                : widget.onCancelReply,
-            splashRadius: 20.0,
-            visualDensity: VisualDensity.compact,
+          
+          // Close button  
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.8),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.close_rounded,
+                size: 18.0,
+                color: Colors.grey.shade600,
+              ),
+              onPressed: widget.isEditing
+                  ? widget.onCancelEdit
+                  : widget.onCancelReply,
+              splashRadius: 16.0,
+              visualDensity: VisualDensity.compact,
+            ),
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 200.ms);
+    ).animate().slideY(
+      begin: -0.5,
+      end: 0.0,
+      duration: 300.ms,
+      curve: Curves.easeOutBack,
+    ).fadeIn(duration: 200.ms);
   }
 
   @override
@@ -311,3 +394,4 @@ class _MessageInputState extends State<MessageInput> {
     );
   }
 }
+

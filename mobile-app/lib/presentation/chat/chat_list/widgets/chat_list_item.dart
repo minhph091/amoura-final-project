@@ -90,8 +90,11 @@ class ChatListItem extends StatelessWidget {
                         child: Text(
                           chat.name,
                           style: TextStyle(
-                            fontWeight: chat.isUnread ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: chat.isUnread ? FontWeight.bold : FontWeight.w500,
                             fontSize: 16,
+                            color: chat.isUnread 
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.87),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -106,7 +109,7 @@ class ChatListItem extends StatelessWidget {
                           color: chat.isUnread
                               ? Theme.of(context).colorScheme.primary
                               : Colors.grey[600],
-                          fontWeight: chat.isUnread ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: chat.isUnread ? FontWeight.w600 : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -119,13 +122,13 @@ class ChatListItem extends StatelessWidget {
                       // Last message
                       Expanded(
                         child: Text(
-                          chat.lastMessage,
+                          chat.lastMessage.isEmpty ? 'No messages yet' : chat.lastMessage,
                           style: TextStyle(
                             fontSize: 14,
                             color: chat.isUnread
                                 ? Theme.of(context).textTheme.bodyLarge?.color
                                 : Colors.grey[600],
-                            fontWeight: chat.isUnread ? FontWeight.w500 : FontWeight.normal,
+                            fontWeight: chat.isUnread ? FontWeight.w600 : FontWeight.normal,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

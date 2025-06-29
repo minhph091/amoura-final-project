@@ -6,6 +6,7 @@ import '../../core/services/setup_profile_service.dart';
 import '../../core/services/profile_service.dart';
 import '../../core/services/match_service.dart';
 import '../../core/services/chat_service.dart';
+import '../../core/services/user_status_service.dart';
 import '../../infrastructure/socket/socket_client.dart';
 import '../../data/remote/auth_api.dart';
 import '../../data/remote/setup_profile_api.dart';
@@ -84,6 +85,7 @@ Future<void> configureDependencies(GlobalKey<NavigatorState> navigatorKey) async
   getIt.registerLazySingleton<ProfileService>(() => ProfileService());
   getIt.registerLazySingleton<MatchService>(() => MatchService());
   getIt.registerLazySingleton<ChatService>(() => ChatService());
+  getIt.registerLazySingleton<UserStatusService>(() => UserStatusService());
   getIt.registerLazySingleton<SubscriptionService>(() => SubscriptionService());
   getIt.registerLazySingleton<RewindService>(() => RewindService());
 

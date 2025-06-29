@@ -121,8 +121,57 @@ class Message {
                       json['sender']?['username'] ?? 
                       'Unknown User';
     final content = json['content'] ?? json['message'] ?? '';
+    final rawType = json['messageType'] ?? json['type'];
+    final typeString = rawType?.toString()?.toUpperCase() ?? '';
+
+    // Enhanced filter theo WebSocket protocol: MESSAGE, TYPING, READ_RECEIPT, MESSAGE_RECALLED
+    bool isSystem = false;
+    final contentLower = content.trim().toLowerCase();
+    final senderNameLower = senderName.trim().toLowerCase();
+    final messageTypeUpper = json['type']?.toString().toUpperCase() ?? '';
     
-    debugPrint('Message.fromJson: senderId=$senderId, senderName=$senderName, content=$content');
+    // Strict filtering theo hướng dẫn WebSocket
+    if (// READ_RECEIPT messages
+        contentLower == 'read' ||
+        contentLower == 'false' ||
+        contentLower == 'true' ||
+        contentLower == 'messages marked as read' ||
+        contentLower.startsWith('read_receipt') ||
+        messageTypeUpper == 'READ_RECEIPT' ||
+        // TYPING indicator messages  
+        messageTypeUpper == 'TYPING' ||
+        (contentLower == 'true' && senderName.trim().isEmpty) ||
+        (contentLower == 'false' && senderName.trim().isEmpty) ||
+        contentLower.contains('typing') ||
+        // Invalid senders
+        senderNameLower.contains('unknown') ||
+        senderNameLower.isEmpty ||
+        senderNameLower == 'null' ||
+        senderNameLower == 'system' ||
+        senderNameLower.contains('websocket') ||
+        senderNameLower.contains('server') ||
+        // System message types
+        typeString == 'READ_RECEIPT' ||
+        typeString == 'SYSTEM' ||
+        typeString == 'TYPING' ||
+        // Empty or invalid content
+        (content.trim().isEmpty && messageTypeUpper != 'IMAGE') ||
+        // Additional WebSocket artifacts
+        contentLower.contains('read_receipt') ||
+        contentLower.contains('user_status') ||
+        messageTypeUpper.contains('RECEIPT')) {
+      isSystem = true;
+      debugPrint('Message.fromJson: Filtered system/invalid message - Sender: "$senderName", Content: "$content", Type: "$typeString", MsgType: "$messageTypeUpper"');
+    }
+
+    final isRead = json['isRead'] ?? false;
+    final imageUrl = json['imageUrl'];
+    final messageType = _parseMessageType(rawType);
+    
+    debugPrint('Message.fromJson: senderId=$senderId, senderName=$senderName, content=$content, isRead=$isRead, isSystem=$isSystem');
+    if (messageType == MessageType.image) {
+      debugPrint('Message.fromJson: IMAGE message - ImageUrl: $imageUrl, Content: "$content"');
+    }
     
     return Message(
       id: json['id']?.toString() ?? json['messageId']?.toString() ?? '',
@@ -137,16 +186,16 @@ class Message {
               ? DateTime.parse(json['timestamp'])
               : DateTime.now(),
       status: MessageStatus.sent, // Backend doesn't provide status
-      type: _parseMessageType(json['messageType'] ?? json['type']),
-      mediaUrl: json['imageUrl'], // Use imageUrl from backend
-      isRead: json['isRead'] ?? false,
+      type: isSystem ? MessageType.system : messageType,
+      mediaUrl: imageUrl ?? json['mediaUrl'], // Use imageUrl from backend, fallback to mediaUrl
+      isRead: isRead, // Backend cung cấp isRead
       readAt: json['readAt'] != null 
           ? DateTime.parse(json['readAt']) 
           : null,
       updatedAt: json['updatedAt'] != null 
           ? DateTime.parse(json['updatedAt']) 
           : null,
-      imageUrl: json['imageUrl'],
+      imageUrl: imageUrl,
       imageUploaderId: json['imageUploaderId']?.toString(),
       recalled: json['recalled'] ?? false,
       recalledAt: json['recalledAt'] != null 

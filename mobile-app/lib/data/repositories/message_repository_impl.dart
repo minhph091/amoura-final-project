@@ -10,13 +10,26 @@ class MessageRepositoryImpl implements MessageRepository {
   MessageRepositoryImpl(this._chatApi);
 
   @override
-  Future<List<Message>> getMessagesByChatId(String chatId) async {
+  Future<dynamic> getMessagesByChatId(String chatId, {
+    int? cursor,
+    int limit = 20,
+    String direction = 'NEXT',
+  }) async {
     try {
-      debugPrint('MessageRepository: Getting messages for chat $chatId');
-      final result = await _chatApi.getMessagesByChatId(chatId);
-      final messages = result['messages'] as List<Message>;
-      debugPrint('MessageRepository: Retrieved ${messages.length} messages from API');
-      return messages;
+      debugPrint('MessageRepository: Getting messages for chat $chatId with cursor=$cursor, limit=$limit, direction=$direction');
+      
+      // Gọi ChatApi với pagination parameters
+      final result = await _chatApi.getMessagesByChatId(
+        chatId,
+        cursor: cursor,
+        limit: limit,
+        direction: direction,
+      );
+      
+      debugPrint('MessageRepository: API returned result type: ${result.runtimeType}');
+      debugPrint('MessageRepository: API returned keys: ${result.keys?.toList()}');
+      
+      return result; // Trả về full result với pagination info
     } catch (e) {
       debugPrint('MessageRepository: Error getting messages for chat $chatId: $e');
       rethrow;
@@ -50,10 +63,8 @@ class MessageRepositoryImpl implements MessageRepository {
   }
 
   @override
-  Future<String> uploadMedia(File file, MessageType type) async {
-    // For now, we'll use a placeholder chatRoomId
-    // In a real implementation, you'd need to pass the actual chatRoomId
-    return await _chatApi.uploadChatImage(file, '1');
+  Future<String> uploadMedia(File file, MessageType type, String chatRoomId) async {
+    return await _chatApi.uploadChatImage(file, chatRoomId);
   }
 
   @override

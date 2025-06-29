@@ -100,9 +100,27 @@ class ChatService {
       final cachedMessages = _cachedMessages[chatRoomId] ?? [];
       debugPrint('ChatService: Found ${cachedMessages.length} cached messages');
       
-      // Lấy messages mới từ backend API
-      final apiResponse = await _messageRepository.getMessagesByChatId(chatRoomId);
-      debugPrint('ChatService: Backend returned ${apiResponse.length} messages');
+      // Lấy messages mới từ backend API với pagination parameters
+      final apiResult = await _messageRepository.getMessagesByChatId(
+        chatRoomId, 
+        cursor: cursor, 
+        limit: limit, 
+        direction: direction
+      );
+      
+      // Extract messages và pagination info từ response
+      final apiResponse = apiResult is List<Message> 
+          ? apiResult  // Backward compatibility
+          : (apiResult as Map<String, dynamic>)['messages'] as List<Message>? ?? [];
+      
+      final hasNext = apiResult is Map<String, dynamic> 
+          ? apiResult['hasNext'] as bool? ?? false
+          : false;
+      final nextCursor = apiResult is Map<String, dynamic>
+          ? apiResult['nextCursor'] as int?
+          : null;
+      
+      debugPrint('ChatService: Backend returned ${apiResponse.length} messages with hasNext=$hasNext, nextCursor=$nextCursor');
       
       // Merge với cache cũ và remove duplicates
       final allMessages = <Message>[];
@@ -133,12 +151,12 @@ class ChatService {
       
       debugPrint('ChatService: Final result - ${allMessages.length} total messages for chat $chatRoomId');
       
-      // Return format compatible with pagination
+      // Return format với pagination info từ backend
       return {
         'messages': allMessages,
-        'hasNext': false, // For now, we load all messages
-        'hasPrevious': false,
-        'nextCursor': null,
+        'hasNext': hasNext,
+        'hasPrevious': false, // Backend chưa support previous
+        'nextCursor': nextCursor,
         'previousCursor': null,
         'totalCount': allMessages.length,
       };
@@ -164,7 +182,7 @@ class ChatService {
     }
   }
   
-  /// Load messages từ local storage
+  /// Load messages từ local storage với filter
   Future<void> _loadMessagesFromStorage(String chatRoomId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -172,26 +190,61 @@ class ChatService {
       
       if (messagesJson != null) {
         final List<dynamic> messagesList = jsonDecode(messagesJson);
-        final messages = messagesList.map((json) => Message.fromJson(json)).toList();
-        _cachedMessages[chatRoomId] = messages;
-        debugPrint('Loaded ${messages.length} messages from storage for chat $chatRoomId');
+        final allMessages = messagesList.map((json) => Message.fromJson(json)).toList();
+        
+        // Filter out system/invalid messages from storage
+        final validMessages = allMessages.where((msg) {
+          final contentLower = msg.content.trim().toLowerCase();
+          final senderNameLower = msg.senderName.trim().toLowerCase();
+          
+          return msg.type != MessageType.system && 
+                 msg.senderName.trim().isNotEmpty &&
+                 !senderNameLower.contains('unknown') &&
+                 senderNameLower != 'null' &&
+                 senderNameLower != 'system' &&
+                 msg.content.trim().isNotEmpty &&
+                 contentLower != 'read' &&
+                 contentLower != 'false' &&
+                 contentLower != 'true' &&
+                 contentLower != 'messages marked as read' &&
+                 !contentLower.startsWith('read_receipt');
+        }).toList();
+        
+        _cachedMessages[chatRoomId] = validMessages;
+        debugPrint('Loaded ${allMessages.length} messages from storage, filtered to ${validMessages.length} valid messages for chat $chatRoomId');
       }
     } catch (e) {
       debugPrint('Error loading messages from storage: $e');
     }
   }
   
-  /// Save messages vào local storage
+  /// Save messages vào local storage với filter
   Future<void> _saveMessagesToStorage(String chatRoomId, List<Message> messages) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       
-      // Only keep last 100 messages to avoid storage bloat
-      final messagesToSave = messages.take(100).toList();
-      final messagesJson = jsonEncode(messagesToSave.map((msg) => msg.toJson()).toList());
+      // Filter out system/invalid messages before saving
+      final validMessages = messages.where((msg) {
+        final contentLower = msg.content.trim().toLowerCase();
+        final senderNameLower = msg.senderName.trim().toLowerCase();
+        
+        return msg.type != MessageType.system && 
+               msg.senderName.trim().isNotEmpty &&
+               !senderNameLower.contains('unknown') &&
+               senderNameLower != 'null' &&
+               senderNameLower != 'system' &&
+               msg.content.trim().isNotEmpty &&
+               contentLower != 'read' &&
+               contentLower != 'false' &&
+               contentLower != 'true' &&
+               contentLower != 'messages marked as read' &&
+               !contentLower.startsWith('read_receipt');
+      }).take(100).toList(); // Only keep last 100 valid messages
+      
+      final messagesJson = jsonEncode(validMessages.map((msg) => msg.toJson()).toList());
       
       await prefs.setString('messages_$chatRoomId', messagesJson);
-      debugPrint('Saved ${messagesToSave.length} messages to storage for chat $chatRoomId');
+      debugPrint('Saved ${validMessages.length} valid messages to storage for chat $chatRoomId (filtered from ${messages.length})');
     } catch (e) {
       debugPrint('Error saving messages to storage: $e');
     }
@@ -207,7 +260,7 @@ class ChatService {
     String? imageUrl,
   }) async {
     try {
-      debugPrint('Sending message to chat room: $chatRoomId');
+      debugPrint('ChatService: Sending message to chat room: $chatRoomId - Content: $content');
       
       // Tạo message object để gửi
       final message = Message(
@@ -223,26 +276,60 @@ class ChatService {
         mediaUrl: imageUrl,
       );
       
-      // Gửi qua repository (REST API)
+      // Gửi qua repository (REST API) trước
       final sentMessage = await _messageRepository.sendMessage(message);
+      debugPrint('ChatService: API response - Message ID: ${sentMessage.id}, Content: ${sentMessage.content}, Type: ${sentMessage.type.name}');
       
-      // Thêm vào cache local ngay lập tức
+      // Thêm tin nhắn của chính user vào cache để hiển thị ngay lập tức
       if (!_cachedMessages.containsKey(chatRoomId)) {
         _cachedMessages[chatRoomId] = [];
       }
-      _cachedMessages[chatRoomId]!.insert(0, sentMessage);
       
-      // Notify listeners
-      _messagesController.add(_cachedMessages);
-      _newMessageController.add(sentMessage);
+      // Check duplicate trước khi thêm
+      final existingIndex = _cachedMessages[chatRoomId]!
+          .indexWhere((m) => m.id == sentMessage.id);
+          
+      if (existingIndex == -1) {
+        _cachedMessages[chatRoomId]!.insert(0, sentMessage);
+        _messagesController.add(_cachedMessages);
+        _newMessageController.add(sentMessage);
+        debugPrint('ChatService: Added sent message to cache for immediate display - Type: ${sentMessage.type.name}');
+      } else {
+        debugPrint('ChatService: WARNING - Sent message already exists in cache: ${sentMessage.id}');
+      }
+      
+      // NOTE: Tạm tắt WebSocket gửi message để tránh duplicate messages
+      // WebSocket sẽ tự động nhận message từ backend sau khi REST API thành công
+      // Chỉ gửi qua WebSocket khi thực sự cần thiết (ví dụ: typing indicators)
+      debugPrint('ChatService: Skipping WebSocket send to avoid duplicates - message will be broadcasted by backend');
+      
+      /*
+      // Gửi qua WebSocket để broadcast cho users khác (sau khi đã có ID từ API)
+      if (_socketClient.isConnected) {
+        try {
+          _socketClient.sendMessage(
+            chatRoomId, 
+            content, 
+            type.name, 
+            imageUrl: imageUrl
+          );
+          debugPrint('ChatService: Sent message via WebSocket for realtime broadcast - Type: ${type.name}, ChatId: $chatRoomId');
+        } catch (e) {
+          debugPrint('ChatService: ERROR sending message via WebSocket: $e');
+          debugPrint('ChatService: WebSocket broadcast failed but message was sent via REST API');
+        }
+      } else {
+        debugPrint('ChatService: WebSocket not connected, only REST API used');
+      }
+      */
       
       // Cập nhật last message trong chat list
       await _updateChatLastMessage(chatRoomId, sentMessage);
       
-      debugPrint('Message sent successfully: ${sentMessage.id}');
+      debugPrint('ChatService: Message sent successfully: ${sentMessage.id}');
       return sentMessage;
     } catch (e) {
-      debugPrint('Error sending message: $e');
+      debugPrint('ChatService: Error sending message: $e');
       rethrow;
     }
   }
@@ -338,7 +425,7 @@ class ChatService {
   /// Upload file/image cho chat
   Future<String> uploadChatImage(File file, String chatRoomId) async {
     try {
-      return await _messageRepository.uploadMedia(file, MessageType.image);
+      return await _messageRepository.uploadMedia(file, MessageType.image, chatRoomId);
     } catch (e) {
       debugPrint('Error uploading chat image: $e');
       rethrow;
@@ -437,16 +524,26 @@ class ChatService {
           debugPrint('ChatService: Received typing indicator');
           break;
         case 'READ_RECEIPT':
-          // Read receipt - cập nhật trạng thái read cho messages
+          // Read receipt - chỉ xử lý internal logic, không emit vào UI
+          debugPrint('ChatService: Processing READ_RECEIPT - not adding to message stream');
           _handleReadReceipt(messageData);
-          break;
+          return; // Early return để không xử lý thêm
         case 'MESSAGE_RECALLED':
+        case 'RECALL':
           // Message recalled - cập nhật message bị thu hồi
+          debugPrint('ChatService: Processing message recall for messageId: ${messageData['messageId']}');
           _handleMessageRecalled(messageData);
           break;
         default:
-          // Các loại message khác
-          debugPrint('ChatService: Unknown message type: ${messageData['type']}');
+          // Check if message data contains recalled flag from regular message updates
+          final message = Message.fromJson(messageData);
+          if (message.recalled) {
+            debugPrint('ChatService: Received recalled message update for messageId: ${message.id}');
+            _addMessageToCache(message); // This will update the existing message with recalled flag
+          } else {
+            _addMessageToCache(message);
+          }
+          debugPrint('ChatService: Processed message type: ${messageData['type'] ?? 'UNKNOWN'}');
       }
     } catch (e) {
       debugPrint('ChatService: Error handling WebSocket message: $e');
@@ -460,23 +557,56 @@ class ChatService {
       _cachedMessages[message.chatId] = [];
     }
     
-    // Kiểm tra xem message đã có trong cache chưa (tránh duplicate)
+    // Enhanced duplicate check: kiểm tra bằng ID, hoặc content+sender+type+time trong vòng 60 giây
     final existingIndex = _cachedMessages[message.chatId]!
-        .indexWhere((m) => m.id == message.id);
+        .indexWhere((m) => 
+            m.id == message.id || 
+            (m.senderId == message.senderId && 
+             m.content.trim() == message.content.trim() &&
+             m.type == message.type &&
+             m.timestamp.difference(message.timestamp).abs().inSeconds < 60));
+             
+    debugPrint('ChatService: Duplicate check for message ${message.id} - SenderId: ${message.senderId}, Content: "${message.content}", Type: ${message.type.name}');
+    if (existingIndex != -1) {
+      final existingMsg = _cachedMessages[message.chatId]![existingIndex];
+      debugPrint('ChatService: Found potential duplicate - Existing ID: ${existingMsg.id}, New ID: ${message.id}');
+    }
     
     if (existingIndex == -1) {
-      _cachedMessages[message.chatId]!.insert(0, message);
-      
-      // Notify listeners
-      _messagesController.add(_cachedMessages);
-      _newMessageController.add(message);
-      
-      // Cập nhật last message trong chat list
-      _updateChatLastMessage(message.chatId, message);
-      
-      debugPrint('ChatService: Added new message to cache: ${message.id}');
+      // Chỉ thêm nếu không phải tin nhắn của chính user (đã được thêm trong sendMessage)
+      // Hoặc nếu là tin nhắn từ WebSocket của user khác
+      if (message.senderId != _currentUserId) {
+        _cachedMessages[message.chatId]!.insert(0, message);
+        
+        // Notify listeners
+        _messagesController.add(_cachedMessages);
+        _newMessageController.add(message);
+        
+        // Cập nhật last message trong chat list
+        _updateChatLastMessage(message.chatId, message);
+        
+        debugPrint('ChatService: Added new message from other user to cache: ${message.id} - Content: ${message.content}');
+      } else {
+        debugPrint('ChatService: Skipped own message from WebSocket (already added via API): ${message.id}');
+      }
     } else {
-      debugPrint('ChatService: Message already exists in cache: ${message.id}');
+      // Message already exists, check if it's an update (like recall status)
+      final existingMessage = _cachedMessages[message.chatId]![existingIndex];
+      if (existingMessage.recalled != message.recalled ||
+          existingMessage.content != message.content ||
+          existingMessage.isRead != message.isRead) {
+        
+        // Update existing message with new data
+        _cachedMessages[message.chatId]![existingIndex] = message;
+        
+        // Notify listeners about the update
+        _messagesController.add(_cachedMessages);
+        _newMessageController.add(message);
+        
+        debugPrint('ChatService: Updated existing message: ${message.id} - Recalled: ${message.recalled}, Content: ${message.content}');
+      } else {
+        debugPrint('ChatService: Duplicate message detected and skipped: ${message.id} - Content: ${message.content}');
+      }
     }
   }
   
@@ -506,8 +636,15 @@ class ChatService {
         );
         
         _messagesController.add(_cachedMessages);
-        debugPrint('ChatService: Message recalled: $messageId');
+        debugPrint('ChatService: Message recalled successfully: $messageId in chat $chatRoomId');
+        
+        // Emit as new message to update UI immediately
+        _newMessageController.add(messages[index]);
+      } else {
+        debugPrint('ChatService: Could not find message to recall: $messageId in chat $chatRoomId');
       }
+    } else {
+      debugPrint('ChatService: Invalid recall data - MessageId: $messageId, ChatRoomId: $chatRoomId');
     }
   }
   
@@ -525,15 +662,39 @@ class ChatService {
     }
     
     try {
+      // Chỉ subscribe, không xử lý message ở đây vì đã có _messageSubscription
       final subscriptionId = _socketClient.subscribeToChat(chatRoomId, (messageData) {
-        // Message sẽ được xử lý trong _messageSubscription stream
-        debugPrint('Received message in chat $chatRoomId');
+        // Không xử lý gì ở đây, message đã được xử lý trong _messageSubscription
       });
       
       _chatSubscriptions[chatRoomId] = subscriptionId;
       debugPrint('Subscribed to chat room: $chatRoomId');
+      
+      // Subscribe vào user status cho chat room này
+      _subscribeToUserStatusForChat(chatRoomId);
     } catch (e) {
       debugPrint('Error subscribing to chat $chatRoomId: $e');
+    }
+  }
+  
+  /// Subscribe vào user status updates cho một chat room cụ thể
+  /// Topic: /topic/chat/{chatRoomId}/user-status
+  void _subscribeToUserStatusForChat(String chatRoomId) {
+    if (!_socketClient.isConnected) return;
+    
+    try {
+      _socketClient.subscribeToUserStatusInChat(chatRoomId, (statusData) {
+        final userId = statusData['userId']?.toString();
+        final status = statusData['status']?.toString();
+        
+        if (userId != null && status != null) {
+          final isOnline = status.toUpperCase() == 'ONLINE';
+          _onlineStatusController.add({userId: isOnline});
+          debugPrint('ChatService: User $userId is now ${isOnline ? "online" : "offline"} in chat $chatRoomId');
+        }
+      });
+    } catch (e) {
+      debugPrint('Error subscribing to user status for chat $chatRoomId: $e');
     }
   }
   
@@ -579,5 +740,29 @@ class ChatService {
     _onlineStatusController.close();
     disconnectWebSocket();
     _socketClient.dispose();
+  }
+  
+  /// Notify chat list rằng messages đã được đọc để reset unread count
+  void notifyReadReceipt(String chatRoomId, String userId) {
+    try {
+      // Tạo system message để notify chat list
+      final readReceiptMessage = Message(
+        id: 'read_receipt_${DateTime.now().millisecondsSinceEpoch}',
+        chatId: chatRoomId,
+        senderId: userId,
+        senderName: 'System',
+        content: 'Messages marked as read',
+        timestamp: DateTime.now(),
+        status: MessageStatus.read,
+        type: MessageType.system, // System message
+      );
+      
+      // Emit vào stream để chat list có thể nhận được
+      _newMessageController.add(readReceiptMessage);
+      
+      debugPrint('ChatService: Notified read receipt for chat $chatRoomId');
+    } catch (e) {
+      debugPrint('ChatService: Error notifying read receipt: $e');
+    }
   }
 } 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:io';
 
 import 'chat_detail_viewmodel.dart';
 import 'widgets/chat_header.dart';
@@ -14,6 +15,7 @@ import '../../../domain/models/message.dart';
 import '../../../app/di/injection.dart';
 import '../../../domain/usecases/chat/get_chat_room_usecase.dart';
 import '../../shared/widgets/app_gradient_background.dart';
+import '../../../core/utils/url_transformer.dart';
 
 class ChatDetailView extends StatefulWidget {
   final String chatId;
@@ -80,15 +82,16 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     }
   }
 
-  /// Listener cho ViewModel changes - chỉ mark as read một lần
+  /// Listener cho ViewModel changes - mark as read khi messages load xong
   void _onViewModelChanged() {
     if (!_viewModel.isLoading && 
         _viewModel.messages.isNotEmpty && 
         !_hasMarkedAsRead) {
-      // Delay một chút để đảm bảo UI đã render
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      // Delay ngắn để đảm bảo UI đã render, sau đó mark as read
+      Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted && !_hasMarkedAsRead) {
           _hasMarkedAsRead = true;
+          debugPrint('ChatDetailView: Auto-marking messages as read after ${_viewModel.messages.length} messages loaded');
           _markMessagesAsRead();
         }
       });
@@ -189,6 +192,21 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     if (_scrollController.offset <= 50 && !_hasMarkedAsRead) { // Near bottom (reverse list)
       _hasMarkedAsRead = true;
       _markMessagesAsRead();
+    }
+
+    // Pagination: Load more messages khi user scroll gần đến top (cuối conversation vì reverse=true)
+    if (_scrollController.hasClients &&
+        _scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      // User đã scroll gần đến cuối danh sách, load thêm tin nhắn cũ hơn
+      _loadMoreMessagesIfNeeded();
+    }
+  }
+
+  /// Load thêm tin nhắn cũ hơn nếu cần và có thể
+  void _loadMoreMessagesIfNeeded() {
+    if (_viewModel.hasMoreMessages && !_viewModel.isLoadingMore) {
+      debugPrint('ChatDetailView: User scrolled to end, loading more messages...');
+      _viewModel.loadMoreMessages();
     }
   }
 
@@ -375,6 +393,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       value: _viewModel,
       child: Consumer<ChatDetailViewModel>(
         builder: (context, viewModel, child) {
+          // Lấy trạng thái online/offline và last seen từ ViewModel
+          final isOnline = _viewModel.isRecipientOnline;
+          final lastSeen = _viewModel.recipientLastSeen;
+          final statusText = isOnline
+              ? 'Active now'
+              : (lastSeen != null ? _viewModel.formatLastSeen(lastSeen) : 'Offline');
           return AppGradientBackground(
             child: Scaffold(
               backgroundColor: Colors.transparent,
@@ -385,52 +409,53 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.pop(context),
                 ),
-                        title: _isLoadingChatInfo 
+                title: _isLoadingChatInfo 
             ? const Text('Loading...')
             : _chatInfoError != null
                 ? const Text('Chat')
                 : Row(
                     children: [
-                      // User avatar với improved error handling
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: Colors.grey.shade300,
-                        child: recipientAvatar != null && recipientAvatar!.isNotEmpty
-                            ? ClipOval(
-                                child: Image.network(
-                                  recipientAvatar!,
-                                  width: 36,
-                                  height: 36,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    debugPrint('Error loading avatar: $error');
-                                    return Text(
-                                      recipientName.isNotEmpty ? recipientName[0].toUpperCase() : "?",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    );
-                                  },
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    );
-                                  },
-                                ),
-                              )
-                            : Text(
-                                recipientName.isNotEmpty ? recipientName[0].toUpperCase() : "?",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                      Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Colors.grey.shade300,
+                            child: _chatRoom?.participantAvatar != null && _chatRoom!.participantAvatar!.isNotEmpty
+                                ? ClipOval(
+                                    child: Image.network(
+                                      UrlTransformer.transformAvatarUrl(_chatRoom!.participantAvatar!),
+                                      width: 36,
+                                      height: 36,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Text(
+                                    recipientName.isNotEmpty ? recipientName[0].toUpperCase() : "?",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                          ),
+                          if (isOnline)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Theme.of(context).scaffoldBackgroundColor,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
+                            ),
+                        ],
                       ),
                       const SizedBox(width: 12),
                       // User info
@@ -448,16 +473,28 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            if (viewModel.lastActiveTime != null)
-                              Text(
-                                viewModel.lastActiveTime!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).hintColor,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                            Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isOnline ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isOnline ? Colors.green : Theme.of(context).hintColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
                           ],
                         ),
                       ),
@@ -597,6 +634,64 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     ),
 
                   // Message input
+                  if (viewModel.pendingMedia != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          if (viewModel.pendingMediaType == 'image')
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                File(viewModel.pendingMedia!.path),
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          if (viewModel.pendingMediaType == 'video')
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(
+                                    'assets/images/video_placeholder.png', // Thay bằng thumbnail nếu có
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const Icon(Icons.play_circle_fill, color: Colors.white, size: 36),
+                              ],
+                            ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: () => viewModel.sendPendingMedia(widget.chatId),
+                                  icon: const Icon(Icons.send),
+                                  label: const Text('Send'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(context).colorScheme.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.red),
+                                  onPressed: viewModel.clearPendingMedia,
+                                  tooltip: 'Remove',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   MessageInput(
                     focusNode: _messageFocusNode,
                     onSendMessage: (message) {
@@ -638,6 +733,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     isEditing: _isEditing,
                     editingText: _editingText,
                     onCancelEdit: _cancelEdit,
+                    onTypingChanged: (isTyping) {
+                      // Gửi typing indicator qua ViewModel
+                      viewModel.setUserTyping(isTyping);
+                    },
                   ),
                 ],
               ),
@@ -688,8 +787,14 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       controller: _scrollController,
       reverse: true,
       padding: const EdgeInsets.symmetric(vertical: 16.0),
-      itemCount: viewModel.messages.length,
+      // +1 để có chỗ cho loading indicator khi load more
+      itemCount: viewModel.messages.length + (viewModel.isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
+        // Hiển thị loading indicator ở đầu danh sách (cuối cùng vì reverse=true)
+        if (index == viewModel.messages.length) {
+          return _buildLoadMoreIndicator();
+        }
+
         final message = viewModel.messages[index];
 
         // Convert domain Message to UI MessageItem
@@ -711,10 +816,42 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           onTapRepliedMessage: message.replyToMessageId != null
               ? () => viewModel.scrollToMessage(message.replyToMessageId!)
               : null,
+          onSwipeReply: () => _startReply(message.content, message.senderName),
           mediaUrl: message.mediaUrl,
           fileInfo: message.fileInfo,
+          recalled: message.recalled, // Pass recalled flag
         );
       },
+    );
+  }
+
+  Widget _buildLoadMoreIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Loading more messages...',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -916,6 +1053,37 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   ],
                 ),
               ),
+              
+              // Second row with audio and video recording
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildAttachmentOption(
+                      icon: Icons.mic,
+                      color: Colors.orange,
+                      label: 'Audio',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _recordAudio();
+                      },
+                    ),
+                    _buildAttachmentOption(
+                      icon: Icons.videocam,
+                      color: Colors.indigo,
+                      label: 'Video',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _recordVideo();
+                      },
+                    ),
+                    // Empty spaces to maintain layout
+                    const SizedBox(width: 60),
+                    const SizedBox(width: 60),
+                  ],
+                ),
+              ),
               const SizedBox(height: 20),
             ],
           ),
@@ -979,6 +1147,106 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   void _shareLocation() {
     // Implement location sharing
     _viewModel.shareCurrentLocation(widget.chatId);
+  }
+
+  void _recordAudio() {
+    // Show recording dialog and record audio
+    _showAudioRecordingDialog();
+  }
+
+  void _recordVideo() {
+    // Show recording dialog and record video
+    _showVideoRecordingDialog();
+  }
+
+  void _showAudioRecordingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.mic, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Recording Audio'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.radio_button_checked,
+              color: Colors.red,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            const Text('Recording voice message...'),
+            const SizedBox(height: 16),
+            const LinearProgressIndicator(),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _viewModel.recordAndSendAudio(widget.chatId);
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showVideoRecordingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.videocam, color: Colors.indigo),
+            SizedBox(width: 8),
+            Text('Recording Video'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.fiber_manual_record,
+              color: Colors.red,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            const Text('Recording video message...'),
+            const SizedBox(height: 16),
+            const LinearProgressIndicator(),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _viewModel.recordAndSendVideo(widget.chatId);
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildPinnedMessagesSection(ChatDetailViewModel viewModel) {

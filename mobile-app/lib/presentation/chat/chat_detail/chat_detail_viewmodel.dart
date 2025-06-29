@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../domain/models/message.dart';
 import '../../../domain/usecases/chat/get_messages_usecase.dart';
@@ -17,6 +19,7 @@ import '../../../core/utils/file_utils.dart';
 import '../../../data/remote/profile_api.dart';
 import '../../../core/services/chat_service.dart';
 import '../../../domain/usecases/chat/get_chat_room_usecase.dart';
+import '../../../core/services/user_status_service.dart';
 
 class ChatDetailViewModel extends ChangeNotifier {
   final GetMessagesUseCase _getMessagesUseCase = getIt<GetMessagesUseCase>();
@@ -28,11 +31,15 @@ class ChatDetailViewModel extends ChangeNotifier {
   final ProfileApi _profileApi = getIt<ProfileApi>();
   final ChatService _chatService = getIt<ChatService>();
   final GetChatRoomUseCase _getChatRoomUseCase = getIt<GetChatRoomUseCase>();
+  final UserStatusService _userStatusService = getIt<UserStatusService>();
   
   final ImagePicker _imagePicker = ImagePicker();
 
   List<Message> _messages = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false; // Loading pagination
+  bool _hasMoreMessages = false; // Có tin nhắn cũ hơn không
+  String? _nextCursor; // Cursor cho pagination
   bool _isTyping = false;
   bool _showDateIndicator = false;
   DateTime? _currentDateIndicator;
@@ -51,10 +58,13 @@ class ChatDetailViewModel extends ChangeNotifier {
   // Stream subscriptions
   StreamSubscription<Map<String, List<Message>>>? _messagesSubscription;
   StreamSubscription<Message>? _newMessageSubscription;
+  StreamSubscription<Map<String, bool>>? _userStatusSubscription;
 
   // Getters
   List<Message> get messages => _messages;
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore; // Getter cho pagination loading
+  bool get hasMoreMessages => _hasMoreMessages; // Getter cho pagination status
   bool get isTyping => _isTyping;
   bool get showDateIndicator => _showDateIndicator;
   DateTime? get currentDateIndicator => _currentDateIndicator;
@@ -64,6 +74,32 @@ class ChatDetailViewModel extends ChangeNotifier {
   int get currentPinnedMessageIndex => _currentPinnedMessageIndex;
   Message? get currentPinnedMessage =>
       _pinnedMessages.isNotEmpty ? _pinnedMessages[_currentPinnedMessageIndex] : null;
+
+  XFile? _pendingMedia;
+  String? _pendingMediaType; // 'image' | 'video'
+
+  XFile? get pendingMedia => _pendingMedia;
+  String? get pendingMediaType => _pendingMediaType;
+
+  String? _recipientId;
+  bool _isRecipientOnline = false;
+  DateTime? _recipientLastSeen;
+
+  String? get recipientId => _recipientId;
+  bool get isRecipientOnline => _isRecipientOnline;
+  DateTime? get recipientLastSeen => _recipientLastSeen;
+
+  void setPendingMedia(XFile file, String type) {
+    _pendingMedia = file;
+    _pendingMediaType = type;
+    notifyListeners();
+  }
+
+  void clearPendingMedia() {
+    _pendingMedia = null;
+    _pendingMediaType = null;
+    notifyListeners();
+  }
 
   ChatDetailViewModel() {
     _initViewModel();
@@ -85,6 +121,25 @@ class ChatDetailViewModel extends ChangeNotifier {
     // Lắng nghe tin nhắn mới từ tất cả chat rooms
     _newMessageSubscription = _chatService.newMessageStream.listen((newMessage) {
       if (newMessage.chatId == _currentChatId) {
+        // Enhanced filter for new messages
+        final contentLower = newMessage.content.trim().toLowerCase();
+        final senderNameLower = newMessage.senderName.trim().toLowerCase();
+        
+        if (newMessage.type == MessageType.system ||
+            newMessage.senderName.trim().isEmpty ||
+            senderNameLower.contains('unknown') ||
+            senderNameLower == 'null' ||
+            senderNameLower == 'system' ||
+            newMessage.content.trim().isEmpty ||
+            contentLower == 'read' ||
+            contentLower == 'false' ||
+            contentLower == 'true' ||
+            contentLower == 'messages marked as read' ||
+            contentLower.startsWith('read_receipt')) {
+          debugPrint('ChatDetailViewModel: Filtered out invalid new message - Sender: "${newMessage.senderName}", Content: "${newMessage.content}"');
+          return;
+        }
+        
         // Kiểm tra xem tin nhắn đã có trong danh sách chưa
         final existingIndex = _messages.indexWhere((msg) => msg.id == newMessage.id);
         if (existingIndex == -1) {
@@ -93,7 +148,7 @@ class ChatDetailViewModel extends ChangeNotifier {
           _updateDateIndicator();
           notifyListeners();
           
-          debugPrint('Received new message in chat ${newMessage.chatId}: ${newMessage.content}');
+          debugPrint('ChatDetailViewModel: Added new valid message in chat ${newMessage.chatId}: ${newMessage.content}');
         }
       }
     });
@@ -101,7 +156,25 @@ class ChatDetailViewModel extends ChangeNotifier {
     // Lắng nghe cập nhật messages từ cache
     _messagesSubscription = _chatService.messagesStream.listen((messagesMap) {
       if (_currentChatId.isNotEmpty && messagesMap.containsKey(_currentChatId)) {
-        _messages = messagesMap[_currentChatId]!;
+        // Enhanced filter: loại bỏ system messages và invalid messages
+        _messages = messagesMap[_currentChatId]!.where((msg) {
+            final contentLower = msg.content.trim().toLowerCase();
+            final senderNameLower = msg.senderName.trim().toLowerCase();
+            
+            return msg.type != MessageType.system && 
+                   msg.senderName.trim().isNotEmpty &&
+                   !senderNameLower.contains('unknown') &&
+                   senderNameLower != 'null' &&
+                   senderNameLower != 'system' &&
+                   msg.content.trim().isNotEmpty &&
+                   contentLower != 'read' &&
+                   contentLower != 'false' &&
+                   contentLower != 'true' &&
+                   contentLower != 'messages marked as read' &&
+                   !contentLower.startsWith('read_receipt');
+        }).toList();
+        
+        debugPrint('ChatDetailViewModel: Filtered ${messagesMap[_currentChatId]!.length} messages to ${_messages.length} valid messages');
         _updateDateIndicator();
         notifyListeners();
       }
@@ -130,6 +203,69 @@ class ChatDetailViewModel extends ChangeNotifier {
       _currentUserId = 'unknown';
       _currentUserName = 'Current User';
     }
+  }
+
+  // Record and send audio message
+  Future<void> recordAndSendAudio(String chatId) async {
+    try {
+      debugPrint('ChatDetailViewModel: Recording audio message for chat $chatId');
+      
+      // TODO: Implement actual audio recording
+      // For now, simulate audio recording and send a mock audio message
+      await Future.delayed(const Duration(seconds: 2)); // Simulate recording time
+      
+      // Create mock audio file info
+      final mockAudioUrl = 'audio_message_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      final mockDuration = const Duration(minutes: 1, seconds: 30);
+      final fileInfo = 'voice_note.m4a • 1.2 MB • ${_formatDuration(mockDuration)}';
+      
+      // Send audio message
+      final sentMessage = await _sendMessageUseCase.execute(
+        chatRoomId: chatId,
+        content: 'Voice message', // Fallback text
+        type: MessageType.audio,
+        imageUrl: mockAudioUrl, // Using imageUrl field for audio URL
+      );
+      
+      debugPrint('ChatDetailViewModel: Audio message sent successfully: ${sentMessage.id}');
+    } catch (e) {
+      debugPrint('ChatDetailViewModel: Error recording/sending audio: $e');
+    }
+  }
+  
+  // Record and send video message
+  Future<void> recordAndSendVideo(String chatId) async {
+    try {
+      debugPrint('ChatDetailViewModel: Recording video message for chat $chatId');
+      
+      // TODO: Implement actual video recording
+      // For now, simulate video recording and send a mock video message
+      await Future.delayed(const Duration(seconds: 3)); // Simulate recording time
+      
+      // Create mock video file info
+      final mockVideoUrl = 'video_message_${DateTime.now().millisecondsSinceEpoch}.mp4';
+      final mockDuration = const Duration(minutes: 2, seconds: 15);
+      final fileInfo = 'video_note.mp4 • 8.5 MB • ${_formatDuration(mockDuration)}';
+      
+      // Send video message
+      final sentMessage = await _sendMessageUseCase.execute(
+        chatRoomId: chatId,
+        content: 'Video message', // Fallback text
+        type: MessageType.video,
+        imageUrl: mockVideoUrl, // Using imageUrl field for video URL
+      );
+      
+      debugPrint('ChatDetailViewModel: Video message sent successfully: ${sentMessage.id}');
+    } catch (e) {
+      debugPrint('ChatDetailViewModel: Error recording/sending video: $e');
+    }
+  }
+  
+  // Helper method to format duration for file info
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(1, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   /// Cập nhật avatar cho các sender trong messages
@@ -167,8 +303,22 @@ class ChatDetailViewModel extends ChangeNotifier {
     }
   }
 
+  /// Setup listeners cho typing indicators từ WebSocket
   void _setupTypingListener() {
-    // Setup firebase or socket listeners for typing indicators
+    // Subscribe vào typing stream từ ChatService
+    _chatService.typingStream.listen((typingData) {
+      final chatRoomId = typingData['chatRoomId']?.toString();
+      final userId = typingData['userId']?.toString();
+      final isTyping = typingData['isTyping'] == true;
+      
+      // Chỉ cập nhật typing status nếu là từ user khác và trong current chat
+      if (chatRoomId == _currentChatId && 
+          userId != null && 
+          userId != _currentUserId) {
+        updateRecipientTypingStatus(isTyping);
+        debugPrint('ChatDetailViewModel: User $userId is ${isTyping ? "typing" : "not typing"} in chat $chatRoomId');
+      }
+    });
   }
 
   // Load chat messages from usecase
@@ -178,9 +328,33 @@ class ChatDetailViewModel extends ChangeNotifier {
       _currentChatId = chatId;
       notifyListeners();
 
+      // Clear any cached invalid messages for this chat
+      await _clearInvalidMessagesFromCache(chatId);
+
       // Đảm bảo có current user info trước khi setup WebSocket
       if (_currentUserId.isEmpty) {
         await _getCurrentUserInfo();
+      }
+
+      // Lấy chat room để xác định recipientId
+      final chatRoom = await _getChatRoomUseCase.execute(chatId);
+      if (chatRoom.user1Id == _currentUserId) {
+        _recipientId = chatRoom.user2Id;
+      } else {
+        _recipientId = chatRoom.user1Id;
+      }
+      // Lấy trạng thái online ban đầu
+      if (_recipientId != null && _recipientId!.isNotEmpty) {
+        _isRecipientOnline = await _userStatusService.getUserOnlineStatus(_recipientId!);
+        notifyListeners();
+        // Lắng nghe realtime
+        _userStatusSubscription?.cancel();
+        _userStatusSubscription = _userStatusService.statusStream.listen((statusMap) {
+          if (statusMap.containsKey(_recipientId)) {
+            _isRecipientOnline = statusMap[_recipientId!] ?? false;
+            notifyListeners();
+          }
+        });
       }
 
       // Initialize WebSocket connection với current user ID
@@ -201,12 +375,16 @@ class ChatDetailViewModel extends ChangeNotifier {
         debugPrint('ChatDetailViewModel: Warning - No current user ID available for WebSocket');
       }
 
-      // Get messages from usecase
-      final result = await _getMessagesUseCase.execute(chatId);
+      // Get messages from usecase với pagination info
+      final result = await _getMessagesUseCase.execute(chatId, limit: 20);
       final messages = result['messages'] as List<Message>;
+      final hasNext = result['hasNext'] as bool? ?? false;
+      final nextCursor = result['nextCursor'] as int?;
 
       // Process messages
       _messages = messages;
+      _hasMoreMessages = hasNext;
+      _nextCursor = nextCursor?.toString();
 
       // Update date indicator
       _updateDateIndicator();
@@ -236,43 +414,110 @@ class ChatDetailViewModel extends ChangeNotifier {
     }
   }
 
-  /// Đánh dấu tin nhắn đã đọc
-  /// Gọi API để mark messages as read và cập nhật local state với debounce
+  /// Load thêm tin nhắn cũ hơn (pagination) khi user scroll lên đầu
+  /// Preserve scroll position để tin nhắn không bị nhảy vị trí
+  Future<void> loadMoreMessages() async {
+    if (_isLoadingMore || !_hasMoreMessages || _nextCursor == null) {
+      return; // Đã đang load hoặc không còn tin nhắn cũ hơn
+    }
+
+    try {
+      _isLoadingMore = true;
+      
+      // Store current message count để preserve scroll position
+      final previousMessageCount = _messages.length;
+      notifyListeners();
+
+      debugPrint('ChatDetailViewModel: Loading more messages with cursor: $_nextCursor (current count: $previousMessageCount)');
+
+      // Load tin nhắn cũ hơn từ API với cursor pagination
+      final result = await _getMessagesUseCase.execute(
+        _currentChatId, 
+        cursor: int.tryParse(_nextCursor!), 
+        limit: 20,
+        direction: 'NEXT' // Load tin nhắn cũ hơn
+      );
+
+      final oldMessages = result['messages'] as List<Message>;
+      final hasNext = result['hasNext'] as bool? ?? false;
+      final nextCursor = result['nextCursor'] as int?;
+
+      if (oldMessages.isNotEmpty) {
+        // Filter old messages để loại bỏ system/invalid messages
+        final validOldMessages = oldMessages.where((msg) {
+          final contentLower = msg.content.trim().toLowerCase();
+          final senderNameLower = msg.senderName.trim().toLowerCase();
+          
+          return msg.type != MessageType.system && 
+                 msg.senderName.trim().isNotEmpty &&
+                 !senderNameLower.contains('unknown') &&
+                 senderNameLower != 'null' &&
+                 senderNameLower != 'system' &&
+                 msg.content.trim().isNotEmpty &&
+                 contentLower != 'read' &&
+                 contentLower != 'false' &&
+                 contentLower != 'true' &&
+                 contentLower != 'messages marked as read' &&
+                 !contentLower.startsWith('read_receipt');
+        }).toList();
+        
+        debugPrint('ChatDetailViewModel: Filtered ${oldMessages.length} old messages to ${validOldMessages.length} valid messages');
+        
+        // IMPORTANT: Append to end of list để preserve scroll position
+        // Với reverse=true ListView, index 0 là newest, index cuối là oldest
+        final allMessages = [..._messages, ...validOldMessages];
+        
+        // Remove duplicates dựa trên ID
+        final uniqueMessages = <Message>[];
+        final seenIds = <String>{};
+        
+        for (final message in allMessages) {
+          if (!seenIds.contains(message.id)) {
+            uniqueMessages.add(message);
+            seenIds.add(message.id);
+          }
+        }
+        
+        _messages = uniqueMessages;
+        _hasMoreMessages = hasNext;
+        _nextCursor = nextCursor?.toString();
+        
+        final newMessageCount = _messages.length;
+        final addedCount = newMessageCount - previousMessageCount;
+        
+        debugPrint('ChatDetailViewModel: Added $addedCount valid messages. Total: $newMessageCount (preserved position for existing messages)');
+      }
+
+      _isLoadingMore = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoadingMore = false;
+      debugPrint('ChatDetailViewModel: Error loading more messages: $e');
+      notifyListeners();
+    }
+  }
+
+  /// Đánh dấu tin nhắn đã đọc trong chat detail
+  /// Chỉ gọi API để đánh dấu đã đọc, không thay đổi UI messages
   Future<void> markMessagesAsRead(String chatId) async {
     // Cancel timer cũ nếu có
     _markAsReadTimer?.cancel();
     
-    // Debounce: chỉ gọi API sau 2 giây không có request mới
-    _markAsReadTimer = Timer(const Duration(seconds: 2), () async {
+    // Debounce: chỉ gọi API sau 1 giây không có request mới
+    _markAsReadTimer = Timer(const Duration(seconds: 1), () async {
       try {
-        debugPrint('ChatDetailViewModel: Actually marking messages as read for chat: $chatId');
+        debugPrint('ChatDetailViewModel: Marking messages as read for chat: $chatId');
         
-        // Gọi ChatService để mark messages as read thông qua API
+        // Chỉ gọi API để mark messages as read - không thay đổi UI messages
         await _chatService.markMessagesAsRead(chatId);
         
-        // Cập nhật local state - đánh dấu tất cả messages của người khác là đã đọc
-        bool hasUpdates = false;
-        for (int i = 0; i < _messages.length; i++) {
-          final message = _messages[i];
-          // Chỉ cập nhật messages của người khác (không phải current user)
-          if (message.senderId != _currentUserId && !message.isRead) {
-            _messages[i] = message.copyWith(
-              isRead: true,
-              readAt: DateTime.now(),
-              status: MessageStatus.read,
-            );
-            hasUpdates = true;
-          }
-        }
-        
-        if (hasUpdates) {
-          notifyListeners();
-          debugPrint('ChatDetailViewModel: Updated local messages read status');
-        }
+        // Notify chat list để reset unread count và bold text
+        _chatService.notifyReadReceipt(chatId, _currentUserId);
         
         debugPrint('ChatDetailViewModel: Successfully marked messages as read for chat: $chatId');
       } catch (e) {
-        debugPrint('ChatDetailViewModel: Error marking messages as read: $e');
+        debugPrint('ChatDetailViewModel: ERROR marking messages as read for chat $chatId: $e');
+        debugPrint('ChatDetailViewModel: This may affect unread message display in chat list');
       }
     });
   }
@@ -296,6 +541,11 @@ class ChatDetailViewModel extends ChangeNotifier {
     } else {
       return 'Active on ${DateFormat('MMM d').format(lastSeen)}';
     }
+  }
+
+  // Public method để UI có thể gọi
+  String formatLastSeen(DateTime? lastSeen) {
+    return _formatLastSeen(lastSeen);
   }
 
   void _updateDateIndicator() {
@@ -414,12 +664,7 @@ class ChatDetailViewModel extends ChangeNotifier {
       );
 
       if (image != null) {
-        await _sendMediaMessage(
-          chatId: chatId,
-          file: File(image.path),
-          type: MessageType.image,
-          caption: '',
-        );
+        setPendingMedia(image, 'image');
       }
     } catch (e) {
       debugPrint('Error selecting image: $e');
@@ -435,15 +680,40 @@ class ChatDetailViewModel extends ChangeNotifier {
       );
 
       if (image != null) {
-        await _sendMediaMessage(
-          chatId: chatId,
-          file: File(image.path),
-          type: MessageType.image,
-          caption: '',
-        );
+        setPendingMedia(image, 'image');
       }
     } catch (e) {
       debugPrint('Error taking picture: $e');
+    }
+  }
+
+  // Select video from gallery
+  Future<void> selectVideoFromGallery(String chatId) async {
+    try {
+      final XFile? video = await _imagePicker.pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: const Duration(minutes: 5),
+      );
+      if (video != null) {
+        setPendingMedia(video, 'video');
+      }
+    } catch (e) {
+      debugPrint('Error selecting video: $e');
+    }
+  }
+
+  // Record video from camera
+  Future<void> recordVideoFromCamera(String chatId) async {
+    try {
+      final XFile? video = await _imagePicker.pickVideo(
+        source: ImageSource.camera,
+        maxDuration: const Duration(minutes: 5),
+      );
+      if (video != null) {
+        setPendingMedia(video, 'video');
+      }
+    } catch (e) {
+      debugPrint('Error recording video: $e');
     }
   }
 
@@ -522,6 +792,43 @@ class ChatDetailViewModel extends ChangeNotifier {
     }
   }
 
+  // Gửi media message (sau khi user nhấn gửi)
+  Future<void> sendPendingMedia(String chatId) async {
+    if (_pendingMedia == null || _pendingMediaType == null) {
+      debugPrint('ChatDetailViewModel: ERROR - No pending media to send');
+      return;
+    }
+    
+    try {
+      debugPrint('ChatDetailViewModel: Sending pending media - Type: $_pendingMediaType, File: ${_pendingMedia!.path}');
+      final file = File(_pendingMedia!.path);
+      final type = _pendingMediaType == 'image' ? MessageType.image : MessageType.video;
+      
+      // Upload media first
+      debugPrint('ChatDetailViewModel: Uploading media file...');
+      final mediaUrl = await _uploadChatImageUseCase.execute(file, chatId);
+      debugPrint('ChatDetailViewModel: Media uploaded successfully - URL: $mediaUrl');
+      
+      // Send message with media URL
+      debugPrint('ChatDetailViewModel: Sending message with media URL...');
+      await _sendMessageUseCase.execute(
+        chatRoomId: chatId,
+        content: '', // Empty content for media messages
+        type: type,
+        imageUrl: mediaUrl,
+      );
+      
+      debugPrint('ChatDetailViewModel: Media message sent successfully');
+      clearPendingMedia();
+    } catch (e) {
+      debugPrint('ChatDetailViewModel: ERROR sending pending media: $e');
+      debugPrint('ChatDetailViewModel: ERROR details - ChatId: $chatId, MediaType: $_pendingMediaType');
+      
+      // Don't clear pending media on error so user can retry
+      // clearPendingMedia();
+    }
+  }
+
   // CALL FUNCTIONALITY
 
   Future<void> initiateVoiceCall(String chatId) async {
@@ -534,22 +841,25 @@ class ChatDetailViewModel extends ChangeNotifier {
     debugPrint('Initiating video call for chat: $chatId');
   }
 
-  // Typing indicator functions
+  // Typing indicator functions - Gửi typing status qua WebSocket
   void setUserTyping(bool isTyping) {
     // Cancel any existing timer
     _typingTimer?.cancel();
 
-    if (isTyping) {
-      // TODO: Send typing indicator to backend
-      // _messageRepository.sendTypingIndicator(_currentUserId, true);
+    if (isTyping && _currentChatId.isNotEmpty) {
+      // Gửi typing indicator qua ChatService/WebSocket
+      _chatService.sendTypingIndicator(_currentChatId, true);
+      debugPrint('ChatDetailViewModel: Sent typing=true for chat $_currentChatId');
 
-      // Auto-cancel after some time of inactivity
-      _typingTimer = Timer(const Duration(seconds: 5), () {
-        // _messageRepository.sendTypingIndicator(_currentUserId, false);
+      // Auto-cancel after 3 seconds of inactivity
+      _typingTimer = Timer(const Duration(seconds: 3), () {
+        _chatService.sendTypingIndicator(_currentChatId, false);
+        debugPrint('ChatDetailViewModel: Auto-sent typing=false for chat $_currentChatId');
       });
-    } else {
-      // TODO: Send stopped typing to backend
-      // _messageRepository.sendTypingIndicator(_currentUserId, false);
+    } else if (_currentChatId.isNotEmpty) {
+      // Gửi stopped typing qua ChatService/WebSocket
+      _chatService.sendTypingIndicator(_currentChatId, false);
+      debugPrint('ChatDetailViewModel: Sent typing=false for chat $_currentChatId');
     }
   }
 
@@ -683,6 +993,51 @@ class ChatDetailViewModel extends ChangeNotifier {
     debugPrint('ChatDetailViewModel: Stopped periodic message refresh');
   }
 
+  /// Clear invalid messages từ cache để tránh hiển thị system messages
+  Future<void> _clearInvalidMessagesFromCache(String chatId) async {
+    try {
+      // Check if ChatService has cached messages for this chat
+      // và clear any invalid messages
+      debugPrint('ChatDetailViewModel: Clearing invalid messages from cache for chat $chatId');
+      
+      // Force refresh cache bằng cách clear local storage invalid messages
+      final prefs = await SharedPreferences.getInstance();
+      final messagesJson = prefs.getString('messages_$chatId');
+      
+      if (messagesJson != null) {
+        final List<dynamic> messagesList = jsonDecode(messagesJson);
+        final allMessages = messagesList.map((json) => Message.fromJson(json)).toList();
+        
+        // Filter out system/invalid messages
+        final validMessages = allMessages.where((msg) {
+          final contentLower = msg.content.trim().toLowerCase();
+          final senderNameLower = msg.senderName.trim().toLowerCase();
+          
+          return msg.type != MessageType.system && 
+                 msg.senderName.trim().isNotEmpty &&
+                 !senderNameLower.contains('unknown') &&
+                 senderNameLower != 'null' &&
+                 senderNameLower != 'system' &&
+                 msg.content.trim().isNotEmpty &&
+                 contentLower != 'read' &&
+                 contentLower != 'false' &&
+                 contentLower != 'true' &&
+                 contentLower != 'messages marked as read' &&
+                 !contentLower.startsWith('read_receipt');
+        }).toList();
+        
+        if (validMessages.length != allMessages.length) {
+          // Save back only valid messages
+          final validMessagesJson = jsonEncode(validMessages.map((msg) => msg.toJson()).toList());
+          await prefs.setString('messages_$chatId', validMessagesJson);
+          debugPrint('ChatDetailViewModel: Cleaned cache - ${allMessages.length} -> ${validMessages.length} messages');
+        }
+      }
+    } catch (e) {
+      debugPrint('ChatDetailViewModel: Error clearing invalid messages: $e');
+    }
+  }
+
   @override
   void dispose() {
     _typingTimer?.cancel();
@@ -690,6 +1045,7 @@ class ChatDetailViewModel extends ChangeNotifier {
     _refreshTimer?.cancel(); // Cancel refresh timer
     _messagesSubscription?.cancel();
     _newMessageSubscription?.cancel();
+    _userStatusSubscription?.cancel();
     super.dispose();
   }
 }

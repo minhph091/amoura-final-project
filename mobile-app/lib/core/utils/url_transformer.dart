@@ -88,4 +88,17 @@ class UrlTransformer {
     if (avatarUrl == null || avatarUrl.isEmpty) return '';
     return transformUrl(avatarUrl);
   }
+  
+  /// Transform image URL specifically for chat messages
+  static String transformImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      debugPrint('UrlTransformer: Empty image URL provided');
+      return '';
+    }
+    
+    debugPrint('UrlTransformer: Transforming image URL: $imageUrl');
+    final transformed = transformUrl(imageUrl);
+    debugPrint('UrlTransformer: Image URL result: $transformed');
+    return transformed;
+  }
 } 

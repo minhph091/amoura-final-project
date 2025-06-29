@@ -5,6 +5,7 @@ import '../../../domain/usecases/chat/get_conversations_usecase.dart';
 import '../../../app/di/injection.dart';
 import '../../../data/remote/profile_api.dart';
 import '../../../core/services/chat_service.dart';
+import '../../../core/services/user_status_service.dart';
 import 'dart:async';
 
 class ChatModel {
@@ -19,8 +20,7 @@ class ChatModel {
   final bool isMuted;
   final bool isHidden;
   final bool isOnline;
-
-  bool get isUnread => unreadCount > 0;
+  final bool isUnread;
 
   ChatModel({
     required this.chatRoomId,
@@ -34,6 +34,7 @@ class ChatModel {
     this.isMuted = false,
     this.isHidden = false,
     this.isOnline = false,
+    this.isUnread = false,
   });
 
   /// Convert from domain Chat model với logic xác định participant khác current user
@@ -65,6 +66,20 @@ class ChatModel {
       debugPrint('ChatModel: Display avatar URL = $displayAvatar');
     }
 
+    // Enhanced unread status logic: kiểm tra cả unreadCount và last message status
+    final unreadCount = chat.unreadCount ?? 0;
+    final hasUnreadMessages = unreadCount > 0;
+    
+    // Chỉ hiển thị unread nếu last message không phải từ current user và chưa được đọc
+    final lastMessageFromOtherUser = chat.lastMessage != null && 
+        chat.lastMessage!.senderId != currentUserId;
+    final lastMessageUnread = chat.lastMessage != null && !chat.lastMessage!.isRead;
+    
+    // isUnread = true khi có tin nhắn chưa đọc HOẶC last message từ người khác và chưa đọc
+    final shouldShowUnread = hasUnreadMessages || (lastMessageFromOtherUser && lastMessageUnread);
+    
+    debugPrint('ChatModel: Chat ${chat.id} - UnreadCount: $unreadCount, LastMsgFromOther: $lastMessageFromOtherUser, LastMsgUnread: $lastMessageUnread, ShouldShowUnread: $shouldShowUnread');
+
     return ChatModel(
       chatRoomId: chat.id,
       userId: participantId,
@@ -72,8 +87,12 @@ class ChatModel {
       avatar: displayAvatar,
       lastMessage: chat.lastMessage?.content ?? '',
       lastMessageTime: chat.lastMessage?.timestamp ?? chat.updatedAt ?? DateTime.now(),
-      unreadCount: chat.unreadCount ?? 0,
-      isOnline: false, // This would need to be fetched separately
+      unreadCount: unreadCount,
+      isPinned: false,
+      isMuted: false,
+      isHidden: false,
+      isOnline: false,
+      isUnread: shouldShowUnread, // Chỉ unread khi có tin nhắn chưa đọc từ người khác
     );
   }
 }
@@ -96,6 +115,7 @@ class ChatListViewModel extends ChangeNotifier {
   final GetConversationsUseCase _getConversationsUseCase = getIt<GetConversationsUseCase>();
   final ProfileApi _profileApi = getIt<ProfileApi>();
   final ChatService _chatService = getIt<ChatService>();
+  final UserStatusService _userStatusService = getIt<UserStatusService>();
   
   List<ChatModel> _chatList = [];
   List<ChatModel> _filteredChatList = [];
@@ -107,9 +127,10 @@ class ChatListViewModel extends ChangeNotifier {
   String _searchQuery = '';
   String _currentUserId = '';
   
-  // Stream subscriptions để lắng nghe ChatService
+  // Stream subscriptions để lắng nghe ChatService và UserStatusService
   StreamSubscription<List<Chat>>? _chatsSubscription;
   StreamSubscription<Message>? _newMessageSubscription;
+  StreamSubscription<Map<String, bool>>? _userStatusSubscription;
 
   // Getters
   List<ChatModel> get chatList => _searchQuery.isEmpty ? _chatList : _filteredChatList;
@@ -123,7 +144,7 @@ class ChatListViewModel extends ChangeNotifier {
     _subscribeToStreams();
   }
 
-  /// Subscribe vào streams từ ChatService để auto-refresh khi có thay đổi
+  /// Subscribe vào streams từ ChatService và UserStatusService để auto-refresh khi có thay đổi
   void _subscribeToStreams() {
     // Lắng nghe cập nhật chat list từ ChatService
     _chatsSubscription = _chatService.chatsStream.listen((chats) async {
@@ -136,6 +157,11 @@ class ChatListViewModel extends ChangeNotifier {
     _newMessageSubscription = _chatService.newMessageStream.listen((newMessage) {
       _updateChatWithNewMessage(newMessage);
     });
+    
+    // Lắng nghe user status changes để cập nhật online indicators
+    _userStatusSubscription = _userStatusService.statusStream.listen((statusUpdate) {
+      _updateUserOnlineStatus(statusUpdate);
+    });
   }
 
   /// Xử lý danh sách chat từ domain models thành UI models
@@ -143,6 +169,30 @@ class ChatListViewModel extends ChangeNotifier {
     try {
       // Convert to ChatModel với current user ID
       _chatList = await Future.wait(chats.map((chat) => ChatModel.fromChat(chat, _currentUserId)));
+      
+      // Lấy trạng thái online cho tất cả users trong chat list
+      final userIds = _chatList.map((chat) => chat.userId).toList();
+      final onlineStatusMap = await _userStatusService.getMultipleUserStatus(userIds);
+      
+      // Cập nhật trạng thái online cho chat list
+      for (int i = 0; i < _chatList.length; i++) {
+        final chat = _chatList[i];
+        final isOnline = onlineStatusMap[chat.userId] ?? false;
+        _chatList[i] = ChatModel(
+          chatRoomId: chat.chatRoomId,
+          userId: chat.userId,
+          name: chat.name,
+          avatar: chat.avatar,
+          lastMessage: chat.lastMessage,
+          lastMessageTime: chat.lastMessageTime,
+          unreadCount: chat.unreadCount,
+          isPinned: false,
+          isMuted: false,
+          isHidden: false,
+          isOnline: isOnline,
+          isUnread: (chat.unreadCount ?? 0) > 0,
+        );
+      }
       
       // Tạo danh sách matches từ chat rooms
       _matches = _chatList.map((chat) => UserModel(
@@ -159,6 +209,11 @@ class ChatListViewModel extends ChangeNotifier {
       _activeUsers = _generateMockActiveUsers();
       _recentUsers = _generateMockRecentUsers();
 
+      // Subscribe vào tất cả chat rooms sau khi đã có danh sách
+      if (_chatList.isNotEmpty) {
+        _subscribeToAllChatRoomsUserStatus();
+      }
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error processing chat list: $e');
@@ -169,6 +224,57 @@ class ChatListViewModel extends ChangeNotifier {
   void _updateChatWithNewMessage(Message newMessage) {
     final chatIndex = _chatList.indexWhere((chat) => chat.chatRoomId == newMessage.chatId);
     if (chatIndex != -1) {
+      // Xử lý system message (read receipt) - reset unread count về 0
+      if (newMessage.type == MessageType.system) {
+        final currentUnreadCount = _chatList[chatIndex].unreadCount;
+        final updatedChat = ChatModel(
+          chatRoomId: _chatList[chatIndex].chatRoomId,
+          userId: _chatList[chatIndex].userId,
+          name: _chatList[chatIndex].name,
+          avatar: _chatList[chatIndex].avatar,
+          lastMessage: _chatList[chatIndex].lastMessage, // Giữ nguyên last message
+          lastMessageTime: _chatList[chatIndex].lastMessageTime, // Giữ nguyên thời gian
+          unreadCount: 0, // Reset unread count về 0
+          isUnread: false, // Đã đọc hết - bỏ bold text
+          isOnline: _chatList[chatIndex].isOnline,
+          isPinned: _chatList[chatIndex].isPinned,
+          isMuted: _chatList[chatIndex].isMuted,
+          isHidden: _chatList[chatIndex].isHidden,
+        );
+        
+        _chatList[chatIndex] = updatedChat;
+        notifyListeners();
+        
+        debugPrint('ChatListViewModel: Read receipt processed for chat ${newMessage.chatId}');
+        debugPrint('ChatListViewModel: Unread count: $currentUnreadCount -> 0, Bold text removed');
+        return;
+      }
+      
+      // Xử lý tin nhắn thường với enhanced unread logic
+      final isFromOtherUser = newMessage.senderId != _currentUserId;
+      final currentUnreadCount = _chatList[chatIndex].unreadCount;
+      
+      // Logic unread count:
+      // - Tăng count nếu tin nhắn từ người khác và chưa đọc
+      // - Reset về 0 nếu là tin nhắn của chính mình (mình đã "đọc" ngay khi gửi)
+      // - Giữ nguyên nếu là tin nhắn từ người khác nhưng đã đọc (case hiếm)
+      final shouldIncreaseUnread = isFromOtherUser && !newMessage.isRead;
+      final newUnreadCount = shouldIncreaseUnread 
+          ? currentUnreadCount + 1 
+          : (isFromOtherUser ? currentUnreadCount : 0);
+      
+      // Enhanced isUnread logic: hiển thị bold nếu có bất kỳ tin nhắn chưa đọc nào
+      // HOẶC nếu tin nhắn mới này từ người khác và chưa được đọc
+      final hasUnreadMessages = newUnreadCount > 0;
+      final thisMessageNeedsAttention = isFromOtherUser && !newMessage.isRead;
+      final isUnread = hasUnreadMessages || thisMessageNeedsAttention;
+      
+      debugPrint('ChatListViewModel: Processing message from ${isFromOtherUser ? "other user" : "current user"}');
+      debugPrint('ChatListViewModel: Message read status: ${newMessage.isRead ? "READ" : "UNREAD"}');
+      debugPrint('ChatListViewModel: Unread count: $currentUnreadCount -> $newUnreadCount');
+      debugPrint('ChatListViewModel: This message needs attention: $thisMessageNeedsAttention');
+      debugPrint('ChatListViewModel: Final bold status: ${isUnread ? "ON" : "OFF"}');
+      
       final updatedChat = ChatModel(
         chatRoomId: _chatList[chatIndex].chatRoomId,
         userId: _chatList[chatIndex].userId,
@@ -176,18 +282,93 @@ class ChatListViewModel extends ChangeNotifier {
         avatar: _chatList[chatIndex].avatar,
         lastMessage: newMessage.content,
         lastMessageTime: newMessage.timestamp,
-        unreadCount: _chatList[chatIndex].unreadCount + 1, // Tăng unread count
+        unreadCount: newUnreadCount,
+        isUnread: isUnread, // Cập nhật isUnread dựa trên unreadCount
+        isOnline: _chatList[chatIndex].isOnline,
         isPinned: _chatList[chatIndex].isPinned,
         isMuted: _chatList[chatIndex].isMuted,
         isHidden: _chatList[chatIndex].isHidden,
-        isOnline: _chatList[chatIndex].isOnline,
       );
       
       _chatList[chatIndex] = updatedChat;
-      _sortChatList();
+      
+      // Sort lại để chat có tin nhắn mới lên đầu
+      _chatList.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+      
       notifyListeners();
       
       debugPrint('Updated chat ${newMessage.chatId} with new message: ${newMessage.content}');
+      debugPrint('Unread count: $newUnreadCount, Is unread: $isUnread');
+    }
+  }
+
+  /// Cập nhật online status của users trong chat list
+  void _updateUserOnlineStatus(Map<String, bool> statusUpdate) {
+    bool hasUpdates = false;
+    
+    // Cập nhật chat list
+    for (final entry in statusUpdate.entries) {
+      final userId = entry.key;
+      final isOnline = entry.value;
+      
+      final chatIndex = _chatList.indexWhere((chat) => chat.userId == userId);
+      if (chatIndex != -1 && _chatList[chatIndex].isOnline != isOnline) {
+        final chat = _chatList[chatIndex];
+        _chatList[chatIndex] = ChatModel(
+          chatRoomId: chat.chatRoomId,
+          userId: chat.userId,
+          name: chat.name,
+          avatar: chat.avatar,
+          lastMessage: chat.lastMessage,
+          lastMessageTime: chat.lastMessageTime,
+          unreadCount: chat.unreadCount,
+          isPinned: chat.isPinned,
+          isMuted: chat.isMuted,
+          isHidden: chat.isHidden,
+          isOnline: isOnline, // Update online status
+          isUnread: chat.unreadCount > 0,
+        );
+        hasUpdates = true;
+        debugPrint('ChatListViewModel: Updated online status for user $userId: ${isOnline ? "online" : "offline"}');
+      }
+    }
+    
+    // Cập nhật active users list
+    for (int i = 0; i < _activeUsers.length; i++) {
+      final userId = _activeUsers[i].userId;
+      if (statusUpdate.containsKey(userId)) {
+        final isOnline = statusUpdate[userId]!;
+        if (_activeUsers[i].isOnline != isOnline) {
+          _activeUsers[i] = UserModel(
+            userId: _activeUsers[i].userId,
+            name: _activeUsers[i].name,
+            avatar: _activeUsers[i].avatar,
+            isOnline: isOnline,
+          );
+          hasUpdates = true;
+        }
+      }
+    }
+    
+    // Cập nhật matches list
+    for (int i = 0; i < _matches.length; i++) {
+      final userId = _matches[i].userId;
+      if (statusUpdate.containsKey(userId)) {
+        final isOnline = statusUpdate[userId]!;
+        if (_matches[i].isOnline != isOnline) {
+          _matches[i] = UserModel(
+            userId: _matches[i].userId,
+            name: _matches[i].name,
+            avatar: _matches[i].avatar,
+            isOnline: isOnline,
+          );
+          hasUpdates = true;
+        }
+      }
+    }
+    
+    if (hasUpdates) {
+      notifyListeners();
     }
   }
 
@@ -239,7 +420,7 @@ class ChatListViewModel extends ChangeNotifier {
     }
   }
 
-  /// Lấy current user ID từ backend API và initialize WebSocket
+  /// Lấy current user ID từ backend API và initialize WebSocket + UserStatusService
   /// API endpoint: GET /user  
   Future<void> _getCurrentUserId() async {
     try {
@@ -250,11 +431,27 @@ class ChatListViewModel extends ChangeNotifier {
       // Initialize WebSocket connection for realtime updates
       if (_currentUserId.isNotEmpty && _currentUserId != 'unknown') {
         await _chatService.initializeWebSocket(_currentUserId);
+        
+        // Initialize UserStatusService để track online/offline status
+        await _userStatusService.initialize();
+        debugPrint('ChatListViewModel: Initialized UserStatusService');
+        
+        // Subscribe vào user status cho tất cả chat rooms
+        _subscribeToAllChatRoomsUserStatus();
       }
     } catch (e) {
       debugPrint('Error getting current user ID in chat list: $e');
       _currentUserId = 'unknown';
     }
+  }
+  
+  /// Subscribe vào user status cho tất cả chat rooms
+  void _subscribeToAllChatRoomsUserStatus() {
+    for (final chat in _chatList) {
+      // Subscribe vào cả user status và messages cho mỗi chat room
+      _chatService.subscribeToChat(chat.chatRoomId);
+    }
+    debugPrint('ChatListViewModel: Subscribed to ${_chatList.length} chat rooms for messages and user status updates');
   }
 
   void toggleReadStatus(String userId) {
@@ -273,6 +470,7 @@ class ChatListViewModel extends ChangeNotifier {
         isMuted: chat.isMuted,
         isHidden: chat.isHidden,
         isOnline: chat.isOnline,
+        isUnread: chat.isUnread,
       );
       notifyListeners();
     }
@@ -294,6 +492,7 @@ class ChatListViewModel extends ChangeNotifier {
         isMuted: chat.isMuted,
         isHidden: chat.isHidden,
         isOnline: chat.isOnline,
+        isUnread: chat.isUnread,
       );
 
       // Sort to move pinned chats to the top
@@ -318,6 +517,7 @@ class ChatListViewModel extends ChangeNotifier {
         isMuted: chat.isMuted,
         isHidden: true,
         isOnline: chat.isOnline,
+        isUnread: chat.isUnread,
       );
       notifyListeners();
     }
@@ -416,6 +616,7 @@ class ChatListViewModel extends ChangeNotifier {
   void dispose() {
     _chatsSubscription?.cancel();
     _newMessageSubscription?.cancel();
+    _userStatusSubscription?.cancel();
     super.dispose();
   }
 }

@@ -69,17 +69,58 @@ class ChatApi {
     required MessageType type,
     String? imageUrl,
   }) async {
-    final response = await _apiClient.post(
-      ApiEndpoints.chatMessages,
-      data: {
-        'chatRoomId': int.parse(chatRoomId),
-        'content': content,
-        'messageType': type.name.toUpperCase(),
-        if (imageUrl != null) 'imageUrl': imageUrl,
-      },
-    );
-    
-    return Message.fromJson(response.data);
+    // Backend validation: IMAGE message cần imageUrl, content có thể empty
+    final requestData = <String, dynamic>{
+      'chatRoomId': int.parse(chatRoomId),
+      'messageType': type.name.toUpperCase(),
+    };
+
+    if (type == MessageType.image) {
+      // Cho IMAGE message: Backend yêu cầu content không được rỗng (@NotBlank validation)
+      // Nếu user không nhập caption thì dùng fallback text
+      final imageContent = content.trim().isEmpty ? 'Photo' : content.trim();
+      requestData['content'] = imageContent;
+      
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        requestData['imageUrl'] = imageUrl;
+        debugPrint('ChatApi: IMAGE message - Content: "$imageContent", ImageUrl: $imageUrl');
+      } else {
+        debugPrint('ChatApi: ERROR - ImageUrl is required for IMAGE message type');
+        throw Exception('ImageUrl is required for IMAGE message type');
+      }
+    } else {
+      // Cho TEXT message: content bắt buộc, không được rỗng
+      final textContent = content.trim();
+      if (textContent.isEmpty) {
+        debugPrint('ChatApi: ERROR - Content is required for TEXT message type');
+        throw Exception('Content is required for TEXT message type');
+      }
+      requestData['content'] = textContent;
+      
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        requestData['imageUrl'] = imageUrl;
+      }
+      debugPrint('ChatApi: TEXT message - Content: "$textContent"');
+    }
+
+    try {
+      debugPrint('ChatApi: Sending message with data: $requestData');
+
+      final response = await _apiClient.post(
+        ApiEndpoints.chatMessages,
+        data: requestData,
+      );
+      
+      debugPrint('ChatApi: Message sent successfully - Status: ${response.statusCode}');
+      return Message.fromJson(response.data);
+    } catch (e) {
+      debugPrint('ChatApi: ERROR sending message - Request data: $requestData');
+      debugPrint('ChatApi: ERROR details: $e');
+      if (e.toString().contains('400')) {
+        debugPrint('ChatApi: 400 Bad Request - Check request format and required fields');
+      }
+      rethrow;
+    }
   }
 
   /// Lấy danh sách tin nhắn theo chatRoomId với cursor-based pagination
@@ -177,16 +218,70 @@ class ChatApi {
   /// Sử dụng REST API endpoint: POST /api/chat/upload-image
   /// Trả về URL của ảnh đã upload để sử dụng trong tin nhắn
   Future<String> uploadChatImage(File file, String chatRoomId) async {
-    final response = await _apiClient.uploadMultipart(
-      ApiEndpoints.chatUploadImage,
-      fileField: 'file',
-      filePath: file.path,
-      additionalData: {
-        'chatRoomId': chatRoomId,
-      },
-    );
-    
-    return response.data;
+    try {
+      debugPrint('ChatApi: Uploading image for chat $chatRoomId');
+      debugPrint('ChatApi: File path: ${file.path}');
+      debugPrint('ChatApi: File size: ${await file.length()} bytes');
+      
+      final response = await _apiClient.uploadMultipart(
+        ApiEndpoints.chatUploadImage,
+        fileField: 'file',
+        filePath: file.path,
+        additionalData: {
+          'chatRoomId': int.parse(chatRoomId),
+        },
+      );
+      
+      debugPrint('ChatApi: Upload response status: ${response.statusCode}');
+      debugPrint('ChatApi: Upload response data type: ${response.data.runtimeType}');
+      debugPrint('ChatApi: Upload response raw data: ${response.data}');
+      
+      // Backend trả về plain text URL (String) - không phải JSON
+      if (response.data == null) {
+        throw Exception('Upload response is null');
+      }
+      
+      String imageUrl;
+      
+      // Backend trả về plain text URL theo backend controller design
+      if (response.data is String) {
+        imageUrl = response.data as String;
+        debugPrint('ChatApi: Got plain text URL: $imageUrl');
+      } else {
+        // Fallback: convert any response to string
+        imageUrl = response.data.toString();
+        debugPrint('ChatApi: Converted response to string: $imageUrl');
+      }
+      
+      // Validate URL
+      if (imageUrl.isEmpty) {
+        debugPrint('ChatApi: ERROR - Empty URL returned from upload');
+        throw Exception('Empty URL returned from upload');
+      }
+      
+      if (!imageUrl.contains('http')) {
+        debugPrint('ChatApi: ERROR - Invalid URL format: $imageUrl');
+        throw Exception('Invalid URL format returned from upload: $imageUrl');
+      }
+      
+      debugPrint('ChatApi: Upload successful - URL: $imageUrl');
+      return imageUrl;
+      
+    } catch (e) {
+      debugPrint('ChatApi: Error uploading image: $e');
+      debugPrint('ChatApi: Error type: ${e.runtimeType}');
+      
+      // Provide more specific error messages
+      if (e.toString().contains('FormatException')) {
+        debugPrint('ChatApi: Format exception - backend returned non-JSON response');
+        throw Exception('Backend returned invalid response format');
+      } else if (e.toString().contains('DioException')) {
+        debugPrint('ChatApi: Network error during upload');
+        throw Exception('Network error during image upload');
+      }
+      
+      rethrow;
+    }
   }
 
   /// Xóa ảnh chat (chỉ người upload mới xóa được)

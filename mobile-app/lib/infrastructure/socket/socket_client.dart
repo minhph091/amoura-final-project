@@ -185,8 +185,7 @@ class SocketClient {
             // Xử lý các loại message khác nhau
             switch (message['type']) {
               case 'MESSAGE':
-                // Tin nhắn thường
-                onMessage(message);
+                // Tin nhắn thường - chỉ gửi vào stream chung
                 _messageController.add(message);
                 break;
               case 'TYPING':
@@ -202,9 +201,9 @@ class SocketClient {
                 _messageController.add(message);
                 break;
               default:
-                // Các loại message khác
-                onMessage(message);
+                // Các loại message khác - chỉ gửi vào stream, không gọi onMessage để tránh duplicate
                 _messageController.add(message);
+                debugPrint('WebSocket: Unknown message type: ${message['type']}, added to stream');
             }
           }
         } catch (e) {
@@ -250,6 +249,35 @@ class SocketClient {
 
     debugPrint('WebSocket: Subscribed to typing indicators for chat $chatRoomId');
     // Return destination as subscription ID
+    return destination;
+  }
+
+  /// Subscribe vào user status updates cho một chat room cụ thể
+  /// Topic: /topic/chat/{chatRoomId}/user-status
+  String? subscribeToUserStatusInChat(String chatRoomId, Function(Map<String, dynamic>) onStatusUpdate) {
+    if (_stompClient == null || !_isConnected) {
+      debugPrint('WebSocket: Cannot subscribe to user status - not connected');
+      return null;
+    }
+
+    final destination = WebSocketConfig.userStatusInChatTopic(chatRoomId);
+    
+    final subscription = _stompClient!.subscribe(
+      destination: destination,
+      callback: (StompFrame frame) {
+        try {
+          if (frame.body != null) {
+            final statusData = jsonDecode(frame.body!);
+            debugPrint('WebSocket: User status update in chat $chatRoomId - User ${statusData['userId']} is ${statusData['status']}');
+            onStatusUpdate(statusData);
+          }
+        } catch (e) {
+          debugPrint('WebSocket: Error parsing user status update - $e');
+        }
+      },
+    );
+
+    debugPrint('WebSocket: Subscribed to user status updates for chat room $chatRoomId');
     return destination;
   }
 
@@ -328,5 +356,28 @@ class SocketClient {
     _notificationController.close();
     _userStatusController.close();
     _connectionController.close();
+  }
+
+  /// Gửi tin nhắn qua WebSocket
+  /// Destination: /app/chat.sendMessage
+  void sendMessage(String chatRoomId, String content, String messageType, {String? imageUrl}) {
+    if (_stompClient == null || !_isConnected) {
+      debugPrint('WebSocket: Cannot send message - not connected');
+      return;
+    }
+
+    final messageData = {
+      'chatRoomId': int.parse(chatRoomId),
+      'content': content,
+      'messageType': messageType.toUpperCase(),
+      if (imageUrl != null) 'imageUrl': imageUrl,
+    };
+
+    _stompClient!.send(
+      destination: WebSocketConfig.sendMessageWsDestination,
+      body: jsonEncode(messageData),
+    );
+
+    debugPrint('WebSocket: Sent message to chat $chatRoomId - Type: $messageType');
   }
 }
