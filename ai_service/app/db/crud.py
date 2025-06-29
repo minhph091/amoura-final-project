@@ -134,7 +134,7 @@ List[int]:
 # --- Message CRUD ---
 def get_message_history(db: Session, user_id: int, other_user_id: int, limit: int = 50) -> List[models.Message]:
     """
-    Get the message history between two users, ordered by creation time.
+    Get the message history between two users via chat_rooms, ordered by creation time.
 
     Args:
         db: Database session
@@ -145,20 +145,29 @@ def get_message_history(db: Session, user_id: int, other_user_id: int, limit: in
     Returns:
         List of Message objects representing the conversation history
     """
-    # Query messages where user_id is sender and other_user_id is receiver
-    # OR user_id is receiver and other_user_id is sender
-    messages = db.query(models.Message).filter(
+    # First, find the chat room between the two users
+    chat_room = db.query(models.ChatRoom).filter(
         (
-            (models.Message.sender_id == user_id) & 
-            (models.Message.receiver_id == other_user_id)
+            (models.ChatRoom.user1_id == user_id) & 
+            (models.ChatRoom.user2_id == other_user_id)
         ) | 
         (
-            (models.Message.sender_id == other_user_id) & 
-            (models.Message.receiver_id == user_id)
+            (models.ChatRoom.user1_id == other_user_id) & 
+            (models.ChatRoom.user2_id == user_id)
         )
-    ).order_by(models.Message.created_at).limit(limit).all()
+    ).first()
 
-    return messages
+    # If no chat room exists, return empty list
+    if not chat_room:
+        return []
+
+    # Query messages for this chat room - get latest messages first, then reverse for chronological order
+    messages = db.query(models.Message).filter(
+        models.Message.chat_room_id == chat_room.id
+    ).order_by(models.Message.created_at.desc()).limit(limit).all()
+
+    # Reverse to get chronological order (oldest first) for AI context
+    return list(reversed(messages))
 
 
 def format_messages_for_ai(messages: List[models.Message], current_user_id: int) -> List[Dict]:

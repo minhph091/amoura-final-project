@@ -150,7 +150,7 @@ class Location(Base):
     country = Column(String(255))
     state = Column(String(255))
     city = Column(String(255))
-    version = Column(Integer, default=0)
+    version = Column(BigInteger, default=0)
     created_at = Column(TIMESTAMP(timezone=False), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=False), onupdate=func.now())
 
@@ -175,23 +175,35 @@ class UserLanguage(Base):
     language_id = Column(BigInteger, ForeignKey("languages.id"), primary_key=True)
     __table_args__ = (UniqueConstraint('user_id', 'language_id', name='uq_user_language'),)
 
-class Message(Base):
-    __tablename__ = "messages"
+# Models cần thiết cho Chat Rooms (backend database có chat_rooms)
+class ChatRoom(Base):
+    __tablename__ = "chat_rooms"
     id = Column(BigInteger, primary_key=True, index=True)
-    sender_id = Column(BigInteger, ForeignKey("users.id"))
-    receiver_id = Column(BigInteger, ForeignKey("users.id"))
-    content = Column(Text)
-    is_read = Column(Boolean, default=False)
-    read_at = Column(TIMESTAMP(timezone=False))
-    is_edited = Column(Boolean, default=False)
-    edited_at = Column(TIMESTAMP(timezone=False))
-    is_recalled = Column(Boolean, default=False)
-    recalled_at = Column(TIMESTAMP(timezone=False))
+    user1_id = Column(BigInteger, ForeignKey("users.id"))
+    user2_id = Column(BigInteger, ForeignKey("users.id"))
+    is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP(timezone=False), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=False), onupdate=func.now())
 
+# Message model để khớp với backend database
+class Message(Base):
+    __tablename__ = "messages"
+    id = Column(BigInteger, primary_key=True, index=True)
+    chat_room_id = Column(BigInteger, ForeignKey("chat_rooms.id"))
+    sender_id = Column(BigInteger, ForeignKey("users.id"))
+    content = Column(Text)
+    message_type = Column(String(20), default='TEXT')
+    is_read = Column(Boolean, default=False)
+    read_at = Column(TIMESTAMP(timezone=False))
+    created_at = Column(TIMESTAMP(timezone=False), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=False), onupdate=func.now())
+    image_url = Column(String(512))
+    image_uploader_id = Column(BigInteger)
+    recalled = Column(Boolean, default=False)
+    recalled_at = Column(TIMESTAMP(timezone=False))
+
+    chat_room = relationship("ChatRoom")
     sender = relationship("User", foreign_keys=[sender_id], backref="sent_messages")
-    receiver = relationship("User", foreign_keys=[receiver_id], backref="received_messages")
 
 class Swipe(Base):
     __tablename__ = "swipes"
