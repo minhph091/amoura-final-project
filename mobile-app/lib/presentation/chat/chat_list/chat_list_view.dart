@@ -5,6 +5,8 @@ import 'widgets/active_users_list.dart';
 import 'widgets/search_history_overlay.dart';
 import '../../shared/widgets/search_input.dart';
 import '../../shared/widgets/app_gradient_background.dart';
+import '../../../app/routes/app_routes.dart';
+import '../../../core/utils/url_transformer.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({Key? key}) : super(key: key);
@@ -156,12 +158,99 @@ class _ChatListViewState extends State<ChatListView> {
   Widget _buildMainContent() {
     return Column(
       children: [
+        // Matches section (giống Tinder)
+        if (_viewModel.matches.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Your Matches',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 80,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    itemCount: _viewModel.matches.length,
+                    itemBuilder: (context, index) {
+                      final match = _viewModel.matches[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            // Tìm chat tương ứng với match này
+                            final matchChat = _viewModel.chatList.firstWhere(
+                              (c) => c.userId == match.userId,
+                              orElse: () => throw StateError('Chat not found for match'),
+                            );
+                            _navigateToChat(context, matchChat.chatRoomId, matchChat);
+                          },
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundImage: match.avatar.isNotEmpty
+                                    ? NetworkImage(UrlTransformer.transformAvatarUrl(match.avatar))
+                                    : null,
+                                child: match.avatar.isEmpty
+                                    ? Text(
+                                        match.name.isNotEmpty 
+                                            ? match.name[0].toUpperCase() 
+                                            : '?',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                match.name,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
         // Active users horizontal scrolling list
         Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: ActiveUsersList(
             users: _viewModel.activeUsers,
-            onUserTap: (userId) => _navigateToChat(context, userId),
+            onUserTap: (userId) {
+              // Tìm chat tương ứng với active user này (nếu có)
+              try {
+                final userChat = _viewModel.chatList.firstWhere(
+                  (c) => c.userId == userId,
+                );
+                _navigateToChat(context, userChat.chatRoomId, userChat);
+              } catch (e) {
+                // Nếu không tìm thấy chat, có thể tạo chat mới hoặc hiển thị profile
+                _navigateToUserProfile(userId);
+              }
+            },
           ),
         ),
 
@@ -221,7 +310,7 @@ class _ChatListViewState extends State<ChatListView> {
                   final chat = _viewModel.chatList[index];
                   return ChatListItem(
                     chat: chat,
-                    onTap: () => _navigateToChat(context, chat.userId),
+                    onTap: () => _navigateToChat(context, chat.chatRoomId, chat),
                     onLongPress: () => _showChatOptions(context, chat),
                   );
                 },
@@ -277,11 +366,16 @@ class _ChatListViewState extends State<ChatListView> {
     );
   }
 
-  void _navigateToChat(BuildContext context, String userId) {
+  void _navigateToChat(BuildContext context, String chatRoomId, ChatModel chat) {
     Navigator.pushNamed(
       context,
-      '/chat/conversation',
-      arguments: userId,
+      AppRoutes.chatConversation,
+      arguments: {
+        'chatId': chatRoomId,
+        'recipientName': chat.name,
+        'recipientAvatar': chat.avatar,
+        'isOnline': chat.isOnline,
+      },
     );
   }
 
@@ -374,9 +468,9 @@ class _ChatListViewState extends State<ChatListView> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              _viewModel.deleteChat(chat.userId);
+              await _viewModel.deleteChat(chat.userId);
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),

@@ -12,6 +12,7 @@ Future<void> showMatchDialog(
   SwipeResponseModel matchResponse,
   UserRecommendationModel matchedProfile,
   String? currentUserAvatarUrl,
+  {VoidCallback? onStartChat}
 ) async {
   await showDialog(
     context: context,
@@ -100,8 +101,7 @@ Future<void> showMatchDialog(
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      // TODO: Navigate to chat screen
-                      // Navigator.pushNamed(context, '/chat', arguments: matchResponse.matchId ?? 0);
+                      if (onStartChat != null) onStartChat();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.pink,

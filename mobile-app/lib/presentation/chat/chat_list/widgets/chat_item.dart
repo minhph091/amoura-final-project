@@ -125,7 +125,7 @@ class ChatItem extends StatelessWidget {
                       // Last message
                       Expanded(
                         child: Text(
-                          chat.lastMessage ?? "No messages yet",
+                          chat.lastMessage?.content ?? "No messages yet",
                           style: TextStyle(
                             fontSize: 14.0,
                             color: theme.textTheme.bodyMedium?.color?.withAlpha(200),

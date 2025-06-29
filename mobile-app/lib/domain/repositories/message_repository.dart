@@ -11,4 +11,5 @@ abstract class MessageRepository {
   Future<void> pinMessage(String messageId);
   Future<void> unpinMessage(String messageId);
   Future<void> unpinAllMessages(String chatId);
+  Future<void> recallMessage(String messageId);
 }

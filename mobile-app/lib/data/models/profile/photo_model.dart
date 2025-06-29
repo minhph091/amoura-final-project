@@ -1,5 +1,7 @@
 // lib/data/models/profile/photo_model.dart
 
+import '../../../config/environment.dart';
+
 // Model ảnh người dùng (Photo)
 class PhotoModel {
   final int id;
@@ -17,7 +19,22 @@ class PhotoModel {
   });
 
   /// Get the full URL for the photo
-  String get url => path.startsWith('http') ? path : 'https://example.com$path';
+  String get url {
+    if (path.startsWith('http')) return path;
+    String base = EnvironmentConfig.baseUrl;
+    if (base.endsWith('/api')) base = base.replaceFirst('/api', '');
+    String fixedPath = path;
+    // Nếu path chưa có prefix /api/files thì thêm vào
+    if (!fixedPath.startsWith('/api/files')) {
+      // Nếu path đã có dấu / đầu thì chỉ thêm 'api/files' vào sau domain
+      if (fixedPath.startsWith('/')) {
+        fixedPath = '/api/files' + fixedPath;
+      } else {
+        fixedPath = '/api/files/' + fixedPath;
+      }
+    }
+    return base + fixedPath;
+  }
 
   factory PhotoModel.fromJson(Map<String, dynamic> json) {
     return PhotoModel(

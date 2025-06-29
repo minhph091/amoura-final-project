@@ -2,6 +2,7 @@
 import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/api_endpoints.dart';
+import 'package:flutter/foundation.dart';
 
 class ProfileApi {
   final ApiClient _apiClient;
@@ -168,5 +169,37 @@ class ProfileApi {
 
   Future<void> deleteHighlight(int photoId) async {
     await _apiClient.dio.delete(ApiEndpoints.deleteHighlight(photoId));
+  }
+  
+  /// Lấy avatar của user khác theo userId
+  /// API endpoint: GET /profiles/photos/{userId}/avatar
+  Future<String?> getUserAvatar(String userId) async {
+    try {
+      final response = await _apiClient.get(ApiEndpoints.getUserAvatar(userId));
+      if (response.statusCode == 200 && response.data != null) {
+        final photoData = response.data as Map<String, dynamic>;
+        return photoData['url'] as String?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting user avatar for userId $userId: $e');
+      return null;
+    }
+  }
+  
+  /// Lấy cover photo của user khác theo userId
+  /// API endpoint: GET /profiles/photos/{userId}/cover
+  Future<String?> getUserCover(String userId) async {
+    try {
+      final response = await _apiClient.get(ApiEndpoints.getUserCover(userId));
+      if (response.statusCode == 200 && response.data != null) {
+        final photoData = response.data as Map<String, dynamic>;
+        return photoData['url'] as String?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting user cover for userId $userId: $e');
+      return null;
+    }
   }
 }

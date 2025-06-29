@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../chat_list_viewmodel.dart';
 import '../../../shared/utils/time_formatter.dart';
+import '../../../../core/utils/url_transformer.dart';
 
 class ChatListItem extends StatelessWidget {
   final ChatModel chat;
@@ -39,7 +40,20 @@ class ChatListItem extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundImage: NetworkImage(chat.avatar),
+                  backgroundImage: chat.avatar.isNotEmpty
+                      ? NetworkImage(UrlTransformer.transformAvatarUrl(chat.avatar))
+                      : null,
+                  child: chat.avatar.isEmpty
+                      ? Text(
+                          chat.name.isNotEmpty 
+                              ? chat.name[0].toUpperCase() 
+                              : '?',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
                 ),
                 if (chat.isOnline)
                   Positioned(

@@ -13,6 +13,7 @@ import '../../presentation/main_navigator/main_navigator_view.dart';
 import '../../presentation/splash/splash_view.dart';
 import '../../presentation/welcome/welcome_view.dart';
 import '../../presentation/profile/setup/widgets/profile_setup_complete_screen.dart';
+import '../../presentation/chat/chat_detail/chat_detail_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -64,6 +65,21 @@ class AppPages {
         return MaterialPageRoute(builder: (_) => const MainNavigatorView());
       case AppRoutes.discovery:
         return MaterialPageRoute(builder: (_) => const DiscoveryView());
+      case AppRoutes.chatConversation:
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
+        final chatId = args['chatId'] as String? ?? '';
+        final recipientName = args['recipientName'] as String? ?? 'Chat';
+        final recipientAvatar = args['recipientAvatar'] as String?;
+        final isOnline = args['isOnline'] as bool? ?? false;
+        
+        return MaterialPageRoute(
+          builder: (_) => ChatDetailView(
+            chatId: chatId,
+            recipientName: recipientName,
+            recipientAvatar: recipientAvatar,
+            isOnline: isOnline,
+          ),
+        );
       default:
         return MaterialPageRoute(builder: (_) => const SplashView());
     }

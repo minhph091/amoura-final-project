@@ -1,20 +1,7 @@
 import 'package:get_it/get_it.dart';
-import '../../domain/repositories/message_repository.dart';
-import '../../domain/repositories/chat_repository.dart';
-import '../../data/repositories/message_repository_impl.dart';
-import '../../data/repositories/chat_repository_impl.dart';
 
+// Re-export the main dependency injection setup
 final GetIt serviceLocator = GetIt.instance;
 
-void setupServiceLocator() {
-  // Repositories
-  serviceLocator.registerLazySingleton<MessageRepository>(
-    () => MessageRepositoryImpl(),
-  );
-
-  serviceLocator.registerLazySingleton<ChatRepository>(
-    () => ChatRepositoryImpl(),
-  );
-
-  // Add other dependencies here
-}
+// This file now just re-exports the main injection setup
+// All dependencies are configured in lib/app/di/injection.dart

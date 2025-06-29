@@ -9,7 +9,10 @@ import 'widgets/chat_header.dart';
 import 'widgets/message_input.dart';
 import 'widgets/message_item.dart';
 import 'widgets/call_button.dart';
+import '../../../domain/models/chat.dart';
 import '../../../domain/models/message.dart';
+import '../../../app/di/injection.dart';
+import '../../../domain/usecases/chat/get_chat_room_usecase.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 
 class ChatDetailView extends StatefulWidget {
@@ -32,6 +35,7 @@ class ChatDetailView extends StatefulWidget {
 
 class _ChatDetailViewState extends State<ChatDetailView> {
   late final ScrollController _scrollController;
+  late final ChatDetailViewModel _viewModel;
   bool _showScrollToBottom = false;
   bool _isReplying = false;
   String? _replyingToMessage;
@@ -39,19 +43,138 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   String? _editingMessageId;
   String? _editingText;
   final _messageFocusNode = FocusNode();
-  // We'll use the MessageItem class directly instead of storing it
+  
+  // Thêm state để lưu thông tin chat room
+  Chat? _chatRoom;
+  bool _isLoadingChatInfo = true;
+  String? _chatInfoError;
+  bool _isInitialized = false;
+  bool _hasMarkedAsRead = false; // Flag để tránh mark messages as read nhiều lần
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_scrollListener);
+    
+    // Khởi tạo viewModel trong initState
+    _viewModel = ChatDetailViewModel();
 
-    // Load chat messages when view initializes
+    // Load chat room info and messages when view initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = Provider.of<ChatDetailViewModel>(context, listen: false);
-      viewModel.loadMessages(widget.chatId);
+      _loadChatRoomInfo();
+      _viewModel.loadMessages(widget.chatId);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Chỉ setup một lần khi view được tạo
+    if (!_isInitialized) {
+      _isInitialized = true;
+      
+      // Setup listener một lần duy nhất để tự động mark messages as read khi messages được load
+      _viewModel.addListener(_onViewModelChanged);
+    }
+  }
+
+  /// Listener cho ViewModel changes - chỉ mark as read một lần
+  void _onViewModelChanged() {
+    if (!_viewModel.isLoading && 
+        _viewModel.messages.isNotEmpty && 
+        !_hasMarkedAsRead) {
+      // Delay một chút để đảm bảo UI đã render
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted && !_hasMarkedAsRead) {
+          _hasMarkedAsRead = true;
+          _markMessagesAsRead();
+        }
+      });
+    }
+  }
+
+  /// Đánh dấu tin nhắn đã đọc
+  /// Gọi ngay khi user vào chat room và khi scroll đến bottom
+  void _markMessagesAsRead() {
+    if (widget.chatId.isNotEmpty) {
+      debugPrint('ChatDetailView: Marking messages as read for chat ${widget.chatId}');
+      _viewModel.markMessagesAsRead(widget.chatId);
+    }
+  }
+
+  Future<void> _loadChatRoomInfo() async {
+    try {
+      setState(() {
+        _isLoadingChatInfo = true;
+        _chatInfoError = null;
+      });
+
+      // Debug logging để xác định vấn đề
+      debugPrint('ChatDetailView: Loading chat room info for chatId: ${widget.chatId}');
+      debugPrint('ChatDetailView: Recipient name: ${widget.recipientName}');
+      debugPrint('ChatDetailView: Recipient avatar: ${widget.recipientAvatar}');
+
+      // Lấy thông tin chat room từ usecase
+      final getChatRoomUseCase = getIt<GetChatRoomUseCase>();
+      final chatRoom = await getChatRoomUseCase.execute(widget.chatId);
+      
+      debugPrint('ChatDetailView: Chat room loaded successfully');
+      debugPrint('ChatDetailView: Chat room data - ID: ${chatRoom.id}, User1: ${chatRoom.user1Name}, User2: ${chatRoom.user2Name}');
+      
+      setState(() {
+        _chatRoom = chatRoom;
+        _isLoadingChatInfo = false;
+      });
+    } catch (e) {
+      debugPrint('ChatDetailView: Error loading chat room info: $e');
+      debugPrint('ChatDetailView: Error type: ${e.runtimeType}');
+      
+      // Nếu là lỗi 404, có thể chat room chưa được tạo hoặc có delay
+      // Sử dụng thông tin từ navigation arguments làm fallback
+      if (e.toString().contains('404') || e.toString().contains('not found')) {
+        debugPrint('ChatDetailView: Chat room not found (404), using fallback mode with navigation arguments');
+        setState(() {
+          _chatRoom = null; // Sẽ dùng thông tin từ widget properties
+          _isLoadingChatInfo = false;
+          _chatInfoError = null; // Clear error để có thể sử dụng chat bình thường
+        });
+        
+        // Retry sau 3 giây nếu chat room chưa sẵn sàng
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted && _chatRoom == null) {
+            debugPrint('ChatDetailView: Retrying to load chat room after delay...');
+            _loadChatRoomInfo();
+          }
+        });
+      } else {
+        setState(() {
+          _chatInfoError = e.toString();
+          _isLoadingChatInfo = false;
+        });
+      }
+    }
+  }
+
+  // Getter để lấy thông tin recipient từ chat room
+  String get recipientName {
+    if (_chatRoom != null) {
+      return _chatRoom!.participantName ?? widget.recipientName;
+    }
+    return widget.recipientName;
+  }
+
+  String? get recipientAvatar {
+    if (_chatRoom != null) {
+      return _chatRoom!.participantAvatar;
+    }
+    return widget.recipientAvatar;
+  }
+
+  bool get isOnline {
+    // TODO: Implement online status check
+    return widget.isOnline;
   }
 
   void _scrollListener() {
@@ -60,6 +183,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       setState(() {
         _showScrollToBottom = showScrollToBottom;
       });
+    }
+
+    // Chỉ auto-mark khi user scroll về bottom và chưa mark lần nào
+    if (_scrollController.offset <= 50 && !_hasMarkedAsRead) { // Near bottom (reverse list)
+      _hasMarkedAsRead = true;
+      _markMessagesAsRead();
     }
   }
 
@@ -112,7 +241,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
   void _showMessageOptions(Message message) {
     // Using the Message class directly instead of MessageItem
-    final viewModel = Provider.of<ChatDetailViewModel>(context, listen: false);
+    final viewModel = _viewModel;
 
     showModalBottomSheet(
       context: context,
@@ -164,6 +293,15 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   );
                 },
               ),
+              if (message.senderId == viewModel.currentUserId && !message.recalled)
+                ListTile(
+                  leading: const Icon(Icons.undo, color: Colors.orange),
+                  title: const Text('Recall message', style: TextStyle(color: Colors.orange)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showRecallConfirmation(message);
+                },
+              ),
               if (message.senderId == viewModel.currentUserId)
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: Colors.red),
@@ -178,6 +316,32 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           ),
         );
       },
+    );
+  }
+
+  void _showRecallConfirmation(Message message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Recall Message?'),
+        content: const Text(
+          'This message will be recalled for everyone. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Recall message
+              _viewModel.recallMessage(message.id);
+            },
+            child: const Text('Recall', style: TextStyle(color: Colors.orange)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -196,8 +360,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             onPressed: () {
               Navigator.pop(context);
               // Delete message
-              final viewModel = Provider.of<ChatDetailViewModel>(context, listen: false);
-              viewModel.deleteMessage(message.id);
+              _viewModel.deleteMessage(message.id);
             },
             child: const Text('DELETE', style: TextStyle(color: Colors.red)),
           ),
@@ -208,8 +371,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ChatDetailViewModel(),
+    return ChangeNotifierProvider.value(
+      value: _viewModel,
       child: Consumer<ChatDetailViewModel>(
         builder: (context, viewModel, child) {
           return AppGradientBackground(
@@ -222,36 +385,144 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.pop(context),
                 ),
-                title: ChatHeader(
-                  matchId: widget.chatId,
-                  matchName: widget.recipientName,
-                  matchAvatar: widget.recipientAvatar ?? '',
-                  matchStatus: viewModel.lastActiveTime,
-                  onBackPressed: () => Navigator.pop(context),
-                ),
+                        title: _isLoadingChatInfo 
+            ? const Text('Loading...')
+            : _chatInfoError != null
+                ? const Text('Chat')
+                : Row(
+                    children: [
+                      // User avatar với improved error handling
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Colors.grey.shade300,
+                        child: recipientAvatar != null && recipientAvatar!.isNotEmpty
+                            ? ClipOval(
+                                child: Image.network(
+                                  recipientAvatar!,
+                                  width: 36,
+                                  height: 36,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    debugPrint('Error loading avatar: $error');
+                                    return Text(
+                                      recipientName.isNotEmpty ? recipientName[0].toUpperCase() : "?",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    );
+                                  },
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Text(
+                                recipientName.isNotEmpty ? recipientName[0].toUpperCase() : "?",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(width: 12),
+                      // User info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              recipientName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (viewModel.lastActiveTime != null)
+                              Text(
+                                viewModel.lastActiveTime!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 actions: [
-                  CallButton(
-                    matchId: widget.chatId,
-                    matchName: widget.recipientName,
-                    matchAvatar: widget.recipientAvatar ?? '',
-                    isVideoCall: false,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.videocam),
-                    onPressed: () {
-                      // Video call functionality
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.info_outline),
-                    onPressed: () {
-                      // Show chat options
-                      _showChatOptions();
-                    },
-                  ),
+                  if (!_isLoadingChatInfo && _chatInfoError == null) ...[
+                    IconButton(
+                      icon: const Icon(Icons.call),
+                      onPressed: () {
+                        // Voice call functionality
+                      },
+                      iconSize: 22,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.videocam),
+                      onPressed: () {
+                        // Video call functionality
+                      },
+                      iconSize: 22,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        // Show chat options
+                        _showChatOptions();
+                      },
+                      iconSize: 22,
+                    ),
+                  ],
                 ],
               ),
-              body: Column(
+              body: _isLoadingChatInfo
+                  ? const Center(child: CircularProgressIndicator())
+                  : _chatInfoError != null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Error loading chat',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _chatInfoError!,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 16),
+                              TextButton.icon(
+                                onPressed: _loadChatRoomInfo,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Column(
                 children: [
                   // Pinned messages section
                   if (viewModel.pinnedMessages.isNotEmpty)
@@ -312,7 +583,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                       child: Row(
                         children: [
                           Text(
-                            '${widget.recipientName} is typing',
+                                      '$recipientName is typing',
                             style: TextStyle(
                               fontSize: 12,
                               color: Theme.of(context).colorScheme.secondary,
@@ -572,8 +843,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               Navigator.pop(context);
               Navigator.pop(context); // Return to chat list
               // Delete chat implementation
-              Provider.of<ChatDetailViewModel>(context, listen: false);
-              // viewModel.deleteChat(widget.chatId);
+              // _viewModel.deleteChat(widget.chatId);
             },
             child: const Text('DELETE', style: TextStyle(color: Colors.red)),
           ),
@@ -693,26 +963,22 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
   void _selectFromGallery() {
     // Implement gallery selection
-    final viewModel = Provider.of<ChatDetailViewModel>(context, listen: false);
-    viewModel.selectImageFromGallery(widget.chatId);
+    _viewModel.selectImageFromGallery(widget.chatId);
   }
 
   void _openCamera() {
     // Implement camera functionality
-    final viewModel = Provider.of<ChatDetailViewModel>(context, listen: false);
-    viewModel.takePicture(widget.chatId);
+    _viewModel.takePicture(widget.chatId);
   }
 
   void _selectDocument() {
     // Implement document selection
-    final viewModel = Provider.of<ChatDetailViewModel>(context, listen: false);
-    viewModel.selectDocument(widget.chatId);
+    _viewModel.selectDocument(widget.chatId);
   }
 
   void _shareLocation() {
     // Implement location sharing
-    final viewModel = Provider.of<ChatDetailViewModel>(context, listen: false);
-    viewModel.shareCurrentLocation(widget.chatId);
+    _viewModel.shareCurrentLocation(widget.chatId);
   }
 
   Widget _buildPinnedMessagesSection(ChatDetailViewModel viewModel) {
@@ -842,6 +1108,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     _messageFocusNode.dispose();
+    _viewModel.removeListener(_onViewModelChanged); // Remove listener trước khi dispose
+    _viewModel.dispose(); // Dispose viewModel
     super.dispose();
   }
 }

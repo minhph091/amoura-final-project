@@ -14,4 +14,5 @@ class AppRoutes {
   static const String mainNavigator = '/main';
   static const String discovery = '/discovery';
   static const String profileSetupComplete = '/profileSetupComplete';
+  static const String chatConversation = '/chat/conversation';
 }

@@ -131,6 +131,7 @@ class LikedUserCard extends StatelessWidget {
           swipeId: 0, // Mock swipe ID
           isMatch: true,
           matchId: 0, // Mock match ID
+          chatRoomId: 1, // Mock chat room ID để tránh lỗi navigation
           matchedUserId: int.tryParse(user.id) ?? 0,
           matchedUsername: user.firstName,
           matchMessage: 'It\'s a match with ${user.firstName}!',

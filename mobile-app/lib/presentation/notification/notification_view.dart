@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../shared/widgets/app_gradient_background.dart';
 import 'notification_viewmodel.dart';
 import 'widgets/notification_item.dart';
+import '../../app/routes/app_routes.dart';
 
 class NotificationView extends StatefulWidget {
   const NotificationView({super.key});
@@ -223,7 +224,7 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
         Navigator.pushNamed(context, '/profile/view', arguments: notification.userId);
         break;
       case NotificationType.message:
-        Navigator.pushNamed(context, '/chat/conversation', arguments: notification.userId);
+        Navigator.pushNamed(context, AppRoutes.chatConversation, arguments: notification.userId);
         break;
       case NotificationType.system:
         // System notifications might not have a destination

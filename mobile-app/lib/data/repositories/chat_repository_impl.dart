@@ -1,75 +1,49 @@
 import '../../domain/models/chat.dart';
 import '../../domain/repositories/chat_repository.dart';
+import '../remote/chat_api.dart';
 
-// This is a mock implementation for demonstration purposes
 class ChatRepositoryImpl implements ChatRepository {
-  final List<Chat> _mockChats = [];
+  final ChatApi _chatApi;
+
+  ChatRepositoryImpl(this._chatApi);
 
   @override
   Future<List<Chat>> getAllChats() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    return _mockChats;
+    return await _chatApi.getChatRooms();
   }
 
   @override
   Future<Chat> getChatById(String chatId) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    final chat = _mockChats.firstWhere(
-      (c) => c.id == chatId,
-      orElse: () => Chat(
-        id: chatId,
-        participantIds: ['current_user_id', 'recipient_id'],
-        lastSeenAt: DateTime.now().subtract(const Duration(minutes: 30)),
-      ),
-    );
-
-    return chat;
+    return await _chatApi.getChatRoomById(chatId);
   }
 
   @override
   Future<void> createChat(Chat chat) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    _mockChats.add(chat);
+    // Chat rooms are created automatically when users match
+    // This method might not be needed or could be used for system chats
+    throw UnimplementedError('Chat rooms are created automatically when users match');
   }
 
   @override
   Future<void> updateChat(Chat chat) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    final index = _mockChats.indexWhere((c) => c.id == chat.id);
-    if (index != -1) {
-      _mockChats[index] = chat;
-    } else {
-      _mockChats.add(chat);
-    }
+    // Chat updates are handled through message operations
+    // This method might not be needed for the current implementation
+    throw UnimplementedError('Chat updates are handled through message operations');
   }
 
   @override
   Future<void> deleteChat(String chatId) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    _mockChats.removeWhere((c) => c.id == chatId);
+    await _chatApi.deactivateChatRoom(chatId);
   }
 
   @override
   Future<void> updateChatLastMessage(String chatId, String lastMessage, DateTime timestamp) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
+    // This is handled automatically by the backend when messages are sent
+    // No need to implement this method as it's managed server-side
+  }
 
-    final index = _mockChats.indexWhere((c) => c.id == chatId);
-    if (index != -1) {
-      _mockChats[index] = _mockChats[index].copyWith(
-        lastMessage: lastMessage,
-        lastMessageTime: timestamp,
-      );
-    }
+  @override
+  Future<void> markMessagesAsRead(String chatId) async {
+    await _chatApi.markMessagesAsRead(chatId);
   }
 }

@@ -14,6 +14,7 @@ import '../../core/services/profile_service.dart';
 import '../../infrastructure/services/rewind_service.dart';
 import '../discovery/widgets/match_dialog.dart';
 import 'discovery_recommendation_cache.dart';
+import '../../../app/routes/app_routes.dart';
 
 class DiscoveryViewModel extends ChangeNotifier {
   List<UserRecommendationModel> _recommendations = [];
@@ -273,7 +274,37 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// This method shows the match dialog when a match occurs
   void _handleMatch(SwipeResponseModel response, UserRecommendationModel matchedProfile) {
     if (_context != null) {
-      showMatchDialog(_context!, response, matchedProfile, _currentUserAvatarUrl);
+      showMatchDialog(
+        _context!,
+        response,
+        matchedProfile,
+        _currentUserAvatarUrl,
+        onStartChat: () {
+          // Sử dụng chatRoomId từ backend response thay vì matchId
+          final chatId = response.chatRoomId?.toString();
+          
+          if (chatId == null || chatId.isEmpty) {
+            print('Error: No chatRoomId found in match response');
+            print('Response data: ${response.toJson()}');
+            return;
+          }
+          
+          print('Navigating to chat with chatRoomId: $chatId');
+          
+          Navigator.pushNamed(
+            _context!,
+            AppRoutes.chatConversation,
+            arguments: {
+              'chatId': chatId,
+              'recipientName': matchedProfile.fullName,
+              'recipientAvatar': matchedProfile.photos.isNotEmpty 
+                  ? UrlTransformer.transform(matchedProfile.photos.first.url) 
+                  : null,
+              'isOnline': false, // TODO: Check actual online status
+            },
+          );
+        },
+      );
     }
   }
 
@@ -286,6 +317,11 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Convert UserRecommendationModel to LikedUserModel for rewind service
   /// This helper method ensures compatibility with the rewind service
   LikedUserModel _convertToLikedUserModel(UserRecommendationModel profile) {
+    // Debug URLs để kiểm tra data từ backend
+    if (profile.photos.isNotEmpty) {
+      UrlTransformer.debugUrl(profile.photos.first.url, UrlTransformer.transform(profile.photos.first.url));
+    }
+    
     return LikedUserModel(
       id: profile.userId.toString(),
       firstName: profile.firstName,
@@ -293,10 +329,10 @@ class DiscoveryViewModel extends ChangeNotifier {
       username: profile.username,
       age: profile.age ?? 0,
       location: profile.location ?? 'Unknown',
-      coverImageUrl: profile.photos.isNotEmpty ? profile.photos.first.url : 'https://example.com/placeholder.jpg',
-      avatarUrl: profile.photos.isNotEmpty ? profile.photos.first.url : 'https://example.com/avatar.jpg',
+      coverImageUrl: profile.photos.isNotEmpty ? UrlTransformer.transform(profile.photos.first.url) : '',
+      avatarUrl: profile.photos.isNotEmpty ? UrlTransformer.transform(profile.photos.first.url) : '',
       bio: profile.bio ?? '',
-      photoUrls: profile.photos.map((p) => p.url).toList(),
+      photoUrls: profile.photos.map((p) => UrlTransformer.transform(p.url)).toList(),
       isVip: false,
     );
   }
@@ -334,6 +370,10 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (profile.photos.isNotEmpty) {
       for (final photo in profile.photos) {
         final transformedUrl = UrlTransformer.transform(photo.url);
+        
+        // Debug URLs để track chính xác URL nào gây lỗi
+        UrlTransformer.debugUrl(photo.url, transformedUrl);
+        
         final provider = CachedNetworkImageProvider(transformedUrl);
         precacheImage(provider, _context!);
       }

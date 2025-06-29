@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import '../../../../domain/models/message.dart';  // Import MessageStatus and MessageType from domain model
+import '../../../../domain/models/message.dart';
+import '../../../../core/utils/url_transformer.dart';  // Import MessageStatus and MessageType from domain model
 
 class MessageItem extends StatelessWidget {
   final String message;
@@ -113,23 +114,53 @@ class MessageItem extends StatelessWidget {
   }
 
   Widget _buildAvatar() {
+    final transformedAvatarUrl = UrlTransformer.transformAvatarUrl(senderAvatar);
+    debugPrint('MessageItem: Building avatar for ${senderName} with URL: $transformedAvatarUrl');
+    
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: CircleAvatar(
         radius: 16.0,
-        backgroundImage: senderAvatar != null
-            ? NetworkImage(senderAvatar!)
-            : null,
         backgroundColor: Colors.grey.shade300,
-        child: senderAvatar == null
-            ? Text(
-          senderName.isNotEmpty ? senderName[0].toUpperCase() : "?",
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        )
-            : null,
+        child: transformedAvatarUrl.isNotEmpty
+            ? ClipOval(
+                child: Image.network(
+                  transformedAvatarUrl,
+                  width: 32,
+                  height: 32,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    debugPrint('MessageItem: Error loading avatar for $senderName: $error');
+                    return Text(
+                      senderName.isNotEmpty ? senderName[0].toUpperCase() : "?",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      debugPrint('MessageItem: Avatar loaded successfully for $senderName');
+                      return child;
+                    }
+                    return const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 1.5),
+                    );
+                  },
+                ),
+              )
+            : Text(
+                senderName.isNotEmpty ? senderName[0].toUpperCase() : "?",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
       ),
     );
   }
@@ -183,8 +214,13 @@ class MessageItem extends StatelessWidget {
         return _buildAudioMessage(theme);
       case MessageType.file:
         return _buildFileMessage(theme);
+      case MessageType.emoji:
+        return _buildEmojiMessage(theme);
+      case MessageType.system:
+        return _buildSystemMessage(theme);
       case MessageType.text:
-      return Padding(
+      default:
+        return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
           child: Text(
             message,
@@ -385,6 +421,43 @@ class MessageItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmojiMessage(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      child: Text(
+        message,
+        style: TextStyle(
+          color: isMe ? Colors.white : theme.colorScheme.onSurface,
+          fontSize: 32.0, // Emoji thường lớn hơn text thường
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSystemMessage(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: theme.dividerColor.withValues(alpha: 0.3),
+          width: 1.0,
+        ),
+      ),
+      child: Text(
+        message,
+        style: TextStyle(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          fontSize: 12.0,
+          fontStyle: FontStyle.italic,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }

@@ -59,7 +59,20 @@ class ActiveUsersList extends StatelessWidget {
                             ),
                             child: CircleAvatar(
                               radius: 30,
-                              backgroundImage: NetworkImage(user.avatar),
+                              backgroundImage: user.avatar.isNotEmpty
+                                  ? NetworkImage(user.avatar)
+                                  : null,
+                              child: user.avatar.isEmpty
+                                  ? Text(
+                                      user.name.isNotEmpty 
+                                          ? user.name[0].toUpperCase() 
+                                          : '?',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )
+                                  : null,
                             ),
                           ),
                           Positioned(

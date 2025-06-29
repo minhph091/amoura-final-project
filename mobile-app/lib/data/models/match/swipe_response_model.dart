@@ -2,6 +2,7 @@ class SwipeResponseModel {
   final int swipeId;
   final bool isMatch;
   final int? matchId;
+  final int? chatRoomId;
   final int? matchedUserId;
   final String? matchedUsername;
   final String? matchMessage;
@@ -10,6 +11,7 @@ class SwipeResponseModel {
     required this.swipeId,
     required this.isMatch,
     this.matchId,
+    this.chatRoomId,
     this.matchedUserId,
     this.matchedUsername,
     this.matchMessage,
@@ -20,6 +22,7 @@ class SwipeResponseModel {
       swipeId: json['swipeId'] as int,
       isMatch: json['isMatch'] as bool,
       matchId: json['matchId'] as int?,
+      chatRoomId: json['chatRoomId'] as int?,
       matchedUserId: json['matchedUserId'] as int?,
       matchedUsername: json['matchedUsername'] as String?,
       matchMessage: json['matchMessage'] as String?,
@@ -31,6 +34,7 @@ class SwipeResponseModel {
       'swipeId': swipeId,
       'isMatch': isMatch,
       'matchId': matchId,
+      'chatRoomId': chatRoomId,
       'matchedUserId': matchedUserId,
       'matchedUsername': matchedUsername,
       'matchMessage': matchMessage,

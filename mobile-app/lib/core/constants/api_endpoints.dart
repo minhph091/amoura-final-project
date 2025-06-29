@@ -26,6 +26,11 @@ class ApiEndpoints {
   
   // Helper method for delete highlight with photoId
   static String deleteHighlight(int photoId) => '$highlightsBase/$photoId';
+  
+  // Helper methods for getting user photos by userId
+  static String getUserAvatar(String userId) => '/profiles/photos/$userId/avatar';
+  static String getUserCover(String userId) => '/profiles/photos/$userId/cover';
+  static String getUserHighlights(String userId) => '/profiles/photos/$userId/highlights';
 
   static const String user = '/user';
 
@@ -36,4 +41,18 @@ class ApiEndpoints {
   static const String getRecommendations = '/matching/recommendations';
   static const String swipeUser = '/matching/swipe';
   static const String getMatches = '/matching/matches';
+
+  // Chat endpoints
+  static const String chatRooms = '/chat/rooms';
+  static const String chatMessages = '/chat/messages';
+  static const String chatUploadImage = '/chat/upload-image';
+  static const String chatDeleteImage = '/chat/delete-image';
+  
+  // Helper methods for chat endpoints with parameters
+  static String chatRoomById(String chatRoomId) => '$chatRooms/$chatRoomId';
+  static String chatMessagesByRoom(String chatRoomId) => '$chatRooms/$chatRoomId/messages';
+  static String markMessagesAsRead(String chatRoomId) => '$chatRooms/$chatRoomId/messages/read';
+  static String unreadMessageCount(String chatRoomId) => '$chatRooms/$chatRoomId/messages/unread-count';
+  static String deleteMessageForMe(String messageId) => '$chatMessages/$messageId/delete-for-me';
+  static String recallMessage(String messageId) => '$chatMessages/$messageId/recall';
 }

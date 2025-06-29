@@ -1,63 +1,65 @@
 import 'dart:io';
 import '../../domain/models/message.dart';
 import '../../domain/repositories/message_repository.dart';
+import '../remote/chat_api.dart';
+import 'package:flutter/foundation.dart';
 
-// This is a mock implementation for demonstration purposes
 class MessageRepositoryImpl implements MessageRepository {
-  final List<Message> _mockMessages = [];
+  final ChatApi _chatApi;
+
+  MessageRepositoryImpl(this._chatApi);
 
   @override
   Future<List<Message>> getMessagesByChatId(String chatId) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    return _mockMessages.where((m) => m.chatId == chatId).toList();
+    try {
+      debugPrint('MessageRepository: Getting messages for chat $chatId');
+      final result = await _chatApi.getMessagesByChatId(chatId);
+      final messages = result['messages'] as List<Message>;
+      debugPrint('MessageRepository: Retrieved ${messages.length} messages from API');
+      return messages;
+    } catch (e) {
+      debugPrint('MessageRepository: Error getting messages for chat $chatId: $e');
+      rethrow;
+    }
   }
 
   @override
   Future<Message> sendMessage(Message message) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    final sentMessage = message.copyWith(
-      status: MessageStatus.sent,
+    return await _chatApi.sendMessage(
+      chatRoomId: message.chatId,
+      content: message.content,
+      type: message.type,
+      imageUrl: message.mediaUrl,
     );
-
-    _mockMessages.add(sentMessage);
-    return sentMessage;
   }
 
   @override
   Future<void> updateMessage(Message message) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    final index = _mockMessages.indexWhere((m) => m.id == message.id);
-    if (index != -1) {
-      _mockMessages[index] = message;
+    // For now, we'll use recall message functionality
+    // In the future, we might need to add edit message endpoint
+    if (message.isEdited) {
+      // If message was edited, we might need to implement edit functionality
+      // For now, we'll just return as the backend handles this
+      return;
     }
   }
 
   @override
   Future<void> deleteMessage(String messageId) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    _mockMessages.removeWhere((m) => m.id == messageId);
+    await _chatApi.deleteMessageForMe(messageId);
   }
 
   @override
   Future<String> uploadMedia(File file, MessageType type) async {
-    // Simulate file upload
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Return a mock URL
-    return 'https://example.com/media/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    // For now, we'll use a placeholder chatRoomId
+    // In a real implementation, you'd need to pass the actual chatRoomId
+    return await _chatApi.uploadChatImage(file, '1');
   }
 
   @override
   Future<void> sendTypingIndicator(String userId, bool isTyping) async {
-    // In a real app, this would send the typing status to a real-time service
+    // This would be implemented with WebSocket in a real app
+    // For now, we'll just log it
     print('User $userId is ${isTyping ? "typing" : "not typing"}');
   }
 
@@ -77,5 +79,10 @@ class MessageRepositoryImpl implements MessageRepository {
   Future<void> unpinMessage(String messageId) {
     // TODO: implement unpinMessage
     throw UnimplementedError();
+  }
+
+  @override
+  Future<void> recallMessage(String messageId) async {
+    await _chatApi.recallMessage(messageId);
   }
 }

@@ -7,4 +7,5 @@ abstract class ChatRepository {
   Future<void> updateChat(Chat chat);
   Future<void> deleteChat(String chatId);
   Future<void> updateChatLastMessage(String chatId, String lastMessage, DateTime timestamp);
+  Future<void> markMessagesAsRead(String chatId);
 }

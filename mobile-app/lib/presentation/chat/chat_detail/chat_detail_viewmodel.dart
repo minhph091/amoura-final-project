@@ -6,14 +6,29 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 
 import '../../../domain/models/message.dart';
-import '../../../domain/repositories/message_repository.dart';
-import '../../../domain/repositories/chat_repository.dart';
-import '../../../core/di/service_locator.dart';
+import '../../../domain/usecases/chat/get_messages_usecase.dart';
+import '../../../domain/usecases/chat/send_message_usecase.dart';
+import '../../../domain/usecases/chat/delete_message_usecase.dart';
+import '../../../domain/usecases/chat/recall_message_usecase.dart';
+import '../../../domain/usecases/chat/mark_messages_read_usecase.dart';
+import '../../../domain/usecases/chat/upload_chat_image_usecase.dart';
+import '../../../app/di/injection.dart';
 import '../../../core/utils/file_utils.dart';
+import '../../../data/remote/profile_api.dart';
+import '../../../core/services/chat_service.dart';
+import '../../../domain/usecases/chat/get_chat_room_usecase.dart';
 
 class ChatDetailViewModel extends ChangeNotifier {
-  final MessageRepository _messageRepository = serviceLocator<MessageRepository>();
-  final ChatRepository _chatRepository = serviceLocator<ChatRepository>();
+  final GetMessagesUseCase _getMessagesUseCase = getIt<GetMessagesUseCase>();
+  final SendMessageUseCase _sendMessageUseCase = getIt<SendMessageUseCase>();
+  final DeleteMessageUseCase _deleteMessageUseCase = getIt<DeleteMessageUseCase>();
+  final RecallMessageUseCase _recallMessageUseCase = getIt<RecallMessageUseCase>();
+  final MarkMessagesReadUseCase _markMessagesReadUseCase = getIt<MarkMessagesReadUseCase>();
+  final UploadChatImageUseCase _uploadChatImageUseCase = getIt<UploadChatImageUseCase>();
+  final ProfileApi _profileApi = getIt<ProfileApi>();
+  final ChatService _chatService = getIt<ChatService>();
+  final GetChatRoomUseCase _getChatRoomUseCase = getIt<GetChatRoomUseCase>();
+  
   final ImagePicker _imagePicker = ImagePicker();
 
   List<Message> _messages = [];
@@ -22,12 +37,20 @@ class ChatDetailViewModel extends ChangeNotifier {
   bool _showDateIndicator = false;
   DateTime? _currentDateIndicator;
   String? _lastActiveTime;
-  String _currentUserId = ''; // This would be fetched from auth service
+  String _currentUserId = '';
+  String _currentUserName = '';
+  String _currentChatId = '';
   Timer? _typingTimer;
+  Timer? _markAsReadTimer; // Timer để debounce mark as read
+  Timer? _refreshTimer; // Timer để refresh messages khi không có WebSocket
 
   // Pinned messages
   List<Message> _pinnedMessages = [];
   int _currentPinnedMessageIndex = 0;
+  
+  // Stream subscriptions
+  StreamSubscription<Map<String, List<Message>>>? _messagesSubscription;
+  StreamSubscription<Message>? _newMessageSubscription;
 
   // Getters
   List<Message> get messages => _messages;
@@ -52,17 +75,95 @@ class ChatDetailViewModel extends ChangeNotifier {
 
     // Setup typing indicator listener
     _setupTypingListener();
+    
+    // Subscribe to ChatService streams để nhận tin nhắn realtime
+    _subscribeToStreams();
   }
 
+  /// Subscribe vào streams từ ChatService để nhận messages realtime
+  void _subscribeToStreams() {
+    // Lắng nghe tin nhắn mới từ tất cả chat rooms
+    _newMessageSubscription = _chatService.newMessageStream.listen((newMessage) {
+      if (newMessage.chatId == _currentChatId) {
+        // Kiểm tra xem tin nhắn đã có trong danh sách chưa
+        final existingIndex = _messages.indexWhere((msg) => msg.id == newMessage.id);
+        if (existingIndex == -1) {
+          // Thêm tin nhắn mới vào đầu danh sách
+          _messages.insert(0, newMessage);
+          _updateDateIndicator();
+          notifyListeners();
+          
+          debugPrint('Received new message in chat ${newMessage.chatId}: ${newMessage.content}');
+        }
+      }
+    });
+    
+    // Lắng nghe cập nhật messages từ cache
+    _messagesSubscription = _chatService.messagesStream.listen((messagesMap) {
+      if (_currentChatId.isNotEmpty && messagesMap.containsKey(_currentChatId)) {
+        _messages = messagesMap[_currentChatId]!;
+        _updateDateIndicator();
+        notifyListeners();
+      }
+    });
+  }
+
+  /// Lấy thông tin current user từ backend API
+  /// API endpoint: GET /user
   Future<void> _getCurrentUserInfo() async {
     try {
-      // Get current user ID from auth service
-      // This would be implemented based on your authentication setup
-      _currentUserId = 'current_user_id'; // Placeholder
-
+      final userInfo = await _profileApi.getUserInfo();
+      
+      // Lấy user ID và tên từ response
+      _currentUserId = userInfo['id']?.toString() ?? '';
+      _currentUserName = '${userInfo['firstName'] ?? ''} ${userInfo['lastName'] ?? ''}'.trim();
+      
+      if (_currentUserName.isEmpty) {
+        _currentUserName = userInfo['username'] ?? 'Unknown User';
+      }
+      
+      debugPrint('Current user info loaded: ID=$_currentUserId, Name=$_currentUserName');
       notifyListeners();
     } catch (e) {
       debugPrint('Error getting current user info: $e');
+      // Fallback values nếu không lấy được thông tin
+      _currentUserId = 'unknown';
+      _currentUserName = 'Current User';
+    }
+  }
+
+  /// Cập nhật avatar cho các sender trong messages
+  /// Backend đã trả về senderAvatar, chỉ cần verify và log
+  Future<void> _updateChatParticipantAvatars(String chatRoomId) async {
+    try {
+      if (_messages.isEmpty) {
+        debugPrint('No messages to update avatars for');
+        return;
+      }
+      
+      // Kiểm tra xem backend đã trả về avatar chưa
+      int messagesWithAvatar = 0;
+      int messagesWithoutAvatar = 0;
+      
+      for (final message in _messages) {
+        if (message.senderId != _currentUserId) {
+          if (message.senderAvatar != null && message.senderAvatar!.isNotEmpty) {
+            messagesWithAvatar++;
+            debugPrint('Message ${message.id} from ${message.senderName} has avatar: ${message.senderAvatar}');
+          } else {
+            messagesWithoutAvatar++;
+            debugPrint('Message ${message.id} from ${message.senderName} missing avatar');
+          }
+        }
+      }
+      
+      debugPrint('Avatar status: $messagesWithAvatar messages have avatar, $messagesWithoutAvatar missing avatar');
+      
+      // Backend đã cung cấp avatar trong response, không cần fetch thêm
+      // Avatar sẽ được sử dụng trực tiếp từ message.senderAvatar
+      
+    } catch (e) {
+      debugPrint('Error checking chat participant avatars: $e');
     }
   }
 
@@ -70,18 +171,39 @@ class ChatDetailViewModel extends ChangeNotifier {
     // Setup firebase or socket listeners for typing indicators
   }
 
-  // Load chat messages from repository
+  // Load chat messages from usecase
   Future<void> loadMessages(String chatId) async {
     try {
       _isLoading = true;
+      _currentChatId = chatId;
       notifyListeners();
 
-      // Get last active time for recipient
-      final chat = await _chatRepository.getChatById(chatId);
-      _lastActiveTime = _formatLastSeen(chat.lastSeenAt);
+      // Đảm bảo có current user info trước khi setup WebSocket
+      if (_currentUserId.isEmpty) {
+        await _getCurrentUserInfo();
+      }
 
-      // Get messages
-      final messages = await _messageRepository.getMessagesByChatId(chatId);
+      // Initialize WebSocket connection với current user ID
+      if (_currentUserId.isNotEmpty) {
+        debugPrint('ChatDetailViewModel: Setting up WebSocket for user $_currentUserId in chat $chatId');
+        try {
+          await _chatService.initializeWebSocket(_currentUserId);
+          await _chatService.subscribeToChat(chatId);
+          debugPrint('ChatDetailViewModel: WebSocket setup completed successfully');
+          // Stop periodic refresh nếu WebSocket thành công
+          _stopPeriodicRefresh();
+        } catch (e) {
+          debugPrint('ChatDetailViewModel: WebSocket setup failed: $e');
+          // Fallback: Start periodic refresh khi WebSocket không available
+          _startPeriodicRefresh(chatId);
+        }
+      } else {
+        debugPrint('ChatDetailViewModel: Warning - No current user ID available for WebSocket');
+      }
+
+      // Get messages from usecase
+      final result = await _getMessagesUseCase.execute(chatId);
+      final messages = result['messages'] as List<Message>;
 
       // Process messages
       _messages = messages;
@@ -91,11 +213,68 @@ class ChatDetailViewModel extends ChangeNotifier {
 
       _isLoading = false;
       notifyListeners();
+      
+      // Check avatar status trong messages (async để không block UI)
+      _updateChatParticipantAvatars(chatId).then((_) {
+        debugPrint('Avatar check completed for chat $chatId');
+      }).catchError((e) {
+        debugPrint('Avatar check failed for chat $chatId: $e');
+      });
+      
+      debugPrint('Loaded ${messages.length} messages for chat $chatId');
     } catch (e) {
       _isLoading = false;
       debugPrint('Error loading messages: $e');
       notifyListeners();
     }
+  }
+
+  /// Refresh messages từ server
+  Future<void> refreshMessages() async {
+    if (_currentChatId.isNotEmpty) {
+      await loadMessages(_currentChatId);
+    }
+  }
+
+  /// Đánh dấu tin nhắn đã đọc
+  /// Gọi API để mark messages as read và cập nhật local state với debounce
+  Future<void> markMessagesAsRead(String chatId) async {
+    // Cancel timer cũ nếu có
+    _markAsReadTimer?.cancel();
+    
+    // Debounce: chỉ gọi API sau 2 giây không có request mới
+    _markAsReadTimer = Timer(const Duration(seconds: 2), () async {
+      try {
+        debugPrint('ChatDetailViewModel: Actually marking messages as read for chat: $chatId');
+        
+        // Gọi ChatService để mark messages as read thông qua API
+        await _chatService.markMessagesAsRead(chatId);
+        
+        // Cập nhật local state - đánh dấu tất cả messages của người khác là đã đọc
+        bool hasUpdates = false;
+        for (int i = 0; i < _messages.length; i++) {
+          final message = _messages[i];
+          // Chỉ cập nhật messages của người khác (không phải current user)
+          if (message.senderId != _currentUserId && !message.isRead) {
+            _messages[i] = message.copyWith(
+              isRead: true,
+              readAt: DateTime.now(),
+              status: MessageStatus.read,
+            );
+            hasUpdates = true;
+          }
+        }
+        
+        if (hasUpdates) {
+          notifyListeners();
+          debugPrint('ChatDetailViewModel: Updated local messages read status');
+        }
+        
+        debugPrint('ChatDetailViewModel: Successfully marked messages as read for chat: $chatId');
+      } catch (e) {
+        debugPrint('ChatDetailViewModel: Error marking messages as read: $e');
+      }
+    });
   }
 
   String _formatLastSeen(DateTime? lastSeen) {
@@ -137,44 +316,17 @@ class ChatDetailViewModel extends ChangeNotifier {
     String? replyToMessageId,
   }) async {
     try {
-      final newMessage = Message(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        chatId: chatId,
-        senderId: _currentUserId,
-        senderName: 'Current User', // This would come from user profile
+      final sentMessage = await _sendMessageUseCase.execute(
+        chatRoomId: chatId,
         content: message,
-        timestamp: DateTime.now(),
-        status: MessageStatus.sending,
         type: MessageType.text,
         replyToMessageId: replyToMessageId,
       );
 
-      // Optimistic update - add to local list immediately
-      _messages.insert(0, newMessage);
-      notifyListeners();
-
-      // Send to repository/backend
-      final sentMessage = await _messageRepository.sendMessage(newMessage);
-
-      // Update local message with server response
-      final index = _messages.indexWhere((m) => m.id == newMessage.id);
-      if (index != -1) {
-        _messages[index] = sentMessage;
-        notifyListeners();
-      }
-
-      // Update chat last message
-      await _updateChatLastMessage(chatId, message);
-
+      debugPrint('Message sent successfully: ${sentMessage.id}');
     } catch (e) {
       debugPrint('Error sending message: $e');
-
-      // Update status to failed
-      final index = _messages.indexWhere((m) => m.id == DateTime.now().millisecondsSinceEpoch.toString());
-      if (index != -1) {
-        _messages[index] = _messages[index].copyWith(status: MessageStatus.failed);
-        notifyListeners();
-      }
+      // Error handling sẽ được xử lý trong UI
     }
   }
 
@@ -193,41 +345,33 @@ class ChatDetailViewModel extends ChangeNotifier {
         _messages[index] = updatedMessage;
         notifyListeners();
 
-        // Update in repository
-        await _messageRepository.updateMessage(updatedMessage);
+        // TODO: Implement edit message functionality
+        // await _messageRepository.updateMessage(updatedMessage);
       }
     } catch (e) {
       debugPrint('Error editing message: $e');
       // Revert changes if failed
-      await loadMessages(_messages.first.chatId);
+      await refreshMessages();
     }
   }
 
   // Delete a message
   Future<void> deleteMessage(String messageId) async {
     try {
-      final index = _messages.indexWhere((m) => m.id == messageId);
-      if (index != -1) {
-        // Remove locally
-        final deletedMessage = _messages[index];
-        _messages.removeAt(index);
-        notifyListeners();
-
-        // Delete from repository
-        await _messageRepository.deleteMessage(messageId);
-
-        // Update chat last message if this was the last message
-        if (index == 0 && _messages.isNotEmpty) {
-          await _updateChatLastMessage(
-            deletedMessage.chatId,
-            _messages.first.content,
-          );
-        }
-      }
+      await _deleteMessageUseCase.execute(messageId);
+      debugPrint('Message deleted successfully: $messageId');
     } catch (e) {
       debugPrint('Error deleting message: $e');
-      // Refresh messages if failed
-      await loadMessages(_messages.first.chatId);
+    }
+  }
+
+  // Recall a message (within 30 minutes)
+  Future<void> recallMessage(String messageId) async {
+    try {
+      await _recallMessageUseCase.execute(messageId);
+      debugPrint('Message recalled successfully: $messageId');
+    } catch (e) {
+      debugPrint('Error recalling message: $e');
     }
   }
 
@@ -244,8 +388,8 @@ class ChatDetailViewModel extends ChangeNotifier {
         _messages[index] = updatedMessage;
         notifyListeners();
 
-        // Update in repository
-        await _messageRepository.updateMessage(updatedMessage);
+        // TODO: Implement reaction functionality
+        // await _messageRepository.updateMessage(updatedMessage);
       }
     } catch (e) {
       debugPrint('Error adding reaction: $e');
@@ -257,19 +401,6 @@ class ChatDetailViewModel extends ChangeNotifier {
     // Implementation would depend on your UI setup
     // This is a placeholder that would be connected to the UI
     debugPrint('Scrolling to message: $messageId');
-  }
-
-  // Update chat with last message info
-  Future<void> _updateChatLastMessage(String chatId, String lastMessage) async {
-    try {
-      await _chatRepository.updateChatLastMessage(
-        chatId,
-        lastMessage,
-        DateTime.now(),
-      );
-    } catch (e) {
-      debugPrint('Error updating chat last message: $e');
-    }
   }
 
   // ATTACHMENT HANDLING
@@ -374,67 +505,20 @@ class ChatDetailViewModel extends ChangeNotifier {
     String? fileInfo,
   }) async {
     try {
-      // Create optimistic message
-      final newMessage = Message(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        chatId: chatId,
-        senderId: _currentUserId,
-        senderName: 'Current User', // Would come from user profile
-        content: caption,
-        timestamp: DateTime.now(),
-        status: MessageStatus.sending,
-        type: type,
-        mediaUrl: file.path, // Local file path initially
-        fileInfo: fileInfo,
-      );
-
-      // Add to local list immediately
-      _messages.insert(0, newMessage);
-      notifyListeners();
-
       // Upload file and get remote URL
-      final mediaUrl = await _messageRepository.uploadMedia(file, type);
+      final mediaUrl = await _uploadChatImageUseCase.execute(file, chatId);
 
-      // Update message with remote URL
-      final updatedMessage = newMessage.copyWith(
-        mediaUrl: mediaUrl,
-        status: MessageStatus.sent,
+      // Send message with media
+      final sentMessage = await _sendMessageUseCase.execute(
+        chatRoomId: chatId,
+        content: caption,
+        type: type,
+        imageUrl: mediaUrl,
       );
 
-      // Update in repository
-      final sentMessage = await _messageRepository.sendMessage(updatedMessage);
-
-      // Update local message
-      final index = _messages.indexWhere((m) => m.id == newMessage.id);
-      if (index != -1) {
-        _messages[index] = sentMessage;
-        notifyListeners();
-      }
-
-      // Update chat last message
-      String lastMessageText = type == MessageType.image
-          ? 'Photo'
-          : type == MessageType.video
-              ? 'Video'
-              : type == MessageType.audio
-                  ? 'Audio'
-                  : 'File';
-
-      if (caption.isNotEmpty) {
-        lastMessageText += ': $caption';
-      }
-
-      await _updateChatLastMessage(chatId, lastMessageText);
-
+      debugPrint('Media message sent successfully: ${sentMessage.id}');
     } catch (e) {
       debugPrint('Error sending media message: $e');
-
-      // Update status to failed
-      final index = _messages.indexWhere((m) => m.id == DateTime.now().millisecondsSinceEpoch.toString());
-      if (index != -1) {
-        _messages[index] = _messages[index].copyWith(status: MessageStatus.failed);
-        notifyListeners();
-      }
     }
   }
 
@@ -456,16 +540,16 @@ class ChatDetailViewModel extends ChangeNotifier {
     _typingTimer?.cancel();
 
     if (isTyping) {
-      // Send typing indicator to backend
-      _messageRepository.sendTypingIndicator(_currentUserId, true);
+      // TODO: Send typing indicator to backend
+      // _messageRepository.sendTypingIndicator(_currentUserId, true);
 
       // Auto-cancel after some time of inactivity
       _typingTimer = Timer(const Duration(seconds: 5), () {
-        _messageRepository.sendTypingIndicator(_currentUserId, false);
+        // _messageRepository.sendTypingIndicator(_currentUserId, false);
       });
     } else {
-      // Send stopped typing to backend
-      _messageRepository.sendTypingIndicator(_currentUserId, false);
+      // TODO: Send stopped typing to backend
+      // _messageRepository.sendTypingIndicator(_currentUserId, false);
     }
   }
 
@@ -488,13 +572,10 @@ class ChatDetailViewModel extends ChangeNotifier {
         _pinnedMessages.add(messageToPin);
         _currentPinnedMessageIndex = _pinnedMessages.length - 1;
 
-        // Optionally, remove from regular messages
-        // _messages.removeAt(index);
-
         notifyListeners();
 
-        // Update in repository
-        await _messageRepository.pinMessage(messageId);
+        // TODO: Update in repository
+        // await _messageRepository.pinMessage(messageId);
       }
     } catch (e) {
       debugPrint('Error pinning message: $e');
@@ -516,8 +597,8 @@ class ChatDetailViewModel extends ChangeNotifier {
 
         notifyListeners();
 
-        // Update in repository
-        await _messageRepository.unpinMessage(messageId);
+        // TODO: Update in repository
+        // await _messageRepository.unpinMessage(messageId);
       }
     } catch (e) {
       debugPrint('Error unpinning message: $e');
@@ -537,8 +618,8 @@ class ChatDetailViewModel extends ChangeNotifier {
 
         notifyListeners();
 
-        // Update in repository
-        await _messageRepository.unpinAllMessages(chatId);
+        // TODO: Update in repository
+        // await _messageRepository.unpinAllMessages(chatId);
       }
     } catch (e) {
       debugPrint('Error unpinning all messages: $e');
@@ -569,9 +650,46 @@ class ChatDetailViewModel extends ChangeNotifier {
     }
   }
 
+  /// Bắt đầu refresh messages định kỳ khi WebSocket không available
+  void _startPeriodicRefresh(String chatId) {
+    debugPrint('ChatDetailViewModel: Starting periodic message refresh for chat $chatId');
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      try {
+        debugPrint('ChatDetailViewModel: Refreshing messages for chat $chatId');
+        final result = await _getMessagesUseCase.execute(chatId);
+        final newMessages = result['messages'] as List<Message>;
+        
+        // Check for new messages
+        final currentMessageIds = _messages.map((m) => m.id).toSet();
+        final newMessagesList = newMessages.where((m) => !currentMessageIds.contains(m.id)).toList();
+        
+        if (newMessagesList.isNotEmpty) {
+          debugPrint('ChatDetailViewModel: Found ${newMessagesList.length} new messages');
+          _messages = newMessages;
+          _updateDateIndicator();
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('ChatDetailViewModel: Error refreshing messages: $e');
+      }
+    });
+  }
+
+  /// Dừng periodic refresh
+  void _stopPeriodicRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+    debugPrint('ChatDetailViewModel: Stopped periodic message refresh');
+  }
+
   @override
   void dispose() {
     _typingTimer?.cancel();
+    _markAsReadTimer?.cancel(); // Cancel mark as read timer
+    _refreshTimer?.cancel(); // Cancel refresh timer
+    _messagesSubscription?.cancel();
+    _newMessageSubscription?.cancel();
     super.dispose();
   }
 }

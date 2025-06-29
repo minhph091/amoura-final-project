@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.amoura"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973" // Cập nhật NDK version để tránh warning
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -28,6 +28,27 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    // Thêm cấu hình flavors
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            resValue("string", "app_name", "Amoura Dev")
+        }
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            resValue("string", "app_name", "Amoura Staging")
+        }
+        create("prod") {
+            dimension = "environment"
+            resValue("string", "app_name", "Amoura")
+        }
     }
 
     buildTypes {

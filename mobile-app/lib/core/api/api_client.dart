@@ -97,7 +97,28 @@ class ApiClient {
     }
   }
 
-  Future<Response> uploadMultipart(String path, {required String fileField, required String filePath}) async {
+  Future<Response> put(String path, {dynamic data}) async {
+    try {
+      return await dio.put(path, data: data);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<Response> delete(String path, {Map<String, dynamic>? queryParameters}) async {
+    try {
+      return await dio.delete(path, queryParameters: queryParameters);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<Response> uploadMultipart(
+    String path, {
+    required String fileField,
+    required String filePath,
+    Map<String, dynamic>? additionalData,
+  }) async {
     try {
       final file = File(filePath);
       final fileName = filePath.split('/').last;
@@ -115,13 +136,20 @@ class ApiClient {
       final mimeType = mimeTypes[extension] ?? 'image/jpeg';
       final contentType = MediaType.parse(mimeType);
       
-      final formData = FormData.fromMap({
+      final formDataMap = <String, dynamic>{
         fileField: await MultipartFile.fromFile(
           filePath,
           filename: fileName,
           contentType: contentType,
         ),
-      });
+      };
+
+      // Add additional data to form
+      if (additionalData != null) {
+        formDataMap.addAll(additionalData);
+      }
+
+      final formData = FormData.fromMap(formDataMap);
 
       return await dio.post(
         path,
