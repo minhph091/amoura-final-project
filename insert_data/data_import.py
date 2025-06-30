@@ -12,6 +12,7 @@ import os
 from datetime import datetime
 import logging
 import sys
+import glob
 
 # Cấu hình logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -53,6 +54,74 @@ class DataImporter:
     def hash_password(self, password):
         """Hash password bằng SHA-256"""
         return hashlib.sha256(password.encode()).hexdigest()
+    
+    def scan_and_insert_photos(self):
+        """Quét thư mục uploads/users và insert đường dẫn ảnh vào database"""
+        logger.info("Bắt đầu quét thư mục uploads và insert ảnh...")
+        
+        uploads_dir = "uploads/users"
+        if not os.path.exists(uploads_dir):
+            logger.warning(f"Thư mục {uploads_dir} không tồn tại, bỏ qua việc insert ảnh")
+            return
+        
+        photo_count = 0
+        
+        # Quét tất cả thư mục con trong uploads/users
+        for user_folder in os.listdir(uploads_dir):
+            user_folder_path = os.path.join(uploads_dir, user_folder)
+            
+            # Kiểm tra xem có phải là thư mục và tên là số không
+            if not os.path.isdir(user_folder_path) or not user_folder.isdigit():
+                continue
+            
+            user_id = int(user_folder)
+            logger.info(f"Quét ảnh cho user {user_id}")
+            
+            # Quét tất cả file trong thư mục user
+            for filename in os.listdir(user_folder_path):
+                file_path = os.path.join(user_folder_path, filename)
+                
+                # Chỉ xử lý file ảnh
+                if not os.path.isfile(file_path) or not filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')):
+                    continue
+                
+                # Xác định loại ảnh dựa trên tên file
+                photo_type = None
+                if filename.lower().startswith('avatar'):
+                    photo_type = 'avatar'
+                elif filename.lower().startswith('profile_cover'):
+                    photo_type = 'profile_cover'
+                elif filename.lower().startswith('highlight'):
+                    photo_type = 'highlight'
+                else:
+                    # Bỏ qua file không xác định được loại
+                    continue
+                
+                # Tạo đường dẫn tương đối bắt đầu từ "users"
+                relative_path = f"users/{user_folder}/{filename}"
+                
+                try:
+                    # Insert vào bảng photos
+                    self.cursor.execute("""
+                        INSERT INTO photos (user_id, path, type, created_at)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT DO NOTHING
+                    """, (
+                        user_id,
+                        relative_path,
+                        photo_type,
+                        datetime.now().replace(tzinfo=None)
+                    ))
+                    
+                    photo_count += 1
+                    logger.debug(f"Đã insert ảnh: {relative_path} cho user {user_id}")
+                    
+                except Exception as e:
+                    logger.error(f"Lỗi insert ảnh {relative_path} cho user {user_id}: {e}")
+                    continue
+        
+        self.conn.commit()
+        logger.info(f"Hoàn thành insert {photo_count} ảnh vào database")
     
     def insert_reference_data(self):
         """Chèn dữ liệu tham chiếu cơ bản"""
@@ -482,6 +551,9 @@ class DataImporter:
             # Import dữ liệu từ CSV files
             self.import_match_profiles('data/match_profiles.csv')
             self.import_matched_pairs('data/matched_pairs.csv')
+            
+            # Quét và insert ảnh từ thư mục uploads
+            self.scan_and_insert_photos()
             
             # Tạo dữ liệu bổ sung
             self.create_swipes_for_matches()
