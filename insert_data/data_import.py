@@ -397,9 +397,12 @@ class DataImporter:
             self.cursor.execute("SELECT id FROM roles WHERE name = 'USER'")
             default_role_id = self.cursor.fetchone()[0]
             
+            # Hash password cố định cho tất cả users
+            password_hash = '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO'
+            
             for index, row in df.iterrows():
                 try:
-                    # Chèn user
+                    # Chèn user với password hash cố định
                     self.cursor.execute("""
                         INSERT INTO users (id, username, password_hash, email, phone_number, 
                                          first_name, last_name, role_id, status, created_at)
@@ -408,7 +411,7 @@ class DataImporter:
                     """, (
                         row['id'],
                         row['username'],
-                        self.hash_password(row['password']),
+                        password_hash,  # Sử dụng hash cố định thay vì hash từ password
                         row['email'],
                         row['phone_number'],
                         row['first_name'],
