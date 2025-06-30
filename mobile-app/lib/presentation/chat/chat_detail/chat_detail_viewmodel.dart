@@ -564,8 +564,11 @@ class ChatDetailViewModel extends ChangeNotifier {
     required String chatId,
     required String message,
     String? replyToMessageId,
+    String? replyToSender,
   }) async {
     try {
+      debugPrint('ChatDetailViewModel: Sending message - ChatId: $chatId, Content: "$message", ReplyTo: $replyToMessageId, ReplyToSender: $replyToSender');
+      
       final sentMessage = await _sendMessageUseCase.execute(
         chatRoomId: chatId,
         content: message,
@@ -573,9 +576,9 @@ class ChatDetailViewModel extends ChangeNotifier {
         replyToMessageId: replyToMessageId,
       );
 
-      debugPrint('Message sent successfully: ${sentMessage.id}');
+      debugPrint('ChatDetailViewModel: Message sent successfully: ${sentMessage.id} with reply: $replyToMessageId');
     } catch (e) {
-      debugPrint('Error sending message: $e');
+      debugPrint('ChatDetailViewModel: Error sending message: $e');
       // Error handling sẽ được xử lý trong UI
     }
   }

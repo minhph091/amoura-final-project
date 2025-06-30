@@ -7,7 +7,7 @@ import 'audio_message_item.dart';
 import 'video_message_item.dart';
 import 'full_screen_image_viewer.dart';
 
-class MessageItem extends StatelessWidget {
+class MessageItem extends StatefulWidget {
   final String message;
   final String senderName;
   final String? senderAvatar;
@@ -19,11 +19,14 @@ class MessageItem extends StatelessWidget {
   final String? replyToSender;
   final VoidCallback? onLongPress;
   final VoidCallback? onDoubleTap;
+  final VoidCallback? onMessageTap;
   final Function()? onTapRepliedMessage;
   final VoidCallback? onSwipeReply;
   final String? mediaUrl;
   final String? fileInfo;
   final bool recalled;
+  final bool isRead;
+  final DateTime? readAt;
 
   const MessageItem({
     Key? key,
@@ -38,12 +41,42 @@ class MessageItem extends StatelessWidget {
     this.replyToSender,
     this.onLongPress,
     this.onDoubleTap,
+    this.onMessageTap,
     this.onTapRepliedMessage,
     this.onSwipeReply,
     this.mediaUrl,
     this.fileInfo,
     this.recalled = false,
+    this.isRead = false,
+    this.readAt,
   }) : super(key: key);
+
+  @override
+  State<MessageItem> createState() => _MessageItemState();
+}
+
+class _MessageItemState extends State<MessageItem> {
+  bool _showReadStatus = false;
+
+  void _toggleReadStatus() {
+    // Only show read status for current user's read messages
+    if (widget.isMe && widget.isRead && widget.readAt != null) {
+      setState(() {
+        _showReadStatus = !_showReadStatus;
+      });
+      
+      // Auto-hide after 3 seconds
+      if (_showReadStatus) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _showReadStatus = false;
+            });
+          }
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +86,11 @@ class MessageItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: widget.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Avatar for other user messages (not shown for current user)
-          if (!isMe) _buildAvatar(),
+          if (!widget.isMe) _buildAvatar(),
 
           // Message bubble with swipe-to-reply
           _buildSwipeableMessage(maxWidth, theme),
@@ -66,7 +99,7 @@ class MessageItem extends StatelessWidget {
           const SizedBox(width: 4.0),
 
           // Status indicator for current user's messages
-          if (isMe)
+          if (widget.isMe)
             _buildStatusIndicator(),
         ],
       ),
@@ -75,88 +108,46 @@ class MessageItem extends StatelessWidget {
 
   Widget _buildSwipeableMessage(double maxWidth, ThemeData theme) {
     return GestureDetector(
-      onLongPress: onLongPress,
-      onDoubleTap: onDoubleTap,
+      onTap: () {
+        // Only handle tap for current user's messages to show read status
+        if (widget.isMe) {
+          _toggleReadStatus(); // Use internal method instead of callback
+        }
+      },
+      onLongPress: widget.onLongPress,
+      onDoubleTap: widget.onDoubleTap,
       onHorizontalDragEnd: (details) {
         // Swipe to reply functionality
-        if (onSwipeReply != null) {
+        if (widget.onSwipeReply != null) {
           // Detect swipe direction and distance
           final velocity = details.velocity.pixelsPerSecond.dx;
           final primaryVelocity = details.primaryVelocity ?? 0;
           
           // For other user's messages: swipe right to reply
           // For own messages: swipe left to reply
-          if ((!isMe && primaryVelocity > 500) || (isMe && primaryVelocity < -500)) {
-            debugPrint('MessageItem: Swipe to reply detected - isMe: $isMe, velocity: $primaryVelocity');
-            onSwipeReply!();
+          if ((!widget.isMe && primaryVelocity > 500) || (widget.isMe && primaryVelocity < -500)) {
+            debugPrint('MessageItem: Swipe to reply detected - isMe: ${widget.isMe}, velocity: $primaryVelocity');
+            widget.onSwipeReply!();
           }
         }
       },
-      child: Animate(
-        effects: [
-          SlideEffect(
-            begin: Offset(isMe ? 0.1 : -0.1, 0),
-            end: Offset.zero,
-            duration: 200.ms,
-            curve: Curves.easeOutQuad,
-          ),
-          FadeEffect(begin: 0.7, end: 1.0, duration: 200.ms),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Message content
+          _buildMessageContent(maxWidth, theme),
+          
+          // Simple "Seen" text for read messages
+          if (_showReadStatus && widget.isMe && widget.isRead && widget.readAt != null)
+            _buildSeenIndicator(theme),
         ],
-        child: Container(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          decoration: BoxDecoration(
-            gradient: isMe
-                ? const LinearGradient(
-                    colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : LinearGradient(
-                    colors: [Colors.white, Colors.grey.shade50],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-            borderRadius: BorderRadius.circular(20.0).copyWith(
-              bottomRight: isMe ? const Radius.circular(6.0) : null,
-              bottomLeft: !isMe ? const Radius.circular(6.0) : null,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isMe 
-                    ? Colors.pink.withValues(alpha: 0.2)
-                    : Colors.black.withValues(alpha: 0.08),
-                blurRadius: 8.0,
-                offset: const Offset(0, 3),
-                spreadRadius: 0,
-              ),
-            ],
-            border: !isMe ? Border.all(
-              color: Colors.grey.shade200,
-              width: 1.0,
-            ) : null,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Reply preview, if this is a reply
-              if (replyToMessage != null)
-                _buildReplyPreview(theme),
-
-              // Message content based on message type
-              _buildMessageContent(theme),
-
-              // Timestamp and read status
-              _buildMessageFooter(theme),
-            ],
-          ),
-        ),
       ),
     );
   }
 
   Widget _buildAvatar() {
-    final transformedAvatarUrl = UrlTransformer.transformAvatarUrl(senderAvatar);
-    debugPrint('MessageItem: Building avatar for ${senderName} with URL: $transformedAvatarUrl');
+    final transformedAvatarUrl = UrlTransformer.transformAvatarUrl(widget.senderAvatar);
+    debugPrint('MessageItem: Building avatar for ${widget.senderName} with URL: $transformedAvatarUrl');
     
     return Padding(
       padding: const EdgeInsets.only(right: 12.0),
@@ -196,7 +187,7 @@ class MessageItem extends StatelessWidget {
                       height: 32,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        debugPrint('MessageItem: Error loading avatar for $senderName: $error');
+                        debugPrint('MessageItem: Error loading avatar for ${widget.senderName}: $error');
                         return Container(
                           width: 32,
                           height: 32,
@@ -210,7 +201,7 @@ class MessageItem extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              senderName.isNotEmpty ? senderName[0].toUpperCase() : "?",
+                              widget.senderName.isNotEmpty ? widget.senderName[0].toUpperCase() : "?",
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -223,7 +214,7 @@ class MessageItem extends StatelessWidget {
                       },
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) {
-                          debugPrint('MessageItem: Avatar loaded successfully for $senderName');
+                          debugPrint('MessageItem: Avatar loaded successfully for ${widget.senderName}');
                           return child;
                         }
                         return Container(
@@ -250,7 +241,7 @@ class MessageItem extends StatelessWidget {
                 )
               : Center(
                   child: Text(
-                    senderName.isNotEmpty ? senderName[0].toUpperCase() : "?",
+                    widget.senderName.isNotEmpty ? widget.senderName[0].toUpperCase() : "?",
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -266,12 +257,12 @@ class MessageItem extends StatelessWidget {
 
   Widget _buildReplyPreview(ThemeData theme) {
     return GestureDetector(
-      onTap: onTapRepliedMessage,
+      onTap: widget.onTapRepliedMessage,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
         margin: const EdgeInsets.only(bottom: 6.0),
         decoration: BoxDecoration(
-          gradient: isMe
+          gradient: widget.isMe
               ? LinearGradient(
                   colors: [
                     Colors.white.withValues(alpha: 0.15),
@@ -290,7 +281,7 @@ class MessageItem extends StatelessWidget {
                 ),
           borderRadius: const BorderRadius.all(Radius.circular(14.0)),
           border: Border.all(
-            color: isMe 
+            color: widget.isMe 
                 ? Colors.white.withValues(alpha: 0.2)
                 : Colors.grey.shade300.withValues(alpha: 0.5),
             width: 1.0,
@@ -302,7 +293,7 @@ class MessageItem extends StatelessWidget {
               width: 3.0,
               height: 30.0,
               decoration: BoxDecoration(
-                color: isMe 
+                color: widget.isMe 
                     ? Colors.white.withValues(alpha: 0.8)
                     : const Color(0xFFFF6B9D),
                 borderRadius: BorderRadius.circular(1.5),
@@ -314,11 +305,11 @@ class MessageItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    replyToSender ?? "Unknown User",
+                    widget.replyToSender ?? "Unknown User",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 11.0,
-                      color: isMe 
+                      color: widget.isMe 
                           ? Colors.white.withValues(alpha: 0.9)
                           : const Color(0xFFFF6B9D),
                       letterSpacing: 0.3,
@@ -326,10 +317,10 @@ class MessageItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 3.0),
                   Text(
-                    replyToMessage!,
+                    widget.replyToMessage!,
                     style: TextStyle(
                       fontSize: 12.0,
-                      color: isMe 
+                      color: widget.isMe 
                           ? Colors.white.withValues(alpha: 0.75)
                           : Colors.grey.shade600,
                       height: 1.2,
@@ -346,47 +337,141 @@ class MessageItem extends StatelessWidget {
     );
   }
 
-  Widget _buildMessageContent(ThemeData theme) {
-    // Check if message is recalled
-    if (recalled) {
-      return _buildRecalledMessage(theme);
-    }
-    
-    switch (type) {
-      case MessageType.image:
-        return _buildImageMessage();
-      case MessageType.video:
-        return _buildVideoMessage();
-      case MessageType.audio:
-        return _buildAudioMessage(theme);
-      case MessageType.file:
-        return _buildFileMessage(theme);
-      case MessageType.emoji:
-        return _buildEmojiMessage(theme);
-      case MessageType.system:
-        return _buildSystemMessage(theme);
-      case MessageType.text:
-      default:
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12.0),
-          child: Text(
-            message,
-            style: TextStyle(
-              color: isMe ? Colors.white : Colors.grey.shade800,
-              fontSize: 15.0,
-              fontWeight: FontWeight.w400,
-              height: 1.4,
-              letterSpacing: 0.2,
-            ),
+  Widget _buildMessageContent(double maxWidth, ThemeData theme) {
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: maxWidth * 0.8,
+        minWidth: 50,
+      ),
+      decoration: BoxDecoration(
+        color: widget.isMe 
+            ? theme.colorScheme.primary
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
           ),
-        );
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Reply section - hiển thị tin nhắn được reply (mờ)
+          if (widget.replyToMessage != null && widget.replyToMessage!.isNotEmpty)
+            _buildReplySection(theme),
+          
+          // Message content
+          _buildMainContent(theme),
+          
+          // Message footer with time, status, and "Seen" indicator
+          _buildMessageFooter(theme),
+        ],
+      ),
+    );
+  }
+
+  /// Build reply section showing the original message being replied to
+  Widget _buildReplySection(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.only(left: 12, right: 12, top: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: (widget.isMe ? Colors.white : Colors.grey.shade600).withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(
+            color: widget.isMe ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.primary.withValues(alpha: 0.6),
+            width: 3,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Original sender name
+          if (widget.replyToSender != null && widget.replyToSender!.isNotEmpty)
+            Text(
+              widget.replyToSender!,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: widget.isMe 
+                    ? Colors.white.withValues(alpha: 0.8)
+                    : theme.colorScheme.primary.withValues(alpha: 0.8),
+              ),
+            ),
+          
+          const SizedBox(height: 2),
+          
+          // Original message content (dimmed/mờ)
+          Text(
+            widget.replyToMessage!,
+            style: TextStyle(
+              fontSize: 13,
+              color: widget.isMe 
+                  ? Colors.white.withValues(alpha: 0.7)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              fontStyle: FontStyle.italic,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainContent(ThemeData theme) {
+    if (widget.recalled) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.undo,
+              size: 16,
+              color: widget.isMe 
+                  ? Colors.white.withValues(alpha: 0.7)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'This message was recalled',
+              style: TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: widget.isMe 
+                    ? Colors.white.withValues(alpha: 0.7)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    switch (widget.type) {
+      case MessageType.image:
+        return _buildImageContent(theme);
+      case MessageType.video:
+        return _buildVideoContent(theme);
+      case MessageType.audio:
+        return _buildAudioContent(theme);
+      case MessageType.file:
+        return _buildFileContent(theme);
+      default:
+        return _buildTextContent(theme);
     }
   }
 
-  Widget _buildImageMessage() {
+  Widget _buildImageContent(ThemeData theme) {
     // Transform URL for Android emulator compatibility
-    final transformedImageUrl = UrlTransformer.transformImageUrl(mediaUrl ?? '');
-    debugPrint('MessageItem: Building image message with URL: $mediaUrl -> $transformedImageUrl');
+    final transformedImageUrl = UrlTransformer.transformImageUrl(widget.mediaUrl ?? '');
+    debugPrint('MessageItem: Building image message with URL: ${widget.mediaUrl} -> $transformedImageUrl');
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,8 +483,8 @@ class MessageItem extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => FullScreenImageViewer(
-                      imageUrl: mediaUrl!,
-                      caption: (message.isNotEmpty && message != 'Photo') ? message : null,
+                      imageUrl: widget.mediaUrl!,
+                      caption: (widget.message.isNotEmpty && widget.message != 'Photo') ? widget.message : null,
                     ),
                     fullscreenDialog: true,
                   ),
@@ -468,11 +553,11 @@ class MessageItem extends StatelessWidget {
             ),
           ),
         ),
-        if (message.isNotEmpty && message != 'Photo')
+        if (widget.message.isNotEmpty && widget.message != 'Photo')
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             decoration: BoxDecoration(
-              gradient: isMe
+              gradient: widget.isMe
                   ? const LinearGradient(
                       colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
                       begin: Alignment.topLeft,
@@ -488,9 +573,9 @@ class MessageItem extends StatelessWidget {
               ),
             ),
             child: Text(
-              message,
+              widget.message,
               style: TextStyle(
-                color: isMe ? Colors.white : Colors.grey.shade800,
+                color: widget.isMe ? Colors.white : Colors.grey.shade800,
                 fontSize: 14.0,
                 fontWeight: FontWeight.w400,
                 height: 1.3,
@@ -501,16 +586,14 @@ class MessageItem extends StatelessWidget {
     );
   }
 
-
-
-  Widget _buildVideoMessage() {
+  Widget _buildVideoContent(ThemeData theme) {
     // Extract file size and duration from message content or fileInfo
     String? fileSize;
     Duration? duration;
     
     // Parse fileInfo if available (format: "filename.mp4 • 5.2 MB • 2:30")
-    if (fileInfo != null) {
-      final parts = fileInfo!.split(' • ');
+    if (widget.fileInfo != null) {
+      final parts = widget.fileInfo!.split(' • ');
       if (parts.length >= 2) {
         fileSize = parts[1]; // Extract size
       }
@@ -531,22 +614,22 @@ class MessageItem extends StatelessWidget {
     }
 
     return VideoMessageItem(
-      videoUrl: mediaUrl ?? '',
-      thumbnailUrl: mediaUrl, // Use same URL for thumbnail for now
+      videoUrl: widget.mediaUrl ?? '',
+      thumbnailUrl: widget.mediaUrl, // Use same URL for thumbnail for now
       duration: duration,
       fileSize: fileSize,
-      isMe: isMe,
-      onLongPress: onLongPress,
-      onDoubleTap: onDoubleTap,
+      isMe: widget.isMe,
+      onLongPress: widget.onLongPress,
+      onDoubleTap: widget.onDoubleTap,
     );
   }
 
-  Widget _buildAudioMessage(ThemeData theme) {
+  Widget _buildAudioContent(ThemeData theme) {
     // Extract duration from fileInfo if available (format: "voice_note.m4a • 3.2 MB • 1:45")
     Duration? duration;
     
-    if (fileInfo != null) {
-      final parts = fileInfo!.split(' • ');
+    if (widget.fileInfo != null) {
+      final parts = widget.fileInfo!.split(' • ');
       if (parts.length >= 3) {
         // Parse duration from format "1:45"
         final timeParts = parts[2].split(':');
@@ -559,8 +642,8 @@ class MessageItem extends StatelessWidget {
     }
     
     // Fallback: parse duration from message content if it looks like time format
-    if (duration == null && message.contains(':')) {
-      final timeParts = message.split(':');
+    if (duration == null && widget.message.contains(':')) {
+      final timeParts = widget.message.split(':');
       if (timeParts.length == 2) {
         final minutes = int.tryParse(timeParts[0]) ?? 0;
         final seconds = int.tryParse(timeParts[1]) ?? 0;
@@ -571,15 +654,15 @@ class MessageItem extends StatelessWidget {
     }
 
     return AudioMessageItem(
-      audioUrl: mediaUrl ?? '',
+      audioUrl: widget.mediaUrl ?? '',
       duration: duration ?? const Duration(seconds: 30), // Default duration
-      isMe: isMe,
-      onLongPress: onLongPress,
-      onDoubleTap: onDoubleTap,
+      isMe: widget.isMe,
+      onLongPress: widget.onLongPress,
+      onDoubleTap: widget.onDoubleTap,
     );
   }
 
-  Widget _buildFileMessage(ThemeData theme) {
+  Widget _buildFileContent(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Row(
@@ -588,12 +671,12 @@ class MessageItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
-              color: isMe ? Colors.white24 : theme.dividerColor.withValues(alpha: 0.2),
+              color: widget.isMe ? Colors.white24 : theme.dividerColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
               Icons.description,
-              color: isMe ? Colors.white : theme.primaryColor,
+              color: widget.isMe ? Colors.white : theme.primaryColor,
               size: 24,
             ),
           ),
@@ -603,20 +686,20 @@ class MessageItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  message.isNotEmpty ? message : "File",
+                  widget.message.isNotEmpty ? widget.message : "File",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isMe ? Colors.white : theme.colorScheme.onSurface,
+                    color: widget.isMe ? Colors.white : theme.colorScheme.onSurface,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (fileInfo != null)
+                if (widget.fileInfo != null)
                   Text(
-                    fileInfo!,
+                    widget.fileInfo!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isMe ? Colors.white70 : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: widget.isMe ? Colors.white70 : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
               ],
@@ -627,123 +710,37 @@ class MessageItem extends StatelessWidget {
     );
   }
 
-  Widget _buildEmojiMessage(ThemeData theme) {
+  Widget _buildTextContent(ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12.0),
       child: Text(
-        message,
+        widget.message,
         style: TextStyle(
-          color: isMe ? Colors.white : theme.colorScheme.onSurface,
-          fontSize: 32.0, // Emoji thường lớn hơn text thường
+          color: widget.isMe ? Colors.white : Colors.grey.shade800,
+          fontSize: 15.0,
+          fontWeight: FontWeight.w400,
+          height: 1.4,
+          letterSpacing: 0.2,
         ),
       ),
     );
   }
 
-  Widget _buildSystemMessage(ThemeData theme) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.3),
-          width: 1.0,
-        ),
-      ),
-      child: Text(
-        message,
-        style: TextStyle(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-          fontSize: 12.0,
-          fontStyle: FontStyle.italic,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  Widget _buildRecalledMessage(ThemeData theme) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+  /// Build simple "Seen" indicator (like Tinder)
+  Widget _buildSeenIndicator(ThemeData theme) {
+    final readTime = DateFormat('HH:mm').format(widget.readAt!);
+    
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0, right: 16.0),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            decoration: BoxDecoration(
-              gradient: isMe 
-                  ? const LinearGradient(
-                      colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : LinearGradient(
-                      colors: [Colors.grey.shade200, Colors.grey.shade300],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-              borderRadius: BorderRadius.circular(18.0).copyWith(
-                bottomRight: isMe ? const Radius.circular(4.0) : null,
-                bottomLeft: !isMe ? const Radius.circular(4.0) : null,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 6.0,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6.0),
-                  decoration: BoxDecoration(
-                    color: isMe 
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : Colors.grey.shade400.withValues(alpha: 0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.replay_circle_filled,
-                    size: 16,
-                    color: isMe ? Colors.white : Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        isMe ? '💕 You recalled this message' : '💔 This message was recalled',
-                        style: TextStyle(
-                          color: isMe ? Colors.white : Colors.grey.shade700,
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w500,
-                          height: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Tap to learn more',
-                        style: TextStyle(
-                          color: isMe 
-                              ? Colors.white.withValues(alpha: 0.8)
-                              : Colors.grey.shade500,
-                          fontSize: 11.0,
-                          fontStyle: FontStyle.italic,
-                          height: 1.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          Text(
+            'Seen $readTime',
+            style: TextStyle(
+              fontSize: 11.0,
+              color: Colors.grey.shade500,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],
@@ -753,7 +750,7 @@ class MessageItem extends StatelessWidget {
 
   Widget _buildMessageFooter(ThemeData theme) {
     final timeFormat = DateFormat('HH:mm');
-    final formattedTime = timeFormat.format(timestamp);
+    final formattedTime = timeFormat.format(widget.timestamp);
 
     return Padding(
       padding: const EdgeInsets.only(right: 16.0, bottom: 8.0, left: 16.0, top: 4.0),
@@ -764,7 +761,7 @@ class MessageItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
             decoration: BoxDecoration(
-              color: isMe 
+              color: widget.isMe 
                   ? Colors.white.withValues(alpha: 0.15)
                   : Colors.grey.shade100.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(12.0),
@@ -776,26 +773,44 @@ class MessageItem extends StatelessWidget {
                   formattedTime,
                   style: TextStyle(
                     fontSize: 10.0,
-                    color: isMe ? Colors.white.withValues(alpha: 0.9) : Colors.grey.shade600,
+                    color: widget.isMe ? Colors.white.withValues(alpha: 0.9) : Colors.grey.shade600,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.5,
                   ),
                 ),
-                if (isMe) ...[
+                if (widget.isMe) ...[
                   const SizedBox(width: 6.0),
-                  Icon(
-                    status == MessageStatus.read 
-                        ? Icons.done_all_rounded
-                        : status == MessageStatus.delivered
-                            ? Icons.done_all_rounded
-                            : status == MessageStatus.sent
-                                ? Icons.done_rounded
-                                : Icons.access_time_rounded,
-                    size: 12.0,
-                    color: status == MessageStatus.read 
-                        ? Colors.white.withValues(alpha: 0.9)
-                        : Colors.white.withValues(alpha: 0.7),
-                  ),
+                  // Enhanced read status display
+                  if (widget.isRead && widget.readAt != null) ...[
+                    // Double check marks for read status (blue to indicate read)
+                    Icon(
+                      Icons.done_all_rounded,
+                      size: 12.0,
+                      color: Colors.blue.shade400, // Blue color to indicate read
+                    ),
+                  ] else if (widget.status == MessageStatus.delivered || widget.status == MessageStatus.sent) ...[
+                    // Single or double check marks for delivered/sent
+                    Icon(
+                      widget.status == MessageStatus.delivered 
+                          ? Icons.done_all_rounded
+                          : Icons.done_rounded,
+                      size: 12.0,
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ] else ...[
+                    // Default status indicator
+                    Icon(
+                      widget.status == MessageStatus.sending
+                          ? Icons.access_time_rounded
+                          : widget.status == MessageStatus.failed
+                              ? Icons.error_outline_rounded
+                              : Icons.done_rounded,
+                      size: 12.0,
+                      color: widget.status == MessageStatus.failed
+                          ? Colors.red.shade300
+                          : Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ],
                 ],
               ],
             ),
@@ -808,7 +823,7 @@ class MessageItem extends StatelessWidget {
   Widget _buildStatusIndicator() {
     Widget statusIcon;
 
-    switch (status) {
+    switch (widget.status) {
       case MessageStatus.sending:
         statusIcon = const SizedBox(
           width: 14,

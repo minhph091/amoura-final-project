@@ -38,12 +38,42 @@ class MessageRepositoryImpl implements MessageRepository {
 
   @override
   Future<Message> sendMessage(Message message) async {
-    return await _chatApi.sendMessage(
+    debugPrint('MessageRepository: Sending message - Content: "${message.content}", Type: ${message.type.name}, ReplyTo: ${message.replyToMessageId}');
+    
+    // If this is a reply message, we need to preserve the reply information
+    String? originalReplyToMessage;
+    String? originalReplyToSenderName;
+    
+    if (message.replyToMessageId != null && message.replyToMessageId!.isNotEmpty) {
+      // Store the reply information from the message object
+      originalReplyToMessage = message.replyToMessage;
+      originalReplyToSenderName = message.replyToSenderName;
+      debugPrint('MessageRepository: Reply info - ReplyTo: ${message.replyToMessageId}, OriginalMessage: "$originalReplyToMessage", OriginalSender: "$originalReplyToSenderName"');
+    }
+    
+    final sentMessage = await _chatApi.sendMessage(
       chatRoomId: message.chatId,
       content: message.content,
       type: message.type,
       imageUrl: message.mediaUrl,
+      replyToMessageId: message.replyToMessageId,
     );
+    
+    // If backend didn't return complete reply information, add it back
+    if (message.replyToMessageId != null && 
+        message.replyToMessageId!.isNotEmpty &&
+        (sentMessage.replyToMessage == null || sentMessage.replyToSenderName == null)) {
+      
+      debugPrint('MessageRepository: Restoring reply info - ReplyTo: ${message.replyToMessageId}');
+      
+      return sentMessage.copyWith(
+        replyToMessageId: message.replyToMessageId,
+        replyToMessage: originalReplyToMessage ?? message.replyToMessage,
+        replyToSenderName: originalReplyToSenderName ?? message.replyToSenderName,
+      );
+    }
+    
+    return sentMessage;
   }
 
   @override

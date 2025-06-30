@@ -115,60 +115,73 @@ class Message {
     debugPrint('Message.fromJson: Parsing message with data: $json');
     
     final senderId = json['senderId']?.toString() ?? json['sender']?['id']?.toString() ?? '';
-    final senderName = json['senderName'] ?? 
-                      json['sender']?['name'] ?? 
-                      json['sender']?['firstName'] ?? 
-                      json['sender']?['username'] ?? 
-                      'Unknown User';
+    final rawSenderName = json['senderName'] ?? 
+                          json['sender']?['name'] ?? 
+                          json['sender']?['firstName'] ?? 
+                          json['sender']?['username'];
     final content = json['content'] ?? json['message'] ?? '';
     final rawType = json['messageType'] ?? json['type'];
     final typeString = rawType?.toString()?.toUpperCase() ?? '';
 
-    // Enhanced filter theo WebSocket protocol: MESSAGE, TYPING, READ_RECEIPT, MESSAGE_RECALLED
-    bool isSystem = false;
+    // Enhanced filter cho WebSocket messages - Complete filtering
+    bool isSystemMessage = false;
     final contentLower = content.trim().toLowerCase();
-    final senderNameLower = senderName.trim().toLowerCase();
     final messageTypeUpper = json['type']?.toString().toUpperCase() ?? '';
+    final hasNullSender = rawSenderName == null || rawSenderName.toString().trim().isEmpty;
     
-    // Strict filtering theo hướng dẫn WebSocket
-    if (// READ_RECEIPT messages
-        contentLower == 'read' ||
-        contentLower == 'false' ||
-        contentLower == 'true' ||
+    // Comprehensive filtering theo WebSocket protocol
+    if (// READ_RECEIPT messages - Complete filtering  
+        messageTypeUpper == 'READ_RECEIPT' ||
+        typeString == 'READ_RECEIPT' ||
+        (contentLower == 'read' && hasNullSender) ||
+        (contentLower == 'read' && senderId.trim().isEmpty) ||
         contentLower == 'messages marked as read' ||
         contentLower.startsWith('read_receipt') ||
-        messageTypeUpper == 'READ_RECEIPT' ||
-        // TYPING indicator messages  
+        
+        // TYPING indicator messages - Complete filtering
         messageTypeUpper == 'TYPING' ||
-        (contentLower == 'true' && senderName.trim().isEmpty) ||
-        (contentLower == 'false' && senderName.trim().isEmpty) ||
-        contentLower.contains('typing') ||
-        // Invalid senders
-        senderNameLower.contains('unknown') ||
-        senderNameLower.isEmpty ||
-        senderNameLower == 'null' ||
-        senderNameLower == 'system' ||
-        senderNameLower.contains('websocket') ||
-        senderNameLower.contains('server') ||
-        // System message types
-        typeString == 'READ_RECEIPT' ||
-        typeString == 'SYSTEM' ||
         typeString == 'TYPING' ||
-        // Empty or invalid content
-        (content.trim().isEmpty && messageTypeUpper != 'IMAGE') ||
-        // Additional WebSocket artifacts
-        contentLower.contains('read_receipt') ||
+        (contentLower == 'true' && hasNullSender) ||
+        (contentLower == 'false' && hasNullSender) ||
+        contentLower.contains('typing') ||
+        
+        // System and invalid messages
+        typeString == 'SYSTEM' ||
+        messageTypeUpper == 'SYSTEM' ||
+        
+        // WebSocket artifacts and system content
+        contentLower == 'false' ||
+        contentLower == 'true' ||
         contentLower.contains('user_status') ||
-        messageTypeUpper.contains('RECEIPT')) {
-      isSystem = true;
-      debugPrint('Message.fromJson: Filtered system/invalid message - Sender: "$senderName", Content: "$content", Type: "$typeString", MsgType: "$messageTypeUpper"');
+        contentLower.contains('websocket') ||
+        messageTypeUpper.contains('RECEIPT') ||
+        
+        // Invalid sender cases - Enhanced
+        hasNullSender ||
+        senderId.trim().isEmpty ||
+        (rawSenderName != null && rawSenderName.toString().trim().toLowerCase().contains('unknown')) ||
+        (rawSenderName != null && rawSenderName.toString().trim().toLowerCase() == 'system') ||
+        (rawSenderName != null && rawSenderName.toString().trim().toLowerCase() == 'null') ||
+        
+        // Empty content for non-media messages
+        (content.trim().isEmpty && messageTypeUpper != 'IMAGE' && messageTypeUpper != 'VIDEO' && messageTypeUpper != 'AUDIO') ||
+        
+        // Missing essential fields
+        (json['id'] == null && json['messageId'] == null) ||
+        (json['chatRoomId'] == null && json['chatId'] == null)) {
+      
+      isSystemMessage = true;
+      debugPrint('Message.fromJson: Filtered system/WebSocket message - Type: "$messageTypeUpper", Content: "$content", SenderName: "${rawSenderName}", SenderId: "$senderId"');
     }
 
+    // Set final senderName after filtering
+    final senderName = hasNullSender ? 'Unknown User' : rawSenderName.toString();
+    
     final isRead = json['isRead'] ?? false;
     final imageUrl = json['imageUrl'];
     final messageType = _parseMessageType(rawType);
     
-    debugPrint('Message.fromJson: senderId=$senderId, senderName=$senderName, content=$content, isRead=$isRead, isSystem=$isSystem');
+    debugPrint('Message.fromJson: Final - senderId=$senderId, senderName=$senderName, content=$content, isRead=$isRead, isSystem=$isSystemMessage');
     if (messageType == MessageType.image) {
       debugPrint('Message.fromJson: IMAGE message - ImageUrl: $imageUrl, Content: "$content"');
     }
@@ -185,10 +198,10 @@ class Message {
           : json['timestamp'] != null
               ? DateTime.parse(json['timestamp'])
               : DateTime.now(),
-      status: MessageStatus.sent, // Backend doesn't provide status
-      type: isSystem ? MessageType.system : messageType,
-      mediaUrl: imageUrl ?? json['mediaUrl'], // Use imageUrl from backend, fallback to mediaUrl
-      isRead: isRead, // Backend cung cấp isRead
+      status: MessageStatus.sent,
+      type: isSystemMessage ? MessageType.system : messageType,
+      mediaUrl: imageUrl ?? json['mediaUrl'],
+      isRead: isRead,
       readAt: json['readAt'] != null 
           ? DateTime.parse(json['readAt']) 
           : null,
@@ -201,6 +214,10 @@ class Message {
       recalledAt: json['recalledAt'] != null 
           ? DateTime.parse(json['recalledAt']) 
           : null,
+      // Parse reply information from backend
+      replyToMessageId: json['replyToMessageId']?.toString(),
+      replyToMessage: json['replyToMessage']?.toString(),
+      replyToSenderName: json['replyToSenderName']?.toString(),
     );
   }
 

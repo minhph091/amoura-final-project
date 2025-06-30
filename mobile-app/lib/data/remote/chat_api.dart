@@ -68,12 +68,27 @@ class ChatApi {
     required String content,
     required MessageType type,
     String? imageUrl,
+    String? replyToMessageId,
   }) async {
     // Backend validation: IMAGE message cần imageUrl, content có thể empty
     final requestData = <String, dynamic>{
       'chatRoomId': int.parse(chatRoomId),
       'messageType': type.name.toUpperCase(),
     };
+
+    // Store reply information for local reconstruction if backend doesn't return it
+    String? localReplyToMessage;
+    String? localReplyToSenderName;
+
+    // Add reply information if provided
+    if (replyToMessageId != null && replyToMessageId.isNotEmpty) {
+      requestData['replyToMessageId'] = int.parse(replyToMessageId);
+      debugPrint('ChatApi: Adding reply to message ID: $replyToMessageId');
+      
+      // Store reply info locally for fallback if backend doesn't return it
+      // Note: This would require access to messages to find the original message
+      // For now, we'll rely on the backend to return this information
+    }
 
     if (type == MessageType.image) {
       // Cho IMAGE message: Backend yêu cầu content không được rỗng (@NotBlank validation)
@@ -83,7 +98,7 @@ class ChatApi {
       
       if (imageUrl != null && imageUrl.isNotEmpty) {
         requestData['imageUrl'] = imageUrl;
-        debugPrint('ChatApi: IMAGE message - Content: "$imageContent", ImageUrl: $imageUrl');
+        debugPrint('ChatApi: IMAGE message - Content: "$imageContent", ImageUrl: $imageUrl, ReplyTo: $replyToMessageId');
       } else {
         debugPrint('ChatApi: ERROR - ImageUrl is required for IMAGE message type');
         throw Exception('ImageUrl is required for IMAGE message type');
@@ -100,7 +115,7 @@ class ChatApi {
       if (imageUrl != null && imageUrl.isNotEmpty) {
         requestData['imageUrl'] = imageUrl;
       }
-      debugPrint('ChatApi: TEXT message - Content: "$textContent"');
+      debugPrint('ChatApi: TEXT message - Content: "$textContent", ReplyTo: $replyToMessageId');
     }
 
     try {
@@ -112,7 +127,30 @@ class ChatApi {
       );
       
       debugPrint('ChatApi: Message sent successfully - Status: ${response.statusCode}');
-      return Message.fromJson(response.data);
+      debugPrint('ChatApi: Response data: ${response.data}');
+      
+      final sentMessage = Message.fromJson(response.data);
+      
+      // If backend doesn't return reply information but we sent it, we need to preserve it
+      // This is a fallback in case backend API doesn't include reply fields in response
+      if (replyToMessageId != null && 
+          replyToMessageId.isNotEmpty && 
+          (sentMessage.replyToMessageId == null || sentMessage.replyToMessageId!.isEmpty)) {
+        
+        debugPrint('ChatApi: Backend response missing reply info, preserving locally sent replyToMessageId: $replyToMessageId');
+        
+        // Return message with reply info preserved
+        // Note: We may need the original message content and sender name
+        // This would typically be passed from the calling service/repository
+        return sentMessage.copyWith(
+          replyToMessageId: replyToMessageId,
+          // These would need to be passed from the calling method:
+          // replyToMessage: localReplyToMessage,  
+          // replyToSenderName: localReplyToSenderName,
+        );
+      }
+      
+      return sentMessage;
     } catch (e) {
       debugPrint('ChatApi: ERROR sending message - Request data: $requestData');
       debugPrint('ChatApi: ERROR details: $e');

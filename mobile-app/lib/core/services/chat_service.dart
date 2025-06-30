@@ -260,9 +260,37 @@ class ChatService {
     String? imageUrl,
   }) async {
     try {
-      debugPrint('ChatService: Sending message to chat room: $chatRoomId - Content: $content');
+      debugPrint('ChatService: Sending message to chat room: $chatRoomId - Content: $content, ReplyTo: $replyToMessageId');
       
-      // Tạo message object để gửi
+      // Find original message details for reply functionality
+      String? replyToMessage;
+      String? replyToSenderName;
+      
+      if (replyToMessageId != null && replyToMessageId.isNotEmpty) {
+        // Search for the original message in cached messages
+        final cachedMessages = _cachedMessages[chatRoomId] ?? [];
+        final originalMessage = cachedMessages.firstWhere(
+          (msg) => msg.id == replyToMessageId,
+          orElse: () => Message(
+            id: '',
+            chatId: chatRoomId,
+            senderId: '',
+            senderName: '',
+            content: '',
+            timestamp: DateTime.now(),
+          ),
+        );
+        
+        if (originalMessage.id.isNotEmpty) {
+          replyToMessage = originalMessage.content;
+          replyToSenderName = originalMessage.senderName;
+          debugPrint('ChatService: Found original message for reply - Content: "${replyToMessage}", Sender: "$replyToSenderName"');
+        } else {
+          debugPrint('ChatService: WARNING - Could not find original message with ID: $replyToMessageId');
+        }
+      }
+      
+      // Tạo message object để gửi với đầy đủ thông tin reply
       final message = Message(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         chatId: chatRoomId,
@@ -273,12 +301,15 @@ class ChatService {
         status: MessageStatus.sending,
         type: type,
         replyToMessageId: replyToMessageId,
+        replyToMessage: replyToMessage, // Include original message content
+        replyToSenderName: replyToSenderName, // Include original sender name
         mediaUrl: imageUrl,
       );
       
-      // Gửi qua repository (REST API) trước
+      // Gửi qua repository (REST API) trước với đầy đủ reply information
       final sentMessage = await _messageRepository.sendMessage(message);
       debugPrint('ChatService: API response - Message ID: ${sentMessage.id}, Content: ${sentMessage.content}, Type: ${sentMessage.type.name}');
+      debugPrint('ChatService: Reply info preserved - ReplyTo: ${sentMessage.replyToMessageId}, OriginalMsg: "${sentMessage.replyToMessage}", OriginalSender: "${sentMessage.replyToSenderName}"');
       
       // Thêm tin nhắn của chính user vào cache để hiển thị ngay lập tức
       if (!_cachedMessages.containsKey(chatRoomId)) {
@@ -293,7 +324,7 @@ class ChatService {
         _cachedMessages[chatRoomId]!.insert(0, sentMessage);
         _messagesController.add(_cachedMessages);
         _newMessageController.add(sentMessage);
-        debugPrint('ChatService: Added sent message to cache for immediate display - Type: ${sentMessage.type.name}');
+        debugPrint('ChatService: Added sent message to cache with reply info - Type: ${sentMessage.type.name}, HasReply: ${sentMessage.replyToMessageId != null}');
       } else {
         debugPrint('ChatService: WARNING - Sent message already exists in cache: ${sentMessage.id}');
       }
@@ -302,26 +333,6 @@ class ChatService {
       // WebSocket sẽ tự động nhận message từ backend sau khi REST API thành công
       // Chỉ gửi qua WebSocket khi thực sự cần thiết (ví dụ: typing indicators)
       debugPrint('ChatService: Skipping WebSocket send to avoid duplicates - message will be broadcasted by backend');
-      
-      /*
-      // Gửi qua WebSocket để broadcast cho users khác (sau khi đã có ID từ API)
-      if (_socketClient.isConnected) {
-        try {
-          _socketClient.sendMessage(
-            chatRoomId, 
-            content, 
-            type.name, 
-            imageUrl: imageUrl
-          );
-          debugPrint('ChatService: Sent message via WebSocket for realtime broadcast - Type: ${type.name}, ChatId: $chatRoomId');
-        } catch (e) {
-          debugPrint('ChatService: ERROR sending message via WebSocket: $e');
-          debugPrint('ChatService: WebSocket broadcast failed but message was sent via REST API');
-        }
-      } else {
-        debugPrint('ChatService: WebSocket not connected, only REST API used');
-      }
-      */
       
       // Cập nhật last message trong chat list
       await _updateChatLastMessage(chatRoomId, sentMessage);
@@ -512,16 +523,30 @@ class ChatService {
     try {
       debugPrint('ChatService: Processing WebSocket message - Type: ${messageData['type']}');
       
+      // Enhanced filtering for WebSocket message types
+      final messageType = messageData['type']?.toString().toUpperCase() ?? '';
+      final content = messageData['content']?.toString() ?? '';
+      final senderName = messageData['senderName']?.toString() ?? '';
+      final senderId = messageData['senderId']?.toString() ?? '';
+      
       // Xử lý các loại message khác nhau
-      switch (messageData['type']) {
+      switch (messageType) {
         case 'MESSAGE':
-          // Tin nhắn thường
+          // Tin nhắn thường - additional validation
+          if (senderId.trim().isEmpty || senderName.trim().isEmpty) {
+            debugPrint('ChatService: Skipping MESSAGE with empty sender info');
+            return;
+          }
           final message = Message.fromJson(messageData);
-          _addMessageToCache(message);
+          if (message.type != MessageType.system) {
+            _addMessageToCache(message);
+          } else {
+            debugPrint('ChatService: Filtered out system message from MESSAGE type');
+          }
           break;
         case 'TYPING':
-          // Typing indicator - không cần lưu vào cache
-          debugPrint('ChatService: Received typing indicator');
+          // Typing indicator - không cần lưu vào cache, chỉ emit cho UI
+          debugPrint('ChatService: Received typing indicator - Content: $content, SenderId: $senderId');
           break;
         case 'READ_RECEIPT':
           // Read receipt - chỉ xử lý internal logic, không emit vào UI
@@ -533,20 +558,40 @@ class ChatService {
           // Message recalled - cập nhật message bị thu hồi
           debugPrint('ChatService: Processing message recall for messageId: ${messageData['messageId']}');
           _handleMessageRecalled(messageData);
-          break;
+          return; // Early return vì không phải tin nhắn mới
         default:
+          // Enhanced fallback processing with strict validation
+          debugPrint('ChatService: Processing unknown/default message type: $messageType');
+          
+          // Additional validation for unknown message types
+          if (messageType == 'READ_RECEIPT' || 
+              content.toLowerCase() == 'read' ||
+              content.toLowerCase() == 'true' ||
+              content.toLowerCase() == 'false' ||
+              senderName.trim().isEmpty ||
+              senderId.trim().isEmpty) {
+            debugPrint('ChatService: Skipping invalid/system message - Type: $messageType, Content: "$content", Sender: "$senderName"');
+            return;
+          }
+          
           // Check if message data contains recalled flag from regular message updates
           final message = Message.fromJson(messageData);
+          if (message.type == MessageType.system) {
+            debugPrint('ChatService: Filtered out system message from unknown type');
+            return;
+          }
+          
           if (message.recalled) {
             debugPrint('ChatService: Received recalled message update for messageId: ${message.id}');
             _addMessageToCache(message); // This will update the existing message with recalled flag
           } else {
             _addMessageToCache(message);
           }
-          debugPrint('ChatService: Processed message type: ${messageData['type'] ?? 'UNKNOWN'}');
+          debugPrint('ChatService: Processed message type: ${messageType}');
       }
     } catch (e) {
       debugPrint('ChatService: Error handling WebSocket message: $e');
+      debugPrint('ChatService: Failed message data: $messageData');
     }
   }
   

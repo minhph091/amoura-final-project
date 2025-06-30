@@ -41,6 +41,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   bool _showScrollToBottom = false;
   bool _isReplying = false;
   String? _replyingToMessage;
+  String? _replyingToMessageId;
+  String? _replyingToSender;
   bool _isEditing = false;
   String? _editingMessageId;
   String? _editingText;
@@ -231,10 +233,26 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     _messageFocusNode.requestFocus();
   }
 
+  /// Enhanced reply method that takes messageId
+  void _startReplyWithId(String messageId, String message, String senderName) {
+    setState(() {
+      _isReplying = true;
+      _replyingToMessage = message;
+      _replyingToMessageId = messageId; // Store the actual message ID
+      _replyingToSender = senderName;
+      _isEditing = false;
+      _editingMessageId = null;
+      _editingText = null;
+    });
+    _messageFocusNode.requestFocus();
+  }
+
   void _cancelReply() {
     setState(() {
       _isReplying = false;
       _replyingToMessage = null;
+      _replyingToMessageId = null;
+      _replyingToSender = null;
     });
   }
 
@@ -245,6 +263,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       _editingText = text;
       _isReplying = false;
       _replyingToMessage = null;
+      _replyingToMessageId = null;
+      _replyingToSender = null;
     });
     _messageFocusNode.requestFocus();
   }
@@ -285,7 +305,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                 title: const Text('Reply'),
                 onTap: () {
                   Navigator.pop(context);
-                  _startReply(message.content, message.senderName);
+                  _startReplyWithId(message.id, message.content, message.senderName);
                 },
               ),
               if (message.senderId == viewModel.currentUserId)
@@ -704,10 +724,15 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                         _cancelEdit();
                       } else {
                         // Send new message, possibly a reply
+                        final replyMessageId = _isReplying ? _replyingToMessageId : null;
+                        final replyToSender = _isReplying ? _replyingToSender : null;
+                        debugPrint('ChatDetailView: Sending message with reply to: $replyMessageId');
+                        
                         viewModel.sendMessage(
                           chatId: widget.chatId,
                           message: message,
-                          replyToMessageId: _isReplying ? _replyingToMessage : null,
+                          replyToMessageId: replyMessageId,
+                          replyToSender: replyToSender,
                         );
                         if (_isReplying) _cancelReply();
                       }
@@ -816,10 +841,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           onTapRepliedMessage: message.replyToMessageId != null
               ? () => viewModel.scrollToMessage(message.replyToMessageId!)
               : null,
-          onSwipeReply: () => _startReply(message.content, message.senderName),
+          onSwipeReply: () => _startReplyWithId(message.id, message.content, message.senderName),
           mediaUrl: message.mediaUrl,
           fileInfo: message.fileInfo,
-          recalled: message.recalled, // Pass recalled flag
+          recalled: message.recalled,
+          isRead: message.isRead,
+          readAt: message.readAt,
         );
       },
     );
