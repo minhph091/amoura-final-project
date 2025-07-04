@@ -51,7 +51,7 @@ export function HowItWorksSection({ t }: HowItWorksSectionProps) {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900/20 dark:to-purple-900/20 text-pink-600 dark:text-pink-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
             <Sparkles className="w-4 h-4" />
-            Hướng dẫn sử dụng
+            {t.howItWorksTag}
           </div>
           <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent mb-6">
             {t.howItWorksTitle}
@@ -106,7 +106,7 @@ export function HowItWorksSection({ t }: HowItWorksSectionProps) {
             className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl"
           >
             <Heart className="w-5 h-5" />
-            Bắt đầu ngay hôm nay
+            {t.startToday}
           </a>
         </div>
       </div>

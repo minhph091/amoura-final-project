@@ -82,9 +82,9 @@ export default function LandingPage() {
         <FeaturesSection t={t} />
         <HowItWorksSection t={t} />
         <TestimonialsSection t={t} />
-        <StatsSection language={language} />
+        <StatsSection t={t} />
         <DownloadSection t={t} />
-        <FAQSection language={language} />
+        <FAQSection t={t} />
       </main>
 
       <Footer t={t} />

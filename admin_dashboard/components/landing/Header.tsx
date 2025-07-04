@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { AmouraLogo } from "@/components/ui/AmouraLogo";
 import { LanguageDropdown } from "./LanguageDropdown";
@@ -22,8 +21,6 @@ export function Header({
   setIsMenuOpen,
   t,
 }: HeaderProps) {
-  const router = useRouter();
-
   return (
     <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm border-b border-slate-200/50 dark:border-slate-700/50">
       <div className="container mx-auto px-6 py-3 flex justify-between items-center">
@@ -53,15 +50,8 @@ export function Header({
 
           <div className="flex items-center space-x-4 border-l border-slate-200 dark:border-slate-700 pl-4">
             <LanguageDropdown language={language} setLanguage={setLanguage} />
-            <ThemeToggle />
+            <ThemeToggle t={t} />
           </div>
-
-          <button
-            onClick={() => router.push("/login")}
-            className="bg-slate-600 dark:bg-slate-700 text-white px-4 py-2 rounded-full font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition"
-          >
-            {t.adminLogin}
-          </button>
 
           <a
             href="#download"
@@ -121,15 +111,9 @@ export function Header({
 
             <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
               <LanguageDropdown language={language} setLanguage={setLanguage} />
-              <ThemeToggle />
+              <ThemeToggle t={t} />
             </div>
 
-            <button
-              onClick={() => router.push("/login")}
-              className="block w-full text-left bg-slate-600 dark:bg-slate-700 text-white px-4 py-2 rounded-full"
-            >
-              {t.adminLogin}
-            </button>
             <a
               href="#download"
               className="block bg-pink-500 text-white px-4 py-2 rounded-full text-center"

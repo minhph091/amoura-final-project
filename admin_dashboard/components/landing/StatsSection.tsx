@@ -4,45 +4,45 @@ import React from "react";
 import { Users, Heart, Star, Trophy, Globe, Shield } from "lucide-react";
 
 interface StatsSectionProps {
-  language: string;
+  t: any;
 }
 
-export function StatsSection({ language }: StatsSectionProps) {
+export function StatsSection({ t }: StatsSectionProps) {
   const stats = [
     {
       icon: Users,
       number: "2M+",
-      label: language === "vi" ? "Người dùng hoạt động" : "Active Users",
+      label: t.activeUsers,
       gradient: "from-blue-500 to-cyan-500",
     },
     {
       icon: Heart,
       number: "850K+",
-      label: language === "vi" ? "Kết đôi thành công" : "Successful Matches",
+      label: t.successfulMatches,
       gradient: "from-pink-500 to-rose-500",
     },
     {
       icon: Star,
       number: "4.9/5",
-      label: language === "vi" ? "Đánh giá trung bình" : "Average Rating",
+      label: t.averageRating,
       gradient: "from-yellow-500 to-orange-500",
     },
     {
       icon: Trophy,
       number: "25K+",
-      label: language === "vi" ? "Cặp đôi kết hôn" : "Married Couples",
+      label: t.marriedCouples,
       gradient: "from-purple-500 to-indigo-500",
     },
     {
       icon: Globe,
       number: "50+",
-      label: language === "vi" ? "Quốc gia" : "Countries",
+      label: t.countries,
       gradient: "from-green-500 to-emerald-500",
     },
     {
       icon: Shield,
       number: "99.9%",
-      label: language === "vi" ? "Tỷ lệ an toàn" : "Safety Rate",
+      label: t.safetyRate,
       gradient: "from-red-500 to-pink-500",
     },
   ];
@@ -62,12 +62,10 @@ export function StatsSection({ language }: StatsSectionProps) {
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-            {language === "vi" ? "Amoura trong con số" : "Amoura in Numbers"}
+            {t.statsTitle}
           </h2>
           <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-            {language === "vi"
-              ? "Hàng triệu người đã tin tử Amoura để tìm kiếm tình yêu đích thực"
-              : "Millions of people trust Amoura to find their true love"}
+            {t.statsSubtitle}
           </p>
         </div>
 
@@ -114,15 +112,9 @@ export function StatsSection({ language }: StatsSectionProps) {
               ))}
             </div>
             <div className="text-left">
-              <div className="text-white font-bold">
-                {language === "vi"
-                  ? "Tham gia cộng đồng"
-                  : "Join the Community"}
-              </div>
+              <div className="text-white font-bold">{t.joinCommunity}</div>
               <div className="text-slate-300 text-sm">
-                {language === "vi"
-                  ? "Hàng ngàn người mới mỗi ngày"
-                  : "Thousands join every day"}
+                {t.thousandsJoinDaily}
               </div>
             </div>
           </div>

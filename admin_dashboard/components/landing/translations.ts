@@ -5,6 +5,27 @@ export const translations = {
     navTestimonials: "Cảm nhận",
     navStartNow: "Bắt đầu ngay",
     adminLogin: "Đăng nhập Admin",
+
+    // Theme Toggle
+    themeLight: "Sáng",
+    themeDark: "Tối",
+    themeSystem: "Hệ thống",
+
+    // Section Tags
+    featuresTag: "Tính năng nổi bật",
+    howItWorksTag: "Hướng dẫn sử dụng",
+    testimonialsTag: "Câu chuyện tình yêu",
+
+    // Call-to-Action Buttons
+    exploreNow: "Khám phá ngay",
+    startToday: "Bắt đầu ngay hôm nay",
+
+    // Statistics
+    satisfactionRate: "Tỷ lệ hài lòng",
+    ratingLabel: "Đánh giá trung bình",
+    successfulCouples: "Cặp đôi thành công",
+    customerSupport: "Hỗ trợ khách hàng",
+
     heroTitle: "Gặp gỡ, kết nối và viết nên",
     heroTitleHighlight: "câu chuyện tình yêu",
     heroTitleEnd: "của bạn.",
@@ -68,6 +89,62 @@ export const translations = {
     downloadSecureDesc: "Được kiểm tra và xác minh bởi store",
     termsOfService: "Điều khoản dịch vụ",
     privacyPolicy: "Chính sách bảo mật",
+
+    // Testimonials
+    testimonial1Quote:
+      "Chúng mình không thể tin được là lại tìm thấy nhau ở đây. Amoura thực sự đã thay đổi cuộc sống của cả hai.",
+    testimonial1Name: "Minh Anh & Hoàng",
+    testimonial1Status: "Đã kết hôn",
+    testimonial2Quote:
+      "Tôi đã từng rất e ngại các ứng dụng hẹn hò, nhưng Amoura với tính năng xác thực hồ sơ đã cho tôi sự tự tin.",
+    testimonial2Name: "Lan Chi",
+    testimonial2Status: "Đang hẹn hò",
+    testimonial3Quote:
+      "Giao diện thân thiện, dễ dùng. Các gợi ý ghép đôi rất chất lượng. Mình đã có những cuộc trò chuyện thú vị.",
+    testimonial3Name: "Quốc Bảo",
+    testimonial3Status: "Người dùng",
+
+    // Stats Section
+    statsTitle: "Amoura trong con số",
+    statsSubtitle:
+      "Hàng triệu người tin tưởng Amoura để tìm thấy tình yêu đích thực",
+    activeUsers: "Người dùng hoạt động",
+    successfulMatches: "Kết đôi thành công",
+    averageRating: "Đánh giá trung bình",
+    marriedCouples: "Cặp đôi kết hôn",
+    countries: "Quốc gia",
+    safetyRate: "Tỷ lệ an toàn",
+
+    // FAQ Section
+    faqTitle: "Câu hỏi thường gặp",
+    faqSubtitle: "Mọi thứ bạn cần biết về Amoura",
+
+    // FAQ
+    faq1Question: "Amoura có miễn phí không?",
+    faq1Answer:
+      "Amoura có bản miễn phí với các tính năng cơ bản như xem hồ sơ, gửi like và chat cơ bản. Chúng tôi cũng có gói Premium với nhiều tính năng nâng cao như Super Like, Boost, và xem ai đã like bạn.",
+    faq2Question: "Làm thế nào để xác thực hồ sơ?",
+    faq2Answer:
+      "Để xác thực hồ sơ, bạn cần cung cấp số điện thoại, email và ảnh chân dung rõ nét. Chúng tôi sử dụng AI để kiểm tra tính xác thực của ảnh và thông tin cá nhân.",
+    faq3Question: "Tôi có thể thay đổi vị trí tìm kiếm không?",
+    faq3Answer:
+      "Có, bạn có thể thay đổi bán kính tìm kiếm từ 5km đến 100km. Với gói Premium, bạn có thể tìm kiếm ở bất kỳ thành phố nào trên thế giới.",
+    faq4Question: "Dữ liệu của tôi có an toàn không?",
+    faq4Answer:
+      "Chúng tôi rất coi trọng quyền riêng tư của bạn. Mọi dữ liệu đều được mã hóa và lưu trữ an toàn. Chúng tôi không bao giờ chia sẻ thông tin cá nhân với bên thứ ba.",
+    faq5Question: "Làm thế nào để báo cáo người dùng có hành vi không phù hợp?",
+    faq5Answer:
+      "Bạn có thể báo cáo trực tiếp trên hồ sơ hoặc cuộc trò chuyện. Đội ngũ kiểm duyệt sẽ xem xét trong vòng 24 giờ và có biện pháp xử lý phù hợp.",
+
+    // FAQ Support
+    stillHaveQuestions: "Vẫn còn thắc mắc?",
+    supportDescription:
+      "Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn 24/7",
+    contactSupport: "Liên hệ hỗ trợ",
+
+    // Join Community Section
+    joinCommunity: "Tham gia cộng đồng",
+    thousandsJoinDaily: "Hàng ngàn người mới mỗi ngày",
   },
   en: {
     navFeatures: "Features",
@@ -75,6 +152,27 @@ export const translations = {
     navTestimonials: "Testimonials",
     navStartNow: "Get Started",
     adminLogin: "Admin Login",
+
+    // Theme Toggle
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeSystem: "System",
+
+    // Section Tags
+    featuresTag: "Featured",
+    howItWorksTag: "How It Works",
+    testimonialsTag: "Love Stories",
+
+    // Call-to-Action Buttons
+    exploreNow: "Explore Now",
+    startToday: "Start Today",
+
+    // Statistics
+    satisfactionRate: "Satisfaction Rate",
+    ratingLabel: "Average Rating",
+    successfulCouples: "Successful Couples",
+    customerSupport: "Customer Support",
+
     heroTitle: "Meet, connect, and write your own",
     heroTitleHighlight: "love story",
     heroSubtitle:
@@ -136,5 +234,59 @@ export const translations = {
     downloadSecureDesc: "Verified and checked by stores",
     termsOfService: "Terms of Service",
     privacyPolicy: "Privacy Policy",
+
+    // Testimonials
+    testimonial1Quote:
+      "We couldn't believe we found each other here. Amoura truly changed both our lives.",
+    testimonial1Name: "Minh Anh & Hoang",
+    testimonial1Status: "Married",
+    testimonial2Quote:
+      "I used to be hesitant about dating apps, but Amoura's profile verification feature gave me confidence.",
+    testimonial2Name: "Lan Chi",
+    testimonial2Status: "Dating",
+    testimonial3Quote:
+      "User-friendly interface, easy to use. The match suggestions are high quality. I've had great conversations.",
+    testimonial3Name: "Quoc Bao",
+    testimonial3Status: "User",
+
+    // Stats Section
+    statsTitle: "Amoura in Numbers",
+    statsSubtitle: "Millions of people trust Amoura to find their true love",
+    activeUsers: "Active Users",
+    successfulMatches: "Successful Matches",
+    averageRating: "Average Rating",
+    marriedCouples: "Married Couples",
+    countries: "Countries",
+    safetyRate: "Safety Rate",
+
+    // FAQ Section
+    faqTitle: "Frequently Asked Questions",
+    faqSubtitle: "Everything you need to know about Amoura",
+
+    // FAQ
+    faq1Question: "Is Amoura free?",
+    faq1Answer:
+      "Amoura has a free version with basic features like viewing profiles, sending likes, and basic chat. We also offer Premium with advanced features like Super Like, Boost, and seeing who liked you.",
+    faq2Question: "How do I verify my profile?",
+    faq2Answer:
+      "To verify your profile, you need to provide your phone number, email, and clear portrait photos. We use AI to check the authenticity of photos and personal information.",
+    faq3Question: "Can I change my search location?",
+    faq3Answer:
+      "Yes, you can change your search radius from 5km to 100km. With Premium, you can search in any city worldwide.",
+    faq4Question: "Is my data safe?",
+    faq4Answer:
+      "We take your privacy very seriously. All data is encrypted and stored securely. We never share personal information with third parties.",
+    faq5Question: "How do I report inappropriate behavior?",
+    faq5Answer:
+      "You can report directly on a profile or conversation. Our moderation team will review within 24 hours and take appropriate action.",
+
+    // FAQ Support
+    stillHaveQuestions: "Still have questions?",
+    supportDescription: "Our support team is available 24/7 to help you",
+    contactSupport: "Contact Support",
+
+    // Join Community Section
+    joinCommunity: "Join the Community",
+    thousandsJoinDaily: "Thousands join every day",
   },
 };
