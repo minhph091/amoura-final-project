@@ -1,4 +1,8 @@
 import 'package:flutter/foundation.dart';
+import '../../core/services/notification_service.dart';
+import '../../app/di/injection.dart';
+import '../../core/services/profile_service.dart';
+import 'dart:async';
 
 enum NotificationType {
   match,
@@ -29,13 +33,33 @@ class NotificationModel {
     this.avatar,
     this.url,
   });
+
+  NotificationModel copyWith({
+    bool? isRead,
+  }) {
+    return NotificationModel(
+      id: id,
+      title: title,
+      body: body,
+      time: time,
+      type: type,
+      isRead: isRead ?? this.isRead,
+      userId: userId,
+      avatar: avatar,
+      url: url,
+    );
+  }
 }
 
 class NotificationViewModel extends ChangeNotifier {
+  final NotificationService _service = getIt<NotificationService>();
   List<NotificationModel> _notifications = [];
   bool _isLoading = true;
   String? _error;
   int _currentTabIndex = 0;
+  late final StreamSubscription _notificationStream;
+  late final StreamSubscription _newNotificationStream;
+  bool _initialized = false;
 
   List<NotificationModel> get notifications => _notifications;
   bool get isLoading => _isLoading;
@@ -68,84 +92,25 @@ class NotificationViewModel extends ChangeNotifier {
     _isLoading = true;
     _error = null;
     notifyListeners();
-
     try {
-      // This would be an API call in a real app
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Mock data for demonstration
-      _notifications = [
-        NotificationModel(
-          id: '1',
-          title: 'Emma liked your profile',
-          body: 'You got a new like from Emma!',
-          time: DateTime.now().subtract(const Duration(minutes: 15)),
-          type: NotificationType.like,
-          userId: '101',
-          avatar: 'https://randomuser.me/api/portraits/women/32.jpg',
-        ),
-        NotificationModel(
-          id: '2',
-          title: 'New message from Alex',
-          body: 'Hey! How are you doing today?',
-          time: DateTime.now().subtract(const Duration(hours: 2)),
-          type: NotificationType.message,
-          isRead: true,
-          userId: '102',
-          avatar: 'https://randomuser.me/api/portraits/men/54.jpg',
-        ),
-        NotificationModel(
-          id: '3',
-          title: 'Match with Sophia!',
-          body: 'You and Sophia liked each other!',
-          time: DateTime.now().subtract(const Duration(days: 1)),
-          type: NotificationType.match,
-          userId: '103',
-          avatar: 'https://randomuser.me/api/portraits/women/45.jpg',
-        ),
-        NotificationModel(
-          id: '4',
-          title: 'Profile verification completed',
-          body: 'Your profile has been successfully verified!',
-          time: DateTime.now().subtract(const Duration(days: 3)),
-          type: NotificationType.system,
-        ),
-        NotificationModel(
-          id: '5',
-          title: 'James liked your profile',
-          body: 'You got a new like from James!',
-          time: DateTime.now().subtract(const Duration(hours: 5)),
-          type: NotificationType.like,
-          userId: '104',
-          avatar: 'https://randomuser.me/api/portraits/men/22.jpg',
-        ),
-        NotificationModel(
-          id: '6',
-          title: 'New message from Sophia',
-          body: 'Looking forward to our date tomorrow!',
-          time: DateTime.now().subtract(const Duration(hours: 3)),
-          type: NotificationType.message,
-          userId: '103',
-          avatar: 'https://randomuser.me/api/portraits/women/45.jpg',
-        ),
-        NotificationModel(
-          id: '7',
-          title: 'Your subscription is expiring soon',
-          body: 'Your premium features will expire in 3 days.',
-          time: DateTime.now().subtract(const Duration(days: 2)),
-          type: NotificationType.system,
-        ),
-        NotificationModel(
-          id: '8',
-          title: 'Oliver liked your profile',
-          body: 'You got a new like from Oliver!',
-          time: DateTime.now().subtract(const Duration(hours: 8)),
-          type: NotificationType.like,
-          userId: '105',
-          avatar: 'https://randomuser.me/api/portraits/men/33.jpg',
-        ),
-      ];
-
+      if (!_initialized) {
+        // Lấy userId thực tế từ profile
+        final profileService = getIt<ProfileService>();
+        final profile = await profileService.getProfile();
+        final userId = profile['userId']?.toString() ?? '';
+        await _service.initialize(userId);
+        _notificationStream = _service.notificationsStream.listen((data) {
+          _notifications = _mapServiceModelsToUI(data);
+          _isLoading = false;
+          notifyListeners();
+        });
+        _newNotificationStream = _service.newNotificationStream.listen((notification) {
+          notifyListeners();
+        });
+        _initialized = true;
+      }
+      await _service.refreshNotifications();
+      _notifications = _mapServiceModelsToUI(_service.notifications);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -156,75 +121,20 @@ class NotificationViewModel extends ChangeNotifier {
   }
 
   void markAsRead(String notificationId) {
-    final index = _notifications.indexWhere((n) => n.id == notificationId);
-    if (index != -1) {
-      final notification = _notifications[index];
-      if (!notification.isRead) {
-        _notifications[index] = NotificationModel(
-          id: notification.id,
-          title: notification.title,
-          body: notification.body,
-          time: notification.time,
-          type: notification.type,
-          isRead: true,
-          userId: notification.userId,
-          avatar: notification.avatar,
-          url: notification.url,
-        );
-        notifyListeners();
-      }
-    }
+    _service.markAsRead(notificationId);
+    // UI sẽ tự động cập nhật qua stream
   }
 
   void markAllAsRead() {
-    bool changed = false;
-    final updatedList = _notifications.map((n) {
-      if (!n.isRead) {
-        changed = true;
-        return NotificationModel(
-          id: n.id,
-          title: n.title,
-          body: n.body,
-          time: n.time,
-          type: n.type,
-          isRead: true,
-          userId: n.userId,
-          avatar: n.avatar,
-          url: n.url,
-        );
-      }
-      return n;
-    }).toList();
-
-    if (changed) {
-      _notifications = updatedList;
-      notifyListeners();
-    }
+    _service.markAllAsRead();
+    // UI sẽ tự động cập nhật qua stream
   }
 
   void markAllAsReadByType(NotificationType type) {
-    bool changed = false;
-    final updatedList = _notifications.map((n) {
-      if (n.type == type && !n.isRead) {
-        changed = true;
-        return NotificationModel(
-          id: n.id,
-          title: n.title,
-          body: n.body,
-          time: n.time,
-          type: n.type,
-          isRead: true,
-          userId: n.userId,
-          avatar: n.avatar,
-          url: n.url,
-        );
-      }
-      return n;
-    }).toList();
-
-    if (changed) {
-      _notifications = updatedList;
-      notifyListeners();
+    // Lọc các id chưa đọc theo type rồi gọi markAsRead cho từng cái
+    final ids = _notifications.where((n) => n.type == type && !n.isRead).map((n) => n.id).toList();
+    for (final id in ids) {
+      _service.markAsRead(id);
     }
   }
 
@@ -236,5 +146,41 @@ class NotificationViewModel extends ChangeNotifier {
   void clearAllByType(NotificationType type) {
     _notifications.removeWhere((n) => n.type == type);
     notifyListeners();
+  }
+
+  List<NotificationModel> _mapServiceModelsToUI(List serviceList) {
+    // Mapping từ NotificationService sang NotificationModel UI
+    return serviceList.map<NotificationModel>((n) {
+      // Tùy chỉnh mapping cho đúng với NotificationModel UI
+      return NotificationModel(
+        id: n.id.toString(),
+        title: n.title ?? '',
+        body: n.content ?? '',
+        time: n.timestamp ?? DateTime.now(),
+        type: _mapType(n.type),
+        isRead: n.isRead ?? false,
+        userId: n.userId?.toString(),
+        avatar: n.avatar,
+        url: n.url,
+      );
+    }).toList();
+  }
+
+  NotificationType _mapType(dynamic type) {
+    final t = type.toString().toLowerCase();
+    if (t.contains('like')) return NotificationType.like;
+    if (t.contains('match')) return NotificationType.match;
+    if (t.contains('message')) return NotificationType.message;
+    if (t.contains('system')) return NotificationType.system;
+    return NotificationType.system;
+  }
+
+  @override
+  void dispose() {
+    if (_initialized) {
+      _notificationStream.cancel();
+      _newNotificationStream.cancel();
+    }
+    super.dispose();
   }
 }

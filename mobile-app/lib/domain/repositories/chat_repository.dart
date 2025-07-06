@@ -8,4 +8,5 @@ abstract class ChatRepository {
   Future<void> deleteChat(String chatId);
   Future<void> updateChatLastMessage(String chatId, String lastMessage, DateTime timestamp);
   Future<void> markMessagesAsRead(String chatId);
+  Future<int> getUnreadMessageCount(String chatId);
 }

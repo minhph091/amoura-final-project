@@ -220,85 +220,92 @@ class ChatListViewModel extends ChangeNotifier {
     }
   }
 
-  /// Cập nhật chat khi có tin nhắn mới
+  /// Cập nhật chat với tin nhắn mới từ WebSocket
   void _updateChatWithNewMessage(Message newMessage) {
-    final chatIndex = _chatList.indexWhere((chat) => chat.chatRoomId == newMessage.chatId);
-    if (chatIndex != -1) {
-      // Xử lý system message (read receipt) - reset unread count về 0
-      if (newMessage.type == MessageType.system) {
-        final currentUnreadCount = _chatList[chatIndex].unreadCount;
-        final updatedChat = ChatModel(
-          chatRoomId: _chatList[chatIndex].chatRoomId,
-          userId: _chatList[chatIndex].userId,
-          name: _chatList[chatIndex].name,
-          avatar: _chatList[chatIndex].avatar,
-          lastMessage: _chatList[chatIndex].lastMessage, // Giữ nguyên last message
-          lastMessageTime: _chatList[chatIndex].lastMessageTime, // Giữ nguyên thời gian
-          unreadCount: 0, // Reset unread count về 0
-          isUnread: false, // Đã đọc hết - bỏ bold text
-          isOnline: _chatList[chatIndex].isOnline,
-          isPinned: _chatList[chatIndex].isPinned,
-          isMuted: _chatList[chatIndex].isMuted,
-          isHidden: _chatList[chatIndex].isHidden,
-        );
+    try {
+      // Kiểm tra nếu là unread count update từ ChatService
+      if (newMessage.content.startsWith('unread_count:')) {
+        final unreadCountStr = newMessage.content.split(':')[1];
+        final unreadCount = int.tryParse(unreadCountStr) ?? 0;
         
-        _chatList[chatIndex] = updatedChat;
-        notifyListeners();
-        
-        debugPrint('ChatListViewModel: Read receipt processed for chat ${newMessage.chatId}');
-        debugPrint('ChatListViewModel: Unread count: $currentUnreadCount -> 0, Bold text removed');
-        return;
+        // Cập nhật unread count cho chat tương ứng
+        final chatIndex = _chatList.indexWhere((chat) => chat.chatRoomId == newMessage.chatId);
+        if (chatIndex != -1) {
+          final updatedChat = ChatModel(
+            chatRoomId: _chatList[chatIndex].chatRoomId,
+            userId: _chatList[chatIndex].userId,
+            name: _chatList[chatIndex].name,
+            avatar: _chatList[chatIndex].avatar,
+            lastMessage: _chatList[chatIndex].lastMessage,
+            lastMessageTime: _chatList[chatIndex].lastMessageTime,
+            unreadCount: unreadCount,
+            isPinned: _chatList[chatIndex].isPinned,
+            isMuted: _chatList[chatIndex].isMuted,
+            isHidden: _chatList[chatIndex].isHidden,
+            isOnline: _chatList[chatIndex].isOnline,
+            isUnread: unreadCount > 0, // Cập nhật isUnread dựa trên unreadCount
+          );
+          
+          _chatList[chatIndex] = updatedChat;
+          notifyListeners();
+          
+          debugPrint('ChatListViewModel: Updated unread count for chat ${newMessage.chatId}: $unreadCount');
+        }
+        return; // Early return vì đây là unread count update, không phải tin nhắn mới
       }
       
-      // Xử lý tin nhắn thường với enhanced unread logic
-      final isFromOtherUser = newMessage.senderId != _currentUserId;
-      final currentUnreadCount = _chatList[chatIndex].unreadCount;
-      
-      // Logic unread count:
-      // - Tăng count nếu tin nhắn từ người khác và chưa đọc
-      // - Reset về 0 nếu là tin nhắn của chính mình (mình đã "đọc" ngay khi gửi)
-      // - Giữ nguyên nếu là tin nhắn từ người khác nhưng đã đọc (case hiếm)
-      final shouldIncreaseUnread = isFromOtherUser && !newMessage.isRead;
-      final newUnreadCount = shouldIncreaseUnread 
-          ? currentUnreadCount + 1 
-          : (isFromOtherUser ? currentUnreadCount : 0);
-      
-      // Enhanced isUnread logic: hiển thị bold nếu có bất kỳ tin nhắn chưa đọc nào
-      // HOẶC nếu tin nhắn mới này từ người khác và chưa được đọc
-      final hasUnreadMessages = newUnreadCount > 0;
-      final thisMessageNeedsAttention = isFromOtherUser && !newMessage.isRead;
-      final isUnread = hasUnreadMessages || thisMessageNeedsAttention;
-      
-      debugPrint('ChatListViewModel: Processing message from ${isFromOtherUser ? "other user" : "current user"}');
-      debugPrint('ChatListViewModel: Message read status: ${newMessage.isRead ? "READ" : "UNREAD"}');
-      debugPrint('ChatListViewModel: Unread count: $currentUnreadCount -> $newUnreadCount');
-      debugPrint('ChatListViewModel: This message needs attention: $thisMessageNeedsAttention');
-      debugPrint('ChatListViewModel: Final bold status: ${isUnread ? "ON" : "OFF"}');
-      
-      final updatedChat = ChatModel(
-        chatRoomId: _chatList[chatIndex].chatRoomId,
-        userId: _chatList[chatIndex].userId,
-        name: _chatList[chatIndex].name,
-        avatar: _chatList[chatIndex].avatar,
-        lastMessage: newMessage.content,
-        lastMessageTime: newMessage.timestamp,
-        unreadCount: newUnreadCount,
-        isUnread: isUnread, // Cập nhật isUnread dựa trên unreadCount
-        isOnline: _chatList[chatIndex].isOnline,
-        isPinned: _chatList[chatIndex].isPinned,
-        isMuted: _chatList[chatIndex].isMuted,
-        isHidden: _chatList[chatIndex].isHidden,
-      );
-      
-      _chatList[chatIndex] = updatedChat;
-      
-      // Sort lại để chat có tin nhắn mới lên đầu
-      _chatList.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-      
-      notifyListeners();
-      
-      debugPrint('Updated chat ${newMessage.chatId} with new message: ${newMessage.content}');
-      debugPrint('Unread count: $newUnreadCount, Is unread: $isUnread');
+      // Nếu là system message (type system hoặc content là 'Messages marked as read'), chỉ reset unread, không cập nhật last message
+      final isSystem = newMessage.type.toString().toLowerCase() == 'system' || newMessage.content.trim().toLowerCase() == 'messages marked as read' || newMessage.content.trim().toLowerCase() == 'read';
+      final chatIndex = _chatList.indexWhere((chat) => chat.chatRoomId == newMessage.chatId);
+      if (chatIndex != -1) {
+        final currentChat = _chatList[chatIndex];
+        if (isSystem) {
+          // Chỉ reset unread count và isUnread
+          final updatedChat = ChatModel(
+            chatRoomId: currentChat.chatRoomId,
+            userId: currentChat.userId,
+            name: currentChat.name,
+            avatar: currentChat.avatar,
+            lastMessage: currentChat.lastMessage, // Giữ nguyên
+            lastMessageTime: currentChat.lastMessageTime, // Giữ nguyên
+            unreadCount: 0,
+            isPinned: currentChat.isPinned,
+            isMuted: currentChat.isMuted,
+            isHidden: currentChat.isHidden,
+            isOnline: currentChat.isOnline,
+            isUnread: false,
+          );
+          _chatList[chatIndex] = updatedChat;
+          notifyListeners();
+          debugPrint('ChatListViewModel: System message - reset unread for chat ${newMessage.chatId}');
+          return;
+        }
+        // Nếu là message thực tế, cập nhật last message, tăng unread, tô đậm
+        final updatedChat = ChatModel(
+          chatRoomId: currentChat.chatRoomId,
+          userId: currentChat.userId,
+          name: currentChat.name,
+          avatar: currentChat.avatar,
+          lastMessage: newMessage.content,
+          lastMessageTime: newMessage.timestamp,
+          unreadCount: currentChat.unreadCount + 1, // Tăng unread count
+          isPinned: currentChat.isPinned,
+          isMuted: currentChat.isMuted,
+          isHidden: currentChat.isHidden,
+          isOnline: currentChat.isOnline,
+          isUnread: true, // Đánh dấu là unread
+        );
+        // Di chuyển chat lên đầu danh sách
+        _chatList.removeAt(chatIndex);
+        _chatList.insert(0, updatedChat);
+        if (_searchQuery.isNotEmpty) {
+          _updateFilteredList();
+        }
+        notifyListeners();
+        debugPrint('ChatListViewModel: Updated chat with new message - Chat: ${newMessage.chatId}, UnreadCount: ${updatedChat.unreadCount}');
+      }
+    } catch (e) {
+      debugPrint('ChatListViewModel: Error updating chat with new message: $e');
     }
   }
 
@@ -384,6 +391,16 @@ class ChatListViewModel extends ChangeNotifier {
       }).toList();
     }
     notifyListeners();
+  }
+  
+  /// Cập nhật filtered list khi có thay đổi trong chat list
+  void _updateFilteredList() {
+    if (_searchQuery.isNotEmpty) {
+      _filteredChatList = _chatList.where((chat) {
+        return chat.name.toLowerCase().contains(_searchQuery) ||
+               chat.lastMessage.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
   }
 
   Future<void> loadChatList() async {

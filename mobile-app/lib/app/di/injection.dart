@@ -46,6 +46,8 @@ import 'package:flutter/material.dart';
 import '../../data/remote/user_api.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../domain/usecases/user/update_user_usecase.dart';
+import '../../data/remote/notification_api.dart';
+import '../../core/services/notification_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -118,4 +120,8 @@ Future<void> configureDependencies(GlobalKey<NavigatorState> navigatorKey) async
   getIt.registerLazySingleton<UserApi>(() => UserApi(getIt<ApiClient>()));
   getIt.registerLazySingleton<UserRepository>(() => UserRepository(getIt<UserApi>()));
   getIt.registerLazySingleton<UpdateUserUseCase>(() => UpdateUserUseCase(getIt<UserRepository>()));
+
+  // Notification
+  getIt.registerLazySingleton<NotificationApi>(() => NotificationApi(getIt<ApiClient>()));
+  getIt.registerLazySingleton<NotificationService>(() => NotificationService());
 }

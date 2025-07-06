@@ -630,6 +630,9 @@ class ChatService {
         // Cập nhật last message trong chat list
         _updateChatLastMessage(message.chatId, message);
         
+        // Cập nhật unread count realtime khi nhận tin nhắn mới
+        _updateUnreadCountForChat(message.chatId);
+        
         debugPrint('ChatService: Added new message from other user to cache: ${message.id} - Content: ${message.content}');
       } else {
         debugPrint('ChatService: Skipped own message from WebSocket (already added via API): ${message.id}');
@@ -653,6 +656,41 @@ class ChatService {
         debugPrint('ChatService: Duplicate message detected and skipped: ${message.id} - Content: ${message.content}');
       }
     }
+  }
+  
+  /// Cập nhật unread count cho chat room khi nhận tin nhắn mới
+  Future<void> _updateUnreadCountForChat(String chatRoomId) async {
+    try {
+      // Gọi API để lấy unread count mới nhất
+      final unreadCount = await _chatRepository.getUnreadMessageCount(chatRoomId);
+      
+      // Emit unread count update để chat list có thể cập nhật UI
+      _emitUnreadCountUpdate(chatRoomId, unreadCount);
+      
+      debugPrint('ChatService: Updated unread count for chat $chatRoomId: $unreadCount');
+    } catch (e) {
+      debugPrint('ChatService: Error updating unread count for chat $chatRoomId: $e');
+      // Fallback: tăng unread count local nếu API fail
+      _emitUnreadCountUpdate(chatRoomId, 1); // Tăng 1
+    }
+  }
+  
+  /// Emit unread count update để chat list cập nhật UI
+  void _emitUnreadCountUpdate(String chatRoomId, int unreadCount) {
+    // Tạo một message đặc biệt để notify unread count change
+    final unreadUpdateMessage = Message(
+      id: 'unread_update_${DateTime.now().millisecondsSinceEpoch}',
+      chatId: chatRoomId,
+      senderId: 'system',
+      senderName: 'System',
+      content: 'unread_count:$unreadCount', // Special format để identify
+      timestamp: DateTime.now(),
+      status: MessageStatus.read,
+      type: MessageType.system,
+    );
+    
+    // Emit vào newMessageStream để chat list nhận được
+    _newMessageController.add(unreadUpdateMessage);
   }
   
   /// Xử lý read receipt

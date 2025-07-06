@@ -46,4 +46,9 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<void> markMessagesAsRead(String chatId) async {
     await _chatApi.markMessagesAsRead(chatId);
   }
+  
+  @override
+  Future<int> getUnreadMessageCount(String chatId) async {
+    return await _chatApi.getUnreadMessageCount(chatId);
+  }
 }
