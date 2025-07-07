@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@stomp/stompjs": "^7.1.1",
-    "react-is": "^19.1.0",
-    "sockjs-client": "^1.6.1",
-    "ws": "^8.18.2"
-  }
-}
