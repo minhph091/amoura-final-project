@@ -229,26 +229,26 @@ class ChatListViewModel extends ChangeNotifier {
         final unreadCount = int.tryParse(unreadCountStr) ?? 0;
         
         // Cập nhật unread count cho chat tương ứng
-        final chatIndex = _chatList.indexWhere((chat) => chat.chatRoomId == newMessage.chatId);
-        if (chatIndex != -1) {
-          final updatedChat = ChatModel(
-            chatRoomId: _chatList[chatIndex].chatRoomId,
-            userId: _chatList[chatIndex].userId,
-            name: _chatList[chatIndex].name,
-            avatar: _chatList[chatIndex].avatar,
+    final chatIndex = _chatList.indexWhere((chat) => chat.chatRoomId == newMessage.chatId);
+    if (chatIndex != -1) {
+        final updatedChat = ChatModel(
+          chatRoomId: _chatList[chatIndex].chatRoomId,
+          userId: _chatList[chatIndex].userId,
+          name: _chatList[chatIndex].name,
+          avatar: _chatList[chatIndex].avatar,
             lastMessage: _chatList[chatIndex].lastMessage,
             lastMessageTime: _chatList[chatIndex].lastMessageTime,
             unreadCount: unreadCount,
-            isPinned: _chatList[chatIndex].isPinned,
-            isMuted: _chatList[chatIndex].isMuted,
-            isHidden: _chatList[chatIndex].isHidden,
+          isPinned: _chatList[chatIndex].isPinned,
+          isMuted: _chatList[chatIndex].isMuted,
+          isHidden: _chatList[chatIndex].isHidden,
             isOnline: _chatList[chatIndex].isOnline,
             isUnread: unreadCount > 0, // Cập nhật isUnread dựa trên unreadCount
-          );
-          
-          _chatList[chatIndex] = updatedChat;
-          notifyListeners();
-          
+        );
+        
+        _chatList[chatIndex] = updatedChat;
+        notifyListeners();
+        
           debugPrint('ChatListViewModel: Updated unread count for chat ${newMessage.chatId}: $unreadCount');
         }
         return; // Early return vì đây là unread count update, không phải tin nhắn mới
@@ -281,13 +281,13 @@ class ChatListViewModel extends ChangeNotifier {
           return;
         }
         // Nếu là message thực tế, cập nhật last message, tăng unread, tô đậm
-        final updatedChat = ChatModel(
+      final updatedChat = ChatModel(
           chatRoomId: currentChat.chatRoomId,
           userId: currentChat.userId,
           name: currentChat.name,
           avatar: currentChat.avatar,
-          lastMessage: newMessage.content,
-          lastMessageTime: newMessage.timestamp,
+        lastMessage: newMessage.content,
+        lastMessageTime: newMessage.timestamp,
           unreadCount: currentChat.unreadCount + 1, // Tăng unread count
           isPinned: currentChat.isPinned,
           isMuted: currentChat.isMuted,
@@ -301,7 +301,7 @@ class ChatListViewModel extends ChangeNotifier {
         if (_searchQuery.isNotEmpty) {
           _updateFilteredList();
         }
-        notifyListeners();
+      notifyListeners();
         debugPrint('ChatListViewModel: Updated chat with new message - Chat: ${newMessage.chatId}, UnreadCount: ${updatedChat.unreadCount}');
       }
     } catch (e) {

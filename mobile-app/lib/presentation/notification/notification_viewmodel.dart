@@ -73,7 +73,8 @@ class NotificationViewModel extends ChangeNotifier {
   }
 
   List<NotificationModel> getLikeNotifications() {
-    return _notifications.where((n) => n.type == NotificationType.like).toList();
+    // Trả về cả like và match
+    return _notifications.where((n) => n.type == NotificationType.like || n.type == NotificationType.match).toList();
   }
 
   List<NotificationModel> getMessageNotifications() {

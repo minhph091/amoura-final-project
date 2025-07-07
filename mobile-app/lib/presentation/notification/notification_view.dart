@@ -68,7 +68,7 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
             labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor: Theme.of(context).colorScheme.onSurface,
             tabs: const [
-              Tab(text: 'Likes'),
+              Tab(text: 'Likes & Matches'),
               Tab(text: 'Messages'),
               Tab(text: 'System'),
             ],
@@ -214,23 +214,54 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
   }
 
   void _handleNotificationTap(BuildContext context, NotificationModel notification) {
-    // Mark as read
     _viewModel.markAsRead(notification.id);
-
-    // Navigate based on notification type
+    if (notification.type == NotificationType.match || notification.type == NotificationType.like) {
+      // Show dialog với 2 lựa chọn
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) {
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.chat),
+                  title: const Text('Chat'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, AppRoutes.chatConversation, arguments: notification.userId);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('Xem thông tin'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/profile/view', arguments: notification.userId);
+                  },
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          );
+        },
+      );
+      return;
+    }
+    // Logic cũ cho message/system
     switch (notification.type) {
-      case NotificationType.match:
-      case NotificationType.like:
-        Navigator.pushNamed(context, '/profile/view', arguments: notification.userId);
-        break;
       case NotificationType.message:
         Navigator.pushNamed(context, AppRoutes.chatConversation, arguments: notification.userId);
         break;
       case NotificationType.system:
-        // System notifications might not have a destination
         if (notification.url != null) {
           // Navigate to a web view or deep link
         }
+        break;
+      default:
         break;
     }
   }
