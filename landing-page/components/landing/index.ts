@@ -1,0 +1,13 @@
+export { Header } from "./Header";
+export { HeroSection } from "./HeroSection";
+export { FeaturesSection } from "./FeaturesSection";
+export { AppScreenshots } from "./AppScreenshots";
+export { HowItWorksSection } from "./HowItWorksSection";
+export { TestimonialsSection } from "./TestimonialsSection";
+export { StatsSection } from "./StatsSection";
+export { DownloadSection } from "./DownloadSection";
+export { FAQSection } from "./FAQSection";
+export { Footer } from "./Footer";
+export { LanguageDropdown } from "./LanguageDropdown";
+export { ThemeToggle } from "./ThemeToggle";
+export { translations } from "./translations";
