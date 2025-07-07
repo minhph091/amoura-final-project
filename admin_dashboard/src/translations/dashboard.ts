@@ -109,8 +109,6 @@ export const dashboardTranslations = {
       welcomeBack: "Chào mừng trở lại!",
       invalidCredentials: "Email hoặc mật khẩu không đúng",
       loginSuccess: "Đăng nhập thành công!",
-      privacyPolicy: "Chính sách bảo mật",
-      termsOfService: "Điều khoản dịch vụ",
     },
 
     // Settings
@@ -323,8 +321,6 @@ export const dashboardTranslations = {
       welcomeBack: "Welcome back!",
       invalidCredentials: "Invalid email or password",
       loginSuccess: "Login successful!",
-      privacyPolicy: "Privacy Policy",
-      termsOfService: "Terms of Service",
     },
 
     // Settings

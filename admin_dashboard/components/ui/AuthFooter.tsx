@@ -16,18 +16,6 @@ export function AuthFooter() {
 
           <div className="flex items-center space-x-6 text-sm text-muted-foreground">
             <Link
-              href="/privacy"
-              className="hover:text-foreground transition-colors"
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href="/terms"
-              className="hover:text-foreground transition-colors"
-            >
-              Terms of Service
-            </Link>
-            <Link
               href="/support"
               className="hover:text-foreground transition-colors"
             >

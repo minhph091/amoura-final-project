@@ -21,8 +21,6 @@ export function DashboardFooter() {
   ];
 
   const legalLinks = [
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
     { name: "Data Protection", href: "/data-protection" },
     { name: "Compliance", href: "/compliance" },
   ];
