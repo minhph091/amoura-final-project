@@ -1,74 +1,89 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "@/hooks/use-toast"
-import { Badge } from "@/components/ui/badge"
-import { CalendarDays, Mail, MapPin, Phone, Shield, Upload } from "lucide-react"
+import { useState, useEffect, useRef } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import {
+  CalendarDays,
+  Mail,
+  MapPin,
+  Phone,
+  Shield,
+  Upload,
+} from "lucide-react";
 
 export function AdminProfile() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [avatarSrc, setAvatarSrc] = useState("https://randomuser.me/api/portraits/men/44.jpg")
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isLoading, setIsLoading] = useState(false);
+  const [avatarSrc, setAvatarSrc] = useState(
+    "https://randomuser.me/api/portraits/men/44.jpg"
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load avatar from localStorage on component mount
   useEffect(() => {
-    const savedAvatar = localStorage.getItem("adminAvatar")
+    const savedAvatar = localStorage.getItem("adminAvatar");
     if (savedAvatar) {
-      setAvatarSrc(savedAvatar)
+      setAvatarSrc(savedAvatar);
     }
-  }, [])
+  }, []);
 
   const handleSave = () => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     // Simulate API call
     setTimeout(() => {
-      setIsLoading(false)
+      setIsLoading(false);
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
-      })
-    }, 1000)
-  }
+      });
+    }, 1000);
+  };
 
   const handlePasswordChange = () => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     // Simulate API call
     setTimeout(() => {
-      setIsLoading(false)
+      setIsLoading(false);
       toast({
         title: "Password updated",
         description: "Your password has been changed successfully.",
-      })
-    }, 1000)
-  }
+      });
+    }, 1000);
+  };
 
   const handleAvatarClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        const result = e.target?.result as string
-        setAvatarSrc(result)
-        localStorage.setItem("adminAvatar", result)
-      }
-      reader.readAsDataURL(file)
+        const result = e.target?.result as string;
+        setAvatarSrc(result);
+        localStorage.setItem("adminAvatar", result);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -79,11 +94,23 @@ export function AdminProfile() {
           </div>
           <div className="flex flex-col items-center sm:flex-row sm:items-start sm:gap-6">
             <div className="relative">
-              <Avatar className="h-24 w-24 cursor-pointer" onClick={handleAvatarClick}>
-                <AvatarImage src={avatarSrc || "/placeholder.svg"} alt="Admin User" />
+              <Avatar
+                className="h-24 w-24 cursor-pointer"
+                onClick={handleAvatarClick}
+              >
+                <AvatarImage
+                  src={avatarSrc || "/placeholder.svg"}
+                  alt="Admin User"
+                />
                 <AvatarFallback>AD</AvatarFallback>
               </Avatar>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
               <Button
                 size="icon"
                 variant="outline"
@@ -99,7 +126,7 @@ export function AdminProfile() {
               <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Mail className="mr-1 h-4 w-4" />
-                  admin@amoura.com
+                  admin@amoura.space
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Phone className="mr-1 h-4 w-4" />
@@ -143,12 +170,20 @@ export function AdminProfile() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="admin@amoura.com" />
+                  <Input
+                    id="email"
+                    type="email"
+                    defaultValue="admin@amoura.space"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    defaultValue="+1 (555) 123-4567"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -231,11 +266,15 @@ export function AdminProfile() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Two-Factor Authentication</h3>
+                <h3 className="text-lg font-medium">
+                  Two-Factor Authentication
+                </h3>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Two-factor authentication is enabled</p>
+                    <p className="font-medium">
+                      Two-factor authentication is enabled
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       Your account is secured with two-factor authentication
                     </p>
@@ -284,27 +323,39 @@ export function AdminProfile() {
                 <div className="space-y-4">
                   <div className="border-l-2 border-primary pl-4 pb-4">
                     <p className="font-medium">Updated user settings</p>
-                    <p className="text-sm text-muted-foreground">Today at 10:30 AM</p>
+                    <p className="text-sm text-muted-foreground">
+                      Today at 10:30 AM
+                    </p>
                   </div>
 
                   <div className="border-l-2 border-muted pl-4 pb-4">
                     <p className="font-medium">Resolved report #REP-1234</p>
-                    <p className="text-sm text-muted-foreground">Yesterday at 2:15 PM</p>
+                    <p className="text-sm text-muted-foreground">
+                      Yesterday at 2:15 PM
+                    </p>
                   </div>
 
                   <div className="border-l-2 border-muted pl-4 pb-4">
                     <p className="font-medium">Created new moderator account</p>
-                    <p className="text-sm text-muted-foreground">Yesterday at 11:30 AM</p>
+                    <p className="text-sm text-muted-foreground">
+                      Yesterday at 11:30 AM
+                    </p>
                   </div>
 
                   <div className="border-l-2 border-muted pl-4 pb-4">
                     <p className="font-medium">Updated system settings</p>
-                    <p className="text-sm text-muted-foreground">2 days ago at 4:45 PM</p>
+                    <p className="text-sm text-muted-foreground">
+                      2 days ago at 4:45 PM
+                    </p>
                   </div>
 
                   <div className="border-l-2 border-muted pl-4 pb-4">
-                    <p className="font-medium">Suspended user account #U-7826</p>
-                    <p className="text-sm text-muted-foreground">3 days ago at 9:20 AM</p>
+                    <p className="font-medium">
+                      Suspended user account #U-7826
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      3 days ago at 9:20 AM
+                    </p>
                   </div>
                 </div>
 
@@ -317,5 +368,5 @@ export function AdminProfile() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

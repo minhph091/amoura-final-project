@@ -1,11 +1,12 @@
 import type { ApiResponse, PaginatedResponse } from "../types/common.types";
+import { API_CONFIG } from "../config/api.config";
 
 export class ApiClient {
   private baseURL: string;
   private token: string | null = null;
 
   constructor(
-    baseURL = "http://localhost:8080" // Backend server URL
+    baseURL = API_CONFIG.BASE_URL // Backend server URL
   ) {
     this.baseURL = baseURL;
     this.token = this.getStoredToken();

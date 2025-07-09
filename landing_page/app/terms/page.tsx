@@ -261,8 +261,8 @@ export default function TermsOfService() {
                   <p className="text-gray-700 font-medium">
                     Amoura Support Team
                   </p>
-                  <p className="text-gray-600">Email: legal@amoura.app</p>
-                  <p className="text-gray-600">Website: https://amoura.app</p>
+                  <p className="text-gray-600">Email: legal@amoura.space</p>
+                  <p className="text-gray-600">Website: https://amoura.space</p>
                 </div>
               </section>
             </div>

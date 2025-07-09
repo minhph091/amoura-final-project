@@ -3,11 +3,11 @@ import '../../config/environment.dart';
 /// Cấu hình WebSocket cho chat và notification
 /// Sử dụng STOMP protocol để giao tiếp với Spring Boot backend
 class WebSocketConfig {
-  static const String endpoint = '/ws';  // Main WebSocket endpoint
-  
+  static const String endpoint = '/ws'; // Main WebSocket endpoint
+
   /// URL chính để kết nối WebSocket
   static String get url => wsEndpoint;
-  
+
   // WebSocket endpoints
   static String get wsEndpoint {
     // Tùy thuộc vào environment
@@ -17,25 +17,28 @@ class WebSocketConfig {
       case Environment.staging:
         return 'ws://150.95.109.13:8080/api/ws';
       case Environment.prod:
-        return 'wss://api.amoura.com/api/ws';
+        return 'wss://api.amoura.space/api/ws';
     }
   }
-  
+
   // STOMP destinations for subscribing
-  static const String topicChatPrefix = '/topic/chat/';  // /topic/chat/{chatRoomId}
-  static const String topicUserStatus = '/topic/user-status/';  // /topic/user-status/{chatRoomId}
-  static const String queueNotification = '/user/queue/notification';  // User-specific notifications
-  static const String queueMatch = '/user/queue/match';  // Match notifications
-  
+  static const String topicChatPrefix =
+      '/topic/chat/'; // /topic/chat/{chatRoomId}
+  static const String topicUserStatus =
+      '/topic/user-status/'; // /topic/user-status/{chatRoomId}
+  static const String queueNotification =
+      '/user/queue/notification'; // User-specific notifications
+  static const String queueMatch = '/user/queue/match'; // Match notifications
+
   // STOMP destinations for sending
-  static const String appChatMessage = '/app/chat.sendMessage';  // Send message
-  static const String appChatTyping = '/app/chat.typing';  // Typing indicator
-  static const String appUserStatus = '/app/user.status';  // User online/offline
-  
+  static const String appChatMessage = '/app/chat.sendMessage'; // Send message
+  static const String appChatTyping = '/app/chat.typing'; // Typing indicator
+  static const String appUserStatus = '/app/user.status'; // User online/offline
+
   // Connection settings
-  static const int heartbeatIncoming = 10000;  // 10 seconds
-  static const int heartbeatOutgoing = 10000;  // 10 seconds
-  static const int reconnectDelay = 5000;  // 5 seconds
+  static const int heartbeatIncoming = 10000; // 10 seconds
+  static const int heartbeatOutgoing = 10000; // 10 seconds
+  static const int reconnectDelay = 5000; // 5 seconds
   static const int maxReconnectAttempts = 10;
 
   /// URL WebSocket chính để kết nối
@@ -43,7 +46,7 @@ class WebSocketConfig {
     final baseUrl = EnvironmentConfig.baseUrl.replaceFirst('/api', '');
     return '$baseUrl$endpoint';
   }
-  
+
   /// URL WebSocket thay thế
   static String get wsUrlAlternative {
     final baseUrl = EnvironmentConfig.baseUrl.replaceFirst('/api', '');
@@ -58,22 +61,25 @@ class WebSocketConfig {
 
   /// Topic chat cho phòng chat cụ thể
   static String chatTopic(String chatRoomId) => '$topicPrefix/chat/$chatRoomId';
-  
+
   /// Topic trạng thái online/offline của user trong phòng chat
-  static String userStatusInChatTopic(String chatRoomId) => '$topicPrefix/chat/$chatRoomId/user-status';
-  
+  static String userStatusInChatTopic(String chatRoomId) =>
+      '$topicPrefix/chat/$chatRoomId/user-status';
+
   /// Queue thông báo cá nhân cho user
   static String userNotificationQueue() => '$userQueuePrefix/notification';
-  
+
   /// Personal notification topic
-  static String get personalNotificationTopic => '$userQueuePrefix/notification';
-  
-  /// General user status topic  
+  static String get personalNotificationTopic =>
+      '$userQueuePrefix/notification';
+
+  /// General user status topic
   static String get userStatusTopic => '$topicPrefix/user-status';
-  
+
   /// Typing indicator topic
-  static String typingIndicatorTopic(String chatRoomId) => '$topicPrefix/chat/$chatRoomId/typing';
-  
+  static String typingIndicatorTopic(String chatRoomId) =>
+      '$topicPrefix/chat/$chatRoomId/typing';
+
   /// Read receipt destination
   static String get readReceiptDestination => '$appPrefix/chat.read';
 
@@ -84,10 +90,10 @@ class WebSocketConfig {
 
   /// Destination để gửi tin nhắn qua WebSocket
   static String get sendMessageWsDestination => sendMessageDestination;
-  
+
   /// Destination để gửi typing indicator
   static String get typingWsDestination => typingDestination;
-  
+
   /// Destination để thu hồi tin nhắn
   static String get recallMessageWsDestination => recallMessageDestination;
 
@@ -142,27 +148,36 @@ class ChatApiConfig {
 
   /// URL đầy đủ cho các API endpoints
   static String get roomsUrl => '${EnvironmentConfig.baseUrl}$roomsEndpoint';
-  static String get messagesUrl => '${EnvironmentConfig.baseUrl}$messagesEndpoint';
-  static String get uploadImageUrl => '${EnvironmentConfig.baseUrl}$uploadImageEndpoint';
-  static String get deleteImageUrl => '${EnvironmentConfig.baseUrl}$deleteImageEndpoint';
+  static String get messagesUrl =>
+      '${EnvironmentConfig.baseUrl}$messagesEndpoint';
+  static String get uploadImageUrl =>
+      '${EnvironmentConfig.baseUrl}$uploadImageEndpoint';
+  static String get deleteImageUrl =>
+      '${EnvironmentConfig.baseUrl}$deleteImageEndpoint';
 
   /// URL cho chat room cụ thể
-  static String chatRoomUrl(String chatRoomId) => '${EnvironmentConfig.baseUrl}$roomsEndpoint/$chatRoomId';
-  
+  static String chatRoomUrl(String chatRoomId) =>
+      '${EnvironmentConfig.baseUrl}$roomsEndpoint/$chatRoomId';
+
   /// URL cho tin nhắn trong chat room
-  static String chatMessagesUrl(String chatRoomId) => '${EnvironmentConfig.baseUrl}$roomsEndpoint/$chatRoomId/messages';
-  
+  static String chatMessagesUrl(String chatRoomId) =>
+      '${EnvironmentConfig.baseUrl}$roomsEndpoint/$chatRoomId/messages';
+
   /// URL để đánh dấu tin nhắn đã đọc
-  static String markMessagesReadUrl(String chatRoomId) => '${EnvironmentConfig.baseUrl}$roomsEndpoint/$chatRoomId/messages/read';
-  
+  static String markMessagesReadUrl(String chatRoomId) =>
+      '${EnvironmentConfig.baseUrl}$roomsEndpoint/$chatRoomId/messages/read';
+
   /// URL để lấy số tin nhắn chưa đọc
-  static String unreadCountUrl(String chatRoomId) => '${EnvironmentConfig.baseUrl}$roomsEndpoint/$chatRoomId/messages/unread-count';
-  
+  static String unreadCountUrl(String chatRoomId) =>
+      '${EnvironmentConfig.baseUrl}$roomsEndpoint/$chatRoomId/messages/unread-count';
+
   /// URL để xóa tin nhắn cho riêng user
-  static String deleteMessageForMeUrl(String messageId) => '${EnvironmentConfig.baseUrl}$messagesEndpoint/$messageId/delete-for-me';
-  
+  static String deleteMessageForMeUrl(String messageId) =>
+      '${EnvironmentConfig.baseUrl}$messagesEndpoint/$messageId/delete-for-me';
+
   /// URL để thu hồi tin nhắn
-  static String recallMessageUrl(String messageId) => '${EnvironmentConfig.baseUrl}$messagesEndpoint/$messageId/recall';
+  static String recallMessageUrl(String messageId) =>
+      '${EnvironmentConfig.baseUrl}$messagesEndpoint/$messageId/recall';
 
   // Headers cho API calls
   static Map<String, String> getApiHeaders(String jwtToken) {
@@ -184,19 +199,25 @@ class ChatApiConfig {
 /// Cấu hình thông báo
 class NotificationApiConfig {
   static const String notificationBase = '/notifications';
-  
+
   /// URL đầy đủ cho các API thông báo
-  static String get notificationsUrl => '${EnvironmentConfig.baseUrl}$notificationBase';
-  static String get unreadNotificationsUrl => '${EnvironmentConfig.baseUrl}$notificationBase/unread';
-  static String get unreadCountUrl => '${EnvironmentConfig.baseUrl}$notificationBase/unread/count';
-  static String get readAllUrl => '${EnvironmentConfig.baseUrl}$notificationBase/read-all';
-  
+  static String get notificationsUrl =>
+      '${EnvironmentConfig.baseUrl}$notificationBase';
+  static String get unreadNotificationsUrl =>
+      '${EnvironmentConfig.baseUrl}$notificationBase/unread';
+  static String get unreadCountUrl =>
+      '${EnvironmentConfig.baseUrl}$notificationBase/unread/count';
+  static String get readAllUrl =>
+      '${EnvironmentConfig.baseUrl}$notificationBase/read-all';
+
   /// URL để đánh dấu thông báo đã đọc
-  static String markAsReadUrl(String notificationId) => '${EnvironmentConfig.baseUrl}$notificationBase/$notificationId/read';
+  static String markAsReadUrl(String notificationId) =>
+      '${EnvironmentConfig.baseUrl}$notificationBase/$notificationId/read';
 }
 
 /// Cấu hình user status
 class UserStatusApiConfig {
   /// URL để kiểm tra trạng thái online của user
-  static String userOnlineStatusUrl(String userId) => '${EnvironmentConfig.baseUrl}/users/$userId/online';
-} 
+  static String userOnlineStatusUrl(String userId) =>
+      '${EnvironmentConfig.baseUrl}/users/$userId/online';
+}

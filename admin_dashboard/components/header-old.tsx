@@ -139,7 +139,7 @@ export function Header() {
               <div className="flex items-center justify-start gap-2 p-2">
                 <div className="flex flex-col space-y-1 leading-none">
                   <p className="font-medium">Admin User</p>
-                  <p className="text-sm text-muted-foreground">admin@amoura.com</p>
+                  <p className="text-sm text-muted-foreground">admin@amoura.space</p>
                 </div>
               </div>
               <DropdownMenuSeparator />
@@ -175,7 +175,7 @@ export function Header() {
             <div className="flex items-center justify-start gap-2 p-2">
               <div className="flex flex-col space-y-1 leading-none">
                 <p className="font-medium">Admin User</p>
-                <p className="text-sm text-muted-foreground">admin@amoura.com</p>
+                <p className="text-sm text-muted-foreground">admin@amoura.space</p>
               </div>
             </div>
             <DropdownMenuSeparator />

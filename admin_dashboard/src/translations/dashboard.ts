@@ -12,7 +12,7 @@ export const dashboardTranslations = {
       dark: "Tối",
       system: "Hệ thống",
       adminUser: "Người quản trị",
-      adminEmail: "admin@amoura.com",
+      adminEmail: "admin@amoura.space",
     },
 
     // Navigation
@@ -102,7 +102,7 @@ export const dashboardTranslations = {
       subtitle: "Đăng nhập vào bảng điều khiển quản trị",
       email: "Email",
       password: "Mật khẩu",
-      emailPlaceholder: "admin@amoura.com",
+      emailPlaceholder: "admin@amoura.space",
       passwordPlaceholder: "Nhập mật khẩu",
       loginButton: "Đăng nhập",
       rememberMe: "Ghi nhớ đăng nhập",
@@ -224,7 +224,7 @@ export const dashboardTranslations = {
       dark: "Dark",
       system: "System",
       adminUser: "Admin User",
-      adminEmail: "admin@amoura.com",
+      adminEmail: "admin@amoura.space",
     },
 
     // Navigation
@@ -314,7 +314,7 @@ export const dashboardTranslations = {
       subtitle: "Sign in to your admin dashboard",
       email: "Email",
       password: "Password",
-      emailPlaceholder: "admin@amoura.com",
+      emailPlaceholder: "admin@amoura.space",
       passwordPlaceholder: "Enter your password",
       loginButton: "Sign In",
       rememberMe: "Remember me",

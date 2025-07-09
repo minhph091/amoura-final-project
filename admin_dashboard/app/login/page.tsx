@@ -94,7 +94,7 @@ export default function LoginPage() {
             </p>
 
             <div className="flex items-center justify-center space-x-2 text-sm text-white/70 mt-12">
-              <span className="font-medium">WWW.AMOURA.COM</span>
+              <span className="font-medium">WWW.AMOURA.SPACE</span>
             </div>
           </div>
         </div>

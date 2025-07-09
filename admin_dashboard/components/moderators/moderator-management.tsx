@@ -42,7 +42,7 @@ const moderators: Moderator[] = [
   {
     id: "MOD-001",
     name: "John Davis",
-    email: "john.d@amoura.com",
+    email: "john.d@amoura.space",
     avatar: "https://randomuser.me/api/portraits/men/75.jpg",
     initials: "JD",
     status: "active",
@@ -54,7 +54,7 @@ const moderators: Moderator[] = [
   {
     id: "MOD-002",
     name: "Lisa Chen",
-    email: "lisa.c@amoura.com",
+    email: "lisa.c@amoura.space",
     avatar: "https://randomuser.me/api/portraits/women/65.jpg",
     initials: "LC",
     status: "active",
@@ -66,7 +66,7 @@ const moderators: Moderator[] = [
   {
     id: "MOD-003",
     name: "Robert Kim",
-    email: "robert.k@amoura.com",
+    email: "robert.k@amoura.space",
     avatar: "https://randomuser.me/api/portraits/men/55.jpg",
     initials: "RK",
     status: "active",
@@ -78,7 +78,7 @@ const moderators: Moderator[] = [
   {
     id: "MOD-004",
     name: "Emily Johnson",
-    email: "emily.j@amoura.com",
+    email: "emily.j@amoura.space",
     avatar: "https://randomuser.me/api/portraits/women/35.jpg",
     initials: "EJ",
     status: "disabled",

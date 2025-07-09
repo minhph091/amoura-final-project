@@ -258,8 +258,8 @@ export default function PrivacyPolicy() {
                   <p className="text-gray-700 font-medium">
                     Amoura Privacy Team
                   </p>
-                  <p className="text-gray-600">Email: privacy@amoura.app</p>
-                  <p className="text-gray-600">Website: https://amoura.app</p>
+                  <p className="text-gray-600">Email: privacy@amoura.space</p>
+                  <p className="text-gray-600">Website: https://amoura.space</p>
                 </div>
                 <p className="text-gray-700 leading-relaxed mt-4">
                   We will respond to your inquiries within a reasonable
