@@ -187,6 +187,103 @@ class SQLGenerator:
         self.write_sql("")
         logger.info(f"Hoàn thành tạo SQL cho {photo_count} ảnh")
     
+    def collect_all_data_from_csv(self, csv_file):
+        """Thu thập tất cả pets, interests, languages từ CSV để insert một lần"""
+        logger.info(f"Thu thập dữ liệu từ {csv_file}...")
+        
+        try:
+            df = pd.read_csv(csv_file)
+            
+            all_pets = set()
+            all_interests = set()
+            all_languages = set()
+            
+            for _, row in df.iterrows():
+                # Thu thập pets
+                if pd.notna(row['pets']) and row['pets']:
+                    pets = [pet.strip() for pet in str(row['pets']).split(' - ') if pet.strip()]
+                    all_pets.update(pets)
+                
+                # Thu thập interests
+                if pd.notna(row['interests']) and row['interests']:
+                    interests = [interest.strip() for interest in str(row['interests']).split(' - ') if interest.strip()]
+                    all_interests.update(interests)
+                
+                # Thu thập languages
+                if pd.notna(row['languages']) and row['languages']:
+                    languages = [lang.strip() for lang in str(row['languages']).split(' - ') if lang.strip()]
+                    all_languages.update(languages)
+            
+            return all_pets, all_interests, all_languages
+            
+        except Exception as e:
+            logger.error(f"Lỗi thu thập dữ liệu từ {csv_file}: {e}")
+            return set(), set(), set()
+    
+    def insert_pets_interests_languages(self, pets, interests, languages):
+        """Insert tất cả pets, interests, languages một lần"""
+        logger.info("Insert pets, interests, languages...")
+        
+        # Insert pets
+        self.write_sql("-- Insert pets")
+        for pet in sorted(pets):
+            sql = f"INSERT INTO pets (name) VALUES ({self.escape_sql_value(pet)}) ON CONFLICT DO NOTHING;"
+            self.write_sql(sql)
+        
+        # Insert interests  
+        self.write_sql("\n-- Insert interests")
+        for interest in sorted(interests):
+            sql = f"INSERT INTO interests (name) VALUES ({self.escape_sql_value(interest)}) ON CONFLICT DO NOTHING;"
+            self.write_sql(sql)
+        
+        # Insert languages
+        self.write_sql("\n-- Insert languages")
+        for language in sorted(languages):
+            sql = f"INSERT INTO languages (name) VALUES ({self.escape_sql_value(language)}) ON CONFLICT DO NOTHING;"
+            self.write_sql(sql)
+        
+        self.write_sql("")
+        logger.info(f"Đã insert {len(pets)} pets, {len(interests)} interests, {len(languages)} languages")
+
+    def generate_user_pets_sql(self, pets_str, user_id):
+        """Tạo SQL cho user_pets relationship"""
+        if not pets_str or pd.isna(pets_str):
+            return
+        
+        pet_names = [pet.strip() for pet in str(pets_str).split(' - ') if pet.strip()]
+        
+        for pet_name in pet_names:
+            sql = f"""INSERT INTO users_pets (user_id, pet_id) 
+                     SELECT {user_id}, id FROM pets WHERE name = {self.escape_sql_value(pet_name)} 
+                     ON CONFLICT DO NOTHING;"""
+            self.write_sql(sql)
+    
+    def generate_user_interests_sql(self, interests_str, user_id):
+        """Tạo SQL cho user_interests relationship"""
+        if not interests_str or pd.isna(interests_str):
+            return
+        
+        interest_names = [interest.strip() for interest in str(interests_str).split(' - ') if interest.strip()]
+        
+        for interest_name in interest_names:
+            sql = f"""INSERT INTO users_interests (user_id, interest_id) 
+                     SELECT {user_id}, id FROM interests WHERE name = {self.escape_sql_value(interest_name)} 
+                     ON CONFLICT DO NOTHING;"""
+            self.write_sql(sql)
+    
+    def generate_user_languages_sql(self, languages_str, user_id):
+        """Tạo SQL cho user_languages relationship"""
+        if not languages_str or pd.isna(languages_str):
+            return
+        
+        language_names = [lang.strip() for lang in str(languages_str).split(' - ') if lang.strip()]
+        
+        for language_name in language_names:
+            sql = f"""INSERT INTO users_languages (user_id, language_id) 
+                     SELECT {user_id}, id FROM languages WHERE name = {self.escape_sql_value(language_name)} 
+                     ON CONFLICT DO NOTHING;"""
+            self.write_sql(sql)
+    
     def generate_pets_sql(self, pets_str, user_id):
         """Tạo SQL cho pets và trả về list tên pets"""
         if not pets_str or pd.isna(pets_str):
@@ -298,10 +395,10 @@ class SQLGenerator:
                              ON CONFLICT (user_id) DO NOTHING;"""
                     self.write_sql(sql)
                     
-                    # Insert pets, interests, languages
-                    self.generate_pets_sql(row['pets'], row['id'])
-                    self.generate_interests_sql(row['interests'], row['id'])
-                    self.generate_languages_sql(row['languages'], row['id'])
+                    # Insert user relationships (không insert vào bảng chính nữa)
+                    self.generate_user_pets_sql(row['pets'], row['id'])
+                    self.generate_user_interests_sql(row['interests'], row['id']) 
+                    self.generate_user_languages_sql(row['languages'], row['id'])
                     
                     if (index + 1) % 100 == 0:
                         logger.info(f"Đã xử lý {index + 1} records")
@@ -395,8 +492,14 @@ SELECT user2_id, 'MATCH', 'You have a new match!', matched_at FROM matches;"""
         try:
             logger.info("Bắt đầu quá trình tạo SQL...")
             
+            # Thu thập tất cả dữ liệu từ CSV trước
+            all_pets, all_interests, all_languages = self.collect_all_data_from_csv('data/match_profiles.csv')
+            
             # Tạo SQL cho dữ liệu tham chiếu
             self.insert_reference_data()
+            
+            # Insert pets, interests, languages một lần
+            self.insert_pets_interests_languages(all_pets, all_interests, all_languages)
             
             # Tạo SQL từ CSV files
             self.import_match_profiles_sql('data/match_profiles.csv')
