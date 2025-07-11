@@ -62,7 +62,9 @@ export function Footer({ t }: FooterProps) {
               </li>
               <li>
                 <a
-                  href="#chat-web"
+                  href="https://chat.amoura.space"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-white dark:hover:text-slate-300 transition"
                 >
                   {t.footerWebChat}

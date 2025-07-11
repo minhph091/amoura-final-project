@@ -89,23 +89,10 @@ export function HeroSection({ t, language }: HeroSectionProps) {
               {t.heroCtaPrimary}
             </a>
             <a
-              href="#chat-web"
+              href="https://chat.amoura.space"
+              target="_blank"
+              rel="noopener noreferrer"
               className="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-pink-500 dark:text-pink-400 border-2 border-pink-200 dark:border-pink-600 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl w-full sm:w-auto flex items-center justify-center gap-2"
-              onClick={(e) => {
-                e.preventDefault();
-                const chatSection = document.getElementById("chat-web");
-                if (chatSection) {
-                  chatSection.scrollIntoView({ behavior: "smooth" });
-                  // Force show animations
-                  setTimeout(() => {
-                    const chatElements = document.querySelectorAll("#chat-web");
-                    chatElements.forEach((el) => {
-                      el.classList.remove("opacity-0", "translate-y-10");
-                      el.classList.add("opacity-100", "translate-y-0");
-                    });
-                  }, 300);
-                }
-              }}
             >
               <MessageSquareHeart className="w-5 h-5 group-hover:animate-pulse" />
               {t.heroCtaSecondary}

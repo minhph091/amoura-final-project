@@ -77,7 +77,9 @@ export function DownloadSection({ t }: DownloadSectionProps) {
             {t.webChatPrompt}
           </p>
           <a
-            href="#"
+            href="https://chat.amoura.space"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl"
           >
             <MessageSquareHeart className="w-6 h-6" />
