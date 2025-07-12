@@ -108,7 +108,7 @@ CREATE TABLE profiles (
                           date_of_birth DATE,
                           height INTEGER,
                           body_type_id BIGINT REFERENCES body_types(id),
-                          sex VARCHAR(10),
+                          sex VARCHAR(50),
                           orientation_id BIGINT REFERENCES orientations(id),
                           job_industry_id BIGINT REFERENCES job_industries(id),
                           drink_status_id BIGINT REFERENCES drink_statuses(id),
