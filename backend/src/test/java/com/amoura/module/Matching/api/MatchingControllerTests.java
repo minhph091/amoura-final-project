@@ -1,6 +1,7 @@
 package com.amoura.module.Matching.api;
 
 import com.amoura.module.matching.dto.UserRecommendationDTO;
+import com.amoura.common.LoginAndGetToken;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -9,19 +10,19 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MatchingControllerTests {
 
-    private static String jwtToken;
+    static String jwtToken;
 
     @BeforeAll
     static void setup() {
         RestAssured.baseURI = "http://localhost/api";
         RestAssured.port = 8080;
-        jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyODFAZ21haWwuY29tIiwidXNlcklkIjo4MSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTc1MjMxMjM0MywiZXhwIjoxNzUyMzk4NzQzfQ.hsE9_ddmahxj5SMhm6IHcuHOFfvXoDgFiMyEB8GqkYw";
-
+        jwtToken = LoginAndGetToken.execute();
     }
 
     @Test

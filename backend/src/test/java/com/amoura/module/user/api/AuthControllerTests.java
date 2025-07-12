@@ -1,27 +1,33 @@
 package com.amoura.module.user.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.amoura.common.LoginAndGetToken;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
 
 import static io.restassured.RestAssured.given;
+import com.amoura.common.LoginAndGetToken;
+
 
 public class AuthControllerTests {
 
+    static String jwtToken;
+
     @BeforeAll
     static void setup() {
-        RestAssured.baseURI = "http://localhost";
+        RestAssured.baseURI = "http://localhost/api";
         RestAssured.port = 8080;
+        jwtToken = LoginAndGetToken.execute();
     }
+
+
 
     @Test
     @DisplayName(" Đăng nhập với tài khoản hợp lệ")
     public void testLoginWithValidCredentials() {
         String body = """
         {
-            "email": "nguyen.van.an@example.com",
+            "email": "user1@gmail.com",
             "password": "Amoura123@",
             "loginType": "EMAIL_PASSWORD"
         }

@@ -1,4 +1,5 @@
 package com.amoura.module.Notification.api;
+import com.amoura.common.LoginAndGetToken;
 
 import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
@@ -15,15 +16,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NotificationControllerTests {
 
-    private static String jwtToken;
+    static String jwtToken;
 
     @BeforeAll
     static void setup() {
         RestAssured.baseURI = "http://localhost/api";
         RestAssured.port = 8080;
-        jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ5NzYyLCJleHAiOjE3NTIyMzYxNjJ9.qnQWY2tb-9a4-ULcg16MSOW827adGnx9Q14W0t3AQkw";
-
+        jwtToken = LoginAndGetToken.execute();
     }
+
 
     @Test
     @DisplayName("lấy thông báo ")
@@ -75,7 +76,7 @@ public class NotificationControllerTests {
     @Test
     @DisplayName("Đánh dấu 1 thông báo là đã đọc")
     void markNotificationAsRead() {
-        long notificationId = 1;
+        long notificationId = 9630;
         given()
                 .header("Authorization", "Bearer " + jwtToken)
                 .log().all()

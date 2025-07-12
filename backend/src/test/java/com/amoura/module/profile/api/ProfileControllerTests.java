@@ -12,19 +12,22 @@ import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
+import com.amoura.common.LoginAndGetToken;
 
 public class ProfileControllerTests {
+    static String jwtToken;
+
     @BeforeAll
     static void setup() {
         RestAssured.baseURI = "http://localhost/api";
         RestAssured.port = 8080;
+        jwtToken = LoginAndGetToken.execute();
     }
+
 
     @Test
     @DisplayName("Lấy profile người dùng hiện tại - Token hợp lệ")
     public void getCurrentUserProfile_WithValidToken() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
-
         RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
@@ -38,8 +41,6 @@ public class ProfileControllerTests {
     @Test
     @DisplayName("Lấy profile người dùng hiện tại - Không có token")
     public void getCurrentUserProfile_WithInvalidToken() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUxMTExMjM0LCJleHAiOjE3NTExOTc2MzR9.5tcooM25TcrUftkjEwRQcYPGirn8ORyGXptXK0jYZgw";
-
         RestAssured
                 .given()
                 .when()
@@ -52,7 +53,6 @@ public class ProfileControllerTests {
     @Test
     @DisplayName("Lấy profile theo userId - Token hợp lệ")
     public void getCurrentUserProfileById_WithValidToken() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
         int userId = 1;
         Response response = RestAssured
                 .given()
@@ -72,7 +72,6 @@ public class ProfileControllerTests {
     @DisplayName("Lấy profile theo userId - Không có token")
     public void getCurrentUserProfileById_WithoutToken() {
         int userId = 1;
-
         Response response = RestAssured
                 .given()
                 .pathParam("userId", userId)
@@ -87,9 +86,7 @@ public class ProfileControllerTests {
     @Test
     @DisplayName("Lấy profile theo userId không tồn tại - Token hợp lệ ")
     public void getProfileById_WithValidTokenButUserNotFound() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI ";
         int nonExistentUserId = 99999;
-
         RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
@@ -104,7 +101,6 @@ public class ProfileControllerTests {
     @Test
     @DisplayName("Lấy các tùy chọn cấu hình profile - Token hợp lệ")
     public void getAllProfileOptions_WithValidToken() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
         RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
@@ -118,8 +114,6 @@ public class ProfileControllerTests {
     @Test
     @DisplayName("Cập nhật profile người dùng - Dữ liệu hợp lệ ")
     public void updateProfile_WithFullValidData() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
-
         String requestBody = """
                 {
                   "dateOfBirth": "2004-08-05",
@@ -162,7 +156,6 @@ public class ProfileControllerTests {
     @Test
     @DisplayName("Ngày sinh dưới 18 tuổi - Không hợp lệ")
     public void updateProfile_Under18YearsOld() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
         String requestBody = """
             {
               "dateOfBirth": "2010-01-01"

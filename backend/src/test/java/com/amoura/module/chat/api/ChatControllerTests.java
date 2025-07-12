@@ -1,26 +1,29 @@
 package com.amoura.module.chat.api;
 
+import com.amoura.common.LoginAndGetToken;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import com.amoura.common.LoginAndGetToken;
+
 
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ChatControllerTests {
 
-    private static final String BASE_URI = "http://localhost:8080";
-    private static final String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyODFAZ21haWwuY29tIiwidXNlcklkIjo4MSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTc1MjMxMjM0MywiZXhwIjoxNzUyMzk4NzQzfQ.hsE9_ddmahxj5SMhm6IHcuHOFfvXoDgFiMyEB8GqkYw";
+    static String jwtToken;
 
     @BeforeAll
     static void setup() {
-        RestAssured.baseURI = BASE_URI;
+        RestAssured.baseURI = "http://localhost/api";
+        RestAssured.port = 8080;
+        jwtToken = LoginAndGetToken.execute();
     }
 
     @Test
@@ -31,7 +34,7 @@ public class ChatControllerTests {
                 .header("Authorization", "Bearer " + jwtToken)
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/chat/rooms")
+                .get("/chat/rooms")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -48,7 +51,7 @@ public class ChatControllerTests {
                 .header("Authorization", "Bearer " + jwtToken)
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/chat/rooms/2700")
+                .get("/chat/rooms/524")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -58,13 +61,13 @@ public class ChatControllerTests {
 
     @Test
     @DisplayName("Lấy chat room theo ID không tồn tại")
-    public void getChatRoomById_WithInvalidToken() {
+    public void getChatRoomById_WithNonExistentChatRoomId() {
         Response response = RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/chat/rooms/27050")
+                .get("/chat/rooms/27050")
                 .then()
                 .log().all()
                 .statusCode(404)
@@ -77,14 +80,12 @@ public class ChatControllerTests {
     @Test
     @DisplayName("Truy cập ChatRoom không thuộc quyền truy cập")
     public void getChatRoomById_WithoutPermission() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyODFAZ21haWwuY29tIiwidXNlcklkIjo4MSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTc1MjMxMjM0MywiZXhwIjoxNzUyMzk4NzQzfQ.hsE9_ddmahxj5SMhm6IHcuHOFfvXoDgFiMyEB8GqkYw";
-
         Response response = RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/api/chat/rooms/9999")
+                .get("/chat/rooms/9999")
                 .then()
                 .log().all()
                 .statusCode(403)
@@ -99,7 +100,7 @@ public class ChatControllerTests {
     public void sendTextMessage() {
         String requestBody = """
                     {
-                        "chatRoomId": 2682,
+                        "chatRoomId": 524,
                         "content": "gud morning",
                         "messageType": "TEXT"
                     }
@@ -111,7 +112,7 @@ public class ChatControllerTests {
                 .contentType(ContentType.JSON)
                 .body(requestBody)
                 .when()
-                .post("/api/chat/messages")
+                .post("/chat/messages")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -134,7 +135,7 @@ public class ChatControllerTests {
                 .contentType(ContentType.JSON)
                 .body(requestBody)
                 .when()
-                .post("/api/chat/messages")
+                .post("/chat/messages")
                 .then()
                 .log().all()
                 .statusCode(400)
@@ -163,7 +164,7 @@ public class ChatControllerTests {
                 .contentType(ContentType.JSON)
                 .body(requestBody)
                 .when()
-                .post("/api/chat/messages")
+                .post("/chat/messages")
                 .then()
                 .log().all()
                 .statusCode(404)
@@ -175,15 +176,16 @@ public class ChatControllerTests {
     }
 
     @Test
-    @DisplayName("Gửi tin nhắn thiếu messageType ")
+    @DisplayName("Gửi tin nhắn thiếu messageType")
     public void sendMessage_MissingMessageType() {
         String requestBody = """
-                    {
-                        "chatRoomId": 2682,
-                        "content": "test missing type"
-                         "messageType": "IMAGE"
-                    }
-                """;
+        {
+            "chatRoomId": 524,
+            "content": "test missing type",
+             "messageType": "string"
+                
+        }
+    """;
 
         Response response = RestAssured
                 .given()
@@ -191,7 +193,7 @@ public class ChatControllerTests {
                 .contentType(ContentType.JSON)
                 .body(requestBody)
                 .when()
-                .post("/api/chat/messages")
+                .post("/chat/messages")
                 .then()
                 .log().all()
                 .statusCode(400)
@@ -199,6 +201,7 @@ public class ChatControllerTests {
                 .response();
 
         String message = response.jsonPath().getString("message");
+        System.out.println("Message returned: " + message);
         assertEquals("Invalid request body format", message);
     }
 
