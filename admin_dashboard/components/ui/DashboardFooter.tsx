@@ -1,10 +1,13 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { AmouraLogo } from "./AmouraLogo";
 import { Heart, Shield, Users, BarChart3, Settings } from "lucide-react";
+import { useSafeDate } from "@/hooks/use-safe-date";
 
 export function DashboardFooter() {
-  const currentYear = new Date().getFullYear();
+  const { currentYear, currentDate, mounted } = useSafeDate();
 
   const quickLinks = [
     { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
@@ -26,8 +29,8 @@ export function DashboardFooter() {
   ];
 
   return (
-    <footer className="bg-background border-t border-border mt-auto">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <footer className="bg-background border-t border-border mt-auto w-full">
+      <div className="w-full px-6 py-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo & Description */}
           <div className="space-y-4">
@@ -109,7 +112,7 @@ export function DashboardFooter() {
             <div className="flex items-center space-x-6 text-sm text-muted-foreground">
               <span>Version 1.0.0</span>
               <span>•</span>
-              <span>Last updated: {new Date().toLocaleDateString()}</span>
+              <span>Last updated: {mounted ? currentDate : "Loading..."}</span>
               <span>•</span>
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>

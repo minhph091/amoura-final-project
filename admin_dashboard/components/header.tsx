@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bell, LogOut, Moon, Settings, Sun, User, Search } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useThemeSafe } from "@/hooks/use-theme-safe";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { AmouraLogo } from "@/components/ui/AmouraLogo";
@@ -20,7 +20,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/src/contexts/LanguageContext";
 
 export function Header() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, mounted } = useThemeSafe();
   const { t } = useLanguage();
   const [avatarSrc, setAvatarSrc] = useState(
     "https://randomuser.me/api/portraits/men/44.jpg"
@@ -41,7 +41,7 @@ export function Header() {
   };
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="fixed top-0 right-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 ease-in-out w-full lg:w-auto lg:left-64">
       <div className="flex h-16 items-center px-6 justify-between">
         {/* Left Side - Logo for mobile */}
         <div className="flex items-center space-x-4 md:hidden">
@@ -73,7 +73,9 @@ export function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                {theme === "dark" ? (
+                {!mounted ? (
+                  <div className="h-5 w-5" />
+                ) : theme === "dark" ? (
                   <Moon className="h-5 w-5" />
                 ) : theme === "light" ? (
                   <Sun className="h-5 w-5" />

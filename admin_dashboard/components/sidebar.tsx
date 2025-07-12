@@ -1,8 +1,7 @@
 "use client";
 
 import type React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,6 +34,7 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const isMobile = useMobile();
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useLanguage();
 
   // Load sidebar state from localStorage on component mount
@@ -112,7 +112,7 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          "sidebar-glow border-r border-sidebar-border flex-col z-40 transition-all duration-300 ease-in-out fixed h-screen shadow-2xl backdrop-blur-sm",
+          "bg-background border-r border-border flex-col z-40 transition-all duration-300 ease-in-out fixed h-screen shadow-2xl",
           isMobile
             ? `inset-y-0 left-0 transform ${
                 isOpen ? "translate-x-0" : "-translate-x-full"
@@ -123,19 +123,15 @@ export function Sidebar() {
         )}
         data-collapsed={isCollapsed}
       >
-        <div className="p-4 flex items-center justify-center border-b border-sidebar-border bg-sidebar/95 backdrop-blur-sm">
+        <div className="p-4 flex items-center justify-center border-b border-border bg-background">
           {isCollapsed ? (
-            <div className="h-8 w-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <Heart className="h-5 w-5 text-white fill-white" />
+            <div className="relative">
+              <Heart className="h-8 w-8 text-rose-500 fill-rose-500" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full" />
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <Heart className="h-5 w-5 text-white fill-white" />
-              </div>
-              <span className="text-sidebar-foreground font-semibold text-lg">
-                Amoura Admin
-              </span>
+              <AmouraLogo size="small" />
             </div>
           )}
         </div>
@@ -144,47 +140,52 @@ export function Sidebar() {
           <ScrollArea className="flex-1">
             <nav className="grid gap-1 px-3 py-4">
               {sidebarItems.map((item) => (
-                <Link
+                <button
                   key={item.href}
-                  href={item.href}
+                  onClick={() => router.push(item.href)}
                   className={cn(
-                    "group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium font-primary transition-all duration-200 hover:bg-white/10 hover:text-white relative overflow-hidden",
+                    "sidebar-item group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium font-primary transition-all duration-200 relative overflow-hidden w-full text-left",
+                    // Hover states for light and dark mode
+                    "hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-primary",
+                    // Active state
                     pathname === item.href
-                      ? "bg-blue-500/20 text-blue-300 shadow-lg shadow-blue-500/20"
-                      : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
+                      ? "bg-primary/20 text-primary shadow-lg shadow-primary/20"
+                      : "text-slate-700 dark:text-slate-300",
                     isCollapsed ? "justify-center px-2" : ""
                   )}
                 >
                   {pathname === item.href && (
-                    <div className="absolute left-0 top-0 w-1 h-full bg-blue-400 rounded-r-full shadow-lg shadow-blue-400/50" />
+                    <div className="absolute left-0 top-0 w-1 h-full bg-primary rounded-r-full shadow-lg shadow-primary/50" />
                   )}
                   <div
                     className={cn(
                       "flex items-center justify-center transition-transform group-hover:scale-110",
-                      pathname === item.href ? "text-blue-300" : ""
+                      pathname === item.href
+                        ? "text-primary"
+                        : "group-hover:text-primary"
                     )}
                   >
                     {item.icon}
                   </div>
                   {!isCollapsed && (
-                    <span className="transition-all duration-200 group-hover:translate-x-1">
+                    <span className="sidebar-text transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary">
                       {item.title}
                     </span>
                   )}
                   {pathname === item.href && !isCollapsed && (
-                    <div className="ml-auto w-2 h-2 bg-blue-400 rounded-full animate-pulse-glow" />
+                    <div className="ml-auto w-2 h-2 bg-primary rounded-full animate-pulse" />
                   )}
-                </Link>
+                </button>
               ))}
             </nav>
           </ScrollArea>
 
-          <div className="p-4 flex justify-center border-t border-sidebar-border">
+          <div className="p-4 flex justify-center border-t border-border">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleCollapse}
-              className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 rounded-xl h-12 w-12 flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 border border-blue-500/30"
+              className="bg-primary/20 hover:bg-primary/30 text-primary rounded-xl h-12 w-12 flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 border border-primary/30"
               title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               <Menu className="h-5 w-5" />

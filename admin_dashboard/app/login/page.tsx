@@ -35,32 +35,53 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
 
-    // Simple validation
-    if (!email || !password) {
-      setError(t.login.invalidCredentials);
+    // BYPASS AUTHENTICATION FOR TESTING
+    // Just simulate loading and redirect to dashboard
+    setTimeout(() => {
+      // Set fake login state
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userRole", "admin");
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: "admin-test",
+          email: email || "admin@amoura.space",
+          name: "Admin Test User",
+          role: "admin",
+        })
+      );
+
       setIsLoading(false);
-      return;
-    }
+      router.push("/dashboard");
+    }, 1000); // Simulate 1 second loading
 
-    try {
-      const loginRequest: LoginRequest = {
-        email,
-        password,
-        loginType: "EMAIL_PASSWORD",
-      };
+    // ORIGINAL CODE - COMMENTED OUT FOR TESTING
+    // // Simple validation
+    // if (!email || !password) {
+    //   setError(t.login.invalidCredentials);
+    //   setIsLoading(false);
+    //   return;
+    // }
 
-      const response = await authService.login(loginRequest);
+    // try {
+    //   const loginRequest: LoginRequest = {
+    //     email,
+    //     password,
+    //     loginType: "EMAIL_PASSWORD",
+    //   };
 
-      if (response.success) {
-        router.push("/dashboard");
-      } else {
-        setError(response.error || "Login failed");
-      }
-    } catch (error) {
-      setError("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
-    }
+    //   const response = await authService.login(loginRequest);
+
+    //   if (response.success) {
+    //     router.push("/dashboard");
+    //   } else {
+    //     setError(response.error || "Login failed");
+    //   }
+    // } catch (error) {
+    //   setError("An unexpected error occurred");
+    // } finally {
+    //   setIsLoading(false);
+    // }
   };
 
   return (

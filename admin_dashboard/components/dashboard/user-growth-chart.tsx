@@ -1,34 +1,60 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState } from "react"
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
-// Generate random data for the past 12 months
+// Generate consistent data for the past 12 months
 const generateData = () => {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  let lastValue = Math.floor(Math.random() * 1000) + 500
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
 
-  return months.map((month, index) => {
-    // Ensure growth trend with some randomness
-    const growth = Math.floor(Math.random() * 500) + 200
-    lastValue += growth
+  // Use consistent data instead of random
+  const baseData = [
+    520, 750, 980, 1400, 1650, 1890, 2200, 2580, 2950, 3300, 3680, 4100,
+  ];
 
-    return {
-      month,
-      users: lastValue,
-    }
-  })
-}
+  return months.map((month, index) => ({
+    month,
+    users: baseData[index],
+  }));
+};
 
 export function UserGrowthChart() {
-  const [data, setData] = useState([])
-  const [mounted, setMounted] = useState(false)
+  const [data, setData] = useState([]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-    setData(generateData())
-  }, [])
+    setMounted(true);
+    setData(generateData());
+  }, []);
 
   if (!mounted) {
     return (
@@ -37,9 +63,11 @@ export function UserGrowthChart() {
           <CardTitle>User Growth</CardTitle>
           <CardDescription>Monthly user registrations</CardDescription>
         </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center">Loading...</CardContent>
+        <CardContent className="h-80 flex items-center justify-center">
+          Loading...
+        </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -84,5 +112,5 @@ export function UserGrowthChart() {
         </ResponsiveContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

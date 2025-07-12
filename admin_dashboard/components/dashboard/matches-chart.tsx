@@ -1,34 +1,44 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState } from "react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
-// Generate random data for days of the week
+// Generate consistent data for days of the week
 const generateData = () => {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  // Use consistent data instead of random
+  const matchesData = [26, 29, 18, 21, 19, 38, 32];
 
-  return days.map((day) => {
-    // Weekend days have more matches
-    const isWeekend = day === "Sat" || day === "Sun"
-    const baseMatches = isWeekend ? 30 : 15
-    const randomFactor = Math.floor(Math.random() * 15)
-
-    return {
-      day,
-      matches: baseMatches + randomFactor,
-    }
-  })
-}
+  return days.map((day, index) => ({
+    day,
+    matches: matchesData[index],
+  }));
+};
 
 export function MatchesChart() {
-  const [data, setData] = useState([])
-  const [mounted, setMounted] = useState(false)
+  const [data, setData] = useState([]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-    setData(generateData())
-  }, [])
+    setMounted(true);
+    setData(generateData());
+  }, []);
 
   if (!mounted) {
     return (
@@ -37,9 +47,11 @@ export function MatchesChart() {
           <CardTitle>Weekly Matches</CardTitle>
           <CardDescription>Successful matches by day of week</CardDescription>
         </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center">Loading...</CardContent>
+        <CardContent className="h-80 flex items-center justify-center">
+          Loading...
+        </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -72,11 +84,16 @@ export function MatchesChart() {
               itemStyle={{ color: "var(--foreground)" }}
               labelStyle={{ color: "var(--foreground)", fontWeight: "bold" }}
             />
-            <Bar dataKey="matches" fill="hsl(346, 77%, 49%)" radius={[4, 4, 0, 0]} name="Matches" />
+            <Bar
+              dataKey="matches"
+              fill="hsl(346, 77%, 49%)"
+              radius={[4, 4, 0, 0]}
+              name="Matches"
+            />
             <Legend />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -606,4 +606,71 @@ body[data-sidebar-collapsed="false"] .main-content {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Existing animations... */
+/* Fixed header positioning based on sidebar state */
+body[data-sidebar-collapsed="true"] header {
+  left: 4rem; /* 64px - collapsed sidebar width */
+}
+
+body[data-sidebar-collapsed="false"] header {
+  left: 16rem; /* 256px - expanded sidebar width */
+}
+
+/* Footer positioning based on sidebar state */
+body[data-sidebar-collapsed="true"] footer {
+  margin-left: 4rem; /* 64px - collapsed sidebar width */
+}
+
+body[data-sidebar-collapsed="false"] footer {
+  margin-left: 16rem; /* 256px - expanded sidebar width */
+}
+
+/* Main content positioning based on sidebar state */
+body[data-sidebar-collapsed="true"] .main-content {
+  margin-left: 4rem; /* 64px - collapsed sidebar width */
+}
+
+body[data-sidebar-collapsed="false"] .main-content {
+  margin-left: 16rem; /* 256px - expanded sidebar width */
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 1024px) {
+  body header {
+    left: 0 !important;
+  }
+
+  body footer {
+    margin-left: 0 !important;
+  }
+
+  body .main-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* Sidebar hover effects for better contrast */
+.sidebar-item:hover {
+  background-color: hsl(var(--primary) / 0.1) !important;
+  color: hsl(var(--primary)) !important;
+}
+
+.dark .sidebar-item:hover {
+  background-color: hsl(
+    220 70% 15%
+  ) !important; /* Dark blue instead of white */
+  color: hsl(var(--primary)) !important;
+}
+
+/* Ensure proper text contrast */
+.sidebar-text {
+  color: hsl(220 16% 36%); /* Dark gray for light mode */
+}
+
+.dark .sidebar-text {
+  color: hsl(0 0% 80%); /* Light gray for dark mode */
+}
+
+.sidebar-text:hover,
+.dark .sidebar-text:hover {
+  color: hsl(var(--primary)) !important;
+}
