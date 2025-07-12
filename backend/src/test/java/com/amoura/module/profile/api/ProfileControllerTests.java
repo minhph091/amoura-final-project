@@ -2,11 +2,15 @@ package com.amoura.module.profile.api;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
+import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ProfileControllerTests {
@@ -15,10 +19,11 @@ public class ProfileControllerTests {
         RestAssured.baseURI = "http://localhost/api";
         RestAssured.port = 8080;
     }
+
     @Test
     @DisplayName("Lấy profile người dùng hiện tại - Token hợp lệ")
     public void getCurrentUserProfile_WithValidToken() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUxMTExMjM0LCJleHAiOjE3NTExOTc2MzR9.5tcooM25TcrUftkjEwRQcYPGirn8ORyGXptXK0jYZgw";
+        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
 
         RestAssured
                 .given()
@@ -47,37 +52,42 @@ public class ProfileControllerTests {
     @Test
     @DisplayName("Lấy profile theo userId - Token hợp lệ")
     public void getCurrentUserProfileById_WithValidToken() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUxMTExMjM0LCJleHAiOjE3NTExOTc2MzR9.5tcooM25TcrUftkjEwRQcYPGirn8ORyGXptXK0jYZgw";
+        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
         int userId = 1;
-        RestAssured
+        Response response = RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
                 .pathParam("userId", userId)
                 .when()
-                .get("/profiles/{userId}")
-                .then()
-                .log().all()
-                .statusCode(200);
+                .get("/profiles/{userId}");
+        response.then().log().all();
+
+        int statusCode = response.getStatusCode();
+        Assertions.assertEquals(200, statusCode, "Mã trạng thái phải là 200");
+        int returnUserID = response.jsonPath().getInt("userId");
+        Assertions.assertEquals(userId, returnUserID, "Phải trả về thông tin của ID được yêu cầu");
     }
 
     @Test
     @DisplayName("Lấy profile theo userId - Không có token")
-    public void getCurrentUserProfileById_WithInvalidToken() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUwNzgwODA4LCJleHAiOjE3NTA4NjcyMDh9.5-BS72CYrwS-gVCTbbr0mtA7j8YIkXGR0KvNJW6sqkA";
+    public void getCurrentUserProfileById_WithoutToken() {
         int userId = 1;
-        RestAssured
+
+        Response response = RestAssured
                 .given()
                 .pathParam("userId", userId)
                 .when()
-                .get("/profiles/{userId}")
-                .then()
-                .log().all()
-                .statusCode(403);
+                .get("/profiles/{userId}");
+
+        int statusCode = response.getStatusCode();
+        Assertions.assertEquals(403, statusCode, "Phải trả về mã lỗi 403 khi không có token");
     }
+
+
     @Test
     @DisplayName("Lấy profile theo userId không tồn tại - Token hợp lệ ")
-    public void getProfileById_WithValidTokenButUserNotFound () {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUxMTExMjM0LCJleHAiOjE3NTExOTc2MzR9.5tcooM25TcrUftkjEwRQcYPGirn8ORyGXptXK0jYZgw "; // token hợp lệ
+    public void getProfileById_WithValidTokenButUserNotFound() {
+        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI ";
         int nonExistentUserId = 99999;
 
         RestAssured
@@ -90,10 +100,11 @@ public class ProfileControllerTests {
                 .log().all()
                 .statusCode(404);
     }
+
     @Test
     @DisplayName("Lấy các tùy chọn cấu hình profile - Token hợp lệ")
     public void getAllProfileOptions_WithValidToken() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUxMTExMjM0LCJleHAiOjE3NTExOTc2MzR9.5tcooM25TcrUftkjEwRQcYPGirn8ORyGXptXK0jYZgw";
+        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
         RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
@@ -103,38 +114,39 @@ public class ProfileControllerTests {
                 .log().all()
                 .statusCode(200);
     }
+
     @Test
     @DisplayName("Cập nhật profile người dùng - Dữ liệu hợp lệ ")
     public void updateProfile_WithFullValidData() {
-        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUxMTExMjM0LCJleHAiOjE3NTExOTc2MzR9.5tcooM25TcrUftkjEwRQcYPGirn8ORyGXptXK0jYZgw";
+        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
 
         String requestBody = """
-{
-  "dateOfBirth": "2004-08-05",
-  "height": 160,
-  "bodyTypeId": 2,
-  "sex": "female",
-  "orientationId": 3,
-  "jobIndustryId": 7,
-  "drinkStatusId": 2,
-  "smokeStatusId": 1,
-  "interestedInNewLanguage": true,
-  "educationLevelId": 3,
-  "dropOut": false,
-  "locationPreference": 1,
-  "bio": "Hello, I’m bé mi ",
-  "location": {
-    "latitude": 10.762622,
-    "longitude": 106.660172,
-    "country": "Vietnam",
-    "state": "Ha Noi",
-    "city": "District 1"
-  },
-  "interestIds": [4, 6],
-  "languageIds": [3, 20],
-  "petIds": [2, 3]
-}
-    """;
+                {
+                  "dateOfBirth": "2004-08-05",
+                  "height": 160,
+                  "bodyTypeId": 2,
+                  "sex": "female",
+                  "orientationId": 3,
+                  "jobIndustryId": 7,
+                  "drinkStatusId": 2,
+                  "smokeStatusId": 1,
+                  "interestedInNewLanguage": true,
+                  "educationLevelId": 3,
+                  "dropOut": false,
+                  "locationPreference": 1,
+                  "bio": "Hello, I’m bé mi ",
+                  "location": {
+                    "latitude": 10.762622,
+                    "longitude": 106.660172,
+                    "country": "Vietnam",
+                    "state": "Ha Noi",
+                    "city": "District 1"
+                  },
+                  "interestIds": [4, 6],
+                  "languageIds": [3, 20],
+                  "petIds": [2, 3]
+                }
+                """;
 
         RestAssured
                 .given()
@@ -147,6 +159,33 @@ public class ProfileControllerTests {
                 .log().all()
                 .statusCode(200);
     }
+    @Test
+    @DisplayName("Ngày sinh dưới 18 tuổi - Không hợp lệ")
+    public void updateProfile_Under18YearsOld() {
+        String jwtToken = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW4udmFuLmFuQGV4YW1wbGUuY29tIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX1VTRVIiXSwiaWF0IjoxNzUyMTQ4MjQzLCJleHAiOjE3NTIyMzQ2NDN9.Y99R-5ISrxGEqd6kLRwML5ZZ2vYIUYV_ETvkW-8TMWI";
+        String requestBody = """
+            {
+              "dateOfBirth": "2010-01-01"
+            }
+            """;
+
+        Response response = RestAssured
+                .given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .contentType("application/json")
+                .body(requestBody)
+                .when()
+                .patch("/profiles/me");
+
+        response.
+                then()
+                .log().all()
+                .statusCode(400);
+        int statusCode = response.getStatusCode();
+        Assertions.assertEquals(400, statusCode,"Người dùng phải từ 18 tuổi trở lên");
+
+    }
+
 
 }
 
