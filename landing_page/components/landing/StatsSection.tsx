@@ -11,37 +11,37 @@ export function StatsSection({ t }: StatsSectionProps) {
   const stats = [
     {
       icon: Users,
-      number: "2M+",
+      number: "2000+",
       label: t.activeUsers,
       gradient: "from-blue-500 to-cyan-500",
     },
     {
       icon: Heart,
-      number: "850K+",
+      number: "450+",
       label: t.successfulMatches,
       gradient: "from-pink-500 to-rose-500",
     },
     {
       icon: Star,
-      number: "4.9/5",
+      number: "4.5/5",
       label: t.averageRating,
       gradient: "from-yellow-500 to-orange-500",
     },
     {
       icon: Trophy,
-      number: "25K+",
+      number: "85+",
       label: t.marriedCouples,
       gradient: "from-purple-500 to-indigo-500",
     },
     {
       icon: Globe,
-      number: "50+",
+      number: "3+",
       label: t.countries,
       gradient: "from-green-500 to-emerald-500",
     },
     {
       icon: Shield,
-      number: "99.9%",
+      number: "98%",
       label: t.safetyRate,
       gradient: "from-red-500 to-pink-500",
     },
