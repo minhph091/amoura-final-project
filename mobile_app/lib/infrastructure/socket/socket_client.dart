@@ -7,10 +7,15 @@ import 'package:stomp_dart_client/stomp_frame.dart';
 import '../../core/constants/websocket_config.dart';
 import '../../core/services/auth_service.dart';
 import '../../app/di/injection.dart';
+import '../../config/environment.dart';
 
 /// WebSocket STOMP client để kết nối với Spring Boot backend
 /// Xử lý việc nhận tin nhắn realtime, typing indicators, và notifications
 class SocketClient {
+  static final SocketClient _instance = SocketClient._internal();
+  factory SocketClient() => _instance;
+  SocketClient._internal();
+
   StompClient? _stompClient;
   bool _isConnected = false;
   String? _currentUserId;
@@ -36,9 +41,24 @@ class SocketClient {
   /// Kết nối tới WebSocket server với JWT authentication
   /// Sử dụng STOMP protocol trên WebSocket transport
   Future<void> connect(String userId) async {
+    // Connection guard - prevent multiple simultaneous connections
     if (_isConnected && _currentUserId == userId) {
       debugPrint('WebSocket: Already connected for user $userId');
       return;
+    }
+
+    // If connecting to different user, disconnect first
+    if (_isConnected && _currentUserId != userId) {
+      debugPrint('WebSocket: Switching user from $_currentUserId to $userId');
+      disconnect();
+    }
+
+    // Disconnect existing connection first
+    if (_stompClient != null) {
+      debugPrint('WebSocket: Disconnecting existing connection...');
+      _stompClient!.deactivate();
+      _stompClient = null;
+      _isConnected = false;
     }
 
     try {
@@ -50,11 +70,27 @@ class SocketClient {
         throw Exception('No access token available for WebSocket connection');
       }
 
-      debugPrint('WebSocket: Connecting to ${WebSocketConfig.wsEndpoint} for user $userId');
+      // Ensure proper WebSocket URL format - use explicit URL construction
+      String wsUrl;
+      switch (EnvironmentConfig.current) {
+        case Environment.dev:
+          wsUrl = 'ws://10.0.2.2:8080/api/ws';
+          break;
+        case Environment.staging:
+          wsUrl = 'ws://150.95.109.13:8080/api/ws';
+          break;
+        case Environment.prod:
+          wsUrl = 'wss://api.amoura.space/api/ws';
+          break;
+      }
+      
+      debugPrint('WebSocket: ENV = ${EnvironmentConfig.current}');
+      debugPrint('WebSocket: wsEndpoint = $wsUrl');
+      debugPrint('WebSocket: url truyền vào StompClient = $wsUrl');
 
       _stompClient = StompClient(
         config: StompConfig(
-          url: WebSocketConfig.wsEndpoint,
+          url: wsUrl,
           onConnect: _onConnect,
           onDisconnect: _onDisconnect,
           beforeConnect: () async {
@@ -63,10 +99,12 @@ class SocketClient {
           onWebSocketError: (dynamic error) {
             debugPrint('WebSocket Error: $error');
             _connectionController.add(false);
+            _isConnected = false;
           },
           onStompError: (StompFrame frame) {
             debugPrint('STOMP Error: ${frame.body}');
             _connectionController.add(false);
+            _isConnected = false;
           },
           onDebugMessage: (String message) {
             if (kDebugMode) {
@@ -80,6 +118,8 @@ class SocketClient {
           // Cấu hình heartbeat để maintain connection
           heartbeatIncoming: const Duration(seconds: 20),
           heartbeatOutgoing: const Duration(seconds: 20),
+          // Disable automatic reconnection to prevent multiple connections
+          reconnectDelay: Duration.zero,
         ),
       );
 
@@ -88,6 +128,7 @@ class SocketClient {
     } catch (e) {
       debugPrint('WebSocket: Failed to connect - $e');
       _connectionController.add(false);
+      _isConnected = false;
       rethrow;
     }
   }
@@ -364,5 +405,64 @@ class SocketClient {
     );
 
     debugPrint('WebSocket: Sent message to chat $chatRoomId - Type: $messageType');
+  }
+
+  /// Test connection để debug URL malformation
+  Future<void> testConnection() async {
+    try {
+      final accessToken = await _authService.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('No access token available');
+      }
+
+      String wsUrl;
+      switch (EnvironmentConfig.current) {
+        case Environment.dev:
+          wsUrl = 'ws://10.0.2.2:8080/api/ws';
+          break;
+        case Environment.staging:
+          wsUrl = 'ws://150.95.109.13:8080/api/ws';
+          break;
+        case Environment.prod:
+          wsUrl = 'wss://api.amoura.space/api/ws';
+          break;
+      }
+
+      debugPrint('=== WebSocket URL Test ===');
+      debugPrint('Environment: ${EnvironmentConfig.current}');
+      debugPrint('WebSocket URL: $wsUrl');
+      debugPrint('URL length: ${wsUrl.length}');
+      debugPrint('URL contains ws://: ${wsUrl.contains('ws://')}');
+      debugPrint('URL contains wss://: ${wsUrl.contains('wss://')}');
+      debugPrint('URL contains :0: ${wsUrl.contains(':0')}');
+      debugPrint('URL contains #: ${wsUrl.contains('#')}');
+      debugPrint('========================');
+
+      // Test with a simple WebSocket connection first
+      final testClient = StompClient(
+        config: StompConfig(
+          url: wsUrl,
+          onConnect: (frame) {
+            debugPrint('Test connection successful!');
+          },
+          onWebSocketError: (error) {
+            debugPrint('Test connection failed: $error');
+          },
+          stompConnectHeaders: {
+            'Authorization': 'Bearer $accessToken',
+          },
+          reconnectDelay: Duration.zero,
+        ),
+      );
+
+      testClient.activate();
+      
+      // Wait a bit then disconnect
+      await Future.delayed(const Duration(seconds: 5));
+      testClient.deactivate();
+      
+    } catch (e) {
+      debugPrint('Test connection error: $e');
+    }
   }
 }

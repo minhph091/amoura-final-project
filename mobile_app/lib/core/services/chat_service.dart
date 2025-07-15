@@ -473,10 +473,7 @@ class ChatService {
       debugPrint('Initializing WebSocket connection for user: $userId');
       _currentUserId = userId;
       
-      // Kết nối WebSocket
-      await _socketClient.connect(userId);
-      
-      // Subscribe vào các streams từ SocketClient
+      // Subscribe vào các streams từ SocketClient (không cần connect lại)
       _setupWebSocketListeners();
       
       debugPrint('WebSocket initialized successfully');

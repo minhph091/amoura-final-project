@@ -445,11 +445,8 @@ class ChatListViewModel extends ChangeNotifier {
       _currentUserId = userInfo['id']?.toString() ?? '';
       debugPrint('Current user ID loaded for chat list: $_currentUserId');
       
-      // Initialize WebSocket connection for realtime updates
+      // Initialize UserStatusService để track online/offline status
       if (_currentUserId.isNotEmpty && _currentUserId != 'unknown') {
-        await _chatService.initializeWebSocket(_currentUserId);
-        
-        // Initialize UserStatusService để track online/offline status
         await _userStatusService.initialize();
         debugPrint('ChatListViewModel: Initialized UserStatusService');
         

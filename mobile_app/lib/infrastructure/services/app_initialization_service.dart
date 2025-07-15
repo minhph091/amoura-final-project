@@ -115,6 +115,10 @@ class AppInitializationService {
       print('AppInitializationService: Khởi tạo WebSocket connection cho user $_currentUserId');
       
       final socketClient = GetIt.I<SocketClient>();
+      
+      // Test connection first to debug URL malformation
+      await socketClient.testConnection();
+      
       await socketClient.connect(_currentUserId.toString());
       
       print('AppInitializationService: WebSocket connection thành công');

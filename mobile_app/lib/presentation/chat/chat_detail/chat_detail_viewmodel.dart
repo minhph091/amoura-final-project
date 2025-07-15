@@ -357,11 +357,10 @@ class ChatDetailViewModel extends ChangeNotifier {
         });
       }
 
-      // Initialize WebSocket connection với current user ID
+      // Subscribe to chat room với current user ID
       if (_currentUserId.isNotEmpty) {
         debugPrint('ChatDetailViewModel: Setting up WebSocket for user $_currentUserId in chat $chatId');
         try {
-          await _chatService.initializeWebSocket(_currentUserId);
           await _chatService.subscribeToChat(chatId);
           debugPrint('ChatDetailViewModel: WebSocket setup completed successfully');
           // Stop periodic refresh nếu WebSocket thành công
