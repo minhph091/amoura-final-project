@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/language/language_controller.dart';
+import '../../../config/language/app_localizations.dart';
 
 class LanguageSelectorDialog extends StatelessWidget {
   const LanguageSelectorDialog({super.key});
@@ -8,6 +9,7 @@ class LanguageSelectorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final languageController = Provider.of<LanguageController>(context);
+    final localizations = AppLocalizations.of(context);
     final languages = languageController.getAvailableLanguages();
     final theme = Theme.of(context);
 
@@ -19,7 +21,7 @@ class LanguageSelectorDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Select Language",
+              localizations.translate('select_language'),
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MessageSquareHeart, Smartphone, Play } from "lucide-react";
+import { MessageSquareHeart, Smartphone, Download } from "lucide-react";
 
 interface DownloadSectionProps {
   t: any;
@@ -56,7 +56,13 @@ export function DownloadSection({ t }: DownloadSectionProps) {
               className="group bg-black dark:bg-slate-900 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-3 hover:bg-gray-800 dark:hover:bg-slate-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl w-full"
             >
               <div className="w-8 h-8 flex items-center justify-center">
-                <Play className="w-8 h-8" />
+                <svg
+                  className="w-8 h-8"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85a.637.637 0 0 0-.83.22l-1.88 3.24a11.43 11.43 0 0 0-8.94 0L5.65 5.67a.637.637 0 0 0-.83-.22c-.3.16-.42.54-.26.85L6.4 9.48C3.3 11.25 1.28 14.44 1 18h22c-.28-3.56-2.3-6.75-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z" />
+                </svg>
               </div>
               <div className="text-left">
                 <p className="text-xs opacity-80">

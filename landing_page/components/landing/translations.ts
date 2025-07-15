@@ -107,7 +107,7 @@ export const translations = {
     // Stats Section
     statsTitle: "Amoura trong con số",
     statsSubtitle:
-      "Hàng triệu người tin tưởng Amoura để tìm thấy tình yêu đích thực",
+      "Hàng ngàn người tin tưởng Amoura để tìm thấy tình yêu đích thực",
     activeUsers: "Người dùng hoạt động",
     successfulMatches: "Kết đôi thành công",
     averageRating: "Đánh giá trung bình",
@@ -144,7 +144,7 @@ export const translations = {
 
     // Join Community Section
     joinCommunity: "Tham gia cộng đồng",
-    thousandsJoinDaily: "Hàng ngàn người mới mỗi ngày",
+    thousandsJoinDaily: "Người mới tham gia hàng ngày",
 
     // App Screenshots Section
     appScreenshotsTitle: "Khám phá giao diện Amoura",
@@ -282,7 +282,7 @@ export const translations = {
 
     // Stats Section
     statsTitle: "Amoura in Numbers",
-    statsSubtitle: "Millions of people trust Amoura to find their true love",
+    statsSubtitle: "Thousands of people trust Amoura to find their true love",
     activeUsers: "Active Users",
     successfulMatches: "Successful Matches",
     averageRating: "Average Rating",
@@ -318,7 +318,7 @@ export const translations = {
 
     // Join Community Section
     joinCommunity: "Join the Community",
-    thousandsJoinDaily: "Thousands join every day",
+    thousandsJoinDaily: "New members join daily",
 
     // App Screenshots Section
     appScreenshotsTitle: "Experience Amoura",

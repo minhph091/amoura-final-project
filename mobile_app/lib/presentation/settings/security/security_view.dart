@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import 'authentication/authentication_view.dart';
 import 'account_management/account_management_view.dart';
@@ -8,6 +9,7 @@ class SecurityView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     print('Current theme is dark: $isDark');
 
@@ -15,7 +17,7 @@ class SecurityView extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Account Security'),
+          title: Text(localizations.translate('account_security_title')),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),

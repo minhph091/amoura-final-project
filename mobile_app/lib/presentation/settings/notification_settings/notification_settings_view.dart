@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import 'notification_settings_viewmodel.dart';
 
@@ -15,6 +16,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return ChangeNotifierProvider(
       create: (_) => NotificationSettingsViewModel(),
       child: Consumer<NotificationSettingsViewModel>(
@@ -25,7 +27,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                title: const Text('Notification Settings'),
+                title: Text(localizations.translate('notification_settings')),
                 centerTitle: true,
               ),
               body: Column(

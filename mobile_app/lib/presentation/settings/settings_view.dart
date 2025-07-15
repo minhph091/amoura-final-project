@@ -1,4 +1,5 @@
 // lib/presentation/settings/settings_view.dart
+import 'package:amoura/config/language/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../shared/widgets/app_gradient_background.dart';
@@ -27,13 +28,15 @@ class SettingsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return ChangeNotifierProvider<SettingsViewModel>(
       create: (_) => SettingsViewModel(),
       child: AppGradientBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: Center(child: const Text('Settings')),
+            title: Center(child: Text(localizations.translate('settings'))),
             backgroundColor: Colors.transparent,
             elevation: 0,
             automaticallyImplyLeading: false,
@@ -58,9 +61,12 @@ class SettingsView extends StatelessWidget {
               SettingsTile(
                 icon: Icons.person_outline_rounded,
                 title: 'View Profile',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => ProfileView(isMyProfile: true)),
-                ),
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProfileView(isMyProfile: true),
+                      ),
+                    ),
               ),
               SettingsTile(
                 icon: Icons.edit_outlined,
@@ -68,60 +74,75 @@ class SettingsView extends StatelessWidget {
                 onTap: () {
                   final profile = context.read<ProfileViewModel>().profile;
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => EditProfileView(profile: profile)),
+                    MaterialPageRoute(
+                      builder: (_) => EditProfileView(profile: profile),
+                    ),
                   );
                 },
               ),
               SettingsTile(
                 icon: Icons.security_outlined,
                 title: 'Account & Security',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SecurityView()),
-                ),
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SecurityView()),
+                    ),
               ),
               SettingsTile(
                 icon: Icons.notifications_active_outlined,
                 title: 'Notification Settings',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const NotificationSettingsView()),
-                ),
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationSettingsView(),
+                      ),
+                    ),
               ),
               SettingsTile(
                 icon: Icons.block_outlined,
                 title: 'Block List',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ChangeNotifierProvider(
-                      create: (_) => BlockingService(),
-                      child: const BlockListView(),
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (_) => ChangeNotifierProvider(
+                              create: (_) => BlockingService(),
+                              child: const BlockListView(),
+                            ),
+                      ),
                     ),
-                  ),
-                ),
               ),
               const SettingsDivider(),
               const SettingsSectionTitle(title: 'App Experience'),
               Consumer<ThemeModeController>(
-                builder: (context, themeController, _) => SettingsThemePicker(
-                  currentThemeMode: themeController.themeMode,
-                  onChanged: (mode) => themeController.setThemeMode(mode),
-                ),
+                builder:
+                    (context, themeController, _) => SettingsThemePicker(
+                      currentThemeMode: themeController.themeMode,
+                      onChanged: (mode) => themeController.setThemeMode(mode),
+                    ),
               ),
               const SettingsLanguageSelector(), // Add language selector here
               SettingsTile(
                 icon: Icons.subscriptions_outlined,
                 title: 'Subscription Plans',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SubscriptionPlansView()),
-                ),
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const SubscriptionPlansView(),
+                      ),
+                    ),
               ),
               const SettingsDivider(),
               const SettingsSectionTitle(title: 'Support & Legal'),
               SettingsTile(
                 icon: Icons.article_outlined,
                 title: 'Legal & Resources',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const LegalResourcesView()),
-                ),
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const LegalResourcesView(),
+                      ),
+                    ),
               ),
               const SizedBox(height: 16),
               const SettingsLogoutButton(),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/language/app_localizations.dart';
 
 // VIP Plan model class definition
 class VipPlan {
@@ -69,7 +70,8 @@ class VipSubscriptionViewModel extends ChangeNotifier {
   ];
 
   // Get the currently selected plan
-  VipPlan? get selectedPlan => plans.firstWhere((plan) => plan.id == _selectedPlanId);
+  VipPlan? get selectedPlan =>
+      plans.firstWhere((plan) => plan.id == _selectedPlanId);
 
   // Select a different plan
   void selectPlan(String planId) {
@@ -79,25 +81,29 @@ class VipSubscriptionViewModel extends ChangeNotifier {
 
   // Proceed to payment (mock implementation)
   void proceedToPayment(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     // This would typically navigate to a payment processing page
     // For now, we'll just show a dialog confirming the selection
-    final VipPlan selected = plans.firstWhere((plan) => plan.id == _selectedPlanId);
+    final VipPlan selected = plans.firstWhere(
+      (plan) => plan.id == _selectedPlanId,
+    );
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Subscription Selected'),
-        content: Text(
-          'You\'ve selected the ${selected.name} plan for \$${selected.price.toStringAsFixed(2)}. '
-          'In a real app, this would proceed to payment processing.'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+      builder:
+          (context) => AlertDialog(
+            title: Text(localizations.translate('subscription_selected')),
+            content: Text(
+              'You\'ve selected the ${selected.name} plan for \$${selected.price.toStringAsFixed(2)}. '
+              'In a real app, this would proceed to payment processing.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(localizations.translate('close')),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

@@ -6,12 +6,16 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../config/theme/app_colors.dart';
 import '../../core/constants/asset_path.dart';
 import '../../app/routes/app_routes.dart';
+import '../../config/language/app_localizations.dart';
+import '../../config/language/language_controller.dart';
 import '../common/terms_of_service_view.dart';
 import '../common/privacy_policy_view.dart';
 import '../shared/widgets/app_button.dart';
+import '../shared/widgets/language_selector.dart';
 import 'widgets/welcome_slide_item.dart';
 import 'widgets/welcome_page_indicator.dart';
 import 'widgets/login_options_bottom_sheet.dart';
@@ -45,24 +49,27 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideUpAnimation;
 
-  final List<WelcomeSlide> _slides = const [
-    WelcomeSlide(
-      imagePath: AssetPath.onboardingFindMatch,
-      title: 'Explore a World of Connections',
-      subtitle: 'Find new friends, meaningful relationships, and more.',
-    ),
-    WelcomeSlide(
-      imagePath: AssetPath.onboardingSafeSecure,
-      title: 'Showcase Your Personality',
-      subtitle: 'Create a unique profile, share your story and interests.',
-    ),
-    WelcomeSlide(
-      imagePath: AssetPath.onboardingStartChatting,
-      title: 'Start Your Journey of Love',
-      subtitle: 'Amoura - Where genuine connections are built and love flourishes.',
-      imageAlignment: Alignment.bottomCenter,
-    ),
-  ];
+  List<WelcomeSlide> get _slides {
+    final localizations = AppLocalizations.of(context);
+    return [
+      WelcomeSlide(
+        imagePath: AssetPath.onboardingFindMatch,
+        title: localizations.translate('welcome_slide1_title'),
+        subtitle: localizations.translate('welcome_slide1_subtitle'),
+      ),
+      WelcomeSlide(
+        imagePath: AssetPath.onboardingSafeSecure,
+        title: localizations.translate('welcome_slide2_title'),
+        subtitle: localizations.translate('welcome_slide2_subtitle'),
+      ),
+      WelcomeSlide(
+        imagePath: AssetPath.onboardingStartChatting,
+        title: localizations.translate('welcome_slide3_title'),
+        subtitle: localizations.translate('welcome_slide3_subtitle'),
+        imageAlignment: Alignment.bottomCenter,
+      ),
+    ];
+  }
 
   @override
   void initState() {
@@ -131,6 +138,8 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
+    final localizations = AppLocalizations.of(context);
+    final slides = _slides; // Get localized slides
 
     const double buttonHeight = 56.0;
     final double desiredButtonWidth = screenWidth * 0.86;
@@ -142,10 +151,10 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
           Positioned.fill(
             child: PageView.builder(
               controller: _pageController,
-              itemCount: _slides.length,
+              itemCount: slides.length,
               onPageChanged: (index) => setState(() => _currentPage = index),
               itemBuilder: (context, index) {
-                final slide = _slides[index];
+                final slide = slides[index];
                 return WelcomeSlideItem(slide: slide, index: index);
               },
             ),
@@ -189,6 +198,12 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
               ],
             ).animate().fadeIn(duration: 900.ms).slideY(begin: -0.6, end: 0, curve: Curves.elasticOut.flipped),
           ),
+          // Language selector in top-right corner
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 20,
+            right: 20,
+            child: const LanguageSelector(isCompact: true),
+          ),
           // BOTTOM CONTAINER
           Positioned(
             bottom: 0,
@@ -215,9 +230,9 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (_slides.length > 1)
-                        WelcomePageIndicator(currentPage: _currentPage, slideCount: _slides.length),
-                      SizedBox(height: _slides.length > 1 ? 28 : 10),
+                      if (slides.length > 1)
+                        WelcomePageIndicator(currentPage: _currentPage, slideCount: slides.length),
+                      SizedBox(height: slides.length > 1 ? 28 : 10),
                       SlideTransition(
                         position: _slideUpAnimation,
                         child: FadeTransition(
@@ -225,7 +240,7 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                           child: Column(
                             children: [
                               AppButton(
-                                text: 'SIGN IN',
+                                text: localizations.translate('sign_in').toUpperCase(),
                                 onPressed: () => _showLoginOptionsBottomSheet(context),
                                 gradient: LinearGradient(
                                   colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
@@ -249,7 +264,7 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                               ),
                               const SizedBox(height: 16),
                               AppButton(
-                                text: 'CREATE NEW ACCOUNT',
+                                text: localizations.translate('create_new_account'),
                                 onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
                                 color: Colors.white.withValues(alpha: 0.2),
                                 shape: RoundedRectangleBorder(
@@ -291,12 +306,12 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                               fontSize: 11.5,
                             ),
                             children: <TextSpan>[
-                              const TextSpan(text: 'By continuing, you agree to Amoura\'s '),
+                              TextSpan(text: localizations.translate('terms_agreement_text')),
                               TextSpan(
-                                text: 'Terms of Service',
+                                text: localizations.translate('terms_service_link'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.pinkAccent,
+                                  color: Color(0xFFD81B60), // Darker pink color
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () => Navigator.push(
@@ -306,12 +321,12 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                                     ),
                                   ),
                               ),
-                              const TextSpan(text: ' and '),
+                              TextSpan(text: localizations.translate('and_text')),
                               TextSpan(
-                                text: 'Privacy Policy',
+                                text: localizations.translate('privacy_policy_link'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.pinkAccent,
+                                  color: Color(0xFFD81B60), // Darker pink color
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () => Navigator.push(

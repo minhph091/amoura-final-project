@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../../infrastructure/services/blocking_service.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import 'block_list_viewmodel.dart';
@@ -15,7 +16,8 @@ class BlockListView extends StatefulWidget {
   State<BlockListView> createState() => _BlockListViewState();
 }
 
-class _BlockListViewState extends State<BlockListView> with SingleTickerProviderStateMixin {
+class _BlockListViewState extends State<BlockListView>
+    with SingleTickerProviderStateMixin {
   late BlockListViewModel _viewModel;
 
   @override
@@ -23,7 +25,10 @@ class _BlockListViewState extends State<BlockListView> with SingleTickerProvider
     super.initState();
 
     // Initialize ViewModel
-    final blockingService = Provider.of<BlockingService>(context, listen: false);
+    final blockingService = Provider.of<BlockingService>(
+      context,
+      listen: false,
+    );
     _viewModel = BlockListViewModel(blockingService, this);
 
     // Fetch data when the view initializes
@@ -46,23 +51,17 @@ class _BlockListViewState extends State<BlockListView> with SingleTickerProvider
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: const Text('Block List'),
+            title: Text(AppLocalizations.of(context).translate('block_list')),
             backgroundColor: Colors.transparent,
             elevation: 0,
             bottom: TabBar(
               controller: _viewModel.tabController,
-              tabs: const [
-                Tab(text: 'Users'),
-                Tab(text: 'Messages'),
-              ],
+              tabs: const [Tab(text: 'Users'), Tab(text: 'Messages')],
             ),
           ),
           body: TabBarView(
             controller: _viewModel.tabController,
-            children: const [
-              BlockedUsersTab(),
-              BlockedMessagesTab(),
-            ],
+            children: const [BlockedUsersTab(), BlockedMessagesTab()],
           ),
         ),
       ),

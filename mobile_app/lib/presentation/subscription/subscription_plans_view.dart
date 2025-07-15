@@ -1,6 +1,7 @@
 // filepath: c:\amoura-final-project\mobile-app\lib\presentation\subscription\subscription_plans_view.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../config/language/app_localizations.dart';
 import '../shared/widgets/app_gradient_background.dart';
 import 'widgets/subscription_card.dart';
 import 'widgets/vip_benefit_item.dart';
@@ -13,7 +14,10 @@ class SubscriptionPlansView extends StatefulWidget {
 }
 
 class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
-  final PageController _pageController = PageController(initialPage: 1, viewportFraction: 0.8);
+  final PageController _pageController = PageController(
+    initialPage: 1,
+    viewportFraction: 0.8,
+  );
   int _currentPage = 1;
 
   final List<Map<String, dynamic>> _subscriptionPlans = [
@@ -68,6 +72,7 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return AppGradientBackground(
@@ -203,9 +208,12 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
                     height: 8,
                     width: _currentPage == index ? 24 : 8,
                     decoration: BoxDecoration(
-                      color: _currentPage == index
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.primary.withValues(alpha: 0.3),
+                      color:
+                          _currentPage == index
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.primary.withValues(
+                                alpha: 0.3,
+                              ),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -216,13 +224,20 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
 
               // Payment Button
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 child: ElevatedButton(
                   onPressed: () {
                     // Navigate to payment page
                     // For now, just show a snackbar
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Payment functionality coming soon')),
+                      SnackBar(
+                        content: Text(
+                          localizations.translate('payment_coming_soon'),
+                        ),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../config/language/app_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
@@ -13,7 +14,8 @@ class Step3OrientationForm extends StatefulWidget {
   State<Step3OrientationForm> createState() => _Step3OrientationFormState();
 }
 
-class _Step3OrientationFormState extends State<Step3OrientationForm> with TickerProviderStateMixin {
+class _Step3OrientationFormState extends State<Step3OrientationForm>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -40,7 +42,7 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> with Ticker
   Widget build(BuildContext context) {
     final vm = Provider.of<SetupProfileViewModel>(context);
     final step3ViewModel = vm.stepViewModels[2] as Step3ViewModel;
-    
+
     // Listen to Step3ViewModel changes for real-time UI updates
     return AnimatedBuilder(
       animation: step3ViewModel,
@@ -50,9 +52,14 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> with Ticker
     );
   }
 
-  Widget _buildContent(SetupProfileViewModel vm, Step3ViewModel step3ViewModel) {
+  Widget _buildContent(
+    SetupProfileViewModel vm,
+    Step3ViewModel step3ViewModel,
+  ) {
     // Debug: Track UI rebuilds
-    print('🔄 Step3 UI rebuilding - selected orientation: ${step3ViewModel.orientationId}');
+    print(
+      '🔄 Step3 UI rebuilding - selected orientation: ${step3ViewModel.orientationId}',
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
@@ -64,21 +71,23 @@ class _Step3OrientationFormState extends State<Step3OrientationForm> with Ticker
             // Header Section
             OrientationHeader(),
             const SizedBox(height: 32),
-            
+
             // Content Section
             step3ViewModel.isLoading
                 ? OrientationLoadingState()
                 : step3ViewModel.errorMessage != null
-                    ? OrientationErrorState(errorMessage: step3ViewModel.errorMessage!)
-                    : step3ViewModel.orientationOptions.isEmpty
-                        ? OrientationEmptyState()
-                        : OrientationCards(step3ViewModel: step3ViewModel),
-            
+                ? OrientationErrorState(
+                  errorMessage: step3ViewModel.errorMessage!,
+                )
+                : step3ViewModel.orientationOptions.isEmpty
+                ? OrientationEmptyState()
+                : OrientationCards(step3ViewModel: step3ViewModel),
+
             const SizedBox(height: 40),
-            
+
             // Next Button
             SetupProfileButton(
-              text: 'Next',
+              text: AppLocalizations.of(context).translate('next'),
               onPressed: () => vm.nextStep(context: context),
               width: double.infinity,
               height: 52,

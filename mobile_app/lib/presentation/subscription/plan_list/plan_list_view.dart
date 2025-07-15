@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../infrastructure/services/subscription_service.dart';
 import '../../shared/widgets/app_button.dart';
@@ -10,7 +11,8 @@ import 'widgets/vip_feature_card.dart';
 
 class PlanListView extends StatefulWidget {
   final bool fromVipPromotion;
-  final String? sourceFeature; // Which feature triggered the promotion (e.g., 'rewind', 'likes')
+  final String?
+  sourceFeature; // Which feature triggered the promotion (e.g., 'rewind', 'likes')
 
   const PlanListView({
     Key? key,
@@ -22,9 +24,12 @@ class PlanListView extends StatefulWidget {
   State<PlanListView> createState() => _PlanListViewState();
 }
 
-class _PlanListViewState extends State<PlanListView> with SingleTickerProviderStateMixin {
+class _PlanListViewState extends State<PlanListView>
+    with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  final PageController _planPageController = PageController(viewportFraction: 0.85);
+  final PageController _planPageController = PageController(
+    viewportFraction: 0.85,
+  );
 
   @override
   void initState() {
@@ -34,7 +39,10 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
     // If we have a specific feature that triggered this view, focus on it
     if (widget.sourceFeature != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final viewModel = Provider.of<PlanListViewModel>(context, listen: false);
+        final viewModel = Provider.of<PlanListViewModel>(
+          context,
+          listen: false,
+        );
         // Select appropriate tab based on source feature
       });
     }
@@ -49,8 +57,13 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return ChangeNotifierProvider(
-      create: (_) => PlanListViewModel(Provider.of<SubscriptionService>(context, listen: false)),
+      create:
+          (_) => PlanListViewModel(
+            Provider.of<SubscriptionService>(context, listen: false),
+          ),
       child: Consumer<PlanListViewModel>(
         builder: (context, viewModel, _) {
           // Auto-select the recommended plan when the view is first created
@@ -62,7 +75,7 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
 
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Amoura VIP'),
+              title: Text(localizations.translate('amoura_vip')),
               centerTitle: true,
               elevation: 0,
             ),
@@ -78,12 +91,15 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
                         child: Column(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
                                     Colors.pink.shade300,
-                                    Colors.purple.shade300
+                                    Colors.purple.shade300,
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(20),
@@ -115,7 +131,8 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
                         Tab(text: 'Choose a Plan'),
                       ],
                       labelColor: Theme.of(context).primaryColor,
-                      unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
+                      unselectedLabelColor:
+                          Theme.of(context).textTheme.bodyMedium?.color,
                       indicatorColor: Theme.of(context).primaryColor,
                     ),
 
@@ -137,9 +154,10 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: AppButton(
-                        text: _tabController.index == 0
-                            ? 'Choose a Plan'
-                            : 'Continue to Payment',
+                        text:
+                            _tabController.index == 0
+                                ? 'Choose a Plan'
+                                : 'Continue to Payment',
                         isLoading: viewModel.isLoading,
                         onPressed: () {
                           if (_tabController.index == 0) {
@@ -172,15 +190,12 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
       children: [
         const Text(
           'Exclusive VIP Benefits',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         // List of VIP features
-        ...subscriptionService.vipFeatures.map((feature) =>
-          VipFeatureCard(
+        ...subscriptionService.vipFeatures.map(
+          (feature) => VipFeatureCard(
             feature: feature,
             isHighlighted: widget.sourceFeature == feature.id,
           ),
@@ -210,9 +225,8 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
                 plan: plan,
                 isSelected: isSelected,
                 onTap: () => viewModel.selectPlan(plan),
-                animation: isSelected
-                  ? _buildSelectionAnimation(context)
-                  : null,
+                animation:
+                    isSelected ? _buildSelectionAnimation(context) : null,
               );
             },
           ),
@@ -232,8 +246,8 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
-                    ...viewModel.selectedPlan!.benefits.map((benefit) =>
-                      Padding(
+                    ...viewModel.selectedPlan!.benefits.map(
+                      (benefit) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4.0),
                         child: Row(
                           children: [
@@ -243,9 +257,7 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
                               size: 18,
                             ),
                             const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(benefit),
-                            ),
+                            Expanded(child: Text(benefit)),
                           ],
                         ),
                       ),
@@ -282,10 +294,12 @@ class _PlanListViewState extends State<PlanListView> with SingleTickerProviderSt
   }
 
   void _proceedToPayment(BuildContext context, PlanListViewModel viewModel) {
+    final localizations = AppLocalizations.of(context);
+
     if (viewModel.selectedPlan == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a subscription plan'),
+        SnackBar(
+          content: Text(localizations.translate('select_subscription_plan')),
         ),
       );
       return;

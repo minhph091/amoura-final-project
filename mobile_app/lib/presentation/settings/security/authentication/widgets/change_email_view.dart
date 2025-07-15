@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:amoura/data/repositories/user_repository.dart';
+import '../../../../../config/language/app_localizations.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
 import 'change_email_viewmodel.dart';
 import 'email_password_form.dart';
@@ -12,6 +13,7 @@ class ChangeEmailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final userRepository = Provider.of<UserRepository>(context, listen: false);
     return ChangeNotifierProvider(
       create: (_) => ChangeEmailViewModel(userRepository: userRepository),
@@ -19,7 +21,7 @@ class ChangeEmailView extends StatelessWidget {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: const Text('Change Email'),
+            title: Text(localizations.translate('change_email')),
             backgroundColor: Colors.transparent,
             elevation: 0,
             leading: Consumer<ChangeEmailViewModel>(

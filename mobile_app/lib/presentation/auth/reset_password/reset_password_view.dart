@@ -1,6 +1,7 @@
 // lib/presentation/auth/reset_password/reset_password_view.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/language/app_localizations.dart';
 import 'widgets/reset_email_form.dart';
 import 'widgets/new_password_form.dart';
 import '../../shared/widgets/otp_input_form.dart';
@@ -15,6 +16,7 @@ class ResetPasswordView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return ChangeNotifierProvider(
       create: (_) => ResetPasswordViewModel(email: email),
       child: Consumer<ResetPasswordViewModel>(
@@ -29,7 +31,10 @@ class ResetPasswordView extends StatelessWidget {
               child: SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -44,19 +49,25 @@ class ResetPasswordView extends StatelessWidget {
                         const SizedBox(height: 22),
                         Text(
                           _getFormTitle(viewModel),
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                                letterSpacing: 1.2,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            letterSpacing: 1.2,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           _getFormSubtitle(viewModel),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.95),
-                                fontWeight: FontWeight.w500,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyLarge?.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.95),
+                            fontWeight: FontWeight.w500,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         if (viewModel.sentEmail != null)
@@ -64,10 +75,12 @@ class ResetPasswordView extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 6.0),
                             child: Text(
                               viewModel.sentEmail!,
-                              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.labelLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         const SizedBox(height: 28),
@@ -77,20 +90,33 @@ class ResetPasswordView extends StatelessWidget {
                               NewPasswordForm(
                                 isLoading: viewModel.isLoading,
                                 onSubmit: (password) async {
-                                  final success = await viewModel.resetPassword(password);
+                                  final success = await viewModel.resetPassword(
+                                    password,
+                                  );
                                   if (success) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Password reset successfully'),
+                                      SnackBar(
+                                        content: Text(
+                                          localizations.translate(
+                                            'password_changed_success',
+                                          ),
+                                        ),
                                         backgroundColor: Colors.green,
                                       ),
                                     );
-                                    Navigator.pushReplacementNamed(context, '/login');
+                                    Navigator.pushReplacementNamed(
+                                      context,
+                                      '/login',
+                                    );
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text(viewModel.errorMessage ?? 'Failed to reset password'),
-                                        backgroundColor: Theme.of(context).colorScheme.error,
+                                        content: Text(
+                                          viewModel.errorMessage ??
+                                              'Failed to reset password',
+                                        ),
+                                        backgroundColor:
+                                            Theme.of(context).colorScheme.error,
                                       ),
                                     );
                                   }
@@ -102,7 +128,8 @@ class ResetPasswordView extends StatelessWidget {
                                   child: Text(
                                     viewModel.errorMessage!,
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.error,
+                                      color:
+                                          Theme.of(context).colorScheme.error,
                                       fontSize: 14,
                                     ),
                                     textAlign: TextAlign.center,
@@ -124,17 +151,25 @@ class ResetPasswordView extends StatelessWidget {
                             isLoading: viewModel.isLoading,
                             onSend: (email) => viewModel.onSendEmail(email),
                           ),
-                        if (viewModel.errorMessage != null && !viewModel.hasVerifiedOtp)
+                        if (viewModel.errorMessage != null &&
+                            !viewModel.hasVerifiedOtp)
                           Padding(
                             padding: const EdgeInsets.only(top: 12),
                             child: Text(
                               viewModel.errorMessage!,
                               style: TextStyle(
-                                color: viewModel.errorMessage!.contains('successfully') ||
-                                        viewModel.errorMessage!.contains('A new OTP has been sent') ||
-                                        viewModel.errorMessage!.contains('has been sent to your email')
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.error,
+                                color:
+                                    viewModel.errorMessage!.contains(
+                                              'successfully',
+                                            ) ||
+                                            viewModel.errorMessage!.contains(
+                                              'A new OTP has been sent',
+                                            ) ||
+                                            viewModel.errorMessage!.contains(
+                                              'has been sent to your email',
+                                            )
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context).colorScheme.error,
                                 fontSize: 14,
                               ),
                               textAlign: TextAlign.center,
@@ -156,23 +191,23 @@ class ResetPasswordView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark
         ? LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.darkBackground,
-              AppColors.darkSecondary.withValues(alpha: 0.90),
-              AppColors.darkPrimary.withValues(alpha: 0.82),
-            ],
-          )
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.darkBackground,
+            AppColors.darkSecondary.withValues(alpha: 0.90),
+            AppColors.darkPrimary.withValues(alpha: 0.82),
+          ],
+        )
         : LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.background,
-              AppColors.primary.withValues(alpha: 0.13),
-              AppColors.secondary.withValues(alpha: 0.06),
-            ],
-          );
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.background,
+            AppColors.primary.withValues(alpha: 0.13),
+            AppColors.secondary.withValues(alpha: 0.06),
+          ],
+        );
   }
 
   String _getFormTitle(ResetPasswordViewModel viewModel) {
