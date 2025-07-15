@@ -1,6 +1,7 @@
 // lib/presentation/profile/setup/steps/step1_name_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/shake_widget.dart';
 import '../theme/setup_profile_theme.dart';
@@ -44,7 +45,8 @@ class _Step1NameFormState extends State<Step1NameForm> {
     vm.lastName = _lastNameCtrl.text.trim();
 
     // Đồng bộ lại cho Step1ViewModel nếu có
-    if (vm.stepViewModels.isNotEmpty && vm.stepViewModels[0] is Step1ViewModel) {
+    if (vm.stepViewModels.isNotEmpty &&
+        vm.stepViewModels[0] is Step1ViewModel) {
       final step1Vm = vm.stepViewModels[0] as Step1ViewModel;
       step1Vm.firstName = vm.firstName;
       step1Vm.lastName = vm.lastName;
@@ -58,14 +60,17 @@ class _Step1NameFormState extends State<Step1NameForm> {
       });
     } else {
       setState(() {
-        _firstNameError = ValidationUtil().validateFirstName(_firstNameCtrl.text) != null;
-        _lastNameError = ValidationUtil().validateLastName(_lastNameCtrl.text) != null;
+        _firstNameError =
+            ValidationUtil().validateFirstName(_firstNameCtrl.text) != null;
+        _lastNameError =
+            ValidationUtil().validateLastName(_lastNameCtrl.text) != null;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
 
     return SingleChildScrollView(
@@ -77,9 +82,15 @@ class _Step1NameFormState extends State<Step1NameForm> {
           children: [
             Text("Your Name", style: ProfileTheme.getTitleStyle(context)),
             const SizedBox(height: 6),
-            Text("This name will be visible to everyone.", style: ProfileTheme.getDescriptionStyle(context)),
+            Text(
+              "This name will be visible to everyone.",
+              style: ProfileTheme.getDescriptionStyle(context),
+            ),
             const SizedBox(height: 8),
-            Text("Fields marked with * are required.", style: ProfileTheme.getDescriptionStyle(context)),
+            Text(
+              "Fields marked with * are required.",
+              style: ProfileTheme.getDescriptionStyle(context),
+            ),
             const SizedBox(height: 24),
             ShakeWidget(
               shake: _firstNameError,
@@ -112,7 +123,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
             ),
             const SizedBox(height: 28),
             SetupProfileButton(
-              text: "Next",
+              text: localizations.translate('next'),
               onPressed: () {
                 _validateAndSave();
                 if (!_firstNameError && !_lastNameError) {

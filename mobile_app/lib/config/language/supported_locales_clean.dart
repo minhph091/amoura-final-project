@@ -200,9 +200,6 @@ final Map<String, dynamic> englishStrings = {
   'change_password_title': 'Change Password',
   'change_email_title': 'Change Email',
   'notification_settings_title': 'Notification Settings',
-
-  // Social Login
-  'login_coming_soon': 'Login with {} coming soon!',
 };
 
 // Vietnamese strings
@@ -403,7 +400,4 @@ final Map<String, dynamic> vietnameseStrings = {
   'change_password_title': 'Đổi mật khẩu',
   'change_email_title': 'Đổi email',
   'notification_settings_title': 'Cài đặt thông báo',
-
-  // Social Login
-  'login_coming_soon': 'Đăng nhập với {} sẽ sớm có!',
 };

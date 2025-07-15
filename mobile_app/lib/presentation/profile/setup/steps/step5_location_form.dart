@@ -1,6 +1,7 @@
 // lib/presentation/profile/setup/steps/step5_location_form.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
@@ -22,9 +23,15 @@ class Step5LocationForm extends StatelessWidget {
         children: [
           Text("Your Location", style: ProfileTheme.getTitleStyle(context)),
           const SizedBox(height: 6),
-          Text("This helps you connect with people nearby.", style: ProfileTheme.getDescriptionStyle(context)),
+          Text(
+            "This helps you connect with people nearby.",
+            style: ProfileTheme.getDescriptionStyle(context),
+          ),
           const SizedBox(height: 8),
-          Text("Tap the GPS icon to automatically detect your location.", style: ProfileTheme.getDescriptionStyle(context)),
+          Text(
+            "Tap the GPS icon to automatically detect your location.",
+            style: ProfileTheme.getDescriptionStyle(context),
+          ),
           const SizedBox(height: 18),
           AppTextField(
             controller: step5ViewModel.cityController,
@@ -33,7 +40,10 @@ class Step5LocationForm extends StatelessWidget {
             prefixIcon: Icons.location_city,
             prefixIconColor: ProfileTheme.darkPink,
             readOnly: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             style: ProfileTheme.getInputTextStyle(context),
             suffixIcon: _buildGpsButton(context, step5ViewModel),
           ),
@@ -45,7 +55,10 @@ class Step5LocationForm extends StatelessWidget {
             prefixIcon: Icons.map,
             prefixIconColor: ProfileTheme.darkPink,
             readOnly: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             style: ProfileTheme.getInputTextStyle(context),
           ),
           const SizedBox(height: 12),
@@ -56,18 +69,27 @@ class Step5LocationForm extends StatelessWidget {
             prefixIcon: Icons.flag,
             prefixIconColor: ProfileTheme.darkPink,
             readOnly: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             style: ProfileTheme.getInputTextStyle(context),
           ),
           const SizedBox(height: 20),
           Center(
-            child: Text("Preferred Distance (km)", style: ProfileTheme.getLabelStyle(context), textAlign: TextAlign.center),
+            child: Text(
+              "Preferred Distance (km)",
+              style: ProfileTheme.getLabelStyle(context),
+              textAlign: TextAlign.center,
+            ),
           ),
           Selector<SetupProfileViewModel, int?>(
             selector: (_, vm) => vm.locationPreference,
             builder: (context, locationPreference, child) {
               return Slider(
-                value: (locationPreference ?? 50).toDouble(), // Default to 50 if null
+                value:
+                    (locationPreference ?? 50)
+                        .toDouble(), // Default to 50 if null
                 min: 1,
                 max: 300,
                 divisions: 30,
@@ -75,14 +97,16 @@ class Step5LocationForm extends StatelessWidget {
                 activeColor: ProfileTheme.darkPink,
                 inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
                 onChanged: (val) {
-                  vm.setLocationPreference(val.round()); // Call setLocationPreference to update value
+                  vm.setLocationPreference(
+                    val.round(),
+                  ); // Call setLocationPreference to update value
                 },
               );
             },
           ),
           const SizedBox(height: 28),
           SetupProfileButton(
-            text: "Next",
+            text: AppLocalizations.of(context).translate('next'),
             onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
@@ -100,22 +124,35 @@ class Step5LocationForm extends StatelessWidget {
           print('GPS button tapped.');
           final result = await showDialog<bool>(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Location Permission'),
-              content: const Text('This app needs location access to fill address fields.'),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Deny')),
-                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Allow')),
-              ],
-            ),
+            builder:
+                (context) => AlertDialog(
+                  title: const Text('Location Permission'),
+                  content: const Text(
+                    'This app needs location access to fill address fields.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Deny'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Allow'),
+                    ),
+                  ],
+                ),
           );
           if (result == true) {
-            print('User allowed location access, calling getCurrentLocation...');
+            print(
+              'User allowed location access, calling getCurrentLocation...',
+            );
             await step5ViewModel.getCurrentLocation(context);
             print('Finished calling getCurrentLocation.');
           } else {
             print('User denied location access.');
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Permission denied")));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text("Permission denied")));
           }
         },
         borderRadius: BorderRadius.circular(50),
@@ -129,8 +166,14 @@ class Step5LocationForm extends StatelessWidget {
             tween: Tween(begin: 1.0, end: 1.2),
             duration: const Duration(seconds: 2),
             curve: Curves.easeInOut,
-            builder: (context, value, child) => Transform.scale(scale: value, child: child),
-            child: Icon(Icons.gps_fixed, color: ProfileTheme.darkPink, size: 24),
+            builder:
+                (context, value, child) =>
+                    Transform.scale(scale: value, child: child),
+            child: Icon(
+              Icons.gps_fixed,
+              color: ProfileTheme.darkPink,
+              size: 24,
+            ),
           ),
         ),
       ),

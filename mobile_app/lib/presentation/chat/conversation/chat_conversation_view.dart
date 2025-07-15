@@ -1,5 +1,6 @@
 // filepath: c:\amoura-final-project\mobile-app\lib\presentation\chat\conversation\chat_conversation_view.dart
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../../data/models/chat/message_model.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/message_input.dart';
@@ -91,7 +92,8 @@ class _ChatConversationViewState extends State<ChatConversationView> {
         id: 4,
         senderId: 2,
         receiverId: 1,
-        content: "It's a mobile app for connecting people with similar interests. I'm calling it Amoura.",
+        content:
+            "It's a mobile app for connecting people with similar interests. I'm calling it Amoura.",
         messageTypeId: 1,
         isRead: true,
         isEdited: false,
@@ -162,7 +164,9 @@ class _ChatConversationViewState extends State<ChatConversationView> {
 
     if (_editingMessage != null) {
       // Handle editing existing message
-      final index = _messages.indexWhere((msg) => msg.id == _editingMessage!.id);
+      final index = _messages.indexWhere(
+        (msg) => msg.id == _editingMessage!.id,
+      );
       if (index != -1) {
         final updatedMessage = MessageModel(
           id: _editingMessage!.id,
@@ -199,7 +203,8 @@ class _ChatConversationViewState extends State<ChatConversationView> {
 
   void _handleLongPressMessage(MessageModel message) {
     // Show options: Reply, Edit (if own message), Pin, Delete, etc.
-    if (message.senderId == 1) { // Current user ID
+    if (message.senderId == 1) {
+      // Current user ID
       _showMessageOptionsForOwnMessage(message);
     } else {
       _showMessageOptionsForOtherMessage(message);
@@ -207,96 +212,99 @@ class _ChatConversationViewState extends State<ChatConversationView> {
   }
 
   void _showMessageOptionsForOwnMessage(MessageModel message) {
+    final localizations = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.reply),
-              title: const Text('Reply'),
-              onTap: () {
-                Navigator.pop(context);
-                setState(() {
-                  _replyingToMessage = message;
-                  _editingMessage = null;
-                });
-              },
+      builder:
+          (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.reply),
+                  title: Text(localizations.translate('reply')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _replyingToMessage = message;
+                      _editingMessage = null;
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: Text(localizations.translate('edit')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _editingMessage = message;
+                      _replyingToMessage = null;
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.push_pin),
+                  title: Text(_isPinned(message) ? 'Unpin' : 'Pin'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _togglePinMessage(message);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text(
+                    localizations.translate('delete'),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _deleteMessage(message);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit'),
-              onTap: () {
-                Navigator.pop(context);
-                setState(() {
-                  _editingMessage = message;
-                  _replyingToMessage = null;
-                });
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.push_pin),
-              title: Text(
-                _isPinned(message) ? 'Unpin' : 'Pin',
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _togglePinMessage(message);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text('Delete', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Navigator.pop(context);
-                _deleteMessage(message);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
   void _showMessageOptionsForOtherMessage(MessageModel message) {
+    final localizations = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.reply),
-              title: const Text('Reply'),
-              onTap: () {
-                Navigator.pop(context);
-                setState(() {
-                  _replyingToMessage = message;
-                });
-              },
+      builder:
+          (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.reply),
+                  title: Text(localizations.translate('reply')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _replyingToMessage = message;
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.push_pin),
+                  title: Text(_isPinned(message) ? 'Unpin' : 'Pin'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _togglePinMessage(message);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.copy),
+                  title: Text(localizations.translate('copy')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Copy message text to clipboard
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.push_pin),
-              title: Text(
-                _isPinned(message) ? 'Unpin' : 'Pin',
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _togglePinMessage(message);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.copy),
-              title: const Text('Copy'),
-              onTap: () {
-                Navigator.pop(context);
-                // Copy message text to clipboard
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -339,6 +347,7 @@ class _ChatConversationViewState extends State<ChatConversationView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -349,34 +358,44 @@ class _ChatConversationViewState extends State<ChatConversationView> {
               height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.2),
               ),
-              child: widget.recipientAvatarUrl != null && widget.recipientAvatarUrl!.isNotEmpty
-                  ? ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Image.network(
-                  widget.recipientAvatarUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Center(
-                    child: Text(
-                      widget.recipientName.isNotEmpty ? widget.recipientName[0].toUpperCase() : '?',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+              child:
+                  widget.recipientAvatarUrl != null &&
+                          widget.recipientAvatarUrl!.isNotEmpty
+                      ? ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.network(
+                          widget.recipientAvatarUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (context, error, stackTrace) => Center(
+                                child: Text(
+                                  widget.recipientName.isNotEmpty
+                                      ? widget.recipientName[0].toUpperCase()
+                                      : '?',
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                        ),
+                      )
+                      : Center(
+                        child: Text(
+                          widget.recipientName.isNotEmpty
+                              ? widget.recipientName[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-              )
-                  : Center(
-                child: Text(
-                  widget.recipientName.isNotEmpty ? widget.recipientName[0].toUpperCase() : '?',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
             ),
             const SizedBox(width: 8),
 
@@ -459,67 +478,84 @@ class _ChatConversationViewState extends State<ChatConversationView> {
 
           // Messages list
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _messages.isEmpty
-                ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No messages yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start a conversation',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ),
-            )
-                : ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 8.0),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                final isMyMessage = message.senderId == 1; // Current user ID
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _messages.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 64,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.3),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No messages yet',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Start a conversation',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        final message = _messages[index];
+                        final isMyMessage =
+                            message.senderId == 1; // Current user ID
 
-                // Show date separator (would need to implement logic to determine when to show)
-                bool showDateSeparator = index == 0 ||
-                    !_isSameDay(_messages[index].createdAt, _messages[index - 1].createdAt);
+                        // Show date separator (would need to implement logic to determine when to show)
+                        bool showDateSeparator =
+                            index == 0 ||
+                            !_isSameDay(
+                              _messages[index].createdAt,
+                              _messages[index - 1].createdAt,
+                            );
 
-                return Column(
-                  children: [
-                    if (showDateSeparator)
-                      _buildDateSeparator(message.createdAt),
-                    MessageBubble(
-                      message: message,
-                      isMyMessage: isMyMessage,
-                      senderName: isMyMessage ? 'You' : widget.recipientName,
-                      senderAvatarUrl: isMyMessage ? null : widget.recipientAvatarUrl,
-                      onMessageLongPress: _handleLongPressMessage,
-                      onDoubleTap: (msg) => setState(() {
-                        _replyingToMessage = msg;
-                      }),
+                        return Column(
+                          children: [
+                            if (showDateSeparator)
+                              _buildDateSeparator(message.createdAt),
+                            MessageBubble(
+                              message: message,
+                              isMyMessage: isMyMessage,
+                              senderName:
+                                  isMyMessage ? 'You' : widget.recipientName,
+                              senderAvatarUrl:
+                                  isMyMessage
+                                      ? null
+                                      : widget.recipientAvatarUrl,
+                              onMessageLongPress: _handleLongPressMessage,
+                              onDoubleTap:
+                                  (msg) => setState(() {
+                                    _replyingToMessage = msg;
+                                  }),
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                  ],
-                );
-              },
-            ),
           ),
 
           // Message input
@@ -533,14 +569,16 @@ class _ChatConversationViewState extends State<ChatConversationView> {
             },
             isReplying: _replyingToMessage != null,
             replyingTo: _replyingToMessage?.content,
-            onCancelReply: () => setState(() {
-              _replyingToMessage = null;
-            }),
+            onCancelReply:
+                () => setState(() {
+                  _replyingToMessage = null;
+                }),
             isEditing: _editingMessage != null,
             editingText: _editingMessage?.content,
-            onCancelEdit: () => setState(() {
-              _editingMessage = null;
-            }),
+            onCancelEdit:
+                () => setState(() {
+                  _editingMessage = null;
+                }),
           ),
         ],
       ),
@@ -560,7 +598,9 @@ class _ChatConversationViewState extends State<ChatConversationView> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),

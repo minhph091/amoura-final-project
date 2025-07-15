@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
 class SearchHistoryOverlay extends StatefulWidget {
@@ -85,27 +86,28 @@ class _SearchHistoryOverlayState extends State<SearchHistoryOverlay> {
   void _clearAllSearchHistory() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear search history?'),
-        content: const Text(
-          'This will delete all your search history. Are you sure you want to continue?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Clear search history?'),
+            content: const Text(
+              'This will delete all your search history. Are you sure you want to continue?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _recentSearches.clear();
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text('Delete all'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _recentSearches.clear();
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Delete all'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -146,27 +148,23 @@ class _SearchHistoryOverlayState extends State<SearchHistoryOverlay> {
               ),
               _recentSearches.isEmpty
                   ? const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(
-                        child: Text(
-                          'No search history',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        ),
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Center(
+                      child: Text(
+                        'No search history',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
-                    )
-                  : Wrap(
-                      spacing: 8.0,
-                      runSpacing: 8.0,
-                      children: _recentSearches
-                          .take(6)
-                          .map(
-                            (term) => _buildSearchTermChip(term),
-                          )
-                          .toList(),
                     ),
+                  )
+                  : Wrap(
+                    spacing: 8.0,
+                    runSpacing: 8.0,
+                    children:
+                        _recentSearches
+                            .take(6)
+                            .map((term) => _buildSearchTermChip(term))
+                            .toList(),
+                  ),
               const SizedBox(height: 24),
 
               // Recently viewed users section
@@ -180,38 +178,31 @@ class _SearchHistoryOverlayState extends State<SearchHistoryOverlay> {
               const SizedBox(height: 8),
               _recentUsers.isEmpty
                   ? const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(
-                        child: Text(
-                          'No recently viewed users',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    )
-                  : SizedBox(
-                      height: 110,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _recentUsers.length,
-                        itemBuilder: (context, index) {
-                          final user = _recentUsers[index];
-                          return _buildRecentUserItem(user);
-                        },
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Center(
+                      child: Text(
+                        'No recently viewed users',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ),
+                  )
+                  : SizedBox(
+                    height: 110,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _recentUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = _recentUsers[index];
+                        return _buildRecentUserItem(user);
+                      },
+                    ),
+                  ),
               const SizedBox(height: 24),
 
               // Nearby users section
-              _buildSectionHeader(
-                'Nearby Users',
-                'View more',
-                () {
-                  // Handle view more action
-                },
-              ),
+              _buildSectionHeader('Nearby Users', 'View more', () {
+                // Handle view more action
+              }),
               const SizedBox(height: 8),
               SizedBox(
                 height: 110,
@@ -234,9 +225,7 @@ class _SearchHistoryOverlayState extends State<SearchHistoryOverlay> {
                     onPressed: _clearAllSearchHistory,
                     icon: const Icon(Icons.delete_outline),
                     label: const Text('Clear all search history'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                    ),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -247,22 +236,20 @@ class _SearchHistoryOverlayState extends State<SearchHistoryOverlay> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String? actionText, VoidCallback? onAction) {
+  Widget _buildSectionHeader(
+    String title,
+    String? actionText,
+    VoidCallback? onAction,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         if (actionText != null && onAction != null)
-          TextButton(
-            onPressed: onAction,
-            child: Text(actionText),
-          ),
+          TextButton(onPressed: onAction, child: Text(actionText)),
       ],
     );
   }

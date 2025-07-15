@@ -1,5 +1,6 @@
 // lib/presentation/auth/login/widgets/social_login_button.dart
 import 'package:flutter/material.dart';
+import '../../../../config/language/app_localizations.dart';
 
 class SocialLoginButtons extends StatelessWidget {
   final VoidCallback? onGoogle;
@@ -9,9 +10,10 @@ class SocialLoginButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Column(
       children: [
-        const Text("Or sign in with"),
+        Text(localizations.translate('or_sign_in_with')),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -36,7 +38,8 @@ class SocialLoginButtons extends StatelessWidget {
                   ),
                   child: Image.asset(
                     'assets/logos/google_logo.png',
-                    width: 32, height: 32,
+                    width: 32,
+                    height: 32,
                   ),
                 ),
               ),
@@ -61,7 +64,8 @@ class SocialLoginButtons extends StatelessWidget {
                   ),
                   child: Image.asset(
                     'assets/logos/facebook_logo.png',
-                    width: 38, height: 38,
+                    width: 38,
+                    height: 38,
                   ),
                 ),
               ),

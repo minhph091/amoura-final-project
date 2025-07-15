@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../../domain/models/settings/blocked_user.dart';
 import '../../../../infrastructure/services/blocking_service.dart';
 import 'blocked_user_item.dart';
@@ -17,6 +18,7 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final blockingService = Provider.of<BlockingService>(context);
     final blockedUsers = blockingService.blockedUsers;
 
@@ -28,8 +30,13 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
             // Multi-selection controls
             if (_isSelectionMode)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: Theme.of(context).primaryColor.withAlpha(26), // replaced withOpacity(0.1)
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                color: Theme.of(
+                  context,
+                ).primaryColor.withAlpha(26), // replaced withOpacity(0.1)
                 child: Row(
                   children: [
                     Text(
@@ -44,14 +51,12 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
                           _isSelectionMode = false;
                         });
                       },
-                      child: const Text('Cancel'),
+                      child: Text(localizations.translate('cancel')),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () async {
-                        await blockingService.unblockUsers(
-                          _selectedUsers,
-                        );
+                        await blockingService.unblockUsers(_selectedUsers);
                         setState(() {
                           _selectedUsers.clear();
                           _isSelectionMode = false;
@@ -60,7 +65,7 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.error,
                       ),
-                      child: const Text('Unblock'),
+                      child: Text(localizations.translate('unblock')),
                     ),
                   ],
                 ),
@@ -68,9 +73,10 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
 
             // Blocked users list
             Expanded(
-              child: blockingService.isLoadingUsers
-                  ? const Center(child: CircularProgressIndicator())
-                  : blockedUsers.isEmpty
+              child:
+                  blockingService.isLoadingUsers
+                      ? const Center(child: CircularProgressIndicator())
+                      : blockedUsers.isEmpty
                       ? const Center(child: Text('No blocked users'))
                       : buildBlockedUsersList(blockedUsers),
             ),
@@ -85,7 +91,7 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
             child: FloatingActionButton.extended(
               onPressed: showUnblockAllDialog,
               icon: const Icon(Icons.lock_open),
-              label: const Text('Unblock all'),
+              label: Text(localizations.translate('unblock_all')),
             ),
           ),
       ],
@@ -101,7 +107,8 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
       itemCount: rowCount,
       itemBuilder: (context, rowIndex) {
         final int startIndex = rowIndex * 2;
-        final int endIndex = startIndex + 1 < users.length ? startIndex + 1 : startIndex;
+        final int endIndex =
+            startIndex + 1 < users.length ? startIndex + 1 : startIndex;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -172,7 +179,10 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
   }
 
   void _handleUnblock(String userId) async {
-    final blockingService = Provider.of<BlockingService>(context, listen: false);
+    final blockingService = Provider.of<BlockingService>(
+      context,
+      listen: false,
+    );
     await blockingService.unblockUser(userId);
   }
 
@@ -187,30 +197,38 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
   }
 
   void showUnblockAllDialog() {
+    final localizations = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Unblock All'),
-        content: const Text('Are you sure you want to unblock all users?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: Text(localizations.translate('unblock_all')),
+            content: Text(localizations.translate('unblock_all_confirmation')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(localizations.translate('cancel')),
+              ),
+              TextButton(
+                onPressed: () {
+                  final blockingService = Provider.of<BlockingService>(
+                    context,
+                    listen: false,
+                  );
+                  final userIds =
+                      blockingService.blockedUsers
+                          .map((user) => user.id)
+                          .toSet();
+                  blockingService.unblockUsers(userIds);
+                  Navigator.of(context).pop();
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                child: Text(localizations.translate('unblock')),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              final blockingService = Provider.of<BlockingService>(context, listen: false);
-              final userIds = blockingService.blockedUsers.map((user) => user.id).toSet();
-              blockingService.unblockUsers(userIds);
-              Navigator.of(context).pop();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Unblock'),
-          ),
-        ],
-      ),
     );
   }
 }

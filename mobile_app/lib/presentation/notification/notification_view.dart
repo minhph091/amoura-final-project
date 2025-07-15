@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/language/app_localizations.dart';
 import '../shared/widgets/app_gradient_background.dart';
 import 'notification_viewmodel.dart';
 import 'widgets/notification_item.dart';
@@ -11,7 +12,8 @@ class NotificationView extends StatefulWidget {
   State<NotificationView> createState() => _NotificationViewState();
 }
 
-class _NotificationViewState extends State<NotificationView> with SingleTickerProviderStateMixin {
+class _NotificationViewState extends State<NotificationView>
+    with SingleTickerProviderStateMixin {
   final NotificationViewModel _viewModel = NotificationViewModel();
   late TabController _tabController;
 
@@ -151,7 +153,7 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
     List<NotificationModel> notifications,
     String emptyTitle,
     String emptySubtitle,
-    NotificationType type
+    NotificationType type,
   ) {
     if (notifications.isEmpty) {
       return _buildEmptyState(emptyTitle, emptySubtitle);
@@ -183,7 +185,9 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -195,27 +199,25 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
           const SizedBox(height: 24),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              subtitle,
-              textAlign: TextAlign.center,
-            ),
+            child: Text(subtitle, textAlign: TextAlign.center),
           ),
         ],
       ),
     );
   }
 
-  void _handleNotificationTap(BuildContext context, NotificationModel notification) {
+  void _handleNotificationTap(
+    BuildContext context,
+    NotificationModel notification,
+  ) {
     _viewModel.markAsRead(notification.id);
-    if (notification.type == NotificationType.match || notification.type == NotificationType.like) {
+    if (notification.type == NotificationType.match ||
+        notification.type == NotificationType.like) {
       // Show dialog với 2 lựa chọn
       showModalBottomSheet(
         context: context,
@@ -232,7 +234,11 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
                   title: const Text('Chat'),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.chatConversation, arguments: notification.userId);
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.chatConversation,
+                      arguments: notification.userId,
+                    );
                   },
                 ),
                 ListTile(
@@ -240,7 +246,11 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
                   title: const Text('Xem thông tin'),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/profile/view', arguments: notification.userId);
+                    Navigator.pushNamed(
+                      context,
+                      '/profile/view',
+                      arguments: notification.userId,
+                    );
                   },
                 ),
                 const SizedBox(height: 10),
@@ -254,7 +264,11 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
     // Logic cũ cho message/system
     switch (notification.type) {
       case NotificationType.message:
-        Navigator.pushNamed(context, AppRoutes.chatConversation, arguments: notification.userId);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.chatConversation,
+          arguments: notification.userId,
+        );
         break;
       case NotificationType.system:
         if (notification.url != null) {
@@ -294,7 +308,9 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
                   _viewModel.markAllAsReadByType(type);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('All ${type.name} notifications marked as read'),
+                      content: Text(
+                        'All ${type.name} notifications marked as read',
+                      ),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -302,7 +318,10 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('Clear all notifications', style: TextStyle(color: Colors.red)),
+                title: const Text(
+                  'Clear all notifications',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _showClearConfirmationDialog(context, type);
@@ -316,32 +335,38 @@ class _NotificationViewState extends State<NotificationView> with SingleTickerPr
     );
   }
 
-  void _showClearConfirmationDialog(BuildContext context, NotificationType type) {
+  void _showClearConfirmationDialog(
+    BuildContext context,
+    NotificationType type,
+  ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Clear ${type.name} notifications?'),
-        content: Text('This will remove all ${type.name} notifications. This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Clear ${type.name} notifications?'),
+            content: Text(
+              'This will remove all ${type.name} notifications. This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('CANCEL'),
+              ),
+              TextButton(
+                onPressed: () {
+                  _viewModel.clearAllByType(type);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('All ${type.name} notifications cleared'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: const Text('CLEAR', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              _viewModel.clearAllByType(type);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('All ${type.name} notifications cleared'),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-            child: const Text('CLEAR', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 }

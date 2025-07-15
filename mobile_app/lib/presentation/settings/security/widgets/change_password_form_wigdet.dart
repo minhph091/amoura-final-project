@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:amoura/core/utils/validation_util.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../authentication/widgets/change_password_viewmodel.dart';
@@ -20,6 +21,7 @@ class _ChangePasswordFormWidgetState extends State<ChangePasswordFormWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final color = theme.brightness == Brightness.dark
         ? const Color(0xFFFF69B4)
@@ -36,7 +38,7 @@ class _ChangePasswordFormWidgetState extends State<ChangePasswordFormWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Update your password',
+                  localizations.translate('update_your_password'),
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: color,
                     fontWeight: FontWeight.bold,
@@ -46,7 +48,7 @@ class _ChangePasswordFormWidgetState extends State<ChangePasswordFormWidget> {
                 const SizedBox(height: 16),
                 AppTextField(
                   controller: viewModel.currentPasswordController,
-                  labelText: 'Current Password',
+                  labelText: localizations.translate('current_password'),
                   obscureText: !_showCurrentPassword,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   suffixIcon: IconButton(
@@ -59,7 +61,7 @@ class _ChangePasswordFormWidgetState extends State<ChangePasswordFormWidget> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Current password is required';
+                      return localizations.translate('current_password_required');
                     }
                     if (viewModel.currentPasswordError != null) {
                       return viewModel.currentPasswordError;
@@ -73,7 +75,7 @@ class _ChangePasswordFormWidgetState extends State<ChangePasswordFormWidget> {
                 const SizedBox(height: 28),
                 AppTextField(
                   controller: viewModel.newPasswordController,
-                  labelText: 'New Password',
+                  labelText: localizations.translate('new_password'),
                   obscureText: !_showNewPassword,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   suffixIcon: IconButton(
@@ -92,7 +94,7 @@ class _ChangePasswordFormWidgetState extends State<ChangePasswordFormWidget> {
                 const SizedBox(height: 28),
                 AppTextField(
                   controller: viewModel.confirmPasswordController,
-                  labelText: 'Confirm New Password',
+                  labelText: localizations.translate('confirm_new_password'),
                   obscureText: !_showConfirmPassword,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   suffixIcon: IconButton(
@@ -116,7 +118,7 @@ class _ChangePasswordFormWidgetState extends State<ChangePasswordFormWidget> {
                   child: SizedBox(
                     width: MediaQuery.of(context).size.width * 0.5,
                     child: AppButton(
-                      text: 'Save Changes',
+                      text: localizations.translate('save_changes'),
                       onPressed: viewModel.isLoading
                           ? null
                           : () async {

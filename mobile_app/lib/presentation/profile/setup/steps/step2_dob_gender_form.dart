@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../../core/utils/date_util.dart';
 import '../../../../core/utils/validation_util.dart';
 import '../../../shared/widgets/shake_widget.dart';
@@ -29,7 +30,10 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
     super.initState();
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
     _dobController = TextEditingController(
-      text: vm.dateOfBirth == null ? '' : DateUtil.formatDDMMYYYY(vm.dateOfBirth!),
+      text:
+          vm.dateOfBirth == null
+              ? ''
+              : DateUtil.formatDDMMYYYY(vm.dateOfBirth!),
     );
   }
 
@@ -43,7 +47,8 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
 
     // Đồng bộ lại cho Step2ViewModel nếu có
-    if (vm.stepViewModels.isNotEmpty && vm.stepViewModels[1] is Step2ViewModel) {
+    if (vm.stepViewModels.isNotEmpty &&
+        vm.stepViewModels[1] is Step2ViewModel) {
       final step2Vm = vm.stepViewModels[1] as Step2ViewModel;
       step2Vm.dateOfBirth = vm.dateOfBirth;
       step2Vm.sex = vm.sex;
@@ -65,6 +70,7 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final vm = Provider.of<SetupProfileViewModel>(context);
 
     return SingleChildScrollView(
@@ -74,11 +80,20 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your Birthday & Gender', style: ProfileTheme.getTitleStyle(context)),
+            Text(
+              'Your Birthday & Gender',
+              style: ProfileTheme.getTitleStyle(context),
+            ),
             const SizedBox(height: 6),
-            Text('This helps us personalize your dating experience.', style: ProfileTheme.getDescriptionStyle(context)),
+            Text(
+              'This helps us personalize your dating experience.',
+              style: ProfileTheme.getDescriptionStyle(context),
+            ),
             const SizedBox(height: 8),
-            Text('Fields marked with * are required.', style: ProfileTheme.getDescriptionStyle(context)),
+            Text(
+              'Fields marked with * are required.',
+              style: ProfileTheme.getDescriptionStyle(context),
+            ),
             const SizedBox(height: 24),
             ShakeWidget(
               shake: _dobError,
@@ -96,7 +111,8 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                     setState(() {
                       vm.dateOfBirth = picked;
                       // Đồng bộ lại cho Step2ViewModel
-                      if (vm.stepViewModels.isNotEmpty && vm.stepViewModels[1] is Step2ViewModel) {
+                      if (vm.stepViewModels.isNotEmpty &&
+                          vm.stepViewModels[1] is Step2ViewModel) {
                         final step2Vm = vm.stepViewModels[1] as Step2ViewModel;
                         step2Vm.dateOfBirth = picked;
                       }
@@ -111,7 +127,9 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                     prefixIcon: Icons.cake_rounded,
                     prefixIconColor: ProfileTheme.darkPink,
                     controller: _dobController,
-                    validator: (v) => ValidationUtil().validateBirthday(vm.dateOfBirth),
+                    validator:
+                        (v) =>
+                            ValidationUtil().validateBirthday(vm.dateOfBirth),
                     style: ProfileTheme.getInputTextStyle(context),
                   ),
                 ),
@@ -128,7 +146,8 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                     setState(() {
                       vm.sex = value;
                       // Đồng bộ lại cho Step2ViewModel
-                      if (vm.stepViewModels.isNotEmpty && vm.stepViewModels[1] is Step2ViewModel) {
+                      if (vm.stepViewModels.isNotEmpty &&
+                          vm.stepViewModels[1] is Step2ViewModel) {
                         final step2Vm = vm.stepViewModels[1] as Step2ViewModel;
                         step2Vm.sex = value;
                       }
@@ -143,14 +162,18 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
             ),
             const SizedBox(height: 32),
             SetupProfileButton(
-              text: 'Next',
+              text: localizations.translate('next'),
               onPressed: () {
                 _validateAndSave();
                 if (!_dobError && !_genderError) {
                   vm.nextStep(context: context);
                 } else if (_genderError) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please select your gender')),
+                    SnackBar(
+                      content: Text(
+                        localizations.translate('select_gender_error'),
+                      ),
+                    ),
                   );
                 }
               },

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../config/language/app_localizations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/services/auth_service.dart';
 import '../theme/setup_profile_theme.dart';
@@ -49,25 +50,26 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
     final step4ViewModel = Provider.of<Step4ViewModel>(context, listen: false);
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Photo Options'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              step4ViewModel.editImage(context, path, isAvatar);
-            },
-            child: const Text('Edit Photo'),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Photo Options'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  step4ViewModel.editImage(context, path, isAvatar);
+                },
+                child: const Text('Edit Photo'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  step4ViewModel.pickImage(context, isAvatar);
+                },
+                child: const Text('Choose Another Photo'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              step4ViewModel.pickImage(context, isAvatar);
-            },
-            child: const Text('Choose Another Photo'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -96,10 +98,15 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Your Avatar & Cover Photo", style: ProfileTheme.getTitleStyle(context)),
+                Text(
+                  "Your Avatar & Cover Photo",
+                  style: ProfileTheme.getTitleStyle(context),
+                ),
                 const SizedBox(height: 6),
-                Text("Upload a vertical or square photo (max 2MB, recommended 512x512 for avatar, 1024x1024 for cover).",
-                    style: ProfileTheme.getDescriptionStyle(context)),
+                Text(
+                  "Upload a vertical or square photo (max 2MB, recommended 512x512 for avatar, 1024x1024 for cover).",
+                  style: ProfileTheme.getDescriptionStyle(context),
+                ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -115,7 +122,11 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                 if (step4ViewModel.avatarPath == null) {
                                   step4ViewModel.pickImage(context, true);
                                 } else {
-                                  _showImageOptions(context, true, step4ViewModel.avatarPath!);
+                                  _showImageOptions(
+                                    context,
+                                    true,
+                                    step4ViewModel.avatarPath!,
+                                  );
                                 }
                               },
                               child: Stack(
@@ -123,39 +134,75 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                 children: [
                                   Container(
                                     decoration: BoxDecoration(
-                                      color: ProfileTheme.darkPink.withAlpha(20),
+                                      color: ProfileTheme.darkPink.withAlpha(
+                                        20,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: ProfileTheme.darkPink, width: 2),
+                                      border: Border.all(
+                                        color: ProfileTheme.darkPink,
+                                        width: 2,
+                                      ),
                                     ),
-                                    child: step4ViewModel.avatarPath == null
-                                        ? const Center(child: Icon(Icons.camera_alt, size: 48, color: ProfileTheme.darkPink))
-                                        : ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: CachedNetworkImage(
-                                              imageUrl: _adjustUrl(step4ViewModel.avatarPath!),
-                                              fit: BoxFit.cover,
-                                              width: double.infinity,
-                                              height: double.infinity,
-                                              memCacheWidth: 512, // Giảm tải bộ nhớ
-                                              httpHeaders: _accessToken != null
-                                                  ? {'Authorization': 'Bearer $_accessToken'}
-                                                  : null,
-                                              errorWidget: (context, url, error) {
-                                                print('Error loading avatar: $error, URL: ${_adjustUrl(step4ViewModel.avatarPath!)}');
-                                                return const Center(
-                                                  child: Icon(Icons.error, size: 48, color: Colors.red),
-                                                );
-                                              },
-                                              placeholder: (context, url) {
-                                                return const Center(child: CircularProgressIndicator());
-                                              },
+                                    child:
+                                        step4ViewModel.avatarPath == null
+                                            ? const Center(
+                                              child: Icon(
+                                                Icons.camera_alt,
+                                                size: 48,
+                                                color: ProfileTheme.darkPink,
+                                              ),
+                                            )
+                                            : ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: CachedNetworkImage(
+                                                imageUrl: _adjustUrl(
+                                                  step4ViewModel.avatarPath!,
+                                                ),
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                                memCacheWidth:
+                                                    512, // Giảm tải bộ nhớ
+                                                httpHeaders:
+                                                    _accessToken != null
+                                                        ? {
+                                                          'Authorization':
+                                                              'Bearer $_accessToken',
+                                                        }
+                                                        : null,
+                                                errorWidget: (
+                                                  context,
+                                                  url,
+                                                  error,
+                                                ) {
+                                                  print(
+                                                    'Error loading avatar: $error, URL: ${_adjustUrl(step4ViewModel.avatarPath!)}',
+                                                  );
+                                                  return const Center(
+                                                    child: Icon(
+                                                      Icons.error,
+                                                      size: 48,
+                                                      color: Colors.red,
+                                                    ),
+                                                  );
+                                                },
+                                                placeholder: (context, url) {
+                                                  return const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  );
+                                                },
+                                              ),
                                             ),
-                                          ),
                                   ),
                                   if (step4ViewModel.avatarPath != null)
                                     GestureDetector(
                                       onTap: () async {
-                                        await step4ViewModel.deleteImage(context, true); // Xóa ảnh trên backend
+                                        await step4ViewModel.deleteImage(
+                                          context,
+                                          true,
+                                        ); // Xóa ảnh trên backend
                                         setState(() {
                                           step4ViewModel.avatarPath = null;
                                           vm.avatarPath = null;
@@ -166,9 +213,18 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                         decoration: const BoxDecoration(
                                           color: Colors.white,
                                           shape: BoxShape.circle,
-                                          boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
+                                          boxShadow: [
+                                            BoxShadow(
+                                              blurRadius: 2,
+                                              color: Color(0xFF424242),
+                                            ),
+                                          ],
                                         ),
-                                        child: const Icon(Icons.close, color: ProfileTheme.darkPink, size: 18),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: ProfileTheme.darkPink,
+                                          size: 18,
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -176,8 +232,18 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Text("Avatar", style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                          Text("Your main profile photo", style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
+                          Text(
+                            "Avatar",
+                            style: ProfileTheme.getLabelStyle(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w600),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            "Your main profile photo",
+                            style: ProfileTheme.getDescriptionStyle(context),
+                            textAlign: TextAlign.center,
+                          ),
                         ],
                       ),
                     ),
@@ -194,7 +260,11 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                 if (step4ViewModel.coverPath == null) {
                                   step4ViewModel.pickImage(context, false);
                                 } else {
-                                  _showImageOptions(context, false, step4ViewModel.coverPath!);
+                                  _showImageOptions(
+                                    context,
+                                    false,
+                                    step4ViewModel.coverPath!,
+                                  );
                                 }
                               },
                               child: Stack(
@@ -202,39 +272,75 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                 children: [
                                   Container(
                                     decoration: BoxDecoration(
-                                      color: ProfileTheme.darkPurple.withAlpha(25),
+                                      color: ProfileTheme.darkPurple.withAlpha(
+                                        25,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: ProfileTheme.darkPurple, width: 2),
+                                      border: Border.all(
+                                        color: ProfileTheme.darkPurple,
+                                        width: 2,
+                                      ),
                                     ),
-                                    child: step4ViewModel.coverPath == null
-                                        ? const Center(child: Icon(Icons.image, size: 48, color: ProfileTheme.darkPurple))
-                                        : ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: CachedNetworkImage(
-                                              imageUrl: _adjustUrl(step4ViewModel.coverPath!),
-                                              fit: BoxFit.cover,
-                                              width: double.infinity,
-                                              height: double.infinity,
-                                              memCacheWidth: 1024, // Giảm tải bộ nhớ
-                                              httpHeaders: _accessToken != null
-                                                  ? {'Authorization': 'Bearer $_accessToken'}
-                                                  : null,
-                                              errorWidget: (context, url, error) {
-                                                print('Error loading cover: $error, URL: ${_adjustUrl(step4ViewModel.coverPath!)}');
-                                                return const Center(
-                                                  child: Icon(Icons.error, size: 48, color: Colors.red),
-                                                );
-                                              },
-                                              placeholder: (context, url) {
-                                                return const Center(child: CircularProgressIndicator());
-                                              },
+                                    child:
+                                        step4ViewModel.coverPath == null
+                                            ? const Center(
+                                              child: Icon(
+                                                Icons.image,
+                                                size: 48,
+                                                color: ProfileTheme.darkPurple,
+                                              ),
+                                            )
+                                            : ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: CachedNetworkImage(
+                                                imageUrl: _adjustUrl(
+                                                  step4ViewModel.coverPath!,
+                                                ),
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                                memCacheWidth:
+                                                    1024, // Giảm tải bộ nhớ
+                                                httpHeaders:
+                                                    _accessToken != null
+                                                        ? {
+                                                          'Authorization':
+                                                              'Bearer $_accessToken',
+                                                        }
+                                                        : null,
+                                                errorWidget: (
+                                                  context,
+                                                  url,
+                                                  error,
+                                                ) {
+                                                  print(
+                                                    'Error loading cover: $error, URL: ${_adjustUrl(step4ViewModel.coverPath!)}',
+                                                  );
+                                                  return const Center(
+                                                    child: Icon(
+                                                      Icons.error,
+                                                      size: 48,
+                                                      color: Colors.red,
+                                                    ),
+                                                  );
+                                                },
+                                                placeholder: (context, url) {
+                                                  return const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  );
+                                                },
+                                              ),
                                             ),
-                                          ),
                                   ),
                                   if (step4ViewModel.coverPath != null)
                                     GestureDetector(
                                       onTap: () async {
-                                        await step4ViewModel.deleteImage(context, false); // Xóa ảnh trên backend
+                                        await step4ViewModel.deleteImage(
+                                          context,
+                                          false,
+                                        ); // Xóa ảnh trên backend
                                         setState(() {
                                           step4ViewModel.coverPath = null;
                                           vm.coverPath = null;
@@ -245,9 +351,18 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                         decoration: const BoxDecoration(
                                           color: Colors.white,
                                           shape: BoxShape.circle,
-                                          boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
+                                          boxShadow: [
+                                            BoxShadow(
+                                              blurRadius: 2,
+                                              color: Color(0xFF424242),
+                                            ),
+                                          ],
                                         ),
-                                        child: const Icon(Icons.close, color: ProfileTheme.darkPurple, size: 18),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: ProfileTheme.darkPurple,
+                                          size: 18,
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -255,8 +370,18 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Text("Cover Photo", style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                          Text("Large background photo", style: ProfileTheme.getDescriptionStyle(context), textAlign: TextAlign.center),
+                          Text(
+                            "Cover Photo",
+                            style: ProfileTheme.getLabelStyle(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w600),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            "Large background photo",
+                            style: ProfileTheme.getDescriptionStyle(context),
+                            textAlign: TextAlign.center,
+                          ),
                         ],
                       ),
                     ),
@@ -264,11 +389,13 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                 ),
                 const SizedBox(height: 28),
                 SetupProfileButton(
-                  text: "Next",
+                  text: AppLocalizations.of(context).translate('next'),
                   onPressed: () {
                     final error = step4ViewModel.validate();
                     if (error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error)));
                       return;
                     }
                     vm.nextStep(context: context);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../../domain/models/settings/blocked_message.dart';
 import '../../../../infrastructure/services/blocking_service.dart';
 import 'blocked_message_item.dart';
@@ -21,18 +22,11 @@ class BlockedMessagesTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.message_outlined,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.message_outlined, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'No blocked messages',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),
@@ -73,9 +67,7 @@ class BlockedMessagesTab extends StatelessWidget {
 class _BlockedChatView extends StatelessWidget {
   final BlockedMessage blockedMessage;
 
-  const _BlockedChatView({
-    required this.blockedMessage,
-  });
+  const _BlockedChatView({required this.blockedMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -116,10 +108,7 @@ class _BlockedChatView extends StatelessWidget {
                   padding: EdgeInsets.all(8.0),
                   child: Text(
                     'Today',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ),
               ),
@@ -139,7 +128,9 @@ class _BlockedChatView extends StatelessWidget {
           // White overlay
           Positioned.fill(
             child: Container(
-              color: Colors.white.withAlpha(179), // 0.7 opacity converted to alpha
+              color: Colors.white.withAlpha(
+                179,
+              ), // 0.7 opacity converted to alpha
             ),
           ),
 
@@ -154,7 +145,9 @@ class _BlockedChatView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 backgroundColor: Theme.of(context).colorScheme.primary,
               ),
-              child: const Text('Unblock Message'),
+              child: Text(
+                AppLocalizations.of(context).translate('unblock_message'),
+              ),
             ),
           ),
         ],
@@ -165,30 +158,35 @@ class _BlockedChatView extends StatelessWidget {
   void _handleUnblock(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Unblock Message'),
-        content: Text('Do you want to unblock messages from ${blockedMessage.userName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final blockingService = context.read<BlockingService>();
-              blockingService.unblockMessage(blockedMessage.id).then((_) {
-                // Close dialog and return to blocked messages list
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              });
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.primary,
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              AppLocalizations.of(context).translate('unblock_message'),
             ),
-            child: const Text('Unblock'),
+            content: Text(
+              'Do you want to unblock messages from ${blockedMessage.userName}?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(AppLocalizations.of(context).translate('cancel')),
+              ),
+              TextButton(
+                onPressed: () {
+                  final blockingService = context.read<BlockingService>();
+                  blockingService.unblockMessage(blockedMessage.id).then((_) {
+                    // Close dialog and return to blocked messages list
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  });
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                ),
+                child: Text(AppLocalizations.of(context).translate('unblock')),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
@@ -213,9 +211,10 @@ class _ChatMessageBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isFromMe
-              ? Theme.of(context).colorScheme.primary
-              : Colors.grey[200],
+          color:
+              isFromMe
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey[200],
           borderRadius: BorderRadius.circular(20),
         ),
         constraints: BoxConstraints(
@@ -226,9 +225,7 @@ class _ChatMessageBubble extends StatelessWidget {
           children: [
             Text(
               message,
-              style: TextStyle(
-                color: isFromMe ? Colors.white : Colors.black87,
-              ),
+              style: TextStyle(color: isFromMe ? Colors.white : Colors.black87),
             ),
             const SizedBox(height: 4),
             Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/validation_util.dart';
+import '../../../../../config/language/app_localizations.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../../config/theme/app_colors.dart';
@@ -12,6 +13,7 @@ class EmailPasswordForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final textColor = theme.brightness == Brightness.dark
         ? const Color(0xFFFF69B4)
@@ -25,7 +27,7 @@ class EmailPasswordForm extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Verify your identity',
+              localizations.translate('verify_identity'),
               style: theme.textTheme.headlineMedium?.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.bold,
@@ -34,7 +36,7 @@ class EmailPasswordForm extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Please enter your password to continue with email change.',
+              localizations.translate('password_continue'),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.8),
               ),
@@ -42,8 +44,8 @@ class EmailPasswordForm extends StatelessWidget {
             const SizedBox(height: 24),
             AppTextField(
               controller: viewModel.passwordController,
-              labelText: 'Your Password',
-              hintText: 'Enter your current password',
+              labelText: localizations.translate('current_password'),
+              hintText: localizations.translate('current_password_hint'),
               errorText: viewModel.passwordError,
               obscureText: true,
               prefixIcon: Icons.lock_outline,
@@ -56,7 +58,7 @@ class EmailPasswordForm extends StatelessWidget {
               child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.5,
                 child: AppButton(
-                  text: 'Continue',
+                  text: localizations.translate('continue'),
                   onPressed: viewModel.isLoading ? null : () => viewModel.verifyPassword(context),
                   isLoading: viewModel.isLoading,
                   loading: const SizedBox(
