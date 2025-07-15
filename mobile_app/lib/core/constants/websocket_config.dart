@@ -73,7 +73,7 @@ class WebSocketConfig {
   static String get personalNotificationTopic =>
       '$userQueuePrefix/notification';
 
-  /// General user status topic
+  /// General user status topic (không sử dụng nữa, thay bằng chat-specific topics)
   static String get userStatusTopic => '$topicPrefix/user-status';
 
   /// Typing indicator topic
@@ -115,7 +115,7 @@ class WebSocketConfig {
   /// Cấu hình STOMP client
   static Map<String, dynamic> getStompConfig(String jwtToken) {
     return {
-      'brokerURL': wsUrl,
+      'brokerURL': wsEndpoint,
       'connectHeaders': getConnectionHeaders(jwtToken),
       'reconnectDelay': reconnectDelay,
       'heartbeatIncoming': heartbeatIncoming,

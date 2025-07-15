@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get_it/get_it.dart';
 import '../../../core/utils/url_transformer.dart';
+import '../../../infrastructure/services/image_precache_service.dart';
 
 class RecommendationCache {
   static final RecommendationCache instance = RecommendationCache._internal();
@@ -29,26 +30,19 @@ class RecommendationCache {
     // Precache images for first 2 profiles
     final context = GetIt.I<GlobalKey<NavigatorState>>().currentContext;
     if (context != null && _recommendations!.isNotEmpty) {
-      for (int i = 0; i < _recommendations!.length && i < 2; i++) {
-        await _precacheProfileData(_recommendations![i], context);
+      try {
+        await ImagePrecacheService.instance.precacheMultipleProfiles(_recommendations!, context, count: 2);
+      } catch (e) {
+        print('RecommendationCache: Lỗi khi precache recommendations: $e');
       }
     }
   }
 
   Future<void> ensurePrecacheForProfiles(List<UserRecommendationModel> profiles, BuildContext context, {int count = 5}) async {
-    for (int i = 0; i < profiles.length && i < count; i++) {
-      await _precacheProfileData(profiles[i], context);
-    }
-  }
-
-  /// Precache all data for a specific profile including images and other resources
-  Future<void> _precacheProfileData(UserRecommendationModel profile, BuildContext context) async {
-    if (profile.photos.isNotEmpty) {
-      for (final photo in profile.photos) {
-        final transformedUrl = UrlTransformer.transform(photo.url);
-        final provider = CachedNetworkImageProvider(transformedUrl);
-        await precacheImage(provider, context);
-      }
+    try {
+      await ImagePrecacheService.instance.precacheMultipleProfiles(profiles, context, count: count);
+    } catch (e) {
+      print('RecommendationCache: Lỗi khi ensure precache: $e');
     }
   }
 

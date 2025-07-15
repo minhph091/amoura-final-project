@@ -5,6 +5,8 @@ import '../../domain/usecases/auth/logout_usecase.dart';
 import '../../core/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import '../profile/view/profile_viewmodel.dart';
+import '../../infrastructure/services/app_initialization_service.dart';
+import '../../infrastructure/services/app_startup_service.dart';
 
 class SettingsViewModel extends ChangeNotifier {
   final LogoutUseCase _logoutUseCase = GetIt.I<LogoutUseCase>();
@@ -26,6 +28,10 @@ class SettingsViewModel extends ChangeNotifier {
       print('LogoutUseCase executed successfully'); // Log xác nhận gọi API thành công
       await _authService.clearTokens();
       print('Tokens cleared successfully'); // Log xác nhận xóa token
+      
+      // Reset AppStartupService để clear cached data
+      AppStartupService.instance.reset();
+      print('AppStartupService reset successfully');
     } catch (e) {
       print('Logout failed in SettingsViewModel: $e'); // Log lỗi chi tiết
       rethrow;

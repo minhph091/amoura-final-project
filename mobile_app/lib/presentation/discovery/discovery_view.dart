@@ -13,6 +13,9 @@ import '../../infrastructure/services/rewind_service.dart';
 import '../../core/services/match_service.dart';
 import '../../core/services/profile_service.dart';
 import 'discovery_recommendation_cache.dart';
+import '../../infrastructure/services/app_initialization_service.dart';
+import '../../infrastructure/services/image_precache_service.dart';
+import '../../infrastructure/services/app_startup_service.dart';
 
 class DiscoveryView extends StatefulWidget {
   const DiscoveryView({super.key});
@@ -34,13 +37,24 @@ class _DiscoveryViewState extends State<DiscoveryView> {
       matchService: getIt<MatchService>(),
       profileService: getIt<ProfileService>(),
     );
+    
     // Load recommendations when screen is created
     _viewModel.loadRecommendations();
-    // Precache images for recommendations if available
+    
+    // Chỉ precache thêm nếu dữ liệu chưa được chuẩn bị từ AppStartupService
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final recs = _viewModel.recommendations;
-      if (recs.isNotEmpty) {
-        await RecommendationCache.instance.ensurePrecacheForProfiles(recs, context, count: 5);
+      if (!AppStartupService.instance.isReady) {
+        final recs = _viewModel.recommendations;
+        if (recs.isNotEmpty && mounted) {
+          print('DiscoveryView: Precache thêm ảnh vì dữ liệu chưa được chuẩn bị từ đầu');
+          try {
+            await ImagePrecacheService.instance.precacheMultipleProfiles(recs, context, count: 5);
+          } catch (e) {
+            print('DiscoveryView: Lỗi khi precache: $e');
+          }
+        }
+      } else {
+        print('DiscoveryView: Dữ liệu đã được chuẩn bị từ AppStartupService, không cần precache thêm');
       }
     });
   }

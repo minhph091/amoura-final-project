@@ -50,11 +50,11 @@ class SocketClient {
         throw Exception('No access token available for WebSocket connection');
       }
 
-      debugPrint('WebSocket: Connecting to ${WebSocketConfig.url} for user $userId');
+      debugPrint('WebSocket: Connecting to ${WebSocketConfig.wsEndpoint} for user $userId');
 
       _stompClient = StompClient(
         config: StompConfig(
-          url: WebSocketConfig.url,
+          url: WebSocketConfig.wsEndpoint,
           onConnect: _onConnect,
           onDisconnect: _onDisconnect,
           beforeConnect: () async {
@@ -76,8 +76,6 @@ class SocketClient {
           // Thêm JWT token vào headers cho authentication
           stompConnectHeaders: {
             'Authorization': 'Bearer $accessToken',
-            'login': userId,
-            'passcode': '',
           },
           // Cấu hình heartbeat để maintain connection
           heartbeatIncoming: const Duration(seconds: 20),
@@ -142,26 +140,13 @@ class SocketClient {
   }
 
   /// Subscribe vào user status updates
-  /// Topic: /topic/user-status
+  /// Note: User status updates sẽ được subscribe per chat room, không subscribe global
   void _subscribeToUserStatusUpdates() {
     if (_stompClient == null || !_isConnected) return;
 
-    _stompClient!.subscribe(
-      destination: WebSocketConfig.userStatusTopic,
-      callback: (StompFrame frame) {
-        try {
-          if (frame.body != null) {
-            final statusUpdate = jsonDecode(frame.body!);
-            debugPrint('WebSocket: User status update - ${statusUpdate['userId']} is ${statusUpdate['status']}');
-            _userStatusController.add(statusUpdate);
-          }
-        } catch (e) {
-          debugPrint('WebSocket: Error parsing user status - $e');
-        }
-      },
-    );
-
-    debugPrint('WebSocket: Subscribed to user status updates');
+    // Không subscribe global user status nữa
+    // User status sẽ được subscribe per chat room khi cần
+    debugPrint('WebSocket: User status updates will be subscribed per chat room');
   }
 
   /// Subscribe vào một chat room cụ thể để nhận tin nhắn realtime

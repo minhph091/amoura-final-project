@@ -15,6 +15,9 @@ import '../../infrastructure/services/rewind_service.dart';
 import '../discovery/widgets/match_dialog.dart';
 import 'discovery_recommendation_cache.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../infrastructure/services/app_initialization_service.dart';
+import '../../../infrastructure/services/image_precache_service.dart';
+import '../../../infrastructure/services/app_startup_service.dart';
 
 class DiscoveryViewModel extends ChangeNotifier {
   List<UserRecommendationModel> _recommendations = [];
@@ -77,10 +80,16 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Load current user's profile to get location information
   Future<void> loadCurrentUserProfile() async {
     try {
+      // Nếu AppStartupService đã được khởi tạo, sử dụng current user ID từ đó
+      if (AppStartupService.instance.isReady) {
+        _currentUserId = AppInitializationService.instance.currentUserId;
+        print('DiscoveryViewModel: Sử dụng current user ID từ AppStartupService: $_currentUserId');
+      }
+      
       final profileData = await _profileService.getProfile();
       
-      // Extract current user ID
-      if (profileData['userId'] != null) {
+      // Extract current user ID (nếu chưa có từ AppInitializationService)
+      if (_currentUserId == null && profileData['userId'] != null) {
         _currentUserId = profileData['userId'] as int;
         // Set current user ID in cache for filtering
         RecommendationCache.instance.setCurrentUserId(_currentUserId);
@@ -148,7 +157,23 @@ class DiscoveryViewModel extends ChangeNotifier {
       // If forceRefresh, clear cache before calling API
       if (forceRefresh) {
         RecommendationCache.instance.clear();
+        AppStartupService.instance.reset();
       }
+      
+      // Check if app data has been initialized
+      if (!forceRefresh && AppStartupService.instance.isReady) {
+        print('DiscoveryViewModel: Sử dụng dữ liệu đã được chuẩn bị từ AppStartupService');
+        final cached = RecommendationCache.instance.recommendations;
+        if (cached != null && cached.isNotEmpty) {
+          _recommendations = _filterOutCurrentUser(cached);
+          _currentProfileIndex = 0;
+          _isLoading = false;
+          notifyListeners();
+          _precacheInitialImages();
+          return;
+        }
+      }
+      
       // Check cache first
       final cached = RecommendationCache.instance.recommendations;
       if (!forceRefresh && cached != null && cached.isNotEmpty) {
@@ -159,6 +184,7 @@ class DiscoveryViewModel extends ChangeNotifier {
         _precacheInitialImages();
         return;
       }
+      
       // Call the service layer to get recommendations
       final recommendations = await _matchService.getRecommendations();
       _recommendations = _filterOutCurrentUser(recommendations);
@@ -343,10 +369,14 @@ class DiscoveryViewModel extends ChangeNotifier {
   void _precacheInitialImages() {
     if (_context == null || _recommendations.length < 1) return;
 
-    // Cache current (index 0) and next (index 1) profiles
+    // Sử dụng ImagePrecacheService để precache hiệu quả hơn
     final int endIndex = _recommendations.length > 2 ? 2 : _recommendations.length;
-    for (int i = 0; i < endIndex; i++) {
-      _precacheImagesForProfile(i);
+    final profilesToPrecache = _recommendations.take(endIndex).toList();
+    
+    try {
+      ImagePrecacheService.instance.precacheMultipleProfiles(profilesToPrecache, _context!, count: endIndex);
+    } catch (e) {
+      print('DiscoveryViewModel: Lỗi khi precache initial images: $e');
     }
   }
 
@@ -357,8 +387,13 @@ class DiscoveryViewModel extends ChangeNotifier {
     // e.g., if we are now showing index 1, we pre-cache index 2.
     final indexToPrecache = _currentProfileIndex + 1;
 
-    if (indexToPrecache < _recommendations.length) {
-      _precacheImagesForProfile(indexToPrecache);
+    if (indexToPrecache < _recommendations.length && _context != null) {
+      final profile = _recommendations[indexToPrecache];
+      try {
+        ImagePrecacheService.instance.precacheProfileImages(profile, _context!);
+      } catch (e) {
+        print('DiscoveryViewModel: Lỗi khi precache next image: $e');
+      }
     }
   }
 
@@ -367,16 +402,6 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_context == null || profileIndex >= _recommendations.length) return;
 
     final profile = _recommendations[profileIndex];
-    if (profile.photos.isNotEmpty) {
-      for (final photo in profile.photos) {
-        final transformedUrl = UrlTransformer.transform(photo.url);
-        
-        // Debug URLs để track chính xác URL nào gây lỗi
-        UrlTransformer.debugUrl(photo.url, transformedUrl);
-        
-        final provider = CachedNetworkImageProvider(transformedUrl);
-        precacheImage(provider, _context!);
-      }
-    }
+    ImagePrecacheService.instance.precacheProfileImages(profile, _context!);
   }
 }

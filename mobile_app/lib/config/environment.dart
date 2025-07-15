@@ -2,7 +2,7 @@
 enum Environment { dev, staging, prod }
 
 class EnvironmentConfig {
-  static Environment current = Environment.dev;
+  static Environment current = Environment.prod;
 
   static String get baseUrl {
     switch (current) {

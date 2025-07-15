@@ -45,7 +45,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
   @override
   void didUpdateWidget(covariant ImageCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.photos != oldWidget.photos || widget.uniqueKey != oldWidget.uniqueKey) {
+    // Chỉ reset khi photos thay đổi, không reset khi uniqueKey thay đổi
+    if (widget.photos != oldWidget.photos) {
       _resetToFirstImage();
     }
     widget.controller?._reset = _resetToFirstImage;
@@ -55,7 +56,18 @@ class _ImageCarouselState extends State<ImageCarousel> {
     setState(() {
       _currentIndex = 0;
     });
-    _pageController.jumpToPage(0);
+    
+    // Kiểm tra xem PageController đã được attach chưa trước khi gọi jumpToPage
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(0);
+    } else {
+      // Nếu chưa attach, sử dụng Future.delayed để đợi widget được build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageController.hasClients) {
+          _pageController.jumpToPage(0);
+        }
+      });
+    }
   }
 
   void _onTapDown(TapDownDetails details, BoxConstraints constraints) {
@@ -67,7 +79,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
         setState(() {
           _currentIndex--;
         });
-        _pageController.animateToPage(_currentIndex, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+        _animateToPage(_currentIndex);
       }
     } else {
       // Tap right: next
@@ -75,8 +87,14 @@ class _ImageCarouselState extends State<ImageCarousel> {
         setState(() {
           _currentIndex++;
         });
-        _pageController.animateToPage(_currentIndex, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+        _animateToPage(_currentIndex);
       }
+    }
+  }
+
+  void _animateToPage(int page) {
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(page, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
     }
   }
 
