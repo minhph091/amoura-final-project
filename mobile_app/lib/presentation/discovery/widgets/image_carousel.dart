@@ -100,12 +100,12 @@ class _ImageCarouselState extends State<ImageCarousel> {
               physics: const NeverScrollableScrollPhysics(), // Only allow tap navigation
               itemBuilder: (context, index) {
                 final photo = widget.photos[index];
-                final transformedUrl = UrlTransformer.transform(photo.url);
+                final imageUrl = photo.url;
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(14),
                   child: CachedNetworkImage(
                     key: ValueKey('${widget.uniqueKey}_${photo.id}_$index'),
-                    imageUrl: transformedUrl,
+                    imageUrl: imageUrl,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       color: Colors.grey[300],
