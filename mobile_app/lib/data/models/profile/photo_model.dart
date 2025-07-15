@@ -22,18 +22,21 @@ class PhotoModel {
   String get url {
     if (path.startsWith('http')) return path;
     String base = EnvironmentConfig.baseUrl;
-    if (base.endsWith('/api')) base = base.replaceFirst('/api', '');
+    // Xóa /api ở cuối nhưng không làm mất dấu /
+    base = base.replaceFirst(RegExp(r'/api/?$'), '');
+    if (base.endsWith('/')) base = base.substring(0, base.length - 1);
     String fixedPath = path;
     // Nếu path chưa có prefix /api/files thì thêm vào
     if (!fixedPath.startsWith('/api/files')) {
-      // Nếu path đã có dấu / đầu thì chỉ thêm 'api/files' vào sau domain
       if (fixedPath.startsWith('/')) {
         fixedPath = '/api/files' + fixedPath;
       } else {
         fixedPath = '/api/files/' + fixedPath;
       }
     }
-    return base + fixedPath;
+    final url = base + fixedPath;
+    assert(url.startsWith('http'), 'PhotoModel.url: URL không hợp lệ: ' + url + ' (base: ' + base + ', fixedPath: ' + fixedPath + ')');
+    return url;
   }
 
   factory PhotoModel.fromJson(Map<String, dynamic> json) {

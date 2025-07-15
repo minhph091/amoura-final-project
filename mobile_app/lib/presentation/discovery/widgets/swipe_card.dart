@@ -26,8 +26,8 @@ class SwipeCardStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get next profile for peeking effect
-    final nextProfileIndex = Provider.of<DiscoveryViewModel>(context, listen: false).currentProfileIndex + 1;
     final viewModel = Provider.of<DiscoveryViewModel>(context, listen: false);
+    final nextProfileIndex = viewModel.currentProfileIndex + 1;
     final nextProfile = (nextProfileIndex < viewModel.recommendations.length)
         ? viewModel.recommendations[nextProfileIndex]
         : null;
