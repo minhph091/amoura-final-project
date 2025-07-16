@@ -5,6 +5,7 @@ import com.amoura.module.chat.dto.ChatRoomDTO;
 import com.amoura.module.chat.service.ChatService;
 import com.amoura.module.matching.domain.Match;
 import com.amoura.module.matching.domain.Swipe;
+import com.amoura.module.matching.dto.ReceivedLikeDTO;
 import com.amoura.module.matching.dto.SwipeRequest;
 import com.amoura.module.matching.dto.SwipeResponse;
 import com.amoura.module.matching.dto.UserRecommendationDTO;
@@ -262,6 +263,88 @@ public class MatchingServiceImpl implements MatchingService {
                 .url(photo.getPath())
                 .type(photo.getType())
                 .uploadedAt(photo.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReceivedLikeDTO> getReceivedLikes(String userEmail) {
+        User currentUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
+
+        // Lấy tất cả swipe mà người khác đã like mình
+        List<Swipe> receivedLikes = swipeRepository.findLikesReceivedByUser(currentUser.getId());
+
+        // Chuyển đổi thành DTO
+        return receivedLikes.stream()
+                .map(swipe -> convertToReceivedLikeDTO(swipe.getInitiator(), swipe.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
+
+    private ReceivedLikeDTO convertToReceivedLikeDTO(User user, LocalDateTime likedAt) {
+        Profile profile = profileRepository.findById(user.getId()).orElse(null);
+        
+        List<PhotoDTO> photos = user.getPhotos().stream()
+                .map(this::convertToPhotoDTO)
+                .collect(Collectors.toList());
+
+        Integer age = null;
+        if (profile != null && profile.getDateOfBirth() != null) {
+            age = Period.between(profile.getDateOfBirth(), LocalDate.now()).getYears();
+        }
+
+        String location = "Unknown";
+        Double latitude = null;
+        Double longitude = null;
+        
+        if (user.getLocation() != null) {
+            location = String.format("%s, %s", 
+                    user.getLocation().getCity() != null ? user.getLocation().getCity() : "",
+                    user.getLocation().getCountry() != null ? user.getLocation().getCountry() : "");
+            
+            if (user.getLocation().getLatitudes() != null) {
+                latitude = user.getLocation().getLatitudes().doubleValue();
+            }
+            if (user.getLocation().getLongitudes() != null) {
+                longitude = user.getLocation().getLongitudes().doubleValue();
+            }
+        }
+
+        // Lấy danh sách sở thích
+        List<InterestDTO> interests = userInterestRepository.findByUserId(user.getId())
+                .stream()
+                .map(userInterest -> InterestDTO.builder()
+                        .id(userInterest.getInterest().getId())
+                        .name(userInterest.getInterest().getName())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Lấy danh sách pets
+        List<PetDTO> pets = userPetRepository.findByUserId(user.getId())
+                .stream()
+                .map(userPet -> PetDTO.builder()
+                        .id(userPet.getPet().getId())
+                        .name(userPet.getPet().getName())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ReceivedLikeDTO.builder()
+                .userId(user.getId())
+                .username(user.getActualUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .dateOfBirth(profile != null ? profile.getDateOfBirth() : null)
+                .age(age)
+                .height(profile != null ? profile.getHeight() : null)
+                .sex(profile != null ? profile.getSex() : null)
+                .bio(profile != null ? profile.getBio() : null)
+                .location(location)
+                .latitude(latitude)
+                .longitude(longitude)
+                .interests(interests)
+                .pets(pets)
+                .photos(photos)
+                .likedAt(likedAt)
                 .build();
     }
 } 

@@ -28,4 +28,7 @@ public interface SwipeRepository extends JpaRepository<Swipe, Long> {
     @Query("SELECT s FROM Swipe s WHERE s.initiator.id = :initiatorId AND s.targetUser.id = :targetUserId AND s.isLike = true")
     Optional<Swipe> findLikeByInitiatorAndTargetUser(@Param("initiatorId") Long initiatorId, 
                                                     @Param("targetUserId") Long targetUserId);
+    
+    @Query("SELECT s FROM Swipe s WHERE s.targetUser.id = :targetUserId AND s.isLike = true ORDER BY s.createdAt ASC")
+    List<Swipe> findLikesReceivedByUser(@Param("targetUserId") Long targetUserId);
 } 
