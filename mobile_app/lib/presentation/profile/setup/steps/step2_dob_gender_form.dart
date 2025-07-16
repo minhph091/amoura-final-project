@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../config/language/app_localizations.dart';
 import '../../../../core/utils/date_util.dart';
-import '../../../../core/utils/validation_util.dart';
+import '../../../../core/utils/localized_validation.dart';
 import '../../../shared/widgets/shake_widget.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
@@ -45,6 +45,7 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
 
   void _validateAndSave() {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+    final validator = LocalizedValidation.of(context);
 
     // Đồng bộ lại cho Step2ViewModel nếu có
     if (vm.stepViewModels.isNotEmpty &&
@@ -57,12 +58,12 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       setState(() {
-        _dobError = ValidationUtil().validateBirthday(vm.dateOfBirth) != null;
+        _dobError = validator.validateBirthday(vm.dateOfBirth) != null;
         _genderError = vm.sex == null || vm.sex!.isEmpty;
       });
     } else {
       setState(() {
-        _dobError = ValidationUtil().validateBirthday(vm.dateOfBirth) != null;
+        _dobError = validator.validateBirthday(vm.dateOfBirth) != null;
         _genderError = vm.sex == null || vm.sex!.isEmpty;
       });
     }
@@ -72,6 +73,7 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final vm = Provider.of<SetupProfileViewModel>(context);
+    final validator = LocalizedValidation.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
@@ -81,17 +83,17 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your Birthday & Gender',
+              localizations.translate('step2_title'),
               style: ProfileTheme.getTitleStyle(context),
             ),
             const SizedBox(height: 6),
             Text(
-              'This helps us personalize your dating experience.',
+              localizations.translate('step2_description'),
               style: ProfileTheme.getDescriptionStyle(context),
             ),
             const SizedBox(height: 8),
             Text(
-              'Fields marked with * are required.',
+              localizations.translate('fields_required'),
               style: ProfileTheme.getDescriptionStyle(context),
             ),
             const SizedBox(height: 24),
@@ -122,14 +124,13 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                 },
                 child: AbsorbPointer(
                   child: AppTextField(
-                    labelText: 'Birthday *',
+                    labelText: "${localizations.translate('birthday_label')} *",
                     labelStyle: ProfileTheme.getLabelStyle(context),
                     prefixIcon: Icons.cake_rounded,
                     prefixIconColor: ProfileTheme.darkPink,
                     controller: _dobController,
                     validator:
-                        (v) =>
-                            ValidationUtil().validateBirthday(vm.dateOfBirth),
+                        (v) => validator.validateBirthday(vm.dateOfBirth),
                     style: ProfileTheme.getInputTextStyle(context),
                   ),
                 ),
@@ -155,14 +156,14 @@ class _Step2DobGenderFormState extends State<Step2DobGenderForm> {
                     });
                   }
                 },
-                labelText: 'Gender *',
+                labelText: "${localizations.translate('gender_label')} *",
                 labelStyle: ProfileTheme.getLabelStyle(context),
                 scrollable: false,
               ),
             ),
             const SizedBox(height: 32),
             SetupProfileButton(
-              text: localizations.translate('next'),
+              text: localizations.translate('continue_setup'),
               onPressed: () {
                 _validateAndSave();
                 if (!_dobError && !_genderError) {

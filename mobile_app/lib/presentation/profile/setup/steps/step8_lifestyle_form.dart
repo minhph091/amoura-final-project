@@ -5,6 +5,7 @@ import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step8_viewmodel.dart';
 import 'widgets/_step8_widgets.dart';
+import '../../../../config/language/app_localizations.dart';
 
 class Step8LifestyleForm extends StatefulWidget {
   const Step8LifestyleForm({super.key});
@@ -28,9 +29,14 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
     );
   }
 
-  Widget _buildContent(SetupProfileViewModel vm, Step8ViewModel step8ViewModel) {
+  Widget _buildContent(
+    SetupProfileViewModel vm,
+    Step8ViewModel step8ViewModel,
+  ) {
     // Debug: Track UI rebuilds
-    print('🔄 Step8 UI rebuilding - drink: ${step8ViewModel.drinkStatusId}, smoke: ${step8ViewModel.smokeStatusId}, pets: ${step8ViewModel.selectedPets}');
+    debugPrint(
+      '🔄 Step8 UI rebuilding - drink: ${step8ViewModel.drinkStatusId}, smoke: ${step8ViewModel.smokeStatusId}, pets: ${step8ViewModel.selectedPets}',
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -43,35 +49,36 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
 
           // Content Section - Fixed layout without scroll
           Expanded(
-            child: step8ViewModel.isLoading
-                ? const LifestyleLoadingState()
-                : step8ViewModel.errorMessage != null
-                ? _buildErrorState(step8ViewModel.errorMessage!)
-                : step8ViewModel.drinkStatusOptions.isEmpty ||
-                step8ViewModel.smokeStatusOptions.isEmpty ||
-                step8ViewModel.petOptions.isEmpty
-                ? _buildEmptyState()
-                : Column(
-              children: [
-                // Drink Status Selector
-                DrinkStatusSelector(step8ViewModel: step8ViewModel),
-                const SizedBox(height: 10),
+            child:
+                step8ViewModel.isLoading
+                    ? const LifestyleLoadingState()
+                    : step8ViewModel.errorMessage != null
+                    ? _buildErrorState(step8ViewModel.errorMessage!)
+                    : step8ViewModel.drinkStatusOptions.isEmpty ||
+                        step8ViewModel.smokeStatusOptions.isEmpty ||
+                        step8ViewModel.petOptions.isEmpty
+                    ? _buildEmptyState()
+                    : Column(
+                      children: [
+                        // Drink Status Selector
+                        DrinkStatusSelector(step8ViewModel: step8ViewModel),
+                        const SizedBox(height: 10),
 
-                // Smoke Status Selector
-                SmokeStatusSelector(step8ViewModel: step8ViewModel),
-                const SizedBox(height: 12),
+                        // Smoke Status Selector
+                        SmokeStatusSelector(step8ViewModel: step8ViewModel),
+                        const SizedBox(height: 12),
 
-                // Pet Selector - Compact design
-                Expanded(
-                  child: PetSelector(step8ViewModel: step8ViewModel),
-                ),
-              ],
-            ),
+                        // Pet Selector - Compact design
+                        Expanded(
+                          child: PetSelector(step8ViewModel: step8ViewModel),
+                        ),
+                      ],
+                    ),
           ),
 
           // Next Button - Always visible at bottom
           SetupProfileButton(
-            text: 'Next',
+            text: AppLocalizations.of(context).translate('continue_setup'),
             onPressed: () => vm.nextStep(context: context),
             width: double.infinity,
             height: 52,
@@ -94,11 +101,7 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline,
-              color: Colors.red[400],
-              size: 32,
-            ),
+            Icon(Icons.error_outline, color: Colors.red[400], size: 32),
             const SizedBox(height: 8),
             Text(
               errorMessage,
@@ -127,11 +130,7 @@ class _Step8LifestyleFormState extends State<Step8LifestyleForm> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.search_off,
-              color: const Color(0xFF666666),
-              size: 32,
-            ),
+            Icon(Icons.search_off, color: const Color(0xFF666666), size: 32),
             const SizedBox(height: 8),
             Text(
               'No lifestyle options available',

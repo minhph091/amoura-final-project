@@ -101,7 +101,7 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'Unlock Premium Features',
+                  localizations.translate('unlock_premium_features'),
                   style: GoogleFonts.montserrat(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -113,7 +113,7 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'Get the most out of Amoura with premium benefits',
+                  localizations.translate('premium_benefits_subtitle'),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
                     fontSize: 16,
@@ -128,24 +128,24 @@ class _SubscriptionPlansViewState extends State<SubscriptionPlansView> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
-                    const VIPBenefitItem(
+                    VIPBenefitItem(
                       icon: Icons.refresh,
-                      text: 'Unlimited left swipes',
+                      text: localizations.translate('unlimited_left_swipes'),
                     ),
                     const SizedBox(height: 12),
-                    const VIPBenefitItem(
+                    VIPBenefitItem(
                       icon: Icons.history,
-                      text: 'Go back to skipped profiles',
+                      text: localizations.translate('go_back_profiles'),
                     ),
                     const SizedBox(height: 12),
-                    const VIPBenefitItem(
+                    VIPBenefitItem(
                       icon: Icons.favorite,
-                      text: 'See who liked your profile',
+                      text: localizations.translate('see_who_liked'),
                     ),
                     const SizedBox(height: 12),
-                    const VIPBenefitItem(
+                    VIPBenefitItem(
                       icon: Icons.star,
-                      text: 'Featured profile for more visibility',
+                      text: localizations.translate('featured_profile'),
                     ),
                     const SizedBox(height: 12),
                     const VIPBenefitItem(

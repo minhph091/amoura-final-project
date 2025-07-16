@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/theme/text_styles.dart';
+import '../../../../config/language/app_localizations.dart';
 
 // Contains the "Reset" and "Apply" buttons for the filter dialog.
 class FilterActionButtons extends StatelessWidget {
@@ -17,8 +18,12 @@ class FilterActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0), // Independent padding
+      padding: const EdgeInsets.symmetric(
+        horizontal: 24.0,
+        vertical: 10.0,
+      ), // Independent padding
       child: Row(
         children: [
           Expanded(
@@ -27,11 +32,16 @@ class FilterActionButtons extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: AppColors.secondary, width: 2),
                 foregroundColor: AppColors.secondary,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 textStyle: AppTextStyles.button.copyWith(fontSize: 16),
               ),
-              child: const Text('Reset'),
+              child: Text(localizations.translate('reset')),
             ),
           ),
           const SizedBox(width: 16),
@@ -41,12 +51,17 @@ class FilterActionButtons extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 textStyle: AppTextStyles.button.copyWith(fontSize: 16),
                 elevation: 0,
               ),
-              child: const Text('Apply'),
+              child: Text(localizations.translate('apply')),
             ),
           ),
         ],

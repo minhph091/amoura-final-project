@@ -15,25 +15,25 @@ class ProfileApi {
       final response = await _apiClient.get(ApiEndpoints.updateProfile); // Endpoint: /profiles/me
       if (response.statusCode == 200) {
         // Add detailed logging for debugging
-        print('API Response Data: ${response.data}');
-        print('Body Type from API: ${response.data['bodyType']}');
-        print('Height from API: ${response.data['height']}');
+        debugPrint('API Response Data: ${response.data}');
+        debugPrint('Body Type from API: ${response.data['bodyType']}');
+        debugPrint('Height from API: ${response.data['height']}');
         
         if (response.data['bodyType'] == null || response.data['height'] == null) {
-          print('Warning: Missing appearance data in API response');
+          debugPrint('Warning: Missing appearance data in API response');
         }
         
         return response.data as Map<String, dynamic>;
       } else {
-        print('API Error Response: ${response.statusCode} - ${response.data}');
+        debugPrint('API Error Response: ${response.statusCode} - ${response.data}');
         throw Exception('Failed to fetch profile: ${response.statusCode}');
       }
     } on DioException catch (e) {
       // Log error details for debugging
-      print('Error fetching profile: ${e.response?.statusCode} - ${e.response?.data}');
+      debugPrint('Error fetching profile: ${e.response?.statusCode} - ${e.response?.data}');
       throw Exception('Error fetching profile: ${e.message}');
     } catch (e) {
-      print('Unexpected error in getProfile: $e');
+      debugPrint('Unexpected error in getProfile: $e');
       throw Exception('Error fetching profile: $e');
     }
   }
@@ -49,10 +49,10 @@ class ProfileApi {
         throw Exception('Failed to fetch user info: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      print('Error fetching user info: ${e.response?.statusCode} - ${e.response?.data}');
+      debugPrint('Error fetching user info: ${e.response?.statusCode} - ${e.response?.data}');
       throw Exception('Error fetching user info: ${e.message}');
     } catch (e) {
-      print('Unexpected error in getUserInfo: $e');
+      debugPrint('Unexpected error in getUserInfo: $e');
       throw Exception('Error fetching user info: $e');
     }
   }
@@ -67,10 +67,10 @@ class ProfileApi {
         throw Exception('Failed to fetch profile options: \\${response.statusCode}');
       }
     } on DioException catch (e) {
-      print('Error fetching profile options: \\${e.response?.statusCode} - \\${e.response?.data}');
+      debugPrint('Error fetching profile options: \\${e.response?.statusCode} - \\${e.response?.data}');
       throw Exception('Error fetching profile options: \\${e.message}');
     } catch (e) {
-      print('Unexpected error in getProfileOptions: $e');
+      debugPrint('Unexpected error in getProfileOptions: $e');
       throw Exception('Error fetching profile options: $e');
     }
   }
@@ -89,10 +89,10 @@ class ProfileApi {
         throw Exception(response.data['message'] ?? 'Failed to upload avatar');
       }
     } on DioException catch (e) {
-      print('Error uploading avatar: ${e.response?.statusCode} - ${e.response?.data}');
+      debugPrint('Error uploading avatar: ${e.response?.statusCode} - ${e.response?.data}');
       throw Exception(e.response?.data['message'] ?? 'Failed to upload avatar');
     } catch (e) {
-      print('Unexpected error in uploadAvatar: $e');
+      debugPrint('Unexpected error in uploadAvatar: $e');
       throw Exception('Failed to upload avatar: $e');
     }
   }
@@ -111,10 +111,10 @@ class ProfileApi {
         throw Exception(response.data['message'] ?? 'Failed to upload cover');
       }
     } on DioException catch (e) {
-      print('Error uploading cover: ${e.response?.statusCode} - ${e.response?.data}');
+      debugPrint('Error uploading cover: ${e.response?.statusCode} - ${e.response?.data}');
       throw Exception(e.response?.data['message'] ?? 'Failed to upload cover');
     } catch (e) {
-      print('Unexpected error in uploadCover: $e');
+      debugPrint('Unexpected error in uploadCover: $e');
       throw Exception('Failed to upload cover: $e');
     }
   }
@@ -133,10 +133,10 @@ class ProfileApi {
         throw Exception(response.data['message'] ?? 'Failed to upload highlight');
       }
     } on DioException catch (e) {
-      print('Error uploading highlight: ${e.response?.statusCode} - ${e.response?.data}');
+      debugPrint('Error uploading highlight: ${e.response?.statusCode} - ${e.response?.data}');
       throw Exception(e.response?.data['message'] ?? 'Failed to upload highlight');
     } catch (e) {
-      print('Unexpected error in uploadHighlight: $e');
+      debugPrint('Unexpected error in uploadHighlight: $e');
       throw Exception('Failed to upload highlight: $e');
     }
   }
@@ -147,9 +147,9 @@ class ProfileApi {
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to delete avatar: ${response.statusCode}');
       }
-      print('Delete avatar response: ${response.statusCode}');
+      debugPrint('Delete avatar response: ${response.statusCode}');
     } catch (e) {
-      print('Error in deleteAvatar: $e');
+      debugPrint('Error in deleteAvatar: $e');
       rethrow;
     }
   }
@@ -160,9 +160,9 @@ class ProfileApi {
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to delete cover: ${response.statusCode}');
       }
-      print('Delete cover response: ${response.statusCode}');
+      debugPrint('Delete cover response: ${response.statusCode}');
     } catch (e) {
-      print('Error in deleteCover: $e');
+      debugPrint('Error in deleteCover: $e');
       rethrow;
     }
   }
@@ -203,3 +203,4 @@ class ProfileApi {
     }
   }
 }
+

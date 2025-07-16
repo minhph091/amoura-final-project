@@ -4,12 +4,14 @@ import '../shared/widgets/app_gradient_background.dart';
 import 'vip_subscription_viewmodel.dart';
 import 'widgets/vip_benefit_card.dart';
 import 'widgets/vip_plan_carousel.dart';
+import '../../config/language/app_localizations.dart';
 
 class VipSubscriptionView extends StatelessWidget {
   const VipSubscriptionView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return ChangeNotifierProvider(
       create: (_) => VipSubscriptionViewModel(),
       child: Consumer<VipSubscriptionViewModel>(
@@ -20,11 +22,9 @@ class VipSubscriptionView extends StatelessWidget {
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                title: const Text(
-                  'Amoura VIP',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                title: Text(
+                  localizations.translate('amoura_vip'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 centerTitle: true,
               ),
@@ -48,16 +48,21 @@ class VipSubscriptionView extends StatelessWidget {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFE94057).withValues(alpha: 0.5, red: 0.91, green: 0.25, blue: 0.34),
+                              color: const Color(0xFFE94057).withValues(
+                                alpha: 0.5,
+                                red: 0.91,
+                                green: 0.25,
+                                blue: 0.34,
+                              ),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),
                           ],
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            "VIP",
-                            style: TextStyle(
+                            localizations.translate('vip'),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
@@ -69,9 +74,9 @@ class VipSubscriptionView extends StatelessWidget {
 
                       const SizedBox(height: 24),
 
-                      const Text(
-                        'Upgrade Your Experience',
-                        style: TextStyle(
+                      Text(
+                        localizations.translate('unlock_premium_features'),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -82,9 +87,14 @@ class VipSubscriptionView extends StatelessWidget {
                       const SizedBox(height: 12),
 
                       Text(
-                        'Become a VIP member to enjoy all the exclusive features of Amoura',
+                        localizations.translate('get_premium_benefits'),
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9, red: 1, green: 1, blue: 1),
+                          color: Colors.white.withValues(
+                            alpha: 0.9,
+                            red: 1,
+                            green: 1,
+                            blue: 1,
+                          ),
                           fontSize: 16,
                         ),
                         textAlign: TextAlign.center,
@@ -105,21 +115,29 @@ class VipSubscriptionView extends StatelessWidget {
 
                       const SizedBox(height: 16),
 
-                      const Row(
+                      Row(
                         children: [
                           Expanded(
                             child: VipBenefitCard(
                               icon: Icons.replay,
-                              title: 'Unlimited Rewind',
-                              description: 'Rewind to any profile you skipped anytime',
+                              title: AppLocalizations.of(
+                                context,
+                              ).translate('unlimited_rewind'),
+                              description: AppLocalizations.of(
+                                context,
+                              ).translate('rewind_description'),
                             ),
                           ),
                           SizedBox(width: 12),
                           Expanded(
                             child: VipBenefitCard(
                               icon: Icons.visibility,
-                              title: 'See Who Liked You',
-                              description: 'View the list of people who liked you',
+                              title: AppLocalizations.of(
+                                context,
+                              ).translate('see_who_liked_you'),
+                              description: AppLocalizations.of(
+                                context,
+                              ).translate('see_who_liked_description'),
                             ),
                           ),
                         ],
@@ -127,21 +145,29 @@ class VipSubscriptionView extends StatelessWidget {
 
                       const SizedBox(height: 12),
 
-                      const Row(
+                      Row(
                         children: [
                           Expanded(
                             child: VipBenefitCard(
                               icon: Icons.verified,
-                              title: 'Featured Profile',
-                              description: 'Your profile will be prioritized for others',
+                              title: AppLocalizations.of(
+                                context,
+                              ).translate('featured_profile'),
+                              description: AppLocalizations.of(
+                                context,
+                              ).translate('featured_profile_description'),
                             ),
                           ),
                           SizedBox(width: 12),
                           Expanded(
                             child: VipBenefitCard(
                               icon: Icons.card_giftcard,
-                              title: 'Special Gifts',
-                              description: 'Receive gifts during special events',
+                              title: AppLocalizations.of(
+                                context,
+                              ).translate('special_gifts'),
+                              description: AppLocalizations.of(
+                                context,
+                              ).translate('special_gifts_description'),
                             ),
                           ),
                         ],
@@ -179,7 +205,12 @@ class VipSubscriptionView extends StatelessWidget {
                             backgroundColor: const Color(0xFFE94057),
                             foregroundColor: Colors.white,
                             elevation: 8,
-                            shadowColor: const Color(0xFFE94057).withValues(alpha: 0.5, red: 0.91, green: 0.25, blue: 0.34),
+                            shadowColor: const Color(0xFFE94057).withValues(
+                              alpha: 0.5,
+                              red: 0.91,
+                              green: 0.25,
+                              blue: 0.34,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -199,7 +230,12 @@ class VipSubscriptionView extends StatelessWidget {
                       Text(
                         'Subscription renews automatically. You can cancel anytime.',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7, red: 1, green: 1, blue: 1),
+                          color: Colors.white.withValues(
+                            alpha: 0.7,
+                            red: 1,
+                            green: 1,
+                            blue: 1,
+                          ),
                           fontSize: 12,
                         ),
                         textAlign: TextAlign.center,

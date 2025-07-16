@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'filter_section_header.dart';
+import '../../../../config/language/app_localizations.dart';
 
 // A filter widget for selecting an age range using a RangeSlider.
 class AgeRangeFilter extends StatelessWidget {
@@ -17,12 +18,14 @@ class AgeRangeFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final localizations = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FilterSectionHeader(
-          title: 'Age Range',
-          valueDisplay: '${currentAgeRange.start.round()} - ${currentAgeRange.end.round()}',
+          title: localizations.translate('age_range'),
+          valueDisplay:
+              '${currentAgeRange.start.round()} - ${currentAgeRange.end.round()}',
         ),
         RangeSlider(
           values: currentAgeRange,
@@ -35,7 +38,9 @@ class AgeRangeFilter extends StatelessWidget {
           ),
           onChanged: onChanged,
           activeColor: colorScheme.primary,
-          inactiveColor: colorScheme.primary.withValues(alpha: 0.3), // Using withOpacity
+          inactiveColor: colorScheme.primary.withValues(
+            alpha: 0.3,
+          ), // Using withOpacity
         ),
       ],
     );

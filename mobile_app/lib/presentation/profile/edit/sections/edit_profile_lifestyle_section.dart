@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../setup/theme/setup_profile_theme.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../edit_profile_viewmodel.dart';
 
 class EditProfileLifestyleSection extends StatefulWidget {
   final EditProfileViewModel viewModel;
 
-  const EditProfileLifestyleSection({
-    super.key,
-    required this.viewModel,
-  });
+  const EditProfileLifestyleSection({super.key, required this.viewModel});
 
   @override
-  State<EditProfileLifestyleSection> createState() => _EditProfileLifestyleSectionState();
+  State<EditProfileLifestyleSection> createState() =>
+      _EditProfileLifestyleSectionState();
 }
 
-class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSection> {
+class _EditProfileLifestyleSectionState
+    extends State<EditProfileLifestyleSection> {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -23,20 +23,24 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
       children: [
         Text('Your Lifestyle', style: ProfileTheme.getSubtitleStyle(context)),
         const SizedBox(height: 6),
-        Text('Tell us about your lifestyle and pets.',
-            style: ProfileTheme.getDescriptionStyle(context)),
+        Text(
+          'Tell us about your lifestyle and pets.',
+          style: ProfileTheme.getDescriptionStyle(context),
+        ),
         const SizedBox(height: 16),
 
         // Drink Status Dropdown
         ProfileOptionSelector(
-          options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['drinkStatuses']),
+          options: widget.viewModel.safeOptions(
+            widget.viewModel.profileOptions?['drinkStatuses'],
+          ),
           selectedValue: widget.viewModel.drinkStatus,
           onChanged: (value, selected) {
             if (selected) {
               setState(() => widget.viewModel.updateDrinkStatus(value));
             }
           },
-          labelText: 'Do you drink?',
+          labelText: AppLocalizations.of(context).translate('do_you_drink'),
           labelStyle: ProfileTheme.getLabelStyle(context),
           isDropdown: true,
         ),
@@ -45,14 +49,16 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
 
         // Smoke Status Dropdown
         ProfileOptionSelector(
-          options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['smokeStatuses']),
+          options: widget.viewModel.safeOptions(
+            widget.viewModel.profileOptions?['smokeStatuses'],
+          ),
           selectedValue: widget.viewModel.smokeStatus,
           onChanged: (value, selected) {
             if (selected) {
               setState(() => widget.viewModel.updateSmokeStatus(value));
             }
           },
-          labelText: 'Do you smoke?',
+          labelText: AppLocalizations.of(context).translate('do_you_smoke'),
           labelStyle: ProfileTheme.getLabelStyle(context),
           isDropdown: true,
         ),
@@ -71,7 +77,9 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
   }
 
   Widget _buildPetsGrid() {
-    final options = widget.viewModel.safeOptions(widget.viewModel.profileOptions?['pets']);
+    final options = widget.viewModel.safeOptions(
+      widget.viewModel.profileOptions?['pets'],
+    );
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -84,7 +92,8 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
       itemCount: options.length,
       itemBuilder: (context, index) {
         final option = options[index];
-        final isSelected = widget.viewModel.selectedPets?.contains(option['value']) ?? false;
+        final isSelected =
+            widget.viewModel.selectedPets?.contains(option['value']) ?? false;
 
         return _buildPetItem(
           label: option['label'],
@@ -112,11 +121,15 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
+            color:
+                isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(10),
-          color: isSelected ? ProfileTheme.darkPink.withOpacity(0.1) : Colors.transparent,
+          color:
+              isSelected
+                  ? ProfileTheme.darkPink.withValues(alpha: 0.1)
+                  : Colors.transparent,
         ),
         child: Stack(
           children: [
@@ -127,15 +140,22 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
                   if (icon != null)
                     Icon(
                       icon,
-                      color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
+                      color:
+                          isSelected
+                              ? ProfileTheme.darkPink
+                              : ProfileTheme.lightPurple,
                       size: 22,
                     ),
                   const SizedBox(width: 8),
                   Text(
                     label,
                     style: TextStyle(
-                      color: isSelected ? ProfileTheme.darkPink : ProfileTheme.darkPurple,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color:
+                          isSelected
+                              ? ProfileTheme.darkPink
+                              : ProfileTheme.darkPurple,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 ],
@@ -151,11 +171,7 @@ class _EditProfileLifestyleSectionState extends State<EditProfileLifestyleSectio
                     color: ProfileTheme.darkPink,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 10,
-                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 10),
                 ),
               ),
           ],

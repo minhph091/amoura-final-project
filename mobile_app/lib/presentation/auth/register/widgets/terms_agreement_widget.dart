@@ -45,39 +45,41 @@ class TermsAgreementWidget extends StatelessWidget {
                   color: theme.colorScheme.onSurface,
                 ),
                 children: [
+                  TextSpan(text: loc.translate('terms_agreement_text')),
                   TextSpan(
-                    text: loc.translate('terms_agreement').split(loc.translate('terms_service'))[0],
-                  ),
-                  TextSpan(
-                    text: loc.translate('terms_service'),
+                    text: loc.translate('terms_service_link'),
                     style: TextStyle(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const TermsOfServiceView()),
-                        );
-                      },
+                    recognizer:
+                        TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const TermsOfServiceView(),
+                              ),
+                            );
+                          },
                   ),
+                  TextSpan(text: ' ${loc.translate('and_text')} '),
                   TextSpan(
-                    text: loc.translate('terms_agreement').split(loc.translate('terms_service'))[1].split(loc.translate('privacy_policy'))[0],
-                  ),
-                  TextSpan(
-                    text: loc.translate('privacy_policy'),
+                    text: loc.translate('privacy_policy_link'),
                     style: TextStyle(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const PrivacyPolicyView()),
-                        );
-                      },
+                    recognizer:
+                        TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PrivacyPolicyView(),
+                              ),
+                            );
+                          },
                   ),
                 ],
               ),

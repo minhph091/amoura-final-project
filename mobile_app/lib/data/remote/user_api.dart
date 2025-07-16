@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../core/api/api_client.dart';
 import 'package:dio/dio.dart';
 import '../../core/constants/api_endpoints.dart';
@@ -38,10 +39,10 @@ class UserApi {
         throw Exception('Failed to change password');
       }
     } on DioException catch (e) {
-      print('Error changing password: ${e.response?.statusCode} - ${e.response?.data}');
+      debugPrint('Error changing password: ${e.response?.statusCode} - ${e.response?.data}');
       throw Exception(e.response?.data['message'] ?? 'Failed to change password');
     } catch (e) {
-      print('Unexpected error in changePassword: $e');
+      debugPrint('Unexpected error in changePassword: $e');
       throw Exception('Failed to change password: $e');
     }
   }
@@ -59,10 +60,10 @@ class UserApi {
         throw Exception(response.data['message'] ?? 'Failed to request email change');
       }
     } on DioException catch (e) {
-      print('Error requesting email change: \\${e.response?.statusCode} - \\${e.response?.data}');
+      debugPrint('Error requesting email change: \\${e.response?.statusCode} - \\${e.response?.data}');
       throw Exception(e.response?.data['message'] ?? 'Failed to request email change');
     } catch (e) {
-      print('Unexpected error in requestEmailChange: $e');
+      debugPrint('Unexpected error in requestEmailChange: $e');
       throw Exception('Failed to request email change: $e');
     }
   }
@@ -78,10 +79,10 @@ class UserApi {
         throw Exception(response.data['message'] ?? 'Failed to confirm email change');
       }
     } on DioException catch (e) {
-      print('Error confirming email change: \\${e.response?.statusCode} - \\${e.response?.data}');
+      debugPrint('Error confirming email change: \\${e.response?.statusCode} - \\${e.response?.data}');
       throw Exception(e.response?.data['message'] ?? 'Failed to confirm email change');
     } catch (e) {
-      print('Unexpected error in confirmEmailChange: $e');
+      debugPrint('Unexpected error in confirmEmailChange: $e');
       throw Exception('Failed to confirm email change: $e');
     }
   }

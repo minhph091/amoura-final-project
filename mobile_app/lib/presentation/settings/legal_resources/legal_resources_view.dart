@@ -1,6 +1,7 @@
 // lib/presentation/settings/legal_resources/legal_resources_view.dart
 
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../common/help_center_view.dart';
 import '../../common/privacy_policy_view.dart';
 import '../../common/terms_of_service_view.dart';
@@ -13,10 +14,11 @@ class LegalResourcesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final localizations = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Legal & Resources'),
+        title: Text(localizations.translate('legal_resources')),
         backgroundColor: colorScheme.surface,
         elevation: 1,
         centerTitle: true,
@@ -27,39 +29,43 @@ class LegalResourcesView extends StatelessWidget {
         children: [
           _buildResourceTile(
             context: context,
-            title: 'Help Center',
+            title: localizations.translate('help_center'),
             icon: Icons.help_outline_rounded,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const HelpCenterView()),
-            ),
+            onTap:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HelpCenterView()),
+                ),
           ),
           _buildResourceTile(
             context: context,
-            title: 'Privacy Policy',
+            title: localizations.translate('privacy_policy'),
             icon: Icons.privacy_tip_outlined,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrivacyPolicyView()),
-            ),
+            onTap:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PrivacyPolicyView()),
+                ),
           ),
           _buildResourceTile(
             context: context,
-            title: 'Terms of Service',
+            title: localizations.translate('terms_conditions'),
             icon: Icons.description_outlined,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TermsOfServiceView()),
-            ),
+            onTap:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TermsOfServiceView()),
+                ),
           ),
           _buildResourceTile(
             context: context,
-            title: 'Cookie Policy',
+            title: localizations.translate('cookie_policy'),
             icon: Icons.cookie_outlined,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CookiePolicyView()),
-            ),
+            onTap:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CookiePolicyView()),
+                ),
           ),
         ],
       ),

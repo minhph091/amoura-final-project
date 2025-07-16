@@ -15,19 +15,26 @@ class SocketClient {
   bool _isConnected = false;
   String? _currentUserId;
   final AuthService _authService = getIt<AuthService>();
-  
+
   // Stream controllers cho các loại events khác nhau
-  final StreamController<Map<String, dynamic>> _messageController = StreamController.broadcast();
-  final StreamController<Map<String, dynamic>> _typingController = StreamController.broadcast();
-  final StreamController<Map<String, dynamic>> _notificationController = StreamController.broadcast();
-  final StreamController<Map<String, dynamic>> _userStatusController = StreamController.broadcast();
-  final StreamController<bool> _connectionController = StreamController.broadcast();
+  final StreamController<Map<String, dynamic>> _messageController =
+      StreamController.broadcast();
+  final StreamController<Map<String, dynamic>> _typingController =
+      StreamController.broadcast();
+  final StreamController<Map<String, dynamic>> _notificationController =
+      StreamController.broadcast();
+  final StreamController<Map<String, dynamic>> _userStatusController =
+      StreamController.broadcast();
+  final StreamController<bool> _connectionController =
+      StreamController.broadcast();
 
   // Public streams để các service khác có thể subscribe
   Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
   Stream<Map<String, dynamic>> get typingStream => _typingController.stream;
-  Stream<Map<String, dynamic>> get notificationStream => _notificationController.stream;
-  Stream<Map<String, dynamic>> get userStatusStream => _userStatusController.stream;
+  Stream<Map<String, dynamic>> get notificationStream =>
+      _notificationController.stream;
+  Stream<Map<String, dynamic>> get userStatusStream =>
+      _userStatusController.stream;
   Stream<bool> get connectionStream => _connectionController.stream;
 
   bool get isConnected => _isConnected;
@@ -43,14 +50,16 @@ class SocketClient {
 
     try {
       _currentUserId = userId;
-      
+
       // Lấy access token để authentication
       final accessToken = await _authService.getAccessToken();
       if (accessToken == null) {
         throw Exception('No access token available for WebSocket connection');
       }
 
-      debugPrint('WebSocket: Connecting to ${WebSocketConfig.url} for user $userId');
+      debugPrint(
+        'WebSocket: Connecting to ${WebSocketConfig.url} for user $userId',
+      );
 
       _stompClient = StompClient(
         config: StompConfig(
@@ -86,7 +95,6 @@ class SocketClient {
       );
 
       _stompClient!.activate();
-      
     } catch (e) {
       debugPrint('WebSocket: Failed to connect - $e');
       _connectionController.add(false);
@@ -101,14 +109,37 @@ class SocketClient {
     _isConnected = true;
     _connectionController.add(true);
 
-    // Subscribe vào personal notification queue
-    // Nhận thông báo match, system messages, etc.
-    _subscribeToPersonalNotifications();
+    // Subscribe to personal notification queue
+    _stompClient!.subscribe(
+      destination: '/user/queue/notification',
+      callback: (frame) {
+        if (frame.body != null) {
+          try {
+            final data = json.decode(frame.body!);
+            _notificationController.add(data);
+            debugPrint('WebSocket: Received notification: ${frame.body}');
+          } catch (e) {
+            debugPrint('WebSocket: Failed to parse notification: $e');
+          }
+        }
+      },
+    );
 
-    // Subscribe vào user status updates để biết ai online/offline
-    _subscribeToUserStatusUpdates();
-
-    debugPrint('WebSocket: All subscriptions initialized');
+    // Subscribe to user status updates
+    _stompClient!.subscribe(
+      destination: '/topic/user-status',
+      callback: (frame) {
+        if (frame.body != null) {
+          try {
+            final data = json.decode(frame.body!);
+            _userStatusController.add(data);
+            debugPrint('WebSocket: User status update: ${frame.body}');
+          } catch (e) {
+            debugPrint('WebSocket: Failed to parse user status: $e');
+          }
+        }
+      },
+    );
   }
 
   /// Callback khi mất kết nối WebSocket
@@ -118,70 +149,29 @@ class SocketClient {
     _connectionController.add(false);
   }
 
-  /// Subscribe vào queue thông báo cá nhân
-  /// Topic: /user/queue/notification
-  void _subscribeToPersonalNotifications() {
-    if (_stompClient == null || !_isConnected) return;
-
-    _stompClient!.subscribe(
-      destination: WebSocketConfig.personalNotificationTopic,
-      callback: (StompFrame frame) {
-        try {
-          if (frame.body != null) {
-            final notification = jsonDecode(frame.body!);
-            debugPrint('WebSocket: Received notification - ${notification['type']}');
-            _notificationController.add(notification);
-          }
-        } catch (e) {
-          debugPrint('WebSocket: Error parsing notification - $e');
-        }
-      },
-    );
-
-    debugPrint('WebSocket: Subscribed to personal notifications');
-  }
-
-  /// Subscribe vào user status updates
-  /// Topic: /topic/user-status
-  void _subscribeToUserStatusUpdates() {
-    if (_stompClient == null || !_isConnected) return;
-
-    _stompClient!.subscribe(
-      destination: WebSocketConfig.userStatusTopic,
-      callback: (StompFrame frame) {
-        try {
-          if (frame.body != null) {
-            final statusUpdate = jsonDecode(frame.body!);
-            debugPrint('WebSocket: User status update - ${statusUpdate['userId']} is ${statusUpdate['status']}');
-            _userStatusController.add(statusUpdate);
-          }
-        } catch (e) {
-          debugPrint('WebSocket: Error parsing user status - $e');
-        }
-      },
-    );
-
-    debugPrint('WebSocket: Subscribed to user status updates');
-  }
-
   /// Subscribe vào một chat room cụ thể để nhận tin nhắn realtime
   /// Topic: /topic/chat/{chatRoomId}
-  String? subscribeToChat(String chatRoomId, Function(Map<String, dynamic>) onMessage) {
+  String? subscribeToChat(
+    String chatRoomId,
+    Function(Map<String, dynamic>) onMessage,
+  ) {
     if (_stompClient == null || !_isConnected) {
       debugPrint('WebSocket: Cannot subscribe to chat - not connected');
       return null;
     }
 
     final destination = WebSocketConfig.chatTopic(chatRoomId);
-    
-    final subscription = _stompClient!.subscribe(
+
+    _stompClient!.subscribe(
       destination: destination,
       callback: (StompFrame frame) {
         try {
           if (frame.body != null) {
             final message = jsonDecode(frame.body!);
-            debugPrint('WebSocket: Received message in chat $chatRoomId - Type: ${message['type']}, Content: ${message['content']}');
-            
+            debugPrint(
+              'WebSocket: Received message in chat $chatRoomId - Type: ${message['type']}, Content: ${message['content']}',
+            );
+
             // Xử lý các loại message khác nhau
             switch (message['type']) {
               case 'MESSAGE':
@@ -203,7 +193,9 @@ class SocketClient {
               default:
                 // Các loại message khác - chỉ gửi vào stream, không gọi onMessage để tránh duplicate
                 _messageController.add(message);
-                debugPrint('WebSocket: Unknown message type: ${message['type']}, added to stream');
+                debugPrint(
+                  'WebSocket: Unknown message type: ${message['type']}, added to stream',
+                );
             }
           }
         } catch (e) {
@@ -219,25 +211,30 @@ class SocketClient {
 
   /// Subscribe vào typing indicators của một chat room
   /// Topic: /topic/chat/{chatRoomId}/typing
-  String? subscribeToTypingIndicators(String chatRoomId, Function(Map<String, dynamic>) onTyping) {
+  String? subscribeToTypingIndicators(
+    String chatRoomId,
+    Function(Map<String, dynamic>) onTyping,
+  ) {
     if (_stompClient == null || !_isConnected) {
       debugPrint('WebSocket: Cannot subscribe to typing - not connected');
       return null;
     }
 
     final destination = WebSocketConfig.typingIndicatorTopic(chatRoomId);
-    
-    final subscription = _stompClient!.subscribe(
+
+    _stompClient!.subscribe(
       destination: destination,
       callback: (StompFrame frame) {
         try {
           if (frame.body != null) {
             final typingData = jsonDecode(frame.body!);
-            debugPrint('WebSocket: Typing indicator in chat $chatRoomId - ${typingData['userId']} is ${typingData['isTyping'] ? "typing" : "not typing"}');
-            
+            debugPrint(
+              'WebSocket: Typing indicator in chat $chatRoomId - ${typingData['userId']} is ${typingData['isTyping'] ? "typing" : "not typing"}',
+            );
+
             // Gọi callback để xử lý typing indicator
             onTyping(typingData);
-            
+
             // Cũng emit vào stream chung
             _typingController.add(typingData);
           }
@@ -247,28 +244,35 @@ class SocketClient {
       },
     );
 
-    debugPrint('WebSocket: Subscribed to typing indicators for chat $chatRoomId');
+    debugPrint(
+      'WebSocket: Subscribed to typing indicators for chat $chatRoomId',
+    );
     // Return destination as subscription ID
     return destination;
   }
 
   /// Subscribe vào user status updates cho một chat room cụ thể
   /// Topic: /topic/chat/{chatRoomId}/user-status
-  String? subscribeToUserStatusInChat(String chatRoomId, Function(Map<String, dynamic>) onStatusUpdate) {
+  String? subscribeToUserStatusInChat(
+    String chatRoomId,
+    Function(Map<String, dynamic>) onStatusUpdate,
+  ) {
     if (_stompClient == null || !_isConnected) {
       debugPrint('WebSocket: Cannot subscribe to user status - not connected');
       return null;
     }
 
     final destination = WebSocketConfig.userStatusInChatTopic(chatRoomId);
-    
-    final subscription = _stompClient!.subscribe(
+
+    _stompClient!.subscribe(
       destination: destination,
       callback: (StompFrame frame) {
         try {
           if (frame.body != null) {
             final statusData = jsonDecode(frame.body!);
-            debugPrint('WebSocket: User status update in chat $chatRoomId - User ${statusData['userId']} is ${statusData['status']}');
+            debugPrint(
+              'WebSocket: User status update in chat $chatRoomId - User ${statusData['userId']} is ${statusData['status']}',
+            );
             onStatusUpdate(statusData);
           }
         } catch (e) {
@@ -277,7 +281,9 @@ class SocketClient {
       },
     );
 
-    debugPrint('WebSocket: Subscribed to user status updates for chat room $chatRoomId');
+    debugPrint(
+      'WebSocket: Subscribed to user status updates for chat room $chatRoomId',
+    );
     return destination;
   }
 
@@ -310,7 +316,9 @@ class SocketClient {
       body: jsonEncode(typingData),
     );
 
-    debugPrint('WebSocket: Sent typing indicator for chat $chatRoomId - $isTyping');
+    debugPrint(
+      'WebSocket: Sent typing indicator for chat $chatRoomId - $isTyping',
+    );
   }
 
   /// Gửi message read receipt
@@ -360,7 +368,12 @@ class SocketClient {
 
   /// Gửi tin nhắn qua WebSocket
   /// Destination: /app/chat.sendMessage
-  void sendMessage(String chatRoomId, String content, String messageType, {String? imageUrl}) {
+  void sendMessage(
+    String chatRoomId,
+    String content,
+    String messageType, {
+    String? imageUrl,
+  }) {
     if (_stompClient == null || !_isConnected) {
       debugPrint('WebSocket: Cannot send message - not connected');
       return;
@@ -378,6 +391,8 @@ class SocketClient {
       body: jsonEncode(messageData),
     );
 
-    debugPrint('WebSocket: Sent message to chat $chatRoomId - Type: $messageType');
+    debugPrint(
+      'WebSocket: Sent message to chat $chatRoomId - Type: $messageType',
+    );
   }
 }

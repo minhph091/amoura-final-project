@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../config/environment.dart';
 
 /// Cấu hình WebSocket cho chat và notification
@@ -19,6 +20,11 @@ class WebSocketConfig {
       case Environment.prod:
         return 'wss://api.amoura.space/api/ws';
     }
+  }
+
+  // Thêm method để lấy base WebSocket URL cho production
+  static String get productionWsUrl {
+    return 'wss://api.amoura.space/api/ws';
   }
 
   // STOMP destinations for subscribing
@@ -120,7 +126,7 @@ class WebSocketConfig {
       'reconnectDelay': reconnectDelay,
       'heartbeatIncoming': heartbeatIncoming,
       'heartbeatOutgoing': heartbeatOutgoing,
-      'debug': (str) => print('STOMP: $str'),
+      'debug': (str) => debugPrint('STOMP: $str'),
     };
   }
 
@@ -132,7 +138,7 @@ class WebSocketConfig {
       'reconnectDelay': reconnectDelay,
       'heartbeatIncoming': heartbeatIncoming,
       'heartbeatOutgoing': heartbeatOutgoing,
-      'debug': (str) => print('STOMP: $str'),
+      'debug': (str) => debugPrint('STOMP: $str'),
     };
   }
 }

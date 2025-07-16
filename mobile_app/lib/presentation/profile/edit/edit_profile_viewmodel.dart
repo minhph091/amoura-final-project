@@ -5,7 +5,6 @@ import 'package:get_it/get_it.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../domain/usecases/auth/update_profile_usecase.dart';
 import '../../../../core/services/profile_service.dart';
-import '../../../../domain/usecases/user/update_user_usecase.dart';
 import '../../../../data/remote/profile_api.dart';
 import 'dart:io';
 
@@ -76,88 +75,116 @@ class EditProfileViewModel extends ChangeNotifier {
     if (profile == null) return;
 
     // Lưu id cho orientation
-    orientation = profile?['orientation'] != null
-        ? (profile!['orientation'] as Map<String, dynamic>)['id']?.toString()
-        : null;
+    orientation =
+        profile?['orientation'] != null
+            ? (profile!['orientation'] as Map<String, dynamic>)['id']
+                ?.toString()
+            : null;
 
     // Lưu id cho bodyType
-    bodyType = profile?['bodyType'] != null
-        ? (profile!['bodyType'] as Map<String, dynamic>)['id']?.toString()
-        : null;
+    bodyType =
+        profile?['bodyType'] != null
+            ? (profile!['bodyType'] as Map<String, dynamic>)['id']?.toString()
+            : null;
     height = profile?['height'] as int? ?? 170;
 
     // Lưu id cho jobIndustry
-    jobIndustry = profile?['jobIndustry'] != null
-        ? (profile!['jobIndustry'] as Map<String, dynamic>)['id']?.toString()
-        : null;
+    jobIndustry =
+        profile?['jobIndustry'] != null
+            ? (profile!['jobIndustry'] as Map<String, dynamic>)['id']
+                ?.toString()
+            : null;
     // Lưu id cho educationLevel
-    educationLevel = profile?['educationLevel'] != null
-        ? (profile!['educationLevel'] as Map<String, dynamic>)['id']?.toString()
-        : null;
+    educationLevel =
+        profile?['educationLevel'] != null
+            ? (profile!['educationLevel'] as Map<String, dynamic>)['id']
+                ?.toString()
+            : null;
     dropOut = profile?['dropOut'] as bool? ?? false;
 
     // Lưu id cho drinkStatus
-    drinkStatus = profile?['drinkStatus'] != null
-        ? (profile!['drinkStatus'] as Map<String, dynamic>)['id']?.toString()
-        : null;
+    drinkStatus =
+        profile?['drinkStatus'] != null
+            ? (profile!['drinkStatus'] as Map<String, dynamic>)['id']
+                ?.toString()
+            : null;
     // Lưu id cho smokeStatus
-    smokeStatus = profile?['smokeStatus'] != null
-        ? (profile!['smokeStatus'] as Map<String, dynamic>)['id']?.toString()
-        : null;
+    smokeStatus =
+        profile?['smokeStatus'] != null
+            ? (profile!['smokeStatus'] as Map<String, dynamic>)['id']
+                ?.toString()
+            : null;
     // Lưu id cho pets
-    selectedPets = profile?['pets'] != null
-        ? (profile!['pets'] as List<dynamic>)
-            .map((pet) => (pet as Map<String, dynamic>)['id']?.toString())
-            .whereType<String>()
-            .toList()
-        : [];
+    selectedPets =
+        profile?['pets'] != null
+            ? (profile!['pets'] as List<dynamic>)
+                .map((pet) => (pet as Map<String, dynamic>)['id']?.toString())
+                .whereType<String>()
+                .toList()
+            : [];
 
     // Lưu id cho interests
-    selectedInterestIds = profile?['interests'] != null
-        ? (profile!['interests'] as List<dynamic>)
-            .map((interest) => (interest as Map<String, dynamic>)['id']?.toString())
-            .whereType<String>()
-            .toList()
-        : [];
+    selectedInterestIds =
+        profile?['interests'] != null
+            ? (profile!['interests'] as List<dynamic>)
+                .map(
+                  (interest) =>
+                      (interest as Map<String, dynamic>)['id']?.toString(),
+                )
+                .whereType<String>()
+                .toList()
+            : [];
 
     // Lưu id cho languages
-    selectedLanguageIds = profile?['languages'] != null
-        ? (profile!['languages'] as List<dynamic>)
-            .map((lang) => (lang as Map<String, dynamic>)['id']?.toString())
-            .whereType<String>()
-            .toList()
-        : [];
+    selectedLanguageIds =
+        profile?['languages'] != null
+            ? (profile!['languages'] as List<dynamic>)
+                .map((lang) => (lang as Map<String, dynamic>)['id']?.toString())
+                .whereType<String>()
+                .toList()
+            : [];
 
     // Các trường còn lại giữ nguyên
     firstName = profile?['firstName'] as String?;
     lastName = profile?['lastName'] as String?;
-    dateOfBirth = profile?['dateOfBirth'] != null 
-        ? DateTime.tryParse(profile!['dateOfBirth'] as String) 
-        : null;
+    dateOfBirth =
+        profile?['dateOfBirth'] != null
+            ? DateTime.tryParse(profile!['dateOfBirth'] as String)
+            : null;
     sex = profile?['sex'] as String?;
     avatarUrl = profile?['avatarUrl'] as String?;
     coverUrl = profile?['coverUrl'] as String?;
-    city = profile?['location'] != null 
-        ? (profile!['location'] as Map<String, dynamic>)['city'] as String? 
-        : null;
-    state = profile?['location'] != null 
-        ? (profile!['location'] as Map<String, dynamic>)['state'] as String? 
-        : null;
-    country = profile?['location'] != null 
-        ? (profile!['location'] as Map<String, dynamic>)['country'] as String? 
-        : null;
-    latitude = profile?['location'] != null 
-        ? (profile!['location'] as Map<String, dynamic>)['latitude'] as double? 
-        : null;
-    longitude = profile?['location'] != null 
-        ? (profile!['location'] as Map<String, dynamic>)['longitude'] as double? 
-        : null;
+    city =
+        profile?['location'] != null
+            ? (profile!['location'] as Map<String, dynamic>)['city'] as String?
+            : null;
+    state =
+        profile?['location'] != null
+            ? (profile!['location'] as Map<String, dynamic>)['state'] as String?
+            : null;
+    country =
+        profile?['location'] != null
+            ? (profile!['location'] as Map<String, dynamic>)['country']
+                as String?
+            : null;
+    latitude =
+        profile?['location'] != null
+            ? (profile!['location'] as Map<String, dynamic>)['latitude']
+                as double?
+            : null;
+    longitude =
+        profile?['location'] != null
+            ? (profile!['location'] as Map<String, dynamic>)['longitude']
+                as double?
+            : null;
     locationPreference = profile?['locationPreference'] as int? ?? 10;
-    interestedInNewLanguage = profile?['interestedInNewLanguage'] as bool? ?? false;
+    interestedInNewLanguage =
+        profile?['interestedInNewLanguage'] as bool? ?? false;
     bio = profile?['bio'] as String?;
-    existingPhotos = profile?['galleryPhotos'] != null 
-        ? (profile!['galleryPhotos'] as List<dynamic>).cast<String>() 
-        : [];
+    existingPhotos =
+        profile?['galleryPhotos'] != null
+            ? (profile!['galleryPhotos'] as List<dynamic>).cast<String>()
+            : [];
   }
 
   // MARK: Form field validation
@@ -378,7 +405,8 @@ class EditProfileViewModel extends ChangeNotifier {
       final Map<String, dynamic> data = {
         'dateOfBirth': dateOfBirth?.toIso8601String(),
         'sex': sex,
-        'orientationId': orientation != null ? int.tryParse(orientation!) : null,
+        'orientationId':
+            orientation != null ? int.tryParse(orientation!) : null,
         // Group location data into a nested map
         'location': {
           'city': city,
@@ -390,14 +418,30 @@ class EditProfileViewModel extends ChangeNotifier {
         'locationPreference': locationPreference,
         'bodyTypeId': bodyType != null ? int.tryParse(bodyType!) : null,
         'height': height,
-        'jobIndustryId': jobIndustry != null ? int.tryParse(jobIndustry!) : null,
-        'educationLevelId': educationLevel != null ? int.tryParse(educationLevel!) : null,
+        'jobIndustryId':
+            jobIndustry != null ? int.tryParse(jobIndustry!) : null,
+        'educationLevelId':
+            educationLevel != null ? int.tryParse(educationLevel!) : null,
         'dropOut': dropOut,
-        'drinkStatusId': drinkStatus != null ? int.tryParse(drinkStatus!) : null,
-        'smokeStatusId': smokeStatus != null ? int.tryParse(smokeStatus!) : null,
-        'petIds': selectedPets?.map((id) => int.tryParse(id)).whereType<int>().toList(),
-        'interestIds': selectedInterestIds?.map((id) => int.tryParse(id)).whereType<int>().toList(),
-        'languageIds': selectedLanguageIds?.map((id) => int.tryParse(id)).whereType<int>().toList(),
+        'drinkStatusId':
+            drinkStatus != null ? int.tryParse(drinkStatus!) : null,
+        'smokeStatusId':
+            smokeStatus != null ? int.tryParse(smokeStatus!) : null,
+        'petIds':
+            selectedPets
+                ?.map((id) => int.tryParse(id))
+                .whereType<int>()
+                .toList(),
+        'interestIds':
+            selectedInterestIds
+                ?.map((id) => int.tryParse(id))
+                .whereType<int>()
+                .toList(),
+        'languageIds':
+            selectedLanguageIds
+                ?.map((id) => int.tryParse(id))
+                .whereType<int>()
+                .toList(),
         'interestedInNewLanguage': interestedInNewLanguage,
         'bio': bio,
       };
@@ -420,9 +464,9 @@ class EditProfileViewModel extends ChangeNotifier {
         if (avatarUrl != null && avatarUrl!.isNotEmpty) {
           try {
             await GetIt.I<ProfileApi>().deleteAvatar();
-            print('Successfully deleted old avatar');
+            debugPrint('Successfully deleted old avatar');
           } catch (e) {
-            print('Error deleting old avatar: $e');
+            debugPrint('Error deleting old avatar: $e');
             // Không throw error ở đây vì có thể avatar cũ đã bị xóa
           }
         }
@@ -441,9 +485,9 @@ class EditProfileViewModel extends ChangeNotifier {
         if (coverUrl != null && coverUrl!.isNotEmpty) {
           try {
             await GetIt.I<ProfileApi>().deleteCover();
-            print('Successfully deleted old cover');
+            debugPrint('Successfully deleted old cover');
           } catch (e) {
-            print('Error deleting old cover: $e');
+            debugPrint('Error deleting old cover: $e');
             // Không throw error ở đây vì có thể cover cũ đã bị xóa
           }
         }
@@ -479,10 +523,10 @@ class EditProfileViewModel extends ChangeNotifier {
       profile = await profileService.getProfile();
       _originalProfile = _deepCopy(profile!);
       _initFromProfile();
-      
+
       hasChanges = false;
       successMessage = "Profile updated successfully";
-      
+
       // Notify listeners after all updates are complete
       notifyListeners();
     } catch (e) {
@@ -496,15 +540,22 @@ class EditProfileViewModel extends ChangeNotifier {
 
   // Hàm deep copy cho Map<String, dynamic>
   Map<String, dynamic> _deepCopy(Map<String, dynamic> source) {
-    return Map<String, dynamic>.from(source.map((key, value) {
-      if (value is Map<String, dynamic>) {
-        return MapEntry(key, _deepCopy(value));
-      } else if (value is List) {
-        return MapEntry(key, value.map((e) => e is Map<String, dynamic> ? _deepCopy(e) : e).toList());
-      } else {
-        return MapEntry(key, value);
-      }
-    }));
+    return Map<String, dynamic>.from(
+      source.map((key, value) {
+        if (value is Map<String, dynamic>) {
+          return MapEntry(key, _deepCopy(value));
+        } else if (value is List) {
+          return MapEntry(
+            key,
+            value
+                .map((e) => e is Map<String, dynamic> ? _deepCopy(e) : e)
+                .toList(),
+          );
+        } else {
+          return MapEntry(key, value);
+        }
+      }),
+    );
   }
 
   // Hàm khôi phục lại dữ liệu gốc
@@ -524,19 +575,23 @@ class EditProfileViewModel extends ChangeNotifier {
       profileOptions = await profileService.getProfileOptions();
       notifyListeners();
     } catch (e) {
-      print('Error loading profile options: $e');
+      debugPrint('Error loading profile options: $e');
     }
   }
 
   // Helper: Chuẩn hóa options từ API để tránh lỗi null hoặc sai kiểu
   List<Map<String, dynamic>> safeOptions(List? raw) {
     if (raw == null) return [];
-    return raw.map<Map<String, dynamic>>((e) => {
-      'value': (e['value'] ?? e['id'] ?? '').toString(),
-      'label': (e['label'] ?? e['name'] ?? 'Unknown').toString(),
-      if (e['icon'] != null) 'icon': e['icon'],
-      if (e['color'] != null) 'color': e['color'],
-    }).toList();
+    return raw
+        .map<Map<String, dynamic>>(
+          (e) => {
+            'value': (e['value'] ?? e['id'] ?? '').toString(),
+            'label': (e['label'] ?? e['name'] ?? 'Unknown').toString(),
+            if (e['icon'] != null) 'icon': e['icon'],
+            if (e['color'] != null) 'color': e['color'],
+          },
+        )
+        .toList();
   }
 
   Future<void> uploadAvatar(String filePath) async {
@@ -544,22 +599,22 @@ class EditProfileViewModel extends ChangeNotifier {
     try {
       isLoading = true;
       notifyListeners();
-      
+
       // Delete old avatar if exists
       if (avatarUrl != null && avatarUrl!.isNotEmpty) {
         await profileApi.deleteAvatar();
       }
-      
+
       // Upload new avatar
       final url = await profileApi.uploadAvatar(filePath);
-      
+
       // Update local state
       avatarUrl = url;
       avatarPath = null;
-      
+
       // Update profile data
       await reloadProfile();
-      
+
       hasChanges = true;
       notifyListeners();
     } catch (e) {
@@ -577,22 +632,22 @@ class EditProfileViewModel extends ChangeNotifier {
     try {
       isLoading = true;
       notifyListeners();
-      
+
       // Delete old cover if exists
       if (coverUrl != null && coverUrl!.isNotEmpty) {
         await profileApi.deleteCover();
       }
-      
+
       // Upload new cover
       final url = await profileApi.uploadCover(filePath);
-      
+
       // Update local state
       coverUrl = url;
       coverPath = null;
-      
+
       // Update profile data
       await reloadProfile();
-      
+
       hasChanges = true;
       notifyListeners();
     } catch (e) {
@@ -653,7 +708,7 @@ class EditProfileViewModel extends ChangeNotifier {
       if (!await file.exists()) return false;
 
       final bytes = await file.readAsBytes();
-      if (bytes.length == 0) return false;
+      if (bytes.isEmpty) return false;
 
       // Check file extension
       final extension = filePath.split('.').last.toLowerCase();
@@ -664,7 +719,7 @@ class EditProfileViewModel extends ChangeNotifier {
       await decodeImageFromList(bytes);
       return true;
     } catch (e) {
-      print('Error validating image file: $e');
+      debugPrint('Error validating image file: $e');
       return false;
     }
   }

@@ -1,5 +1,4 @@
 // lib/presentation/shared/widgets/profile_option_selector.dart
-// Reusable widget for selecting profile options (single or multi-select) with animations.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -81,7 +80,7 @@ class ProfileOptionSelector extends StatelessWidget {
         ],
       );
     } catch (e, stack) {
-      print('ERROR in ProfileOptionSelector: $e\n$stack');
+      debugPrint('ERROR in ProfileOptionSelector: $e\n$stack');
       return Center(child: Text('Widget error: $e'));
     }
   }

@@ -57,7 +57,7 @@ class _Step3OrientationFormState extends State<Step3OrientationForm>
     Step3ViewModel step3ViewModel,
   ) {
     // Debug: Track UI rebuilds
-    print(
+    debugPrint(
       '🔄 Step3 UI rebuilding - selected orientation: ${step3ViewModel.orientationId}',
     );
 
@@ -87,7 +87,7 @@ class _Step3OrientationFormState extends State<Step3OrientationForm>
 
             // Next Button
             SetupProfileButton(
-              text: AppLocalizations.of(context).translate('next'),
+              text: AppLocalizations.of(context).translate('continue_setup'),
               onPressed: () => vm.nextStep(context: context),
               width: double.infinity,
               height: 52,

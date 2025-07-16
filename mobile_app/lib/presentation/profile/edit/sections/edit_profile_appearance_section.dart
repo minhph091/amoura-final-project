@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../setup/theme/setup_profile_theme.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../edit_profile_viewmodel.dart';
 
 class EditProfileAppearanceSection extends StatefulWidget {
   final EditProfileViewModel viewModel;
 
-  const EditProfileAppearanceSection({
-    super.key,
-    required this.viewModel,
-  });
+  const EditProfileAppearanceSection({super.key, required this.viewModel});
 
   @override
-  State<EditProfileAppearanceSection> createState() => _EditProfileAppearanceSectionState();
+  State<EditProfileAppearanceSection> createState() =>
+      _EditProfileAppearanceSectionState();
 }
 
-class _EditProfileAppearanceSectionState extends State<EditProfileAppearanceSection> {
+class _EditProfileAppearanceSectionState
+    extends State<EditProfileAppearanceSection> {
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -26,22 +26,29 @@ class _EditProfileAppearanceSectionState extends State<EditProfileAppearanceSect
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your Appearance', style: ProfileTheme.getSubtitleStyle(context)),
+            Text(
+              'Your Appearance',
+              style: ProfileTheme.getSubtitleStyle(context),
+            ),
             const SizedBox(height: 6),
-            Text('Let others know more about your look.',
-                style: ProfileTheme.getDescriptionStyle(context)),
+            Text(
+              'Let others know more about your look.',
+              style: ProfileTheme.getDescriptionStyle(context),
+            ),
             const SizedBox(height: 16),
 
             // Body Type Dropdown
             ProfileOptionSelector(
-              options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['bodyTypes']),
+              options: widget.viewModel.safeOptions(
+                widget.viewModel.profileOptions?['bodyTypes'],
+              ),
               selectedValue: widget.viewModel.bodyType,
               onChanged: (value, selected) {
                 if (selected) {
                   setState(() => widget.viewModel.updateBodyType(value));
                 }
               },
-              labelText: 'Body Type',
+              labelText: AppLocalizations.of(context).translate('body_type'),
               labelStyle: ProfileTheme.getLabelStyle(context),
               isDropdown: true,
             ),
@@ -59,13 +66,18 @@ class _EditProfileAppearanceSectionState extends State<EditProfileAppearanceSect
               label: '${widget.viewModel.height ?? 170} cm',
               activeColor: ProfileTheme.darkPink,
               inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
-              onChanged: (val) => setState(() => widget.viewModel.updateHeight(val.round())),
+              onChanged:
+                  (val) => setState(
+                    () => widget.viewModel.updateHeight(val.round()),
+                  ),
             ),
 
             Center(
               child: Text(
                 '${widget.viewModel.height ?? 170} cm',
-                style: ProfileTheme.getTitleStyle(context).copyWith(fontSize: 16),
+                style: ProfileTheme.getTitleStyle(
+                  context,
+                ).copyWith(fontSize: 16),
               ),
             ),
           ],

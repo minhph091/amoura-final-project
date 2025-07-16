@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../config/language/app_localizations.dart';
-import '../../../../core/utils/validation_util.dart';
+import '../../../../core/utils/localized_validation.dart';
 import '../../../shared/widgets/shake_widget.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
@@ -41,6 +41,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
 
   void _validateAndSave() {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+    final validator = LocalizedValidation.of(context);
     vm.firstName = _firstNameCtrl.text.trim();
     vm.lastName = _lastNameCtrl.text.trim();
 
@@ -61,9 +62,8 @@ class _Step1NameFormState extends State<Step1NameForm> {
     } else {
       setState(() {
         _firstNameError =
-            ValidationUtil().validateFirstName(_firstNameCtrl.text) != null;
-        _lastNameError =
-            ValidationUtil().validateLastName(_lastNameCtrl.text) != null;
+            validator.validateFirstName(_firstNameCtrl.text) != null;
+        _lastNameError = validator.validateLastName(_lastNameCtrl.text) != null;
       });
     }
   }
@@ -72,6 +72,7 @@ class _Step1NameFormState extends State<Step1NameForm> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
+    final validator = LocalizedValidation.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 10),
@@ -80,15 +81,18 @@ class _Step1NameFormState extends State<Step1NameForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Your Name", style: ProfileTheme.getTitleStyle(context)),
+            Text(
+              localizations.translate('step1_title'),
+              style: ProfileTheme.getTitleStyle(context),
+            ),
             const SizedBox(height: 6),
             Text(
-              "This name will be visible to everyone.",
+              localizations.translate('step1_description'),
               style: ProfileTheme.getDescriptionStyle(context),
             ),
             const SizedBox(height: 8),
             Text(
-              "Fields marked with * are required.",
+              localizations.translate('fields_required'),
               style: ProfileTheme.getDescriptionStyle(context),
             ),
             const SizedBox(height: 24),
@@ -96,12 +100,12 @@ class _Step1NameFormState extends State<Step1NameForm> {
               shake: _firstNameError,
               child: AppTextField(
                 controller: _firstNameCtrl,
-                labelText: "First Name *",
+                labelText: "${localizations.translate('first_name_label')} *",
                 labelStyle: ProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.person,
                 prefixIconColor: ProfileTheme.darkPink,
                 maxLength: 50,
-                validator: (v) => ValidationUtil().validateFirstName(v),
+                validator: (v) => validator.validateFirstName(v),
                 onSaved: (v) => vm.firstName = v?.trim(),
                 style: ProfileTheme.getInputTextStyle(context),
               ),
@@ -111,19 +115,19 @@ class _Step1NameFormState extends State<Step1NameForm> {
               shake: _lastNameError,
               child: AppTextField(
                 controller: _lastNameCtrl,
-                labelText: "Last Name *",
+                labelText: "${localizations.translate('last_name_label')} *",
                 labelStyle: ProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.badge,
                 prefixIconColor: ProfileTheme.darkPink,
                 maxLength: 50,
-                validator: (v) => ValidationUtil().validateLastName(v),
+                validator: (v) => validator.validateLastName(v),
                 onSaved: (v) => vm.lastName = v?.trim(),
                 style: ProfileTheme.getInputTextStyle(context),
               ),
             ),
             const SizedBox(height: 28),
             SetupProfileButton(
-              text: localizations.translate('next'),
+              text: localizations.translate('continue_setup'),
               onPressed: () {
                 _validateAndSave();
                 if (!_firstNameError && !_lastNameError) {

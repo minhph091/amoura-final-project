@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../data/models/user/auth_model.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -14,13 +15,13 @@ class RefreshTokenUseCase {
     try {
       String? refreshToken = await _authService.getRefreshToken();
       if (refreshToken == null) {
-        print('No refresh token available in RefreshTokenUseCase');
+        debugPrint('No refresh token available in RefreshTokenUseCase');
         throw ApiException('No refresh token available');
       }
-      print('Calling /auth/refresh with refreshToken: $refreshToken');
+      debugPrint('Calling /auth/refresh with refreshToken: $refreshToken');
 
       final response = await _authRepository.refreshToken(refreshToken);
-      print('Received response from /auth/refresh: $response');
+      debugPrint('Received response from /auth/refresh: $response');
 
       final String? accessToken = response['accessToken'] as String?;
       final String? newRefreshToken = response['refreshToken'] as String?;
@@ -39,11 +40,11 @@ class RefreshTokenUseCase {
       );
 
       await _authService.saveTokens(authModel.accessToken, authModel.refreshToken!);
-      print('Tokens saved after refresh: accessToken=${authModel.accessToken}, refreshToken=${authModel.refreshToken}');
+      debugPrint('Tokens saved after refresh: accessToken=${authModel.accessToken}, refreshToken=${authModel.refreshToken}');
 
       return authModel;
     } on DioException catch (e) {
-      print('Error in RefreshTokenUseCase: ${_handleDioError(e)}');
+      debugPrint('Error in RefreshTokenUseCase: ${_handleDioError(e)}');
       throw ApiException(_handleDioError(e));
     }
   }

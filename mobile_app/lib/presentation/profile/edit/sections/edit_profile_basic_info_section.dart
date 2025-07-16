@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/utils/date_util.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../../core/constants/profile/sex_constants.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/shake_widget.dart';
@@ -9,16 +10,15 @@ import '../edit_profile_viewmodel.dart';
 class EditProfileBasicInfoSection extends StatefulWidget {
   final EditProfileViewModel viewModel;
 
-  const EditProfileBasicInfoSection({
-    super.key,
-    required this.viewModel,
-  });
+  const EditProfileBasicInfoSection({super.key, required this.viewModel});
 
   @override
-  State<EditProfileBasicInfoSection> createState() => _EditProfileBasicInfoSectionState();
+  State<EditProfileBasicInfoSection> createState() =>
+      _EditProfileBasicInfoSectionState();
 }
 
-class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSection> {
+class _EditProfileBasicInfoSectionState
+    extends State<EditProfileBasicInfoSection> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _dobController = TextEditingController();
@@ -41,7 +41,9 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
     _firstNameController.text = widget.viewModel.firstName ?? '';
     _lastNameController.text = widget.viewModel.lastName ?? '';
     if (widget.viewModel.dateOfBirth != null) {
-      _dobController.text = DateUtil.formatDDMMYYYY(widget.viewModel.dateOfBirth!);
+      _dobController.text = DateUtil.formatDDMMYYYY(
+        widget.viewModel.dateOfBirth!,
+      );
     }
 
     // Pre-validate to initialize error states
@@ -50,15 +52,20 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
 
   void _validateInitialFields() {
     // Perform initial validation without setState
-    _firstNameErrorText = widget.viewModel.validateFirstName(_firstNameController.text);
-    _lastNameErrorText = widget.viewModel.validateLastName(_lastNameController.text);
+    _firstNameErrorText = widget.viewModel.validateFirstName(
+      _firstNameController.text,
+    );
+    _lastNameErrorText = widget.viewModel.validateLastName(
+      _lastNameController.text,
+    );
     _dobErrorText = widget.viewModel.validateDob();
 
     // Set error flags based on validation results
     _firstNameError = _firstNameErrorText != null;
     _lastNameError = _lastNameErrorText != null;
     _dobError = _dobErrorText != null;
-    _genderError = widget.viewModel.sex == null || widget.viewModel.sex!.isEmpty;
+    _genderError =
+        widget.viewModel.sex == null || widget.viewModel.sex!.isEmpty;
   }
 
   @override
@@ -102,10 +109,15 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Basic Information', style: ProfileTheme.getSubtitleStyle(context)),
+        Text(
+          'Basic Information',
+          style: ProfileTheme.getSubtitleStyle(context),
+        ),
         const SizedBox(height: 6),
-        Text('Fields marked with * are required.',
-            style: ProfileTheme.getDescriptionStyle(context)),
+        Text(
+          'Fields marked with * are required.',
+          style: ProfileTheme.getDescriptionStyle(context),
+        ),
         const SizedBox(height: 16),
 
         // First Name (Step 1)
@@ -113,7 +125,9 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
           shake: _firstNameError,
           child: AppTextField(
             controller: _firstNameController,
-            labelText: "First Name *",
+            labelText: AppLocalizations.of(
+              context,
+            ).translate('first_name_required_asterisk'),
             labelStyle: ProfileTheme.getLabelStyle(context),
             prefixIcon: Icons.person,
             prefixIconColor: ProfileTheme.darkPink,
@@ -133,7 +147,9 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
           shake: _lastNameError,
           child: AppTextField(
             controller: _lastNameController,
-            labelText: "Last Name *",
+            labelText: AppLocalizations.of(
+              context,
+            ).translate('last_name_required_asterisk'),
             labelStyle: ProfileTheme.getLabelStyle(context),
             prefixIcon: Icons.badge,
             prefixIconColor: ProfileTheme.darkPink,
@@ -157,7 +173,8 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
               final now = DateTime.now();
               final picked = await showDatePicker(
                 context: context,
-                initialDate: widget.viewModel.dateOfBirth ?? DateTime(now.year - 20),
+                initialDate:
+                    widget.viewModel.dateOfBirth ?? DateTime(now.year - 20),
                 firstDate: DateTime(now.year - 120),
                 lastDate: DateTime(now.year - 18),
                 builder: (context, child) {
@@ -184,7 +201,9 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
             },
             child: AbsorbPointer(
               child: AppTextField(
-                labelText: 'Birthday *',
+                labelText: AppLocalizations.of(
+                  context,
+                ).translate('birthday_required_asterisk'),
                 labelStyle: ProfileTheme.getLabelStyle(context),
                 prefixIcon: Icons.cake_rounded,
                 prefixIconColor: ProfileTheme.darkPink,
@@ -210,9 +229,9 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
           shake: _genderError,
           child: Text(
             'Gender *',
-            style: ProfileTheme.getLabelStyle(context).copyWith(
-              color: _genderError ? Colors.red : null,
-            ),
+            style: ProfileTheme.getLabelStyle(
+              context,
+            ).copyWith(color: _genderError ? Colors.red : null),
           ),
         ),
 
@@ -276,7 +295,9 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
   }
 
   Widget _buildOrientationGrid() {
-    final options = widget.viewModel.safeOptions(widget.viewModel.profileOptions?['orientations']);
+    final options = widget.viewModel.safeOptions(
+      widget.viewModel.profileOptions?['orientations'],
+    );
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -319,11 +340,15 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
+            color:
+                isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(10),
-          color: isSelected ? ProfileTheme.darkPink.withValues(alpha: 0.1) : Colors.transparent,
+          color:
+              isSelected
+                  ? ProfileTheme.darkPink.withValues(alpha: 0.1)
+                  : Colors.transparent,
         ),
         child: Stack(
           children: [
@@ -334,7 +359,10 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
                   if (icon != null) ...[
                     Icon(
                       icon,
-                      color: isSelected ? ProfileTheme.darkPink : ProfileTheme.lightPurple,
+                      color:
+                          isSelected
+                              ? ProfileTheme.darkPink
+                              : ProfileTheme.lightPurple,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -342,8 +370,12 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
                   Text(
                     label,
                     style: TextStyle(
-                      color: isSelected ? ProfileTheme.darkPink : ProfileTheme.darkPurple,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color:
+                          isSelected
+                              ? ProfileTheme.darkPink
+                              : ProfileTheme.darkPurple,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 ],
@@ -359,11 +391,7 @@ class _EditProfileBasicInfoSectionState extends State<EditProfileBasicInfoSectio
                     color: ProfileTheme.darkPink,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 10,
-                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 10),
                 ),
               ),
           ],

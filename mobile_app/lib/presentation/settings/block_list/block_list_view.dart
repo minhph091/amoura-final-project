@@ -56,7 +56,10 @@ class _BlockListViewState extends State<BlockListView>
             elevation: 0,
             bottom: TabBar(
               controller: _viewModel.tabController,
-              tabs: const [Tab(text: 'Users'), Tab(text: 'Messages')],
+              tabs: [
+                Tab(text: AppLocalizations.of(context).translate('users')),
+                Tab(text: AppLocalizations.of(context).translate('messages')),
+              ],
             ),
           ),
           body: TabBarView(

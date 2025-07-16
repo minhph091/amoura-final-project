@@ -10,14 +10,17 @@ class MessageRepositoryImpl implements MessageRepository {
   MessageRepositoryImpl(this._chatApi);
 
   @override
-  Future<dynamic> getMessagesByChatId(String chatId, {
+  Future<dynamic> getMessagesByChatId(
+    String chatId, {
     int? cursor,
     int limit = 20,
     String direction = 'NEXT',
   }) async {
     try {
-      debugPrint('MessageRepository: Getting messages for chat $chatId with cursor=$cursor, limit=$limit, direction=$direction');
-      
+      debugPrint(
+        'MessageRepository: Getting messages for chat $chatId with cursor=$cursor, limit=$limit, direction=$direction',
+      );
+
       // Gọi ChatApi với pagination parameters
       final result = await _chatApi.getMessagesByChatId(
         chatId,
@@ -25,32 +28,43 @@ class MessageRepositoryImpl implements MessageRepository {
         limit: limit,
         direction: direction,
       );
-      
-      debugPrint('MessageRepository: API returned result type: ${result.runtimeType}');
-      debugPrint('MessageRepository: API returned keys: ${result.keys?.toList()}');
-      
+
+      debugPrint(
+        'MessageRepository: API returned result type: ${result.runtimeType}',
+      );
+      debugPrint(
+        'MessageRepository: API returned keys: ${result.keys.toList()}',
+      );
+
       return result; // Trả về full result với pagination info
     } catch (e) {
-      debugPrint('MessageRepository: Error getting messages for chat $chatId: $e');
+      debugPrint(
+        'MessageRepository: Error getting messages for chat $chatId: $e',
+      );
       rethrow;
     }
   }
 
   @override
   Future<Message> sendMessage(Message message) async {
-    debugPrint('MessageRepository: Sending message - Content: "${message.content}", Type: ${message.type.name}, ReplyTo: ${message.replyToMessageId}');
-    
+    debugPrint(
+      'MessageRepository: Sending message - Content: "${message.content}", Type: ${message.type.name}, ReplyTo: ${message.replyToMessageId}',
+    );
+
     // If this is a reply message, we need to preserve the reply information
     String? originalReplyToMessage;
     String? originalReplyToSenderName;
-    
-    if (message.replyToMessageId != null && message.replyToMessageId!.isNotEmpty) {
+
+    if (message.replyToMessageId != null &&
+        message.replyToMessageId!.isNotEmpty) {
       // Store the reply information from the message object
       originalReplyToMessage = message.replyToMessage;
       originalReplyToSenderName = message.replyToSenderName;
-      debugPrint('MessageRepository: Reply info - ReplyTo: ${message.replyToMessageId}, OriginalMessage: "$originalReplyToMessage", OriginalSender: "$originalReplyToSenderName"');
+      debugPrint(
+        'MessageRepository: Reply info - ReplyTo: ${message.replyToMessageId}, OriginalMessage: "$originalReplyToMessage", OriginalSender: "$originalReplyToSenderName"',
+      );
     }
-    
+
     final sentMessage = await _chatApi.sendMessage(
       chatRoomId: message.chatId,
       content: message.content,
@@ -58,21 +72,24 @@ class MessageRepositoryImpl implements MessageRepository {
       imageUrl: message.mediaUrl,
       replyToMessageId: message.replyToMessageId,
     );
-    
+
     // If backend didn't return complete reply information, add it back
-    if (message.replyToMessageId != null && 
+    if (message.replyToMessageId != null &&
         message.replyToMessageId!.isNotEmpty &&
-        (sentMessage.replyToMessage == null || sentMessage.replyToSenderName == null)) {
-      
-      debugPrint('MessageRepository: Restoring reply info - ReplyTo: ${message.replyToMessageId}');
-      
+        (sentMessage.replyToMessage == null ||
+            sentMessage.replyToSenderName == null)) {
+      debugPrint(
+        'MessageRepository: Restoring reply info - ReplyTo: ${message.replyToMessageId}',
+      );
+
       return sentMessage.copyWith(
         replyToMessageId: message.replyToMessageId,
         replyToMessage: originalReplyToMessage ?? message.replyToMessage,
-        replyToSenderName: originalReplyToSenderName ?? message.replyToSenderName,
+        replyToSenderName:
+            originalReplyToSenderName ?? message.replyToSenderName,
       );
     }
-    
+
     return sentMessage;
   }
 
@@ -93,7 +110,11 @@ class MessageRepositoryImpl implements MessageRepository {
   }
 
   @override
-  Future<String> uploadMedia(File file, MessageType type, String chatRoomId) async {
+  Future<String> uploadMedia(
+    File file,
+    MessageType type,
+    String chatRoomId,
+  ) async {
     return await _chatApi.uploadChatImage(file, chatRoomId);
   }
 
@@ -101,7 +122,7 @@ class MessageRepositoryImpl implements MessageRepository {
   Future<void> sendTypingIndicator(String userId, bool isTyping) async {
     // This would be implemented with WebSocket in a real app
     // For now, we'll just log it
-    print('User $userId is ${isTyping ? "typing" : "not typing"}');
+    debugPrint('User $userId is ${isTyping ? "typing" : "not typing"}');
   }
 
   @override

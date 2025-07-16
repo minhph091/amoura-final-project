@@ -7,7 +7,7 @@ class CallViewModel extends ChangeNotifier {
   // Call state
   bool _isCallConnected = false;
   bool _isCallInitialized = false;
-  bool _isIncomingCall = false;
+  final bool _isIncomingCall = false;
   DateTime? _callStartTime;
   Duration? _callDuration;
   Timer? _callDurationTimer;

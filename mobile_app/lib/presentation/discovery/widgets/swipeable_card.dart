@@ -33,10 +33,9 @@ class SwipeableCard extends StatefulWidget {
   State<SwipeableCard> createState() => _SwipeableCardState();
 }
 
-class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProviderStateMixin {
+class _SwipeableCardState extends State<SwipeableCard>
+    with SingleTickerProviderStateMixin {
   double _offsetX = 0;
-  double _startX = 0;
-  bool _isDragging = false;
   late AnimationController _animController;
   late Animation<double> _anim;
   bool _highlightLike = false;
@@ -48,7 +47,10 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
     _anim = Tween<double>(begin: 0, end: 0).animate(_animController)
       ..addListener(() {
         setState(() {
@@ -64,8 +66,6 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
   }
 
   void _onDragStart(DragStartDetails details) {
-    _isDragging = true;
-    _startX = details.globalPosition.dx;
     _highlightLike = false;
     _highlightPass = false;
   }
@@ -81,7 +81,6 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
   }
 
   void _onDragEnd(DragEndDetails details) {
-    _isDragging = false;
     widget.onHighlightLike?.call(false);
     widget.onHighlightPass?.call(false);
     if (_offsetX > swipeThreshold) {
@@ -99,7 +98,10 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
   }
 
   void _animateOut(int direction) {
-    _anim = Tween<double>(begin: _offsetX, end: direction * 500).animate(_animController);
+    _anim = Tween<double>(
+      begin: _offsetX,
+      end: direction * 500,
+    ).animate(_animController);
     _animController.forward(from: 0).then((_) {
       setState(() {
         _offsetX = 0;
@@ -123,8 +125,10 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final angle = (_offsetX / 400) * maxAngle * 3.1416 / 180;
-    final nextCardScale = 0.93 + (0.07 * (_offsetX.abs() / swipeThreshold).clamp(0, 1));
-    final nextCardOffset = 18.0 - 18.0 * (_offsetX.abs() / swipeThreshold).clamp(0, 1);
+    final nextCardScale =
+        0.93 + (0.07 * (_offsetX.abs() / swipeThreshold).clamp(0, 1));
+    final nextCardOffset =
+        18.0 - 18.0 * (_offsetX.abs() / swipeThreshold).clamp(0, 1);
     return Stack(
       children: [
         if (widget.nextProfile != null && widget.nextInterests != null)
@@ -154,7 +158,9 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
                   child: Stack(
                     children: [
                       ProfileCard(
-                        key: ValueKey('current_profile_${widget.profile.userId}'),
+                        key: ValueKey(
+                          'current_profile_${widget.profile.userId}',
+                        ),
                         profile: widget.profile,
                         interests: widget.interests,
                         distance: widget.distance,
@@ -166,7 +172,10 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
                           right: 30,
                           child: Opacity(
                             opacity: (_offsetX / 120).clamp(0, 1),
-                            child: _buildHighlightIcon(Icons.favorite, Colors.pinkAccent),
+                            child: _buildHighlightIcon(
+                              Icons.favorite,
+                              Colors.pinkAccent,
+                            ),
                           ),
                         ),
                       if (_highlightPass)
@@ -175,7 +184,10 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
                           left: 30,
                           child: Opacity(
                             opacity: (-_offsetX / 120).clamp(0, 1),
-                            child: _buildHighlightIcon(Icons.close, Colors.redAccent),
+                            child: _buildHighlightIcon(
+                              Icons.close,
+                              Colors.redAccent,
+                            ),
                           ),
                         ),
                     ],
@@ -193,15 +205,11 @@ class _SwipeableCardState extends State<SwipeableCard> with SingleTickerProvider
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
+        color: color.withValues(alpha: 0.18),
         border: Border.all(color: color, width: 2.5),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Icon(
-        icon,
-        color: color,
-        size: 36,
-      ),
+      child: Icon(icon, color: color, size: 36),
     );
   }
-} 
+}

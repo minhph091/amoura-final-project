@@ -1,30 +1,29 @@
 import 'package:flutter/material.dart';
 import '../../theme/setup_profile_theme.dart';
 import '../../stepmodel/step9_viewmodel.dart';
+import '../../../../../config/language/app_localizations.dart';
 
 class InterestsLanguagesHeader extends StatelessWidget {
   const InterestsLanguagesHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Your Interests & Languages',
-          style: ProfileTheme.getTitleStyle(context).copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+          localizations.translate('step9_title'),
+          style: ProfileTheme.getTitleStyle(
+            context,
+          ).copyWith(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Text(
-          'This helps us match you with like-minded people.',
-          style: ProfileTheme.getDescriptionStyle(context).copyWith(
-            fontSize: 15,
-            height: 1.4,
-            color: const Color(0xFF666666),
-          ),
+          localizations.translate('step9_description'),
+          style: ProfileTheme.getDescriptionStyle(
+            context,
+          ).copyWith(fontSize: 15, height: 1.4, color: const Color(0xFF666666)),
         ),
       ],
     );
@@ -129,41 +128,62 @@ class _LanguageSelectorState extends State<LanguageSelector>
   String _getDisplayText() {
     final selected = widget.step9ViewModel.selectedLanguageIds ?? [];
     if (selected.isEmpty) {
-      return 'Select languages...';
+      return AppLocalizations.of(context).translate('select_languages');
     } else if (selected.length == 1) {
       final option = widget.step9ViewModel.languageOptions.firstWhere(
-            (lang) => lang['value'] == selected.first,
-        orElse: () => {'value': '', 'label': 'Unknown'},
+        (lang) => lang['value'] == selected.first,
+        orElse:
+            () => {
+              'value': '',
+              'label': AppLocalizations.of(context).translate('unknown'),
+            },
       );
-      return option['label'] ?? 'Unknown';
+      return option['label'] ??
+          AppLocalizations.of(context).translate('unknown');
     } else {
-      return '${selected.length} languages selected';
+      return '${selected.length} ${AppLocalizations.of(context).translate('languages_selected')}';
     }
   }
 
   String _getLanguageFlag(String label) {
     switch (label.toLowerCase()) {
-      case 'english': return '🇺🇸';
-      case 'spanish': return '🇪🇸';
-      case 'french': return '🇫🇷';
-      case 'german': return '🇩🇪';
-      case 'chinese': return '🇨🇳';
-      case 'japanese': return '🇯🇵';
-      case 'korean': return '🇰🇷';
-      case 'italian': return '🇮🇹';
-      case 'portuguese': return '🇵🇹';
-      case 'russian': return '🇷🇺';
-      case 'vietnamese': return '🇻🇳';
-      case 'thai': return '🇹🇭';
-      case 'arabic': return '🇸🇦';
-      case 'hindi': return '🇮🇳';
-      default: return '🌐';
+      case 'english':
+        return '🇺🇸';
+      case 'spanish':
+        return '🇪🇸';
+      case 'french':
+        return '🇫🇷';
+      case 'german':
+        return '🇩🇪';
+      case 'chinese':
+        return '🇨🇳';
+      case 'japanese':
+        return '🇯🇵';
+      case 'korean':
+        return '🇰🇷';
+      case 'italian':
+        return '🇮🇹';
+      case 'portuguese':
+        return '🇵🇹';
+      case 'russian':
+        return '🇷🇺';
+      case 'vietnamese':
+        return '🇻🇳';
+      case 'thai':
+        return '🇹🇭';
+      case 'arabic':
+        return '🇸🇦';
+      case 'hindi':
+        return '🇮🇳';
+      default:
+        return '🌐';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasSelection = widget.step9ViewModel.selectedLanguageIds?.isNotEmpty ?? false;
+    final hasSelection =
+        widget.step9ViewModel.selectedLanguageIds?.isNotEmpty ?? false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,12 +206,16 @@ class _LanguageSelectorState extends State<LanguageSelector>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: hasSelection
-                    ? const Color(0xFFD81B60).withAlpha(25)
-                    : Colors.white,
+                color:
+                    hasSelection
+                        ? const Color(0xFFD81B60).withAlpha(25)
+                        : Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: hasSelection ? const Color(0xFFD81B60) : const Color(0xFFBA68C8),
+                  color:
+                      hasSelection
+                          ? const Color(0xFFD81B60)
+                          : const Color(0xFFBA68C8),
                   width: hasSelection ? 2.0 : 1.2,
                 ),
                 boxShadow: [
@@ -206,7 +230,10 @@ class _LanguageSelectorState extends State<LanguageSelector>
                 children: [
                   Icon(
                     Icons.language,
-                    color: hasSelection ? const Color(0xFFD81B60) : const Color(0xFFBA68C8),
+                    color:
+                        hasSelection
+                            ? const Color(0xFFD81B60)
+                            : const Color(0xFFBA68C8),
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -215,13 +242,19 @@ class _LanguageSelectorState extends State<LanguageSelector>
                       _getDisplayText(),
                       style: TextStyle(
                         fontSize: 16,
-                        color: hasSelection ? const Color(0xFF424242) : const Color(0xFFBA68C8),
-                        fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w500,
+                        color:
+                            hasSelection
+                                ? const Color(0xFF424242)
+                                : const Color(0xFFBA68C8),
+                        fontWeight:
+                            hasSelection ? FontWeight.w600 : FontWeight.w500,
                       ),
                     ),
                   ),
                   Icon(
-                    _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     color: const Color(0xFFD81B60),
                     size: 24,
                   ),
@@ -255,7 +288,11 @@ class _LanguageSelectorState extends State<LanguageSelector>
                 itemCount: widget.step9ViewModel.languageOptions.length,
                 itemBuilder: (context, index) {
                   final option = widget.step9ViewModel.languageOptions[index];
-                  final isSelected = widget.step9ViewModel.selectedLanguageIds?.contains(option['value']) ?? false;
+                  final isSelected =
+                      widget.step9ViewModel.selectedLanguageIds?.contains(
+                        option['value'],
+                      ) ??
+                      false;
                   return _buildLanguageOption(option, isSelected);
                 },
               ),
@@ -283,9 +320,10 @@ class _LanguageSelectorState extends State<LanguageSelector>
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFFD81B60).withValues(alpha: 0.1)
-                      : const Color(0xFFBA68C8).withValues(alpha: 0.1),
+                  color:
+                      isSelected
+                          ? const Color(0xFFD81B60).withValues(alpha: 0.1)
+                          : const Color(0xFFBA68C8).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -299,16 +337,19 @@ class _LanguageSelectorState extends State<LanguageSelector>
                   option['label']!,
                   style: TextStyle(
                     fontSize: 15,
-                    color: isSelected ? const Color(0xFFD81B60) : const Color(0xFF424242),
+                    color:
+                        isSelected
+                            ? const Color(0xFFD81B60)
+                            : const Color(0xFF424242),
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
               ),
               if (isSelected)
                 const Icon(
-                    Icons.check_circle,
-                    color: Color(0xFFD81B60),
-                    size: 18
+                  Icons.check_circle,
+                  color: Color(0xFFD81B60),
+                  size: 18,
                 ),
             ],
           ),
@@ -330,9 +371,7 @@ class NewLanguageCheckbox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isChecked
-            ? const Color(0xFFD81B60).withAlpha(25)
-            : Colors.white,
+        color: isChecked ? const Color(0xFFD81B60).withAlpha(25) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isChecked ? const Color(0xFFD81B60) : const Color(0xFFE0E0E0),
@@ -353,7 +392,9 @@ class NewLanguageCheckbox extends StatelessWidget {
             width: 24,
             child: Checkbox(
               value: isChecked,
-              onChanged: (value) => step9ViewModel.setInterestedInNewLanguage(value ?? false),
+              onChanged:
+                  (value) =>
+                      step9ViewModel.setInterestedInNewLanguage(value ?? false),
               activeColor: const Color(0xFFD81B60),
               checkColor: Colors.white,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -370,7 +411,10 @@ class NewLanguageCheckbox extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: isChecked ? const Color(0xFFD81B60) : const Color(0xFF333333),
+                color:
+                    isChecked
+                        ? const Color(0xFFD81B60)
+                        : const Color(0xFF333333),
               ),
             ),
           ),
@@ -411,7 +455,10 @@ class InterestSelector extends StatelessWidget {
       case 'travel':
         return {'icon': Icons.flight, 'color': const Color(0xFF00BCD4)};
       case 'volunteering':
-        return {'icon': Icons.volunteer_activism, 'color': const Color(0xFFE91E63)};
+        return {
+          'icon': Icons.volunteer_activism,
+          'color': const Color(0xFFE91E63),
+        };
       default:
         return {'icon': Icons.interests, 'color': const Color(0xFF666666)};
     }
@@ -442,92 +489,112 @@ class InterestSelector extends StatelessWidget {
             child: Wrap(
               spacing: 6,
               runSpacing: 10,
-              children: step9ViewModel.interestOptions.map((interest) {
-                final isSelected = step9ViewModel.selectedInterestIds?.contains(interest['value']) ?? false;
-                final interestData = _getInterestData(interest['label']!);
+              children:
+                  step9ViewModel.interestOptions.map((interest) {
+                    final isSelected =
+                        step9ViewModel.selectedInterestIds?.contains(
+                          interest['value'],
+                        ) ??
+                        false;
+                    final interestData = _getInterestData(interest['label']!);
 
-                return SizedBox(
-                  width: chipWidth,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        final currentSelected = step9ViewModel.selectedInterestIds ?? [];
-                        if (isSelected) {
-                          currentSelected.remove(interest['value']);
-                        } else {
-                          currentSelected.add(interest['value']!);
-                        }
-                        step9ViewModel.setSelectedInterestIds(currentSelected);
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFFD81B60)
-                                : const Color(0xFFBA68C8),
-                            width: isSelected ? 2.0 : 1.2,
-                          ),
+                    return SizedBox(
+                      width: chipWidth,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            final currentSelected =
+                                step9ViewModel.selectedInterestIds ?? [];
+                            if (isSelected) {
+                              currentSelected.remove(interest['value']);
+                            } else {
+                              currentSelected.add(interest['value']!);
+                            }
+                            step9ViewModel.setSelectedInterestIds(
+                              currentSelected,
+                            );
+                          },
                           borderRadius: BorderRadius.circular(12),
-                          color: isSelected
-                              ? const Color(0xFFD81B60).withAlpha(50)
-                              : Colors.white.withAlpha(240),
-                          boxShadow: [
-                            if (isSelected)
-                              BoxShadow(
-                                color: const Color(0xFFD81B60).withAlpha(40),
-                                blurRadius: 4,
-                                spreadRadius: 1,
-                              )
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: (interestData['color'] as Color).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                interestData['icon'] as IconData,
-                                color: interestData['color'] as Color,
-                                size: 20,
-                              ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 14,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                interest['label']!,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                  color: isSelected
-                                      ? const Color(0xFFD81B60)
-                                      : const Color(0xFF424242),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color:
+                                    isSelected
+                                        ? const Color(0xFFD81B60)
+                                        : const Color(0xFFBA68C8),
+                                width: isSelected ? 2.0 : 1.2,
                               ),
+                              borderRadius: BorderRadius.circular(12),
+                              color:
+                                  isSelected
+                                      ? const Color(0xFFD81B60).withAlpha(50)
+                                      : Colors.white.withAlpha(240),
+                              boxShadow: [
+                                if (isSelected)
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFFD81B60,
+                                    ).withAlpha(40),
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  ),
+                              ],
                             ),
-                            if (isSelected)
-                              const Padding(
-                                padding: EdgeInsets.only(left: 4.0),
-                                child: Icon(
-                                  Icons.check_circle,
-                                  color: Color(0xFFD81B60),
-                                  size: 16,
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: (interestData['color'] as Color)
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    interestData['icon'] as IconData,
+                                    color: interestData['color'] as Color,
+                                    size: 20,
+                                  ),
                                 ),
-                              ),
-                          ],
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    interest['label']!,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight:
+                                          isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.w500,
+                                      color:
+                                          isSelected
+                                              ? const Color(0xFFD81B60)
+                                              : const Color(0xFF424242),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                                if (isSelected)
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 4.0),
+                                    child: Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFFD81B60),
+                                      size: 16,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
             ),
           ),
         ),

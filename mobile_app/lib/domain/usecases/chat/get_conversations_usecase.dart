@@ -8,7 +8,6 @@ class GetConversationsUseCase {
   final ChatService _chatService = getIt<ChatService>();
 
   /// Execute method để lấy danh sách chat rooms
-  /// Trả về List<Chat> từ backend
   Future<List<Chat>> execute() async {
     return await _chatService.getChatRooms();
   }

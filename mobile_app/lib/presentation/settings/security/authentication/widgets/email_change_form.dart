@@ -4,6 +4,7 @@ import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../../config/theme/app_colors.dart';
 import 'change_email_viewmodel.dart';
+import '../../../../../config/language/app_localizations.dart';
 
 class EmailChangeForm extends StatelessWidget {
   final ChangeEmailViewModel viewModel;
@@ -13,10 +14,12 @@ class EmailChangeForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textColor = theme.brightness == Brightness.dark
-        ? const Color(0xFFFF69B4)
-        : theme.textTheme.headlineMedium?.color ?? Colors.black87;
+    final textColor =
+        theme.brightness == Brightness.dark
+            ? const Color(0xFFFF69B4)
+            : theme.textTheme.headlineMedium?.color ?? Colors.black87;
 
+    final localizations = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Form(
@@ -25,7 +28,7 @@ class EmailChangeForm extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Update your email',
+              localizations.translate('update_your_email'),
               style: theme.textTheme.headlineMedium?.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.bold,
@@ -34,21 +37,24 @@ class EmailChangeForm extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Enter your new email address. We\'ll send a verification code to confirm the change.',
+              localizations.translate('enter_new_email_address_description'),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.8),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 24),
             AppTextField(
               controller: viewModel.emailController,
-              labelText: 'New Email Address',
-              hintText: 'Enter new email address',
+              labelText: localizations.translate('new_email_address'),
+              hintText: localizations.translate('enter_new_email_address'),
               errorText: viewModel.emailError,
               keyboardType: TextInputType.emailAddress,
               prefixIcon: Icons.email_outlined,
               prefixIconColor: theme.colorScheme.primary,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
               validator: ValidationUtil.validateEmail,
             ),
             const SizedBox(height: 32),
@@ -56,8 +62,11 @@ class EmailChangeForm extends StatelessWidget {
               child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.5,
                 child: AppButton(
-                  text: 'Continue',
-                  onPressed: viewModel.isLoading ? null : () => viewModel.requestEmailChange(context),
+                  text: localizations.translate('continue'),
+                  onPressed:
+                      viewModel.isLoading
+                          ? null
+                          : () => viewModel.requestEmailChange(context),
                   isLoading: viewModel.isLoading,
                   loading: const SizedBox(
                     width: 24,
@@ -68,7 +77,10 @@ class EmailChangeForm extends StatelessWidget {
                     ),
                   ),
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
+                    colors: [
+                      AppColors.primary,
+                      AppColors.secondary.withValues(alpha: 0.85),
+                    ],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),

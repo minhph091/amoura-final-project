@@ -8,7 +8,8 @@ class NotificationSettingsView extends StatefulWidget {
   const NotificationSettingsView({super.key});
 
   @override
-  State<NotificationSettingsView> createState() => _NotificationSettingsViewState();
+  State<NotificationSettingsView> createState() =>
+      _NotificationSettingsViewState();
 }
 
 class _NotificationSettingsViewState extends State<NotificationSettingsView> {
@@ -40,8 +41,12 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                         const SizedBox(height: 24),
                         _buildNotificationSection(
                           context: context,
-                          title: 'System Notifications',
-                          description: 'Get notified about important app updates and announcements',
+                          title: localizations.translate(
+                            'system_notifications',
+                          ),
+                          description: localizations.translate(
+                            'get_notified_important_updates',
+                          ),
                           isEnabled: viewModel.systemNotifications,
                           onChanged: (value) {
                             viewModel.setSystemNotifications(value ?? false);
@@ -51,8 +56,10 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                         const SizedBox(height: 24),
                         _buildNotificationSection(
                           context: context,
-                          title: 'Like Notifications',
-                          description: 'Get notified when someone likes your profile',
+                          title: localizations.translate('like_notifications'),
+                          description: localizations.translate(
+                            'get_notified_likes',
+                          ),
                           isEnabled: viewModel.likeNotifications,
                           onChanged: (value) {
                             viewModel.setLikeNotifications(value ?? false);
@@ -62,8 +69,12 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                         const SizedBox(height: 24),
                         _buildNotificationSection(
                           context: context,
-                          title: 'Message Notifications',
-                          description: 'Get notified when you receive new messages',
+                          title: localizations.translate(
+                            'message_notifications',
+                          ),
+                          description: localizations.translate(
+                            'get_notified_messages',
+                          ),
                           isEnabled: viewModel.messageNotifications,
                           onChanged: (value) {
                             viewModel.setMessageNotifications(value ?? false);
@@ -83,9 +94,13 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                             viewModel.saveSettings();
                             setState(() => _hasChanges = false);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Notification settings saved'),
-                                duration: Duration(seconds: 2),
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  ).translate('notification_settings_saved'),
+                                ),
+                                duration: const Duration(seconds: 2),
                               ),
                             );
                           },
@@ -114,18 +129,22 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
     );
   }
 
-  Widget _buildSelectAllSection(NotificationSettingsViewModel viewModel, BuildContext context) {
+  Widget _buildSelectAllSection(
+    NotificationSettingsViewModel viewModel,
+    BuildContext context,
+  ) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
     final allSelected = viewModel.allNotificationsEnabled;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.8),
+        color: theme.colorScheme.surface.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             spreadRadius: 1,
           ),
@@ -142,7 +161,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
               ),
               const SizedBox(width: 12),
               Text(
-                'All Notification Types',
+                localizations.translate('all_notification_types'),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -150,9 +169,9 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Enable or disable all notifications at once',
-            style: TextStyle(color: Colors.grey),
+          Text(
+            localizations.translate('enable_disable_all_notifications'),
+            style: const TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 16),
           InkWell(
@@ -167,7 +186,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Enable all notification types',
+                    localizations.translate('enable_all_notification_types'),
                     style: theme.textTheme.bodyLarge,
                   ),
                   Switch(
@@ -199,11 +218,11 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.8),
+        color: theme.colorScheme.surface.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             spreadRadius: 1,
           ),
@@ -214,10 +233,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
         children: [
           Row(
             children: [
-              Icon(
-                _getIconForTitle(title),
-                color: theme.colorScheme.primary,
-              ),
+              Icon(_getIconForTitle(title), color: theme.colorScheme.primary),
               const SizedBox(width: 12),
               Text(
                 title,
@@ -228,10 +244,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            description,
-            style: const TextStyle(color: Colors.grey),
-          ),
+          Text(description, style: const TextStyle(color: Colors.grey)),
           const SizedBox(height: 16),
           InkWell(
             borderRadius: BorderRadius.circular(10),
@@ -241,10 +254,7 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Enable $title',
-                    style: theme.textTheme.bodyMedium,
-                  ),
+                  Text('Enable $title', style: theme.textTheme.bodyMedium),
                   Switch(
                     value: isEnabled,
                     onChanged: onChanged,

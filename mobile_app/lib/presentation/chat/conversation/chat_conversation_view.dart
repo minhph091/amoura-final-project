@@ -13,12 +13,12 @@ class ChatConversationView extends StatefulWidget {
   final bool isOnline;
 
   const ChatConversationView({
-    Key? key,
+    super.key,
     required this.conversationId,
     required this.recipientName,
     this.recipientAvatarUrl,
     this.isOnline = false,
-  }) : super(key: key);
+  });
 
   @override
   State<ChatConversationView> createState() => _ChatConversationViewState();
@@ -34,7 +34,7 @@ class _ChatConversationViewState extends State<ChatConversationView> {
   MessageModel? _replyingToMessage;
   MessageModel? _editingMessage;
   bool _isLoading = true;
-  bool _isTyping = false;
+  final bool _isTyping = false;
 
   @override
   void initState() {
@@ -53,12 +53,14 @@ class _ChatConversationViewState extends State<ChatConversationView> {
 
     // Mock data
     final now = DateTime.now();
+    if (!mounted) return;
+    final localizations = AppLocalizations.of(context);
     final List<MessageModel> loadedMessages = [
       MessageModel(
         id: 1,
         senderId: 1, // current user
         receiverId: 2,
-        content: "Hi there! How are you?",
+        content: localizations.translate('mock_message_1'),
         messageTypeId: 1,
         isRead: true,
         isEdited: false,
@@ -69,7 +71,7 @@ class _ChatConversationViewState extends State<ChatConversationView> {
         id: 2,
         senderId: 2, // recipient
         receiverId: 1,
-        content: "I'm good, thanks! Just working on a new project.",
+        content: localizations.translate('mock_message_2'),
         messageTypeId: 1,
         isRead: true,
         isEdited: false,
@@ -80,7 +82,7 @@ class _ChatConversationViewState extends State<ChatConversationView> {
         id: 3,
         senderId: 1,
         receiverId: 2,
-        content: "That sounds interesting! What's it about?",
+        content: localizations.translate('mock_message_3'),
         messageTypeId: 1,
         isRead: true,
         isEdited: true,
@@ -92,8 +94,7 @@ class _ChatConversationViewState extends State<ChatConversationView> {
         id: 4,
         senderId: 2,
         receiverId: 1,
-        content:
-            "It's a mobile app for connecting people with similar interests. I'm calling it Amoura.",
+        content: localizations.translate('mock_message_4'),
         messageTypeId: 1,
         isRead: true,
         isEdited: false,
@@ -104,7 +105,7 @@ class _ChatConversationViewState extends State<ChatConversationView> {
         id: 5,
         senderId: 2,
         receiverId: 1,
-        content: "Would you like to see the prototype when it's ready?",
+        content: localizations.translate('chat_prototype_message'),
         messageTypeId: 1,
         isRead: false,
         isEdited: false,
@@ -202,7 +203,7 @@ class _ChatConversationViewState extends State<ChatConversationView> {
   }
 
   void _handleLongPressMessage(MessageModel message) {
-    // Show options: Reply, Edit (if own message), Pin, Delete, etc.
+    if (!context.mounted) return;
     if (message.senderId == 1) {
       // Current user ID
       _showMessageOptionsForOwnMessage(message);
@@ -347,7 +348,6 @@ class _ChatConversationViewState extends State<ChatConversationView> {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Row(

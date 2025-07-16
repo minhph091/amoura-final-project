@@ -13,7 +13,7 @@ class ChangePasswordView extends StatelessWidget {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    print('Current theme is dark: $isDark');
+    debugPrint('Current theme is dark: $isDark');
     final userRepository = Provider.of<UserRepository>(context, listen: false);
     return AppGradientBackground(
       child: Scaffold(

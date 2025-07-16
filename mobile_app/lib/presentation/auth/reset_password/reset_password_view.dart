@@ -1,4 +1,6 @@
 // lib/presentation/auth/reset_password/reset_password_view.dart
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/language/app_localizations.dart';
@@ -48,7 +50,7 @@ class ResetPasswordView extends StatelessWidget {
                         ),
                         const SizedBox(height: 22),
                         Text(
-                          _getFormTitle(viewModel),
+                          _getFormTitle(viewModel, context),
                           style: Theme.of(
                             context,
                           ).textTheme.headlineMedium?.copyWith(
@@ -59,7 +61,7 @@ class ResetPasswordView extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _getFormSubtitle(viewModel),
+                          _getFormSubtitle(viewModel, context),
                           style: Theme.of(
                             context,
                           ).textTheme.bodyLarge?.copyWith(
@@ -210,23 +212,28 @@ class ResetPasswordView extends StatelessWidget {
         );
   }
 
-  String _getFormTitle(ResetPasswordViewModel viewModel) {
+  String _getFormTitle(ResetPasswordViewModel viewModel, BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     if (viewModel.hasVerifiedOtp) {
-      return "Create New Password";
+      return localizations.translate('create_new_password');
     } else if (viewModel.hasSentEmail) {
-      return "Verify Email";
+      return localizations.translate('verify_email');
     } else {
-      return "Reset Password";
+      return localizations.translate('reset_password');
     }
   }
 
-  String _getFormSubtitle(ResetPasswordViewModel viewModel) {
+  String _getFormSubtitle(
+    ResetPasswordViewModel viewModel,
+    BuildContext context,
+  ) {
+    final localizations = AppLocalizations.of(context);
     if (viewModel.hasVerifiedOtp) {
-      return "Create a new password for your account.";
+      return localizations.translate('create_new_password_subtitle');
     } else if (viewModel.hasSentEmail) {
-      return "Enter the 6-digit code we've just sent to your email.";
+      return localizations.translate('verify_email_subtitle');
     } else {
-      return "Enter your email to receive a password reset code.";
+      return localizations.translate('enter_email_reset');
     }
   }
 }

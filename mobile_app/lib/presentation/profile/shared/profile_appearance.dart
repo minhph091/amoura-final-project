@@ -19,9 +19,9 @@ class ProfileAppearance extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Log the received data for debugging
-    print('ProfileAppearance - Received Data:');
-    print('Body Type: $bodyType');
-    print('Height: $height');
+    debugPrint('ProfileAppearance - Received Data:');
+    debugPrint('Body Type: $bodyType');
+    debugPrint('Height: $height');
 
     return Column(
       children: [
@@ -48,7 +48,7 @@ class ProfileAppearance extends StatelessWidget {
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: ProfileTheme.darkPink,
-                  inactiveTrackColor: ProfileTheme.darkPurple.withOpacity(0.3),
+                  inactiveTrackColor: ProfileTheme.darkPurple.withValues(alpha: 0.3),
                   thumbColor: ProfileTheme.darkPink,
                   thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                   overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
@@ -69,3 +69,4 @@ class ProfileAppearance extends StatelessWidget {
     );
   }
 }
+

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:amoura/data/models/match/user_recommendation_model.dart';
 import 'package:amoura/core/services/match_service.dart';
 import 'package:flutter/material.dart';
@@ -35,14 +37,21 @@ class RecommendationCache {
     }
   }
 
-  Future<void> ensurePrecacheForProfiles(List<UserRecommendationModel> profiles, BuildContext context, {int count = 5}) async {
+  Future<void> ensurePrecacheForProfiles(
+    List<UserRecommendationModel> profiles,
+    BuildContext context, {
+    int count = 5,
+  }) async {
     for (int i = 0; i < profiles.length && i < count; i++) {
       await _precacheProfileData(profiles[i], context);
     }
   }
 
   /// Precache all data for a specific profile including images and other resources
-  Future<void> _precacheProfileData(UserRecommendationModel profile, BuildContext context) async {
+  Future<void> _precacheProfileData(
+    UserRecommendationModel profile,
+    BuildContext context,
+  ) async {
     if (profile.photos.isNotEmpty) {
       for (final photo in profile.photos) {
         final transformedUrl = UrlTransformer.transform(photo.url);
@@ -53,16 +62,20 @@ class RecommendationCache {
   }
 
   /// Filter out current user's profile from recommendations
-  List<UserRecommendationModel> _filterOutCurrentUser(List<UserRecommendationModel> recommendations) {
+  List<UserRecommendationModel> _filterOutCurrentUser(
+    List<UserRecommendationModel> recommendations,
+  ) {
     if (_currentUserId == null) {
       return recommendations;
     }
-    
-    return recommendations.where((profile) => profile.userId != _currentUserId).toList();
+
+    return recommendations
+        .where((profile) => profile.userId != _currentUserId)
+        .toList();
   }
 
   void clear() {
     _recommendations = null;
     _currentUserId = null;
   }
-} 
+}

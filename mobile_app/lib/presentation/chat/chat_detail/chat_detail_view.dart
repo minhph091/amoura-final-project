@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -6,10 +7,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:io';
 
 import 'chat_detail_viewmodel.dart';
-import 'widgets/chat_header.dart';
 import 'widgets/message_input.dart';
 import 'widgets/message_item.dart';
-import 'widgets/call_button.dart';
 import '../../../domain/models/chat.dart';
 import '../../../domain/models/message.dart';
 import '../../../app/di/injection.dart';
@@ -47,20 +46,21 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   String? _editingMessageId;
   String? _editingText;
   final _messageFocusNode = FocusNode();
-  
+
   // Thêm state để lưu thông tin chat room
   Chat? _chatRoom;
   bool _isLoadingChatInfo = true;
   String? _chatInfoError;
   bool _isInitialized = false;
-  bool _hasMarkedAsRead = false; // Flag để tránh mark messages as read nhiều lần
+  bool _hasMarkedAsRead =
+      false; // Flag để tránh mark messages as read nhiều lần
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_scrollListener);
-    
+
     // Khởi tạo viewModel trong initState
     _viewModel = ChatDetailViewModel();
 
@@ -74,11 +74,11 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // Chỉ setup một lần khi view được tạo
     if (!_isInitialized) {
       _isInitialized = true;
-      
+
       // Setup listener một lần duy nhất để tự động mark messages as read khi messages được load
       _viewModel.addListener(_onViewModelChanged);
     }
@@ -86,14 +86,16 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
   /// Listener cho ViewModel changes - mark as read khi messages load xong
   void _onViewModelChanged() {
-    if (!_viewModel.isLoading && 
-        _viewModel.messages.isNotEmpty && 
+    if (!_viewModel.isLoading &&
+        _viewModel.messages.isNotEmpty &&
         !_hasMarkedAsRead) {
       // Delay ngắn để đảm bảo UI đã render, sau đó mark as read
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted && !_hasMarkedAsRead) {
           _hasMarkedAsRead = true;
-          debugPrint('ChatDetailView: Auto-marking messages as read after ${_viewModel.messages.length} messages loaded');
+          debugPrint(
+            'ChatDetailView: Auto-marking messages as read after ${_viewModel.messages.length} messages loaded',
+          );
           _markMessagesAsRead();
         }
       });
@@ -104,7 +106,9 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   /// Gọi ngay khi user vào chat room và khi scroll đến bottom
   void _markMessagesAsRead() {
     if (widget.chatId.isNotEmpty) {
-      debugPrint('ChatDetailView: Marking messages as read for chat ${widget.chatId}');
+      debugPrint(
+        'ChatDetailView: Marking messages as read for chat ${widget.chatId}',
+      );
       _viewModel.markMessagesAsRead(widget.chatId);
     }
   }
@@ -117,17 +121,21 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       });
 
       // Debug logging để xác định vấn đề
-      debugPrint('ChatDetailView: Loading chat room info for chatId: ${widget.chatId}');
+      debugPrint(
+        'ChatDetailView: Loading chat room info for chatId: ${widget.chatId}',
+      );
       debugPrint('ChatDetailView: Recipient name: ${widget.recipientName}');
       debugPrint('ChatDetailView: Recipient avatar: ${widget.recipientAvatar}');
 
       // Lấy thông tin chat room từ usecase
       final getChatRoomUseCase = getIt<GetChatRoomUseCase>();
       final chatRoom = await getChatRoomUseCase.execute(widget.chatId);
-      
+
       debugPrint('ChatDetailView: Chat room loaded successfully');
-      debugPrint('ChatDetailView: Chat room data - ID: ${chatRoom.id}, User1: ${chatRoom.user1Name}, User2: ${chatRoom.user2Name}');
-      
+      debugPrint(
+        'ChatDetailView: Chat room data - ID: ${chatRoom.id}, User1: ${chatRoom.user1Name}, User2: ${chatRoom.user2Name}',
+      );
+
       setState(() {
         _chatRoom = chatRoom;
         _isLoadingChatInfo = false;
@@ -135,21 +143,26 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     } catch (e) {
       debugPrint('ChatDetailView: Error loading chat room info: $e');
       debugPrint('ChatDetailView: Error type: ${e.runtimeType}');
-      
+
       // Nếu là lỗi 404, có thể chat room chưa được tạo hoặc có delay
       // Sử dụng thông tin từ navigation arguments làm fallback
       if (e.toString().contains('404') || e.toString().contains('not found')) {
-        debugPrint('ChatDetailView: Chat room not found (404), using fallback mode with navigation arguments');
+        debugPrint(
+          'ChatDetailView: Chat room not found (404), using fallback mode with navigation arguments',
+        );
         setState(() {
           _chatRoom = null; // Sẽ dùng thông tin từ widget properties
           _isLoadingChatInfo = false;
-          _chatInfoError = null; // Clear error để có thể sử dụng chat bình thường
+          _chatInfoError =
+              null; // Clear error để có thể sử dụng chat bình thường
         });
-        
+
         // Retry sau 3 giây nếu chat room chưa sẵn sàng
         Future.delayed(const Duration(seconds: 3), () {
           if (mounted && _chatRoom == null) {
-            debugPrint('ChatDetailView: Retrying to load chat room after delay...');
+            debugPrint(
+              'ChatDetailView: Retrying to load chat room after delay...',
+            );
             _loadChatRoomInfo();
           }
         });
@@ -191,14 +204,16 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     }
 
     // Chỉ auto-mark khi user scroll về bottom và chưa mark lần nào
-    if (_scrollController.offset <= 50 && !_hasMarkedAsRead) { // Near bottom (reverse list)
+    if (_scrollController.offset <= 50 && !_hasMarkedAsRead) {
+      // Near bottom (reverse list)
       _hasMarkedAsRead = true;
       _markMessagesAsRead();
     }
 
     // Pagination: Load more messages khi user scroll gần đến top (cuối conversation vì reverse=true)
     if (_scrollController.hasClients &&
-        _scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200) {
       // User đã scroll gần đến cuối danh sách, load thêm tin nhắn cũ hơn
       _loadMoreMessagesIfNeeded();
     }
@@ -207,7 +222,9 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   /// Load thêm tin nhắn cũ hơn nếu cần và có thể
   void _loadMoreMessagesIfNeeded() {
     if (_viewModel.hasMoreMessages && !_viewModel.isLoadingMore) {
-      debugPrint('ChatDetailView: User scrolled to end, loading more messages...');
+      debugPrint(
+        'ChatDetailView: User scrolled to end, loading more messages...',
+      );
       _viewModel.loadMoreMessages();
     }
   }
@@ -220,17 +237,6 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         curve: Curves.easeOut,
       );
     }
-  }
-
-  void _startReply(String message, String senderName) {
-    setState(() {
-      _isReplying = true;
-      _replyingToMessage = message;
-      _isEditing = false;
-      _editingMessageId = null;
-      _editingText = null;
-    });
-    _messageFocusNode.requestFocus();
   }
 
   /// Enhanced reply method that takes messageId
@@ -284,7 +290,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return SafeArea(
@@ -294,7 +300,6 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               Container(
                 width: 40,
                 height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2),
@@ -302,16 +307,46 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               ),
               ListTile(
                 leading: const Icon(Icons.reply),
-                title: const Text('Reply'),
+                title: Text(AppLocalizations.of(context).translate('reply')),
                 onTap: () {
                   Navigator.pop(context);
-                  _startReplyWithId(message.id, message.content, message.senderName);
+                  _startReplyWithId(
+                    message.id,
+                    message.content,
+                    message.senderName,
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: Text(AppLocalizations.of(context).translate('edit')),
+                onTap: () {
+                  Navigator.pop(context);
+                  _startEdit(message.id, message.content);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.content_copy),
+                title: Text(AppLocalizations.of(context).translate('copy')),
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: message.content));
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(
+                          context,
+                        ).translate('copied_to_clipboard'),
+                      ),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
                 },
               ),
               if (message.senderId == viewModel.currentUserId)
                 ListTile(
                   leading: const Icon(Icons.edit),
-                  title: const Text('Edit'),
+                  title: Text(AppLocalizations.of(context).translate('edit')),
                   onTap: () {
                     Navigator.pop(context);
                     _startEdit(message.id, message.content);
@@ -319,31 +354,42 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                 ),
               ListTile(
                 leading: const Icon(Icons.content_copy),
-                title: const Text('Copy'),
+                title: Text(AppLocalizations.of(context).translate('copy')),
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: message.content));
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Copied to clipboard'),
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(
+                          context,
+                        ).translate('copied_to_clipboard'),
+                      ),
                       duration: Duration(seconds: 2),
                     ),
                   );
                 },
               ),
-              if (message.senderId == viewModel.currentUserId && !message.recalled)
+              if (message.senderId == viewModel.currentUserId &&
+                  !message.recalled)
                 ListTile(
                   leading: const Icon(Icons.undo, color: Colors.orange),
-                  title: const Text('Recall message', style: TextStyle(color: Colors.orange)),
+                  title: Text(
+                    AppLocalizations.of(context).translate('recall_message'),
+                    style: TextStyle(color: Colors.orange),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _showRecallConfirmation(message);
-                },
-              ),
+                  },
+                ),
               if (message.senderId == viewModel.currentUserId)
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: Colors.red),
-                  title: const Text('Delete', style: TextStyle(color: Colors.red)),
+                  title: Text(
+                    AppLocalizations.of(context).translate('delete'),
+                    style: TextStyle(color: Colors.red),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _showDeleteConfirmation(message);
@@ -360,50 +406,70 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   void _showRecallConfirmation(Message message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Recall Message?'),
-        content: const Text(
-          'This message will be recalled for everyone. This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              AppLocalizations.of(context).translate('recall_message_question'),
+            ),
+            content: Text(
+              AppLocalizations.of(context).translate('recall_message_warning'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppLocalizations.of(context).translate('cancel')),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Recall message
+                  _viewModel.recallMessage(message.id);
+                },
+                child: Text(
+                  AppLocalizations.of(context).translate('recall'),
+                  style: TextStyle(color: Colors.orange),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Recall message
-              _viewModel.recallMessage(message.id);
-            },
-            child: const Text('Recall', style: TextStyle(color: Colors.orange)),
-          ),
-        ],
-      ),
     );
   }
 
   void _showDeleteConfirmation(Message message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Message?'),
-        content: const Text('This message will be deleted for everyone. This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              AppLocalizations.of(context).translate('delete_message_question'),
+            ),
+            content: Text(
+              AppLocalizations.of(context).translate('delete_message_warning'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).translate('cancel').toUpperCase(),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Delete message
+                  _viewModel.deleteMessage(message.id);
+                },
+                child: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).translate('delete').toUpperCase(),
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Delete message
-              _viewModel.deleteMessage(message.id);
-            },
-            child: const Text('DELETE', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -416,9 +482,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           // Lấy trạng thái online/offline và last seen từ ViewModel
           final isOnline = _viewModel.isRecipientOnline;
           final lastSeen = _viewModel.recipientLastSeen;
-          final statusText = isOnline
-              ? 'Active now'
-              : (lastSeen != null ? _viewModel.formatLastSeen(lastSeen) : 'Offline');
+          final statusText =
+              isOnline
+                  ? 'Active now'
+                  : (lastSeen != null
+                      ? _viewModel.formatLastSeen(lastSeen)
+                      : 'Offline');
           return AppGradientBackground(
             child: Scaffold(
               backgroundColor: Colors.transparent,
@@ -429,97 +498,115 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.pop(context),
                 ),
-                title: _isLoadingChatInfo 
-            ? const Text('Loading...')
-            : _chatInfoError != null
-                ? const Text('Chat')
-                : Row(
-                    children: [
-                      Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor: Colors.grey.shade300,
-                            child: _chatRoom?.participantAvatar != null && _chatRoom!.participantAvatar!.isNotEmpty
-                                ? ClipOval(
-                                    child: Image.network(
-                                      UrlTransformer.transformAvatarUrl(_chatRoom!.participantAvatar!),
-                                      width: 36,
-                                      height: 36,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Text(
-                                    recipientName.isNotEmpty ? recipientName[0].toUpperCase() : "?",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                          ),
-                          if (isOnline)
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Theme.of(context).scaffoldBackgroundColor,
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(width: 12),
-                      // User info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                title:
+                    _isLoadingChatInfo
+                        ? const Text('Loading...')
+                        : _chatInfoError != null
+                        ? const Text('Chat')
+                        : Row(
                           children: [
-                            Text(
-                              recipientName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: Colors.grey.shade300,
+                                  child:
+                                      _chatRoom?.participantAvatar != null &&
+                                              _chatRoom!
+                                                  .participantAvatar!
+                                                  .isNotEmpty
+                                          ? ClipOval(
+                                            child: Image.network(
+                                              UrlTransformer.transformAvatarUrl(
+                                                _chatRoom!.participantAvatar!,
+                                              ),
+                                              width: 36,
+                                              height: 36,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                          : Text(
+                                            recipientName.isNotEmpty
+                                                ? recipientName[0].toUpperCase()
+                                                : "?",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                ),
+                                if (isOnline)
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: Colors.green,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).scaffoldBackgroundColor,
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                                            Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isOnline ? Colors.green : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isOnline ? Colors.green : Theme.of(context).hintColor,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+                            const SizedBox(width: 12),
+                            // User info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    recipientName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color:
+                                              isOnline
+                                                  ? Colors.green
+                                                  : Colors.grey,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        statusText,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color:
+                                              isOnline
+                                                  ? Colors.green
+                                                  : Theme.of(context).hintColor,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
                 actions: [
                   if (!_isLoadingChatInfo && _chatInfoError == null) ...[
                     IconButton(
@@ -547,224 +634,272 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   ],
                 ],
               ),
-              body: _isLoadingChatInfo
-                  ? const Center(child: CircularProgressIndicator())
-                  : _chatInfoError != null
+              body:
+                  _isLoadingChatInfo
+                      ? const Center(child: CircularProgressIndicator())
+                      : _chatInfoError != null
                       ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 48,
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Error loading chat',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _chatInfoError!,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton.icon(
-                                onPressed: _loadChatRoomInfo,
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Retry'),
-                              ),
-                            ],
-                          ),
-                        )
-                      : Column(
-                children: [
-                  // Pinned messages section
-                  if (viewModel.pinnedMessages.isNotEmpty)
-                    _buildPinnedMessagesSection(viewModel),
-
-                  // Chat messages
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        // Messages list
-                        _buildMessagesView(viewModel),
-
-                        // Scroll to bottom button
-                        if (_showScrollToBottom)
-                          Positioned(
-                            right: 16,
-                            bottom: 16,
-                            child: FloatingActionButton(
-                              mini: true,
-                              backgroundColor: Theme.of(context).colorScheme.secondary,
-                              onPressed: _scrollToBottom,
-                              child: const Icon(Icons.arrow_downward, size: 20),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.error,
                             ),
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  // Date indicator (today, yesterday, etc)
-                  if (viewModel.showDateIndicator)
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(13),
-                            blurRadius: 3,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        _formatDateIndicator(viewModel.currentDateIndicator),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha(179),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error loading chat',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _chatInfoError!,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 16),
+                            TextButton.icon(
+                              onPressed: _loadChatRoomInfo,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Retry'),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-
-                  // Typing indicator
-                  if (viewModel.isTyping)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16, bottom: 8),
-                      child: Row(
+                      )
+                      : Column(
                         children: [
-                          Text(
-                                      '$recipientName is typing',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).colorScheme.secondary,
-                              fontStyle: FontStyle.italic,
+                          // Pinned messages section
+                          if (viewModel.pinnedMessages.isNotEmpty)
+                            _buildPinnedMessagesSection(viewModel),
+
+                          // Chat messages
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                // Messages list
+                                _buildMessagesView(viewModel),
+
+                                // Scroll to bottom button
+                                if (_showScrollToBottom)
+                                  Positioned(
+                                    right: 16,
+                                    bottom: 16,
+                                    child: FloatingActionButton(
+                                      mini: true,
+                                      backgroundColor:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.secondary,
+                                      onPressed: _scrollToBottom,
+                                      child: const Icon(
+                                        Icons.arrow_downward,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 5),
-                          _buildTypingIndicator(),
-                        ],
-                      ),
-                    ),
 
-                  // Message input
-                  if (viewModel.pendingMedia != null) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Row(
-                        children: [
-                          if (viewModel.pendingMediaType == 'image')
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                File(viewModel.pendingMedia!.path),
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
+                          // Date indicator (today, yesterday, etc)
+                          if (viewModel.showDateIndicator)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 12,
+                              ),
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surface.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withAlpha(13),
+                                    blurRadius: 3,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                _formatDateIndicator(
+                                  viewModel.currentDateIndicator,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withAlpha(179),
+                                ),
                               ),
                             ),
-                          if (viewModel.pendingMediaType == 'video')
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.asset(
-                                    'assets/images/video_placeholder.png', // Thay bằng thumbnail nếu có
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
+
+                          // Typing indicator
+                          if (viewModel.isTyping)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                bottom: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '$recipientName is typing',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.secondary,
+                                      fontStyle: FontStyle.italic,
+                                    ),
                                   ),
-                                ),
-                                const Icon(Icons.play_circle_fill, color: Colors.white, size: 36),
-                              ],
+                                  const SizedBox(width: 5),
+                                  _buildTypingIndicator(),
+                                ],
+                              ),
                             ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed: () => viewModel.sendPendingMedia(widget.chatId),
-                                  icon: const Icon(Icons.send),
-                                  label: const Text('Send'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+
+                          // Message input
+                          if (viewModel.pendingMedia != null) ...[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  if (viewModel.pendingMediaType == 'image')
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.file(
+                                        File(viewModel.pendingMedia!.path),
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  if (viewModel.pendingMediaType == 'video')
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          child: Image.asset(
+                                            'assets/images/video_placeholder.png', // Thay bằng thumbnail nếu có
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.play_circle_fill,
+                                          color: Colors.white,
+                                          size: 36,
+                                        ),
+                                      ],
+                                    ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed:
+                                              () => viewModel.sendPendingMedia(
+                                                widget.chatId,
+                                              ),
+                                          icon: const Icon(Icons.send),
+                                          label: const Text('Send'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 8,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.close,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed:
+                                              viewModel.clearPendingMedia,
+                                          tooltip: 'Remove',
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.red),
-                                  onPressed: viewModel.clearPendingMedia,
-                                  tooltip: 'Remove',
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                          ],
+                          MessageInput(
+                            focusNode: _messageFocusNode,
+                            onSendMessage: (message) {
+                              if (_isEditing && _editingMessageId != null) {
+                                // Edit existing message
+                                viewModel.editMessage(
+                                  _editingMessageId!,
+                                  message,
+                                );
+                                _cancelEdit();
+                              } else {
+                                // Send new message, possibly a reply
+                                final replyMessageId =
+                                    _isReplying ? _replyingToMessageId : null;
+                                final replyToSender =
+                                    _isReplying ? _replyingToSender : null;
+                                debugPrint(
+                                  'ChatDetailView: Sending message with reply to: $replyMessageId',
+                                );
+
+                                viewModel.sendMessage(
+                                  chatId: widget.chatId,
+                                  message: message,
+                                  replyToMessageId: replyMessageId,
+                                  replyToSender: replyToSender,
+                                );
+                                if (_isReplying) _cancelReply();
+                              }
+                              _scrollToBottom();
+                            },
+                            onAttachmentTap: () {
+                              _showAttachmentOptions();
+                            },
+                            onCameraTap: () {
+                              // Handle camera tap action
+                              _openCamera();
+                            },
+                            onLikeTap: () {
+                              // Send quick like/heart
+                              viewModel.sendMessage(
+                                chatId: widget.chatId,
+                                message: '❤️',
+                              );
+                            },
+                            isReplying: _isReplying,
+                            replyingTo: _replyingToMessage,
+                            onCancelReply: _cancelReply,
+                            isEditing: _isEditing,
+                            editingText: _editingText,
+                            onCancelEdit: _cancelEdit,
+                            onTypingChanged: (isTyping) {
+                              // Gửi typing indicator qua ViewModel
+                              viewModel.setUserTyping(isTyping);
+                            },
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                  MessageInput(
-                    focusNode: _messageFocusNode,
-                    onSendMessage: (message) {
-                      if (_isEditing && _editingMessageId != null) {
-                        // Edit existing message
-                        viewModel.editMessage(
-                          _editingMessageId!,
-                          message,
-                        );
-                        _cancelEdit();
-                      } else {
-                        // Send new message, possibly a reply
-                        final replyMessageId = _isReplying ? _replyingToMessageId : null;
-                        final replyToSender = _isReplying ? _replyingToSender : null;
-                        debugPrint('ChatDetailView: Sending message with reply to: $replyMessageId');
-                        
-                        viewModel.sendMessage(
-                          chatId: widget.chatId,
-                          message: message,
-                          replyToMessageId: replyMessageId,
-                          replyToSender: replyToSender,
-                        );
-                        if (_isReplying) _cancelReply();
-                      }
-                      _scrollToBottom();
-                    },
-                    onAttachmentTap: () {
-                      _showAttachmentOptions();
-                    },
-                    onCameraTap: () {
-                      // Handle camera tap action
-                      _openCamera();
-                    },
-                    onLikeTap: () {
-                      // Send quick like/heart
-                      viewModel.sendMessage(
-                        chatId: widget.chatId,
-                        message: '❤️',
-                      );
-                    },
-                    isReplying: _isReplying,
-                    replyingTo: _replyingToMessage,
-                    onCancelReply: _cancelReply,
-                    isEditing: _isEditing,
-                    editingText: _editingText,
-                    onCancelEdit: _cancelEdit,
-                    onTypingChanged: (isTyping) {
-                      // Gửi typing indicator qua ViewModel
-                      viewModel.setUserTyping(isTyping);
-                    },
-                  ),
-                ],
-              ),
             ),
           );
         },
@@ -782,26 +917,16 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 80,
-              color: Colors.grey[300],
-            ),
+            Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
               'No messages yet',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
               'Start the conversation by sending a message',
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[400], fontSize: 14),
             ),
           ],
         ),
@@ -838,10 +963,16 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             // Quick reaction
             viewModel.addReaction(message.id, '👍');
           },
-          onTapRepliedMessage: message.replyToMessageId != null
-              ? () => viewModel.scrollToMessage(message.replyToMessageId!)
-              : null,
-          onSwipeReply: () => _startReplyWithId(message.id, message.content, message.senderName),
+          onTapRepliedMessage:
+              message.replyToMessageId != null
+                  ? () => viewModel.scrollToMessage(message.replyToMessageId!)
+                  : null,
+          onSwipeReply:
+              () => _startReplyWithId(
+                message.id,
+                message.content,
+                message.senderName,
+              ),
           mediaUrl: message.mediaUrl,
           fileInfo: message.fileInfo,
           recalled: message.recalled,
@@ -888,23 +1019,23 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       child: Row(
         children: List.generate(
           3,
-              (index) => Container(
-            margin: const EdgeInsets.symmetric(horizontal: 1),
-            height: 8,
-            width: 8,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondary.withAlpha(153),
-              shape: BoxShape.circle,
-            ),
-          ).animate(
-            onPlay: (controller) => controller.repeat(reverse: true),
-          ).scaleY(
-            begin: 0.5,
-            end: 1.0,
-            duration: const Duration(milliseconds: 600),
-            delay: Duration(milliseconds: (index * 150)),
-            curve: Curves.easeInOut,
-          ),
+          (index) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                height: 8,
+                width: 8,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondary.withAlpha(153),
+                  shape: BoxShape.circle,
+                ),
+              )
+              .animate(onPlay: (controller) => controller.repeat(reverse: true))
+              .scaleY(
+                begin: 0.5,
+                end: 1.0,
+                duration: const Duration(milliseconds: 600),
+                delay: Duration(milliseconds: (index * 150)),
+                curve: Curves.easeInOut,
+              ),
         ),
       ),
     );
@@ -935,7 +1066,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return SafeArea(
@@ -953,7 +1084,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               ),
               ListTile(
                 leading: const Icon(Icons.search),
-                title: const Text('Search'),
+                title: Text(AppLocalizations.of(context).translate('search')),
                 onTap: () {
                   Navigator.pop(context);
                   // Search implementation
@@ -961,7 +1092,9 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               ),
               ListTile(
                 leading: const Icon(Icons.notifications),
-                title: const Text('Mute notifications'),
+                title: Text(
+                  AppLocalizations.of(context).translate('mute_notifications'),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   // Mute implementation
@@ -969,7 +1102,11 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               ),
               ListTile(
                 leading: const Icon(Icons.image),
-                title: const Text('View media, files and links'),
+                title: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).translate('view_media_files_links'),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   // View media implementation
@@ -977,7 +1114,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('Delete chat', style: TextStyle(color: Colors.red)),
+                title: Text(
+                  AppLocalizations.of(context).translate('delete_chat'),
+                  style: TextStyle(color: Colors.red),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _confirmDeleteChat();
@@ -994,25 +1134,39 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   void _confirmDeleteChat() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Chat?'),
-        content: const Text('This will delete all messages in this chat. This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              AppLocalizations.of(context).translate('delete_chat_question'),
+            ),
+            content: Text(
+              AppLocalizations.of(context).translate('delete_chat_warning'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).translate('cancel').toUpperCase(),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context); // Return to chat list
+                  // Delete chat implementation
+                  // _viewModel.deleteChat(widget.chatId);
+                },
+                child: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).translate('delete').toUpperCase(),
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context); // Return to chat list
-              // Delete chat implementation
-              // _viewModel.deleteChat(widget.chatId);
-            },
-            child: const Text('DELETE', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1020,7 +1174,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return SafeArea(
@@ -1080,7 +1234,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   ],
                 ),
               ),
-              
+
               // Second row with audio and video recording
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -1137,20 +1291,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               color: color.withAlpha(26),
               borderRadius: BorderRadius.circular(30),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 28,
-            ),
+            child: Icon(icon, color: color, size: 28),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
         ],
       ),
     );
@@ -1190,44 +1334,45 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.mic, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('Recording Audio'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.radio_button_checked,
-              color: Colors.red,
-              size: 48,
+      builder:
+          (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.mic, color: Colors.orange),
+                SizedBox(width: 8),
+                Text('Recording Audio'),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Text('Recording voice message...'),
-            const SizedBox(height: 16),
-            const LinearProgressIndicator(),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Cancel'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.radio_button_checked,
+                  color: Colors.red,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                const Text('Recording voice message...'),
+                const SizedBox(height: 16),
+                const LinearProgressIndicator(),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _viewModel.recordAndSendAudio(widget.chatId);
+                },
+                child: const Text('Send'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _viewModel.recordAndSendAudio(widget.chatId);
-            },
-            child: const Text('Send'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1235,44 +1380,45 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.videocam, color: Colors.indigo),
-            SizedBox(width: 8),
-            Text('Recording Video'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.fiber_manual_record,
-              color: Colors.red,
-              size: 48,
+      builder:
+          (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.videocam, color: Colors.indigo),
+                SizedBox(width: 8),
+                Text('Recording Video'),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Text('Recording video message...'),
-            const SizedBox(height: 16),
-            const LinearProgressIndicator(),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Cancel'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.fiber_manual_record,
+                  color: Colors.red,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                const Text('Recording video message...'),
+                const SizedBox(height: 16),
+                const LinearProgressIndicator(),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _viewModel.recordAndSendVideo(widget.chatId);
+                },
+                child: const Text('Send'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _viewModel.recordAndSendVideo(widget.chatId);
-            },
-            child: const Text('Send'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1281,10 +1427,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 0.5,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 0.5),
         ),
       ),
       child: Column(
@@ -1321,10 +1464,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             leading: const Icon(Icons.push_pin),
             title: Text(
               viewModel.currentPinnedMessage?.senderName ?? '',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
             subtitle: Text(
               viewModel.currentPinnedMessage?.content ?? '',
@@ -1355,7 +1495,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return SafeArea(
@@ -1403,9 +1543,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     _messageFocusNode.dispose();
-    _viewModel.removeListener(_onViewModelChanged); // Remove listener trước khi dispose
+    _viewModel.removeListener(
+      _onViewModelChanged,
+    ); // Remove listener trước khi dispose
     _viewModel.dispose(); // Dispose viewModel
     super.dispose();
   }
 }
-

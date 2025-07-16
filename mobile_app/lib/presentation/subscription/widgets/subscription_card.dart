@@ -43,7 +43,7 @@ class SubscriptionCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(isSelected ? 0.4 : 0.1),
+              color: color.withValues(alpha: isSelected ? 0.4 : 0.1),
               blurRadius: 10,
               spreadRadius: 2,
               offset: const Offset(0, 4),
@@ -113,7 +113,7 @@ class SubscriptionCard extends StatelessWidget {
                         '/month',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -123,7 +123,7 @@ class SubscriptionCard extends StatelessWidget {
                     'Total: \$$totalPrice',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -131,7 +131,7 @@ class SubscriptionCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

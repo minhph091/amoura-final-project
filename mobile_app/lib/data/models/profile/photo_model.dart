@@ -29,13 +29,13 @@ class PhotoModel {
     // Nếu path chưa có prefix /api/files thì thêm vào
     if (!fixedPath.startsWith('/api/files')) {
       if (fixedPath.startsWith('/')) {
-        fixedPath = '/api/files' + fixedPath;
+        fixedPath = '/api/files$fixedPath';
       } else {
-        fixedPath = '/api/files/' + fixedPath;
+        fixedPath = '/api/files/$fixedPath';
       }
     }
     final url = base + fixedPath;
-    assert(url.startsWith('http'), 'PhotoModel.url: URL không hợp lệ: ' + url + ' (base: ' + base + ', fixedPath: ' + fixedPath + ')');
+    assert(url.startsWith('http'), 'PhotoModel.url: URL không hợp lệ: $url (base: $base, fixedPath: $fixedPath)');
     return url;
   }
 

@@ -8,11 +8,11 @@ class NotificationItem extends StatelessWidget {
   final VoidCallback? onDismiss;
 
   const NotificationItem({
-    Key? key,
+    super.key,
     required this.notification,
     required this.onTap,
     this.onDismiss,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +23,7 @@ class NotificationItem extends StatelessWidget {
         alignment: Alignment.centerRight,
         color: Colors.red,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          Icons.delete_outline,
-          color: Colors.white,
-          size: 28,
-        ),
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
       ),
       onDismissed: (_) {
         if (onDismiss != null) {
@@ -39,15 +35,12 @@ class NotificationItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: notification.isRead
-                ? null
-                : Theme.of(context).colorScheme.primary.withOpacity(0.05),
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).dividerColor,
-                width: 0.5,
-              ),
-            ),
+            color:
+                notification.isRead
+                    ? Colors.transparent
+                    : (Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue.withValues(alpha: 0.1)
+                        : Colors.blue.withValues(alpha: 0.05)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,17 +57,26 @@ class NotificationItem extends StatelessWidget {
                           child: Text(
                             notification.title,
                             style: TextStyle(
-                              fontWeight: notification.isRead
-                                  ? FontWeight.normal
-                                  : FontWeight.bold,
+                              fontWeight:
+                                  notification.isRead
+                                      ? FontWeight.normal
+                                      : FontWeight.bold,
                               fontSize: 16,
+                              color:
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black87,
                             ),
                           ),
                         ),
                         Text(
                           TimeFormatter.formatChatTime(notification.time),
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                             fontSize: 12,
                           ),
                         ),
@@ -84,9 +86,16 @@ class NotificationItem extends StatelessWidget {
                     Text(
                       notification.body,
                       style: TextStyle(
-                        color: notification.isRead
-                            ? Colors.grey[600]
-                            : Theme.of(context).textTheme.bodyMedium?.color,
+                        color:
+                            notification.isRead
+                                ? (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600])
+                                : (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black87),
                         height: 1.3,
                       ),
                     ),
@@ -144,12 +153,8 @@ class NotificationItem extends StatelessWidget {
 
     return CircleAvatar(
       radius: 24,
-      backgroundColor: backgroundColor.withOpacity(0.2),
-      child: Icon(
-        icon,
-        color: backgroundColor,
-        size: 24,
-      ),
+      backgroundColor: backgroundColor.withValues(alpha: 0.2),
+      child: Icon(icon, color: backgroundColor, size: 24),
     );
   }
 }

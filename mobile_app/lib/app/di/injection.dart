@@ -51,39 +51,56 @@ import '../../core/services/notification_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
-Future<void> configureDependencies(GlobalKey<NavigatorState> navigatorKey) async {
+Future<void> configureDependencies(
+  GlobalKey<NavigatorState> navigatorKey,
+) async {
   // Core
   getIt.registerLazySingleton<AuthService>(() => AuthService());
 
   // ApiClient
-  getIt.registerLazySingleton<ApiClient>(() => ApiClient(
-        authService: getIt<AuthService>(),
-        navigatorKey: navigatorKey,
-      ));
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(
+      authService: getIt<AuthService>(),
+      navigatorKey: navigatorKey,
+    ),
+  );
 
   // Data Sources
   getIt.registerLazySingleton<AuthApi>(() => AuthApi(getIt<ApiClient>()));
-  getIt.registerLazySingleton<SetupProfileApi>(() => SetupProfileApi(
-        getIt<ApiClient>(),
-        getIt<AuthService>(),
-      ));
+  getIt.registerLazySingleton<SetupProfileApi>(
+    () => SetupProfileApi(getIt<ApiClient>(), getIt<AuthService>()),
+  );
   getIt.registerLazySingleton<ProfileApi>(() => ProfileApi(getIt<ApiClient>()));
   getIt.registerLazySingleton<MatchApi>(() => MatchApi(getIt<ApiClient>()));
   getIt.registerLazySingleton<ChatApi>(() => ChatApi(getIt<ApiClient>()));
 
   // Repositories
-  getIt.registerLazySingleton<AuthRepository>(() => AuthRepository(getIt<AuthApi>(), getIt<AuthService>()));
-  getIt.registerLazySingleton<SetupProfileRepository>(() => SetupProfileRepository(getIt<SetupProfileApi>()));
-  getIt.registerLazySingleton<ProfileRepository>(() => ProfileRepository(getIt<ProfileApi>()));
-  getIt.registerLazySingleton<MatchRepository>(() => MatchRepository(getIt<MatchApi>()));
-  getIt.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(getIt<ChatApi>()));
-  getIt.registerLazySingleton<MessageRepository>(() => MessageRepositoryImpl(getIt<ChatApi>()));
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepository(getIt<AuthApi>()),
+  );
+  getIt.registerLazySingleton<SetupProfileRepository>(
+    () => SetupProfileRepository(getIt<SetupProfileApi>()),
+  );
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepository(getIt<ProfileApi>()),
+  );
+  getIt.registerLazySingleton<MatchRepository>(
+    () => MatchRepository(getIt<MatchApi>()),
+  );
+  getIt.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(getIt<ChatApi>()),
+  );
+  getIt.registerLazySingleton<MessageRepository>(
+    () => MessageRepositoryImpl(getIt<ChatApi>()),
+  );
 
   // Services
   getIt.registerLazySingleton<SocketClient>(() => SocketClient());
-  getIt.registerLazySingleton<SetupProfileService>(() => SetupProfileService(
-        setupProfileRepository: getIt<SetupProfileRepository>(),
-      ));
+  getIt.registerLazySingleton<SetupProfileService>(
+    () => SetupProfileService(
+      setupProfileRepository: getIt<SetupProfileRepository>(),
+    ),
+  );
   getIt.registerLazySingleton<ProfileService>(() => ProfileService());
   getIt.registerLazySingleton<MatchService>(() => MatchService());
   getIt.registerLazySingleton<ChatService>(() => ChatService());
@@ -92,36 +109,74 @@ Future<void> configureDependencies(GlobalKey<NavigatorState> navigatorKey) async
   getIt.registerLazySingleton<RewindService>(() => RewindService());
 
   // Use Cases
-  getIt.registerLazySingleton<RefreshTokenUseCase>(() => RefreshTokenUseCase(getIt<AuthRepository>(), getIt<AuthService>()));
-  getIt.registerLazySingleton<RegisterUseCase>(() => RegisterUseCase(getIt<AuthRepository>()));
-  getIt.registerLazySingleton<UpdateProfileUseCase>(() => UpdateProfileUseCase(getIt<AuthRepository>()));
-  getIt.registerLazySingleton<LoginUseCase>(() => LoginUseCase(getIt<AuthRepository>(), getIt<AuthService>()));
-  getIt.registerLazySingleton<LogoutUseCase>(() => LogoutUseCase(getIt<AuthRepository>(), getIt<AuthService>()));
-  getIt.registerLazySingleton<GetProfileUseCase>(() => GetProfileUseCase(getIt<ProfileService>()));
+  getIt.registerLazySingleton<RefreshTokenUseCase>(
+    () => RefreshTokenUseCase(getIt<AuthRepository>(), getIt<AuthService>()),
+  );
+  getIt.registerLazySingleton<RegisterUseCase>(
+    () => RegisterUseCase(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateProfileUseCase>(
+    () => UpdateProfileUseCase(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton<LoginUseCase>(
+    () => LoginUseCase(getIt<AuthRepository>(), getIt<AuthService>()),
+  );
+  getIt.registerLazySingleton<LogoutUseCase>(
+    () => LogoutUseCase(getIt<AuthRepository>(), getIt<AuthService>()),
+  );
+  getIt.registerLazySingleton<GetProfileUseCase>(
+    () => GetProfileUseCase(getIt<ProfileService>()),
+  );
 
   // Matching Use Cases
-  getIt.registerLazySingleton<GetRecommendationsUseCase>(() => GetRecommendationsUseCase(getIt<MatchService>()));
-  getIt.registerLazySingleton<LikeUserUseCase>(() => LikeUserUseCase(getIt<MatchService>()));
-  getIt.registerLazySingleton<DislikeUserUseCase>(() => DislikeUserUseCase(getIt<MatchService>()));
-  getIt.registerLazySingleton<GetMatchesUseCase>(() => GetMatchesUseCase(getIt<MatchService>()));
+  getIt.registerLazySingleton<GetRecommendationsUseCase>(
+    () => GetRecommendationsUseCase(getIt<MatchService>()),
+  );
+  getIt.registerLazySingleton<LikeUserUseCase>(
+    () => LikeUserUseCase(getIt<MatchService>()),
+  );
+  getIt.registerLazySingleton<DislikeUserUseCase>(
+    () => DislikeUserUseCase(getIt<MatchService>()),
+  );
+  getIt.registerLazySingleton<GetMatchesUseCase>(
+    () => GetMatchesUseCase(getIt<MatchService>()),
+  );
 
   // Chat Use Cases
-  getIt.registerLazySingleton<GetConversationsUseCase>(() => GetConversationsUseCase());
+  getIt.registerLazySingleton<GetConversationsUseCase>(
+    () => GetConversationsUseCase(),
+  );
   getIt.registerLazySingleton<GetMessagesUseCase>(() => GetMessagesUseCase());
   getIt.registerLazySingleton<SendMessageUseCase>(() => SendMessageUseCase());
-  getIt.registerLazySingleton<DeleteMessageUseCase>(() => DeleteMessageUseCase());
-  getIt.registerLazySingleton<RecallMessageUseCase>(() => RecallMessageUseCase());
-  getIt.registerLazySingleton<MarkMessagesReadUseCase>(() => MarkMessagesReadUseCase());
-  getIt.registerLazySingleton<UploadChatImageUseCase>(() => UploadChatImageUseCase());
-  getIt.registerLazySingleton<CheckUserOnlineUseCase>(() => CheckUserOnlineUseCase());
+  getIt.registerLazySingleton<DeleteMessageUseCase>(
+    () => DeleteMessageUseCase(),
+  );
+  getIt.registerLazySingleton<RecallMessageUseCase>(
+    () => RecallMessageUseCase(),
+  );
+  getIt.registerLazySingleton<MarkMessagesReadUseCase>(
+    () => MarkMessagesReadUseCase(),
+  );
+  getIt.registerLazySingleton<UploadChatImageUseCase>(
+    () => UploadChatImageUseCase(),
+  );
+  getIt.registerLazySingleton<CheckUserOnlineUseCase>(
+    () => CheckUserOnlineUseCase(),
+  );
   getIt.registerLazySingleton<GetChatRoomUseCase>(() => GetChatRoomUseCase());
 
   // User
   getIt.registerLazySingleton<UserApi>(() => UserApi(getIt<ApiClient>()));
-  getIt.registerLazySingleton<UserRepository>(() => UserRepository(getIt<UserApi>()));
-  getIt.registerLazySingleton<UpdateUserUseCase>(() => UpdateUserUseCase(getIt<UserRepository>()));
+  getIt.registerLazySingleton<UserRepository>(
+    () => UserRepository(getIt<UserApi>()),
+  );
+  getIt.registerLazySingleton<UpdateUserUseCase>(
+    () => UpdateUserUseCase(getIt<UserRepository>()),
+  );
 
   // Notification
-  getIt.registerLazySingleton<NotificationApi>(() => NotificationApi(getIt<ApiClient>()));
+  getIt.registerLazySingleton<NotificationApi>(
+    () => NotificationApi(getIt<ApiClient>()),
+  );
   getIt.registerLazySingleton<NotificationService>(() => NotificationService());
 }

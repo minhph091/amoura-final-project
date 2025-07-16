@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../../../domain/models/match/liked_user_model.dart';
 import '../../profile/view/profile_view.dart';
@@ -24,9 +26,7 @@ class LikedUsersViewModel extends ChangeNotifier {
   void onUserSelected(BuildContext context, LikedUserModel user) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => ProfileView(isMyProfile: false),
-      ),
+      MaterialPageRoute(builder: (context) => ProfileView(isMyProfile: false)),
     );
   }
 

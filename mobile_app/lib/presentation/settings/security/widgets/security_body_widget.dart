@@ -6,51 +6,77 @@ import '../../widgets/settings_tile.dart';
 import '../authentication/widgets/change_password_view.dart';
 import '../authentication/widgets/change_email_view.dart';
 import '../account_management/account_management_view.dart';
+import '../../../../config/language/app_localizations.dart';
 
 class SecurityBodyWidget extends StatelessWidget {
   const SecurityBodyWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return SizedBox.expand(
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          const SettingsSectionTitle(title: 'Password & Authentication'),
+          SettingsSectionTitle(
+            title: AppLocalizations.of(
+              context,
+            ).translate('password_authentication'),
+          ),
           SettingsTile(
             icon: Icons.key,
-            title: 'Change Password',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePasswordView())),
+            title: AppLocalizations.of(context).translate('change_password'),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ChangePasswordView()),
+                ),
           ),
           SettingsTile(
             icon: Icons.email_outlined,
-            title: 'Change Email',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangeEmailView())),
+            title: AppLocalizations.of(context).translate('change_email'),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ChangeEmailView()),
+                ),
           ),
           const SettingsDivider(),
 
-          const SettingsSectionTitle(title: 'Account Management'),
+          SettingsSectionTitle(
+            title: AppLocalizations.of(context).translate('account_management'),
+          ),
           SettingsTile(
             icon: Icons.lock_person_outlined,
-            title: 'Deactivate Account',
-            subtitle: 'Temporarily disable your account',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountManagementView())),
+            title: AppLocalizations.of(context).translate('deactivate_account'),
+            subtitle: AppLocalizations.of(
+              context,
+            ).translate('temporarily_disable_account'),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const AccountManagementView(),
+                  ),
+                ),
           ),
           SettingsTile(
             icon: Icons.delete_forever,
-            title: 'Delete Account Permanently',
-            subtitle: 'This action cannot be undone',
+            title: AppLocalizations.of(
+              context,
+            ).translate('delete_account_permanently'),
+            subtitle: AppLocalizations.of(
+              context,
+            ).translate('action_cannot_undone'),
             iconColor: Colors.red,
             titleColor: Colors.red,
             onTap: () async {
               final result = await showConfirmDialog(
                 context: context,
-                title: 'Delete Account',
-                content: 'Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be lost.',
-                confirmText: 'Delete Permanently',
-                cancelText: 'Cancel',
+                title: AppLocalizations.of(context).translate('delete_account'),
+                content: AppLocalizations.of(
+                  context,
+                ).translate('delete_account_info'),
+                confirmText: AppLocalizations.of(
+                  context,
+                ).translate('delete_permanently'),
+                cancelText: AppLocalizations.of(context).translate('cancel'),
                 icon: Icons.delete_forever,
                 iconColor: Colors.red,
               );

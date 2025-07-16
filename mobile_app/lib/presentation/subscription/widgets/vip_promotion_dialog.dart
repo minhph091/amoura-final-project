@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/widgets/app_button.dart';
 import '../subscription_plans_view.dart';
+import '../../../config/language/app_localizations.dart';
 
 class VipPromotionDialog extends StatelessWidget {
   final String featureTitle;
@@ -17,20 +18,21 @@ class VipPromotionDialog extends StatelessWidget {
   });
 
   static Future<bool?> show(
-      BuildContext context, {
-        required String featureTitle,
-        required String featureId,
-        required String description,
-        required IconData icon,
-      }) async {
+    BuildContext context, {
+    required String featureTitle,
+    required String featureId,
+    required String description,
+    required IconData icon,
+  }) async {
     return await showDialog<bool>(
       context: context,
-      builder: (context) => VipPromotionDialog(
-        featureTitle: featureTitle,
-        featureId: featureId,
-        description: description,
-        icon: icon,
-      ),
+      builder:
+          (context) => VipPromotionDialog(
+            featureTitle: featureTitle,
+            featureId: featureId,
+            description: description,
+            icon: icon,
+          ),
     );
   }
 
@@ -71,10 +73,7 @@ class VipPromotionDialog extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               featureTitle,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -82,13 +81,17 @@ class VipPromotionDialog extends StatelessWidget {
               description,
               style: TextStyle(
                 fontSize: 16,
-                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             AppButton(
-              text: "Upgrade to Amoura VIP",
+              text: AppLocalizations.of(
+                context,
+              ).translate('upgrade_to_amoura_vip'),
               onPressed: () {
                 Navigator.pop(context, true);
                 Navigator.push(

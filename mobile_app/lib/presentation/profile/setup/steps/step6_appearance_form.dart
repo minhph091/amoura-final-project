@@ -5,6 +5,7 @@ import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step6_viewmodel.dart';
 import 'widgets/_step6_widgets.dart';
+import '../../../../config/language/app_localizations.dart';
 
 class Step6AppearanceForm extends StatefulWidget {
   const Step6AppearanceForm({super.key});
@@ -28,9 +29,14 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
     );
   }
 
-  Widget _buildContent(SetupProfileViewModel vm, Step6ViewModel step6ViewModel) {
+  Widget _buildContent(
+    SetupProfileViewModel vm,
+    Step6ViewModel step6ViewModel,
+  ) {
     // Debug: Track UI rebuilds
-    print('🔄 Step6 UI rebuilding - selected bodyType: ${step6ViewModel.bodyTypeId}, height: ${step6ViewModel.height}');
+    debugPrint(
+      '🔄 Step6 UI rebuilding - selected bodyType: ${step6ViewModel.bodyTypeId}, height: ${step6ViewModel.height}',
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -40,36 +46,39 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
           // Header Section
           const AppearanceHeader(),
           const SizedBox(height: 24),
-          
+
           // Content Section - Fixed layout without scrolling
           Expanded(
-            child: step6ViewModel.isLoading
-                ? const AppearanceLoadingState()
-              : step6ViewModel.errorMessage != null
+            child:
+                step6ViewModel.isLoading
+                    ? const AppearanceLoadingState()
+                    : step6ViewModel.errorMessage != null
                     ? _buildErrorState(step6ViewModel.errorMessage!)
-                  : step6ViewModel.bodyTypeOptions.isEmpty
-                        ? _buildEmptyState()
-                        : Column(
-                            children: [
-                              // Body Type Selector
-                              BodyTypeSelector(step6ViewModel: step6ViewModel),
-                              const SizedBox(height: 24),
-                              
-                              // Height Selector
-                              HeightSelector(step6ViewModel: step6ViewModel),
-                              
-                              // Spacer to push button to bottom
-                              const Spacer(),
-                              
-                              // Next Button
-          SetupProfileButton(
-                                text: 'Next',
-            onPressed: () => vm.nextStep(context: context),
-            width: double.infinity,
-            height: 52,
-          ),
-        ],
-                          ),
+                    : step6ViewModel.bodyTypeOptions.isEmpty
+                    ? _buildEmptyState()
+                    : Column(
+                      children: [
+                        // Body Type Selector
+                        BodyTypeSelector(step6ViewModel: step6ViewModel),
+                        const SizedBox(height: 24),
+
+                        // Height Selector
+                        HeightSelector(step6ViewModel: step6ViewModel),
+
+                        // Spacer to push button to bottom
+                        const Spacer(),
+
+                        // Next Button
+                        SetupProfileButton(
+                          text: AppLocalizations.of(
+                            context,
+                          ).translate('continue_setup'),
+                          onPressed: () => vm.nextStep(context: context),
+                          width: double.infinity,
+                          height: 52,
+                        ),
+                      ],
+                    ),
           ),
         ],
       ),
@@ -82,17 +91,13 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
         padding: const EdgeInsets.all(20),
         margin: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.red.withOpacity(0.3)),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.error_outline,
-              color: Colors.red[400],
-              size: 40,
-            ),
+            Icon(Icons.error_outline, color: Colors.red[400], size: 40),
             const SizedBox(height: 12),
             Text(
               errorMessage,
@@ -115,16 +120,12 @@ class _Step6AppearanceFormState extends State<Step6AppearanceForm> {
         padding: const EdgeInsets.all(20),
         margin: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: const Color(0xFF666666).withOpacity(0.1),
+          color: const Color(0xFF666666).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.search_off,
-              color: const Color(0xFF666666),
-              size: 40,
-            ),
+            Icon(Icons.search_off, color: const Color(0xFF666666), size: 40),
             const SizedBox(height: 12),
             Text(
               'No appearance options available',

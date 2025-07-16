@@ -4,8 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/utils/url_transformer.dart';
 import '../../core/utils/distance_calculator.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../data/models/profile/interest_model.dart';
-import '../../data/models/profile/profile_model.dart';
 import '../../data/models/match/user_recommendation_model.dart';
 import '../../data/models/match/swipe_response_model.dart';
 import '../../domain/models/match/liked_user_model.dart';
@@ -29,7 +29,7 @@ class DiscoveryViewModel extends ChangeNotifier {
   // Current user location for distance calculation
   double? _currentUserLatitude;
   double? _currentUserLongitude;
-  
+
   // Current user ID to filter out own profile
   int? _currentUserId;
 
@@ -51,10 +51,12 @@ class DiscoveryViewModel extends ChangeNotifier {
   List<UserRecommendationModel> get recommendations => _recommendations;
   List<InterestModel> get interests => _interests;
   UserRecommendationModel? get currentProfile =>
-      _recommendations.isNotEmpty && _currentProfileIndex < _recommendations.length
+      _recommendations.isNotEmpty &&
+              _currentProfileIndex < _recommendations.length
           ? _recommendations[_currentProfileIndex]
           : null;
-  bool get hasMoreProfiles => _currentProfileIndex < _recommendations.length - 1;
+  bool get hasMoreProfiles =>
+      _currentProfileIndex < _recommendations.length - 1;
   bool get isLoading => _isLoading;
   String? get error => _error;
   int get currentProfileIndex => _currentProfileIndex;
@@ -62,7 +64,7 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Get current user's location coordinates
   double? get currentUserLatitude => _currentUserLatitude;
   double? get currentUserLongitude => _currentUserLongitude;
-  
+
   /// Get current user ID
   int? get currentUserId => _currentUserId;
 
@@ -78,60 +80,66 @@ class DiscoveryViewModel extends ChangeNotifier {
   Future<void> loadCurrentUserProfile() async {
     try {
       final profileData = await _profileService.getProfile();
-      
+
       // Extract current user ID
       if (profileData['userId'] != null) {
         _currentUserId = profileData['userId'] as int;
         // Set current user ID in cache for filtering
         RecommendationCache.instance.setCurrentUserId(_currentUserId);
       }
-      
+
       // Extract current user avatar
       if (profileData['avatarUrl'] != null) {
         _currentUserAvatarUrl = profileData['avatarUrl'] as String;
       }
-      
+
       // Extract location data from profile
-      if (profileData['location'] != null && profileData['location'] is Map<String, dynamic>) {
+      if (profileData['location'] != null &&
+          profileData['location'] is Map<String, dynamic>) {
         final location = profileData['location'] as Map<String, dynamic>;
-        
+
         // Handle both null and 0.0 values (backend might return 0.0 instead of null)
         final lat = location['latitude'];
         final lon = location['longitude'];
-        
+
         if (lat != null && lat is num && lat != 0.0) {
           _currentUserLatitude = lat.toDouble();
         }
-        
+
         if (lon != null && lon is num && lon != 0.0) {
           _currentUserLongitude = lon.toDouble();
         }
-        
-        print('Current user location extracted: $_currentUserLatitude, $_currentUserLongitude');
+
+        debugPrint(
+          'Current user location extracted: $_currentUserLatitude, $_currentUserLongitude',
+        );
       } else {
-        print('No location data found in profile response');
-        print('Profile data keys: ${profileData.keys.toList()}');
+        debugPrint('No location data found in profile response');
+        debugPrint('Profile data keys: ${profileData.keys.toList()}');
         if (profileData['location'] != null) {
-          print('Location data type: ${profileData['location'].runtimeType}');
-          print('Location data: ${profileData['location']}');
+          debugPrint(
+            'Location data type: ${profileData['location'].runtimeType}',
+          );
+          debugPrint('Location data: ${profileData['location']}');
         }
       }
     } catch (e) {
-      print('Error loading current user profile: $e');
+      debugPrint('Error loading current user profile: $e');
       // Don't throw error, just log it - distance calculation will show "Distance unavailable"
     }
   }
 
-  /// Calculate distance between current user and a profile
+  /// Calculate distance between current user and a profile (localized)
   String getDistanceToProfile(UserRecommendationModel profile) {
-    final distance = DistanceCalculator.getDistanceText(
+    if (_context == null) return '';
+    final tr = AppLocalizations.of(_context!).translate;
+    return DistanceCalculator.getDistanceText(
       _currentUserLatitude,
       _currentUserLongitude,
       profile.latitude,
       profile.longitude,
+      tr: tr,
     );
-    
-    return distance;
   }
 
   /// Load recommendations from API
@@ -144,7 +152,7 @@ class DiscoveryViewModel extends ChangeNotifier {
     try {
       // Load current user profile first to get location for distance calculation
       await loadCurrentUserProfile();
-      
+
       // If forceRefresh, clear cache before calling API
       if (forceRefresh) {
         RecommendationCache.instance.clear();
@@ -177,17 +185,24 @@ class DiscoveryViewModel extends ChangeNotifier {
   }
 
   /// Filter out current user's profile from recommendations
-  List<UserRecommendationModel> _filterOutCurrentUser(List<UserRecommendationModel> recommendations) {
+  List<UserRecommendationModel> _filterOutCurrentUser(
+    List<UserRecommendationModel> recommendations,
+  ) {
     if (_currentUserId == null) {
       return recommendations;
     }
-    
-    final filtered = recommendations.where((profile) => profile.userId != _currentUserId).toList();
-    
+
+    final filtered =
+        recommendations
+            .where((profile) => profile.userId != _currentUserId)
+            .toList();
+
     if (filtered.length != recommendations.length) {
-      print('Filtered out current user profile (ID: $_currentUserId) from recommendations');
+      debugPrint(
+        'Filtered out current user profile (ID: $_currentUserId) from recommendations',
+      );
     }
-    
+
     return filtered;
   }
 
@@ -202,16 +217,16 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_currentProfileIndex >= _recommendations.length) return;
 
     final currentProfile = _recommendations[_currentProfileIndex];
-    
+
     try {
       // Call the service layer to like the user
       final response = await _matchService.likeUser(currentProfile.userId);
-      
+
       // Handle match if occurred
       if (response.isMatch) {
         _handleMatch(response, currentProfile);
       }
-      
+
       _moveToNextProfile();
     } catch (e) {
       _error = e.toString();
@@ -225,11 +240,11 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_currentProfileIndex >= _recommendations.length) return;
 
     final currentProfile = _recommendations[_currentProfileIndex];
-    
+
     try {
       // Call the service layer to dislike the user
       await _matchService.dislikeUser(currentProfile.userId);
-      
+
       // Store the rejected profile for potential rewind
       _rejectedProfiles.add(currentProfile);
 
@@ -272,7 +287,10 @@ class DiscoveryViewModel extends ChangeNotifier {
 
   /// Handle match response
   /// This method shows the match dialog when a match occurs
-  void _handleMatch(SwipeResponseModel response, UserRecommendationModel matchedProfile) {
+  void _handleMatch(
+    SwipeResponseModel response,
+    UserRecommendationModel matchedProfile,
+  ) {
     if (_context != null) {
       showMatchDialog(
         _context!,
@@ -282,24 +300,27 @@ class DiscoveryViewModel extends ChangeNotifier {
         onStartChat: () {
           // Sử dụng chatRoomId từ backend response thay vì matchId
           final chatId = response.chatRoomId?.toString();
-          
+
           if (chatId == null || chatId.isEmpty) {
-            print('Error: No chatRoomId found in match response');
-            print('Response data: ${response.toJson()}');
+            debugPrint('Error: No chatRoomId found in match response');
+            debugPrint('Response data: ${response.toJson()}');
             return;
           }
-          
-          print('Navigating to chat with chatRoomId: $chatId');
-          
+
+          debugPrint('Navigating to chat with chatRoomId: $chatId');
+
           Navigator.pushNamed(
             _context!,
             AppRoutes.chatConversation,
             arguments: {
               'chatId': chatId,
               'recipientName': matchedProfile.fullName,
-              'recipientAvatar': matchedProfile.photos.isNotEmpty 
-                  ? UrlTransformer.transform(matchedProfile.photos.first.url) 
-                  : null,
+              'recipientAvatar':
+                  matchedProfile.photos.isNotEmpty
+                      ? UrlTransformer.transform(
+                        matchedProfile.photos.first.url,
+                      )
+                      : null,
               'isOnline': false, // TODO: Check actual online status
             },
           );
@@ -319,9 +340,12 @@ class DiscoveryViewModel extends ChangeNotifier {
   LikedUserModel _convertToLikedUserModel(UserRecommendationModel profile) {
     // Debug URLs để kiểm tra data từ backend
     if (profile.photos.isNotEmpty) {
-      UrlTransformer.debugUrl(profile.photos.first.url, UrlTransformer.transform(profile.photos.first.url));
+      UrlTransformer.debugUrl(
+        profile.photos.first.url,
+        UrlTransformer.transform(profile.photos.first.url),
+      );
     }
-    
+
     return LikedUserModel(
       id: profile.userId.toString(),
       firstName: profile.firstName,
@@ -329,10 +353,17 @@ class DiscoveryViewModel extends ChangeNotifier {
       username: profile.username,
       age: profile.age ?? 0,
       location: profile.location ?? 'Unknown',
-      coverImageUrl: profile.photos.isNotEmpty ? UrlTransformer.transform(profile.photos.first.url) : '',
-      avatarUrl: profile.photos.isNotEmpty ? UrlTransformer.transform(profile.photos.first.url) : '',
+      coverImageUrl:
+          profile.photos.isNotEmpty
+              ? UrlTransformer.transform(profile.photos.first.url)
+              : '',
+      avatarUrl:
+          profile.photos.isNotEmpty
+              ? UrlTransformer.transform(profile.photos.first.url)
+              : '',
       bio: profile.bio ?? '',
-      photoUrls: profile.photos.map((p) => UrlTransformer.transform(p.url)).toList(),
+      photoUrls:
+          profile.photos.map((p) => UrlTransformer.transform(p.url)).toList(),
       isVip: false,
     );
   }
@@ -341,10 +372,11 @@ class DiscoveryViewModel extends ChangeNotifier {
 
   /// Pre-caches images for the first few profiles to ensure a smooth initial experience.
   void _precacheInitialImages() {
-    if (_context == null || _recommendations.length < 1) return;
+    if (_context == null || _recommendations.isEmpty) return;
 
     // Cache current (index 0) and next (index 1) profiles
-    final int endIndex = _recommendations.length > 2 ? 2 : _recommendations.length;
+    final int endIndex =
+        _recommendations.length > 2 ? 2 : _recommendations.length;
     for (int i = 0; i < endIndex; i++) {
       _precacheImagesForProfile(i);
     }
@@ -370,10 +402,10 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (profile.photos.isNotEmpty) {
       for (final photo in profile.photos) {
         final transformedUrl = UrlTransformer.transform(photo.url);
-        
+
         // Debug URLs để track chính xác URL nào gây lỗi
         UrlTransformer.debugUrl(photo.url, transformedUrl);
-        
+
         final provider = CachedNetworkImageProvider(transformedUrl);
         precacheImage(provider, _context!);
       }

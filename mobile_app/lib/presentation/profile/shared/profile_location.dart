@@ -58,7 +58,7 @@ class ProfileLocation extends StatelessWidget {
           customValueWidget: locationPreference != null ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${locationPreference} km', style: Theme.of(context).textTheme.titleSmall),
+              Text('$locationPreference km', style: Theme.of(context).textTheme.titleSmall),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: ProfileTheme.darkPink,

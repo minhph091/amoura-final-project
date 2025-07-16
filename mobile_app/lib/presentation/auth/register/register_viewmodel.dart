@@ -46,7 +46,8 @@ class RegisterViewModel extends ChangeNotifier {
   Future<void> initiateRegistration(BuildContext context) async {
     // Check if terms are agreed
     if (!termsAgreed) {
-      errorMessage = "You must agree to the Terms of Service to create an account";
+      errorMessage =
+          "You must agree to the Terms of Service to create an account";
       notifyListeners();
       return;
     }
@@ -67,9 +68,10 @@ class RegisterViewModel extends ChangeNotifier {
         startResendTimer(60);
         notifyListeners();
       } catch (e) {
-        errorMessage = e.toString().contains('already registered')
-            ? 'Email or phone number already registered'
-            : 'Failed to register. Please try again.';
+        errorMessage =
+            e.toString().contains('already registered')
+                ? 'Email or phone number already registered'
+                : 'Failed to register. Please try again.';
         notifyListeners();
       } finally {
         isLoading = false;
@@ -100,11 +102,13 @@ class RegisterViewModel extends ChangeNotifier {
       if (response['status'] == 'VERIFIED') {
         showOtp = false;
         notifyListeners();
-        Navigator.pushReplacementNamed(
-          context,
-          '/setup-profile',
-          arguments: {'sessionToken': sessionToken},
-        );
+        if (context.mounted) {
+          Navigator.pushReplacementNamed(
+            context,
+            '/setup-profile',
+            arguments: {'sessionToken': sessionToken},
+          );
+        }
       } else {
         throw Exception('Invalid OTP please check again');
       }

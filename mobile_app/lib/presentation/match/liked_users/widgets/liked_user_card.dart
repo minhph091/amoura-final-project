@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:amoura/app/di/injection.dart';
 import 'package:amoura/core/services/profile_service.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +30,7 @@ class LikedUserCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -41,9 +43,7 @@ class LikedUserCard extends StatelessWidget {
             // Cover image - tappable to view profile
             GestureDetector(
               onTap: onTap,
-              child: Positioned.fill(
-                child: _buildCoverImage(),
-              ),
+              child: Positioned.fill(child: _buildCoverImage()),
             ),
 
             // Gradient overlay for text readability
@@ -55,7 +55,7 @@ class LikedUserCard extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withValues(alpha: 0.7),
                     ],
                     stops: const [0.6, 1.0],
                   ),
@@ -111,11 +111,7 @@ class LikedUserCard extends StatelessWidget {
             ),
 
             // Like button in top-right corner
-            Positioned(
-              top: 10,
-              right: 10,
-              child: _buildLikeButton(context),
-            ),
+            Positioned(top: 10, right: 10, child: _buildLikeButton(context)),
           ],
         ),
       ),
@@ -145,15 +141,18 @@ class LikedUserCard extends StatelessWidget {
           age: user.age,
           bio: user.bio,
           location: user.location,
-          photos: user.photoUrls
-              .map((url) => PhotoModel(
-                    id: 0, // Mock ID
-                    userId: int.tryParse(user.id) ?? 0, // Mock user ID
-                    path: url, // Correct parameter name
-                    type: 'highlight', // Mock type
-                    createdAt: DateTime.now(), // Mock date
-                  ))
-              .toList(),
+          photos:
+              user.photoUrls
+                  .map(
+                    (url) => PhotoModel(
+                      id: 0, // Mock ID
+                      userId: int.tryParse(user.id) ?? 0, // Mock user ID
+                      path: url, // Correct parameter name
+                      type: 'highlight', // Mock type
+                      createdAt: DateTime.now(), // Mock date
+                    ),
+                  )
+                  .toList(),
           interests: [], // Not available in LikedUserModel, provide empty list
           pets: [], // Not available in LikedUserModel, provide empty list
         );
@@ -162,8 +161,12 @@ class LikedUserCard extends StatelessWidget {
         final profileData = await profileService.getProfile();
         final currentUserAvatarUrl = profileData['avatarUrl'] as String?;
         // Show match dialog when user likes back
-        showMatchDialog(context, mockMatchResponse, matchedProfile, currentUserAvatarUrl)
-            .then((_) {
+        showMatchDialog(
+          context,
+          mockMatchResponse,
+          matchedProfile,
+          currentUserAvatarUrl,
+        ).then((_) {
           // Call the onLike callback if provided
           if (onLike != null) {
             onLike!();
@@ -182,46 +185,100 @@ class LikedUserCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.pink.withOpacity(0.4),
+              color: Colors.pink.withValues(alpha: 0.4),
               blurRadius: 8,
               spreadRadius: 2,
             ),
           ],
         ),
-        child: const Icon(
-          Icons.favorite,
-          color: Colors.white,
-          size: 24,
-        ),
+        child: const Icon(Icons.favorite, color: Colors.white, size: 24),
       ),
     );
   }
 
   Widget _buildCoverImage() {
-    if (user.coverImageUrl.startsWith('http')) {
-      final transformedUrl = UrlTransformer.transform(user.coverImageUrl);
+    // Ưu tiên sử dụng avatar, nếu không có thì dùng cover image hoặc photo đầu tiên
+    String? imageUrl;
+
+    if (user.avatarUrl.isNotEmpty) {
+      imageUrl = user.avatarUrl;
+    } else if (user.coverImageUrl.isNotEmpty) {
+      imageUrl = user.coverImageUrl;
+    } else if (user.photoUrls.isNotEmpty) {
+      imageUrl = user.photoUrls.first;
+    }
+
+    if (imageUrl != null && imageUrl.startsWith('http')) {
+      final transformedUrl = UrlTransformer.transform(imageUrl);
       return CachedNetworkImage(
         imageUrl: transformedUrl,
         fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: Colors.grey[300],
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-        errorWidget: (context, url, error) => Container(
-          color: Colors.grey[300],
-          child: const Icon(
-            Icons.broken_image,
-            color: Colors.grey,
-          ),
-        ),
+        width: double.infinity,
+        height: double.infinity,
+        placeholder:
+            (context, url) => Container(
+              color: Colors.grey[300],
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        errorWidget:
+            (context, url, error) => Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.person, color: Colors.grey, size: 50),
+            ),
       );
     } else {
-      // Handle local assets or placeholder
-      return Image.asset(
-        'assets/images/avatars/placeholder.jpg',
-        fit: BoxFit.cover,
+      // Handle placeholder images - use a colorful placeholder for demo
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.primaries[user.id.hashCode % Colors.primaries.length]
+                  .withValues(alpha: 0.8),
+              Colors.primaries[(user.id.hashCode + 1) % Colors.primaries.length]
+                  .withValues(alpha: 0.6),
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.white.withValues(alpha: 0.3),
+                child: Text(
+                  '${user.firstName[0]}${user.lastName.isNotEmpty ? user.lastName[0] : ''}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  user.firstName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
   }

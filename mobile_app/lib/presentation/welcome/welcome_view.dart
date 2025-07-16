@@ -6,12 +6,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import '../../config/theme/app_colors.dart';
 import '../../core/constants/asset_path.dart';
 import '../../app/routes/app_routes.dart';
 import '../../config/language/app_localizations.dart';
-import '../../config/language/language_controller.dart';
 import '../common/terms_of_service_view.dart';
 import '../common/privacy_policy_view.dart';
 import '../shared/widgets/app_button.dart';
@@ -41,7 +39,8 @@ class WelcomeView extends StatefulWidget {
   State<WelcomeView> createState() => _WelcomeViewState();
 }
 
-class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin {
+class _WelcomeViewState extends State<WelcomeView>
+    with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   Timer? _slideshowTimer;
@@ -85,10 +84,12 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
     _slideUpAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _mainContentAnimationController,
-      curve: Curves.elasticOut.flipped,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _mainContentAnimationController,
+        curve: Curves.elasticOut.flipped,
+      ),
+    );
     _mainContentAnimationController.forward();
     _startSlideshow();
   }
@@ -165,38 +166,47 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
             left: 0,
             right: 0,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  AssetPath.logo,
-                  height: 50,
-                  color: AppColors.primary,
-                  fit: BoxFit.contain,
-                ).animate().rotate(delay: 700.ms, duration: 800.ms, curve: Curves.easeOutBack, begin: -0.1, end: 0.0),
-                const SizedBox(width: 10),
-                Text(
-                  'Amoura',
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 8,
-                        color: Colors.black.withValues(alpha: 0.5),
-                        offset: const Offset(1, 2),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      AssetPath.logo,
+                      height: 50,
+                      color: AppColors.primary,
+                      fit: BoxFit.contain,
+                    ).animate().rotate(
+                      delay: 700.ms,
+                      duration: 800.ms,
+                      curve: Curves.easeOutBack,
+                      begin: -0.1,
+                      end: 0.0,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Amoura',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 8,
+                            color: Colors.black.withValues(alpha: 0.5),
+                            offset: const Offset(1, 2),
+                          ),
+                          Shadow(
+                            blurRadius: 2,
+                            color: AppColors.primary.withValues(alpha: 0.4),
+                            offset: const Offset(-0.5, -0.5),
+                          ),
+                        ],
                       ),
-                      Shadow(
-                        blurRadius: 2,
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        offset: const Offset(-0.5, -0.5),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ).animate().fadeIn(duration: 900.ms).slideY(begin: -0.6, end: 0, curve: Curves.elasticOut.flipped),
+                    ),
+                  ],
+                )
+                .animate()
+                .fadeIn(duration: 900.ms)
+                .slideY(begin: -0.6, end: 0, curve: Curves.elasticOut.flipped),
           ),
           // Language selector in top-right corner
           Positioned(
@@ -210,16 +220,26 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
             left: 0,
             right: 0,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
+              ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
                 child: Container(
-                  padding: EdgeInsets.fromLTRB(screenWidth * 0.07, 28, screenWidth * 0.07, 15),
+                  padding: EdgeInsets.fromLTRB(
+                    screenWidth * 0.07,
+                    28,
+                    screenWidth * 0.07,
+                    15,
+                  ),
                   decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.light
-                        ? AppColors.surfaceLight.withValues(alpha: 0.6)
-                        : colorScheme.surface.withValues(alpha: 0.6),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                    color:
+                        theme.brightness == Brightness.light
+                            ? AppColors.surfaceLight.withValues(alpha: 0.6)
+                            : colorScheme.surface.withValues(alpha: 0.6),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(32),
+                    ),
                     border: Border(
                       top: BorderSide(
                         color: Colors.white.withValues(alpha: 0.15),
@@ -231,7 +251,10 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (slides.length > 1)
-                        WelcomePageIndicator(currentPage: _currentPage, slideCount: slides.length),
+                        WelcomePageIndicator(
+                          currentPage: _currentPage,
+                          slideCount: slides.length,
+                        ),
                       SizedBox(height: slides.length > 1 ? 28 : 10),
                       SlideTransition(
                         position: _slideUpAnimation,
@@ -240,10 +263,17 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                           child: Column(
                             children: [
                               AppButton(
-                                text: localizations.translate('sign_in').toUpperCase(),
-                                onPressed: () => _showLoginOptionsBottomSheet(context),
+                                text:
+                                    localizations
+                                        .translate('sign_in')
+                                        .toUpperCase(),
+                                onPressed:
+                                    () => _showLoginOptionsBottomSheet(context),
                                 gradient: LinearGradient(
-                                  colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
+                                  colors: [
+                                    AppColors.primary,
+                                    AppColors.secondary.withValues(alpha: 0.85),
+                                  ],
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                 ),
@@ -260,12 +290,22 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20), loading: null,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 0,
+                                  horizontal: 20,
+                                ),
+                                loading: null,
                               ),
                               const SizedBox(height: 16),
                               AppButton(
-                                text: localizations.translate('create_new_account'),
-                                onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
+                                text: localizations.translate(
+                                  'create_new_account',
+                                ),
+                                onPressed:
+                                    () => Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.register,
+                                    ),
                                 color: Colors.white.withValues(alpha: 0.2),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
@@ -284,7 +324,10 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                                   letterSpacing: 0.9,
                                 ),
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 0,
+                                  horizontal: 20,
+                                ),
                               ),
                             ],
                           ),
@@ -293,7 +336,10 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                       const SizedBox(height: 22),
                       Padding(
                         padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).padding.bottom > 0 ? 0 : 10.0,
+                          bottom:
+                              MediaQuery.of(context).padding.bottom > 0
+                                  ? 0
+                                  : 10.0,
                           left: 10,
                           right: 10,
                         ),
@@ -306,43 +352,66 @@ class _WelcomeViewState extends State<WelcomeView> with TickerProviderStateMixin
                               fontSize: 11.5,
                             ),
                             children: <TextSpan>[
-                              TextSpan(text: localizations.translate('terms_agreement_text')),
                               TextSpan(
-                                text: localizations.translate('terms_service_link'),
+                                text: localizations.translate(
+                                  'terms_agreement_text',
+                                ),
+                              ),
+                              TextSpan(
+                                text: localizations.translate(
+                                  'terms_service_link',
+                                ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFFD81B60), // Darker pink color
                                 ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const TermsOfServiceView(),
-                                    ),
-                                  ),
+                                recognizer:
+                                    TapGestureRecognizer()
+                                      ..onTap =
+                                          () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) =>
+                                                      const TermsOfServiceView(),
+                                            ),
+                                          ),
                               ),
-                              TextSpan(text: localizations.translate('and_text')),
                               TextSpan(
-                                text: localizations.translate('privacy_policy_link'),
+                                text: localizations.translate('and_text'),
+                              ),
+                              TextSpan(
+                                text: localizations.translate(
+                                  'privacy_policy_link',
+                                ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFFD81B60), // Darker pink color
                                 ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const PrivacyPolicyView(),
-                                    ),
-                                  ),
+                                recognizer:
+                                    TapGestureRecognizer()
+                                      ..onTap =
+                                          () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) =>
+                                                      const PrivacyPolicyView(),
+                                            ),
+                                          ),
                               ),
-                              const TextSpan(text: '.'),
+                              TextSpan(
+                                text: AppLocalizations.of(
+                                  context,
+                                ).translate('dot'),
+                              ), // key 'dot' = '.'
                             ],
                           ),
                         ).animate(delay: 500.ms).fadeIn(duration: 600.ms),
                       ),
                       SizedBox(
-                        height: MediaQuery.of(context).padding.bottom > 0 ? 8 : 18,
+                        height:
+                            MediaQuery.of(context).padding.bottom > 0 ? 8 : 18,
                       ),
                     ],
                   ),

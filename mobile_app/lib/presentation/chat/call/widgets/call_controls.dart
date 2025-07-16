@@ -11,7 +11,7 @@ class CallControls extends StatelessWidget {
   final Function() onEndCall;
 
   const CallControls({
-    Key? key,
+    super.key,
     required this.isMuted,
     required this.isCameraOff,
     required this.isSpeakerOn,
@@ -19,7 +19,7 @@ class CallControls extends StatelessWidget {
     required this.onToggleCamera,
     required this.onToggleSpeaker,
     required this.onEndCall,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -104,13 +104,13 @@ class CompactCallControls extends StatelessWidget {
   final Function() onEndCall;
 
   const CompactCallControls({
-    Key? key,
+    super.key,
     required this.isMuted,
     required this.isCameraOff,
     required this.onToggleMute,
     required this.onToggleCamera,
     required this.onEndCall,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

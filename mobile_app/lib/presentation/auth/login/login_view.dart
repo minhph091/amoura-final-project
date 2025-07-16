@@ -15,23 +15,23 @@ class LoginView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark
         ? LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        AppColors.darkBackground,
-        AppColors.darkSecondary.withValues(alpha: 0.90),
-        AppColors.darkPrimary.withValues(alpha: 0.82),
-      ],
-    )
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.darkBackground,
+            AppColors.darkSecondary.withValues(alpha: 0.90),
+            AppColors.darkPrimary.withValues(alpha: 0.82),
+          ],
+        )
         : LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        AppColors.background,
-        AppColors.primary.withValues(alpha: 0.13),
-        AppColors.secondary.withValues(alpha: 0.06),
-      ],
-    );
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.background,
+            AppColors.primary.withValues(alpha: 0.13),
+            AppColors.secondary.withValues(alpha: 0.06),
+          ],
+        );
   }
 
   @override
@@ -45,9 +45,7 @@ class LoginView extends StatelessWidget {
         body: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: _getBackgroundGradient(context),
-          ),
+          decoration: BoxDecoration(gradient: _getBackgroundGradient(context)),
           child: SafeArea(
             child: Stack(
               children: [
@@ -60,7 +58,10 @@ class LoginView extends StatelessWidget {
 
                 Center(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -97,7 +98,9 @@ class LoginView extends StatelessWidget {
                               onPressed: () {
                                 Navigator.of(context).pushNamed('/register');
                               },
-                              child: Text(localizations.translate("register_now")),
+                              child: Text(
+                                localizations.translate("register_now"),
+                              ),
                             ),
                           ],
                         ),
@@ -107,9 +110,12 @@ class LoginView extends StatelessWidget {
                             Navigator.of(context).pop();
                           },
                           icon: const Icon(Icons.arrow_back, size: 16),
-                          label: Text(localizations.translate("back_to_options")),
+                          label: Text(
+                            localizations.translate("back_to_options"),
+                          ),
                           style: TextButton.styleFrom(
-                            foregroundColor: theme.colorScheme.onSurface.withOpacity(0.6),
+                            foregroundColor: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.6),
                           ),
                         ),
                       ],

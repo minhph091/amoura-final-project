@@ -32,7 +32,7 @@ class ProfileDetailBottomSheet extends StatelessWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.10),
+              color: Colors.black.withValues(alpha: 0.10),
               blurRadius: 18,
               offset: const Offset(0, -4),
             ),
@@ -93,14 +93,14 @@ class ProfileDetailBottomSheet extends StatelessWidget {
                   const SizedBox(height: 8),
                   interestList.isNotEmpty
                       ? Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: interestList.map((name) => Chip(
-                            label: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
-                            backgroundColor: Colors.pink[50],
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          )).toList(),
-                        )
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: interestList.map((name) => Chip(
+                      label: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                      backgroundColor: Colors.pink[50],
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    )).toList(),
+                  )
                       : const Text('-', style: TextStyle(color: Colors.grey)),
 
                   const SizedBox(height: 32),
@@ -145,10 +145,10 @@ class ProfileDetailBottomSheet extends StatelessWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.pinkAccent,
-            fontSize: 18,
-          ),
+        fontWeight: FontWeight.bold,
+        color: Colors.pinkAccent,
+        fontSize: 18,
+      ),
     );
   }
 
@@ -183,3 +183,4 @@ class ProfileDetailBottomSheet extends StatelessWidget {
     );
   }
 } 
+

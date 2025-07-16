@@ -31,9 +31,10 @@ class _ProfileGalleryState extends State<ProfileGallery> {
     }
 
     final hasMoreThanTwoPhotos = widget.galleryPhotos!.length > 2;
-    final displayedPhotos = _showAllPhotos
-        ? widget.galleryPhotos!
-        : widget.galleryPhotos!.take(2).toList();
+    final displayedPhotos =
+        _showAllPhotos
+            ? widget.galleryPhotos!
+            : widget.galleryPhotos!.take(2).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,15 +42,16 @@ class _ProfileGalleryState extends State<ProfileGallery> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-                'Albums',
-                style: ProfileTheme.getSubtitleStyle(context)
-            ),
+            Text('Albums', style: ProfileTheme.getSubtitleStyle(context)),
             Row(
               children: [
                 if (widget.editable && widget.onAddPhoto != null)
                   IconButton(
-                    icon: Icon(Icons.add_a_photo, color: ProfileTheme.darkPink, size: 20),
+                    icon: Icon(
+                      Icons.add_a_photo,
+                      color: ProfileTheme.darkPink,
+                      size: 20,
+                    ),
                     onPressed: widget.onAddPhoto,
                     tooltip: "Add Photo",
                   ),
@@ -81,67 +83,83 @@ class _ProfileGalleryState extends State<ProfileGallery> {
           crossAxisSpacing: 10,
           childAspectRatio: 1,
           padding: EdgeInsets.zero,
-          children: displayedPhotos.asMap().entries.map((entry) {
-            final i = entry.key;
-            final url = entry.value;
-            return Stack(
-              clipBehavior: Clip.none,
-              children: [
-                GestureDetector(
-                  onTap: widget.onViewPhoto != null ? () => widget.onViewPhoto!(url) : null,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: ProfileTheme.lightPurple),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        url,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: ProfileTheme.lightPink.withValues(alpha: 0.2),
-                          child: Icon(Icons.image_not_supported, color: ProfileTheme.darkPink),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (widget.editable && widget.onRemovePhoto != null)
-                  Positioned(
-                    top: -8,
-                    right: -8,
-                    child: GestureDetector(
-                      onTap: () => widget.onRemovePhoto!(widget.galleryPhotos!.indexOf(url)),
+          children:
+              displayedPhotos.asMap().entries.map((entry) {
+                final url = entry.value;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    GestureDetector(
+                      onTap:
+                          widget.onViewPhoto != null
+                              ? () => widget.onViewPhoto!(url)
+                              : null,
                       child: Container(
-                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: ProfileTheme.lightPurple),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 2,
-                              offset: Offset(0, 1),
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        child: Icon(Icons.close, color: Colors.red, size: 18),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            url,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (_, __, ___) => Container(
+                                  color: ProfileTheme.lightPink.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: ProfileTheme.darkPink,
+                                  ),
+                                ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            );
-          }).toList(),
+                    if (widget.editable && widget.onRemovePhoto != null)
+                      Positioned(
+                        top: -8,
+                        right: -8,
+                        child: GestureDetector(
+                          onTap:
+                              () => widget.onRemovePhoto!(
+                                widget.galleryPhotos!.indexOf(url),
+                              ),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 2,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.close,
+                              color: Colors.red,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }).toList(),
         ),
       ],
     );

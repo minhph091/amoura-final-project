@@ -16,7 +16,8 @@ class LoginForm extends StatefulWidget {
   State<LoginForm> createState() => _LoginFormState();
 }
 
-class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMixin {
+class _LoginFormState extends State<LoginForm>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animController;
 
   @override
@@ -70,7 +71,11 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
               prefixIcon: Icons.lock_outline,
               prefixIconColor: Theme.of(context).colorScheme.primary,
               suffixIcon: IconButton(
-                icon: Icon(viewModel.obscurePassword ? Icons.visibility_off : Icons.visibility),
+                icon: Icon(
+                  viewModel.obscurePassword
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                ),
                 onPressed: viewModel.toggleObscurePassword,
               ),
               validator: ValidationUtil.validatePassword,
@@ -88,20 +93,29 @@ class _LoginFormState extends State<LoginForm> with SingleTickerProviderStateMix
             const SizedBox(height: 8),
             AppButton(
               text: localizations.translate("sign_in"),
-              onPressed: viewModel.isLoading
-                  ? null
-                  : () => viewModel.onLoginPressed(
+              onPressed:
+                  viewModel.isLoading
+                      ? null
+                      : () => viewModel.onLoginPressed(
                         onSuccess: () async {
-                          await Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
-                          Navigator.pushNamedAndRemoveUntil(
+                          await Provider.of<ProfileViewModel>(
                             context,
-                            '/mainNavigator',
-                            (route) => false,
-                          );
+                            listen: false,
+                          ).loadProfile();
+                          if (context.mounted) {
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/mainNavigator',
+                              (route) => false,
+                            );
+                          }
                         },
                       ),
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
+                colors: [
+                  AppColors.primary,
+                  AppColors.secondary.withValues(alpha: 0.85),
+                ],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),

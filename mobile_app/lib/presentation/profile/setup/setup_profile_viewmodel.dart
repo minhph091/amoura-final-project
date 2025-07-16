@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../../domain/usecases/auth/register_usecase.dart';
@@ -83,7 +85,10 @@ class SetupProfileViewModel extends ChangeNotifier {
   String? bio;
   List<String>? additionalPhotos;
 
-  bool get showSkip => !stepViewModels.isEmpty ? !stepViewModels[currentStep].isRequired : true;
+  bool get showSkip =>
+      stepViewModels.isNotEmpty && currentStep < stepViewModels.length
+          ? !stepViewModels[currentStep].isRequired
+          : true;
 
   SetupProfileViewModel(
     this._registerUseCase,
@@ -91,8 +96,8 @@ class SetupProfileViewModel extends ChangeNotifier {
     this.sessionToken,
     SetupProfileService? setupProfileService,
     AuthService? authService,
-  })  : _setupProfileService = setupProfileService ?? SetupProfileService(),
-        _authService = authService ?? GetIt.I<AuthService>() {
+  }) : _setupProfileService = setupProfileService ?? SetupProfileService(),
+       _authService = authService ?? GetIt.I<AuthService>() {
     stepViewModel();
     _preloadStepData();
   }
@@ -110,7 +115,7 @@ class SetupProfileViewModel extends ChangeNotifier {
       Step9ViewModel(this, setupProfileService: _setupProfileService),
       Step10ViewModel(this, setupProfileService: _setupProfileService),
     ];
-    print('Initialized stepViewModels with Step 10.');
+    debugPrint('Initialized stepViewModels with Step 10.');
   }
 
   Future<void> _preloadStepData() async {
@@ -140,9 +145,9 @@ class SetupProfileViewModel extends ChangeNotifier {
       final currentViewModel = stepViewModels[currentStep];
       final error = currentViewModel.validate();
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
         return;
       }
       currentViewModel.saveData(); // Lưu dữ liệu mới nhất trước khi chuyển bước
@@ -159,7 +164,10 @@ class SetupProfileViewModel extends ChangeNotifier {
       } else if (currentStep == 7) {
         await _updateProfileStep(context, step: 8);
       } else if (currentStep == 8) {
-        await _updateProfileStep(context, step: 9); // Cập nhật dữ liệu bước 9 khi nhấn Next
+        await _updateProfileStep(
+          context,
+          step: 9,
+        ); // Cập nhật dữ liệu bước 9 khi nhấn Next
       }
     }
 
@@ -178,7 +186,9 @@ class SetupProfileViewModel extends ChangeNotifier {
       currentStep++;
       setPageContext(context);
       pageController.nextPage(
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
       notifyListeners();
     } else if (currentStep == totalSteps - 1) {
       final step10ViewModel = stepViewModels[9] as Step10ViewModel;
@@ -192,7 +202,9 @@ class SetupProfileViewModel extends ChangeNotifier {
       currentStep++;
       setPageContext(context);
       pageController.nextPage(
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
       notifyListeners();
     } else if (currentStep == totalSteps - 1) {
       _updateProfile(context);
@@ -228,16 +240,20 @@ class SetupProfileViewModel extends ChangeNotifier {
         dateOfBirth: profileData['dateOfBirth'],
         sex: profileData['sex'],
       );
-      print('Complete registration response: $response');
+      debugPrint('Complete registration response: $response');
       if (response['status'] == 'COMPLETED') {
-        if (response['authResponse'] != null && response['authResponse']['accessToken'] != null) {
+        if (response['authResponse'] != null &&
+            response['authResponse']['accessToken'] != null) {
           sessionToken = response['authResponse']['accessToken'];
-          print('Updated sessionToken with accessToken: ${sessionToken!.substring(0, 10)}...');
+          debugPrint(
+            'Updated sessionToken with accessToken: ${sessionToken!.substring(0, 10)}...',
+          );
         }
         currentStep++;
         pageController.nextPage(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut);
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
         notifyListeners();
       } else {
         throw Exception('Failed to complete registration');
@@ -245,17 +261,23 @@ class SetupProfileViewModel extends ChangeNotifier {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Failed to complete registration. Please try again.')),
+          content: Text('Failed to complete registration. Please try again.'),
+        ),
       );
     }
   }
 
   // [API Integration] Cập nhật hồ sơ cho các bước cụ thể (Step 3, 5, 6, 7, 8, 9) với API
-  Future<void> _updateProfileStep(BuildContext context, {required int step}) async {
+  Future<void> _updateProfileStep(
+    BuildContext context, {
+    required int step,
+  }) async {
     final accessToken = await _authService.getAccessToken();
     if (accessToken == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Authentication required. Please log in again.')),
+        const SnackBar(
+          content: Text('Authentication required. Please log in again.'),
+        ),
       );
       return;
     }
@@ -263,12 +285,12 @@ class SetupProfileViewModel extends ChangeNotifier {
     Map<String, dynamic> stepData = {};
     if (step == 3) {
       if (orientationId == null || orientation == null) {
-        print('Skipping updateProfileStep because orientationId or orientation is null');
+        debugPrint(
+          'Skipping updateProfileStep because orientationId or orientation is null',
+        );
         return;
       }
-      stepData = {
-        'orientationId': orientationId,
-      };
+      stepData = {'orientationId': orientationId};
     } else if (step == 5) {
       stepData = {
         'location': {
@@ -278,57 +300,101 @@ class SetupProfileViewModel extends ChangeNotifier {
           'latitude': profileData['latitude'],
           'longitude': profileData['longitude'],
         },
-        'locationPreference': profileData['locationPreference'], // Sử dụng giá trị mới nhất từ profileData
+        'locationPreference':
+            profileData['locationPreference'], // Sử dụng giá trị mới nhất từ profileData
       };
-      print('Prepared step 5 data for API: $stepData'); // Ghi log dữ liệu trước khi gửi API
+      debugPrint(
+        'Prepared step 5 data for API: $stepData',
+      ); // Ghi log dữ liệu trước khi gửi API
     } else if (step == 6) {
       final step6ViewModel = stepViewModels[5] as Step6ViewModel;
       stepData = {
-        'bodyTypeId': step6ViewModel.bodyTypeId != null ? int.tryParse(step6ViewModel.bodyTypeId!) : null,
+        'bodyTypeId':
+            step6ViewModel.bodyTypeId != null
+                ? int.tryParse(step6ViewModel.bodyTypeId!)
+                : null,
         'height': step6ViewModel.height,
       };
       if (stepData['bodyTypeId'] == null && stepData['height'] == null) {
-        print('Skipping updateProfileStep because all fields are null');
+        debugPrint('Skipping updateProfileStep because all fields are null');
         return;
       }
     } else if (step == 7) {
       final step7ViewModel = stepViewModels[6] as Step7ViewModel;
       stepData = {
-        'jobIndustryId': step7ViewModel.jobIndustryId != null ? int.tryParse(step7ViewModel.jobIndustryId!) : null,
-        'educationLevelId': step7ViewModel.educationLevelId != null ? int.tryParse(step7ViewModel.educationLevelId!) : null,
+        'jobIndustryId':
+            step7ViewModel.jobIndustryId != null
+                ? int.tryParse(step7ViewModel.jobIndustryId!)
+                : null,
+        'educationLevelId':
+            step7ViewModel.educationLevelId != null
+                ? int.tryParse(step7ViewModel.educationLevelId!)
+                : null,
         'dropOut': step7ViewModel.dropOut,
       };
-      if (stepData['jobIndustryId'] == null && stepData['educationLevelId'] == null && stepData['dropOut'] == null) {
-        print('Skipping updateProfileStep because all fields are null');
+      if (stepData['jobIndustryId'] == null &&
+          stepData['educationLevelId'] == null &&
+          stepData['dropOut'] == null) {
+        debugPrint('Skipping updateProfileStep because all fields are null');
         return;
       }
     } else if (step == 8) {
       final step8ViewModel = stepViewModels[7] as Step8ViewModel;
       stepData = {
-        'drinkStatusId': step8ViewModel.drinkStatusId != null ? int.tryParse(step8ViewModel.drinkStatusId!) : null,
-        'smokeStatusId': step8ViewModel.smokeStatusId != null ? int.tryParse(step8ViewModel.smokeStatusId!) : null,
+        'drinkStatusId':
+            step8ViewModel.drinkStatusId != null
+                ? int.tryParse(step8ViewModel.drinkStatusId!)
+                : null,
+        'smokeStatusId':
+            step8ViewModel.smokeStatusId != null
+                ? int.tryParse(step8ViewModel.smokeStatusId!)
+                : null,
         // [API Data Preparation] Chuyển đổi selectedPets từ List<String> sang List<int> để khớp với backend (List<Long>)
-        'petIds': step8ViewModel.selectedPets?.map((id) => int.parse(id)).toList() ?? [],
+        'petIds':
+            step8ViewModel.selectedPets?.map((id) => int.parse(id)).toList() ??
+            [],
       };
-      stepData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
+      stepData.removeWhere(
+        (key, value) => value == null || (value is List && value.isEmpty),
+      );
       if (stepData.isEmpty) {
-        print('Skipping updateProfileStep because all fields are null or empty');
+        debugPrint(
+          'Skipping updateProfileStep because all fields are null or empty',
+        );
         return;
       }
     } else if (step == 9) {
       final step9ViewModel = stepViewModels[8] as Step9ViewModel;
       // [API Integration - Debug] Ghi log dữ liệu thô từ UI để kiểm tra trước khi xử lý
-      print('Raw selectedInterestIds in Step 9: ${step9ViewModel.selectedInterestIds}');
-      print('Raw selectedLanguageIds in Step 9: ${step9ViewModel.selectedLanguageIds}');
-      print('Raw interestedInNewLanguage in Step 9: ${step9ViewModel.interestedInNewLanguage}');
+      debugPrint(
+        'Raw selectedInterestIds in Step 9: ${step9ViewModel.selectedInterestIds}',
+      );
+      debugPrint(
+        'Raw selectedLanguageIds in Step 9: ${step9ViewModel.selectedLanguageIds}',
+      );
+      debugPrint(
+        'Raw interestedInNewLanguage in Step 9: ${step9ViewModel.interestedInNewLanguage}',
+      );
 
       // [API Data Preparation] Chuẩn bị dữ liệu cho API, chuyển đổi ID từ String sang int và loại bỏ giá trị không hợp lệ
-      final interestIds = step9ViewModel.selectedInterestIds?.map((id) {
-        return int.tryParse(id) ?? 0; // Chuyển đổi sang int, nếu lỗi thì gán 0
-      }).where((id) => id != 0).toList() ?? [];
-      final languageIds = step9ViewModel.selectedLanguageIds?.map((id) {
-        return int.tryParse(id) ?? 0; // Chuyển đổi sang int, nếu lỗi thì gán 0
-      }).where((id) => id != 0).toList() ?? [];
+      final interestIds =
+          step9ViewModel.selectedInterestIds
+              ?.map((id) {
+                return int.tryParse(id) ??
+                    0; // Chuyển đổi sang int, nếu lỗi thì gán 0
+              })
+              .where((id) => id != 0)
+              .toList() ??
+          [];
+      final languageIds =
+          step9ViewModel.selectedLanguageIds
+              ?.map((id) {
+                return int.tryParse(id) ??
+                    0; // Chuyển đổi sang int, nếu lỗi thì gán 0
+              })
+              .where((id) => id != 0)
+              .toList() ??
+          [];
       stepData = {
         'interestIds': interestIds.isNotEmpty ? interestIds : null,
         'languageIds': languageIds.isNotEmpty ? languageIds : null,
@@ -336,15 +402,19 @@ class SetupProfileViewModel extends ChangeNotifier {
       };
 
       // [API Data Validation] Loại bỏ các trường null hoặc rỗng để tránh gửi dữ liệu không cần thiết
-      stepData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
+      stepData.removeWhere(
+        (key, value) => value == null || (value is List && value.isEmpty),
+      );
       if (stepData.isEmpty) {
-        print('Skipping updateProfileStep because all fields are null or empty');
+        debugPrint(
+          'Skipping updateProfileStep because all fields are null or empty',
+        );
         return;
       }
-      print('Parsed stepData for Step 9 before API call: $stepData');
+      debugPrint('Parsed stepData for Step 9 before API call: $stepData');
     }
 
-    print('Updating profile step $step with data: $stepData');
+    debugPrint('Updating profile step $step with data: $stepData');
 
     try {
       // [API Integration] Gửi yêu cầu PATCH đến endpoint /profiles/me với token xác thực
@@ -356,14 +426,14 @@ class SetupProfileViewModel extends ChangeNotifier {
         sessionToken: accessToken,
         profileData: stepData,
       );
-      print('Update profile step $step response: $response');
+      debugPrint('Update profile step $step response: $response');
       // Giả định cập nhật thành công nếu không có ngoại lệ, vì API trả về mã 200 và dữ liệu hồ sơ
-      print('Profile step $step updated successfully');
+      debugPrint('Profile step $step updated successfully');
 
       // Cập nhật lại profile vào ProfileViewModel
       Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
     } catch (e) {
-      print('Error updating profile step $step: $e');
+      debugPrint('Error updating profile step $step: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update profile step $step: $e')),
       );
@@ -375,7 +445,9 @@ class SetupProfileViewModel extends ChangeNotifier {
     final accessToken = await _authService.getAccessToken();
     if (accessToken == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Authentication required. Please log in again.')),
+        const SnackBar(
+          content: Text('Authentication required. Please log in again.'),
+        ),
       );
       return;
     }
@@ -385,7 +457,11 @@ class SetupProfileViewModel extends ChangeNotifier {
     final profileData = {
       'orientationId': orientationId,
       'avatarPath': avatarPath,
-      'coverPath': coverPath ?? (additionalPhotos?.isNotEmpty ?? false ? additionalPhotos!.first : null),
+      'coverPath':
+          coverPath ??
+          (additionalPhotos?.isNotEmpty ?? false
+              ? additionalPhotos!.first
+              : null),
       'location': {
         'city': city,
         'state': state,
@@ -404,17 +480,21 @@ class SetupProfileViewModel extends ChangeNotifier {
       // [API Data Preparation] Chuyển đổi selectedPets từ List<String> sang List<int> để khớp với backend (List<Long>)
       'petIds': selectedPets?.map((id) => int.parse(id)).toList() ?? [],
       // [API Data Preparation] Chuyển đổi selectedInterestIds từ List<String> sang List<int> để khớp với backend (List<Long>)
-      'interestIds': selectedInterestIds?.map((id) => int.parse(id)).toList() ?? [],
+      'interestIds':
+          selectedInterestIds?.map((id) => int.parse(id)).toList() ?? [],
       // [API Data Preparation] Chuyển đổi selectedLanguageIds từ List<String> sang List<int> để khớp với backend (List<Long>)
-      'languageIds': selectedLanguageIds?.map((id) => int.parse(id)).toList() ?? [],
+      'languageIds':
+          selectedLanguageIds?.map((id) => int.parse(id)).toList() ?? [],
       'interestedInNewLanguage': interestedInNewLanguage,
       'bio': bio,
       'galleryPhotos': additionalPhotos ?? [],
     };
 
-    profileData.removeWhere((key, value) => value == null || (value is List && value.isEmpty));
+    profileData.removeWhere(
+      (key, value) => value == null || (value is List && value.isEmpty),
+    );
 
-    print('Updating profile with data: $profileData');
+    debugPrint('Updating profile with data: $profileData');
 
     try {
       // [API Integration] Gửi yêu cầu PATCH cuối cùng để cập nhật toàn bộ hồ sơ
@@ -426,27 +506,27 @@ class SetupProfileViewModel extends ChangeNotifier {
         sessionToken: accessToken,
         profileData: profileData,
       );
-     print('Update profile response: $response');
-    // Hiển thị thông báo thành công trước khi chuyển đến màn hình chúc mừng
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile setup complete!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-    
-    // Cập nhật lại profile vào ProfileViewModel
-    Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
-    
-    // Chờ thông báo hiển thị, sau đó chuyển đến màn hình chúc mừng
-    await Future.delayed(const Duration(seconds: 2));
-    Navigator.pushReplacementNamed(context, '/profileSetupComplete');
-  } catch (e) {
-    print('Error updating profile: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to update profile: $e')),
-    );
-  }
+      debugPrint('Update profile response: $response');
+      // Hiển thị thông báo thành công trước khi chuyển đến màn hình chúc mừng
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile setup complete!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Cập nhật lại profile vào ProfileViewModel
+      Provider.of<ProfileViewModel>(context, listen: false).loadProfile();
+
+      // Chờ thông báo hiển thị, sau đó chuyển đến màn hình chúc mừng
+      await Future.delayed(const Duration(seconds: 2));
+      Navigator.pushReplacementNamed(context, '/profileSetupComplete');
+    } catch (e) {
+      debugPrint('Error updating profile: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to update profile: $e')));
+    }
   }
 
   String? validateStep8() {
@@ -464,9 +544,12 @@ class SetupProfileViewModel extends ChangeNotifier {
 
   void setLocationPreference(int value) {
     locationPreference = value;
-    profileData['locationPreference'] = value; // Cập nhật profileData với giá trị thanh trượt
+    profileData['locationPreference'] =
+        value; // Cập nhật profileData với giá trị thanh trượt
     notifyListeners();
-    print('Set location preference to: $value km'); // Ghi log để xác nhận cập nhật thanh trượt
+    debugPrint(
+      'Set location preference to: $value km',
+    ); // Ghi log để xác nhận cập nhật thanh trượt
   }
 
   int? getDrinkStatusId() => drinkStatusId;
@@ -475,6 +558,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     drinkStatusId = value;
     notifyListeners();
   }
+
   void setDrinkStatus(String? value) {
     drinkStatus = value;
     notifyListeners();
@@ -486,6 +570,7 @@ class SetupProfileViewModel extends ChangeNotifier {
     smokeStatusId = value;
     notifyListeners();
   }
+
   void setSmokeStatus(String? value) {
     smokeStatus = value;
     notifyListeners();

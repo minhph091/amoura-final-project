@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../../../domain/models/match/liked_user_model.dart';
+import '../../../data/models/match/user_recommendation_model.dart';
+import '../../core/services/match_service.dart';
+import '../../app/di/injection.dart';
 
 class LikesService with ChangeNotifier {
   bool _isLoading = false;
@@ -17,11 +20,14 @@ class LikesService with ChangeNotifier {
     notifyListeners();
 
     try {
-      // This would normally be an API call
-      await Future.delayed(const Duration(milliseconds: 1500));
+      // Thay vì mock riêng, lấy data từ discovery service
+      final matchService = getIt<MatchService>();
+      final discoveryRecommendations = await matchService.getRecommendations();
 
-      // Mock data for demonstration purposes
-      _likedUsers = _generateMockLikedUsers();
+      // Chuyển đổi từ UserRecommendationModel sang LikedUserModel
+      // Coi như những users này đã thích mình
+      _likedUsers = _convertDiscoveryToLikedUsers(discoveryRecommendations);
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -31,81 +37,34 @@ class LikesService with ChangeNotifier {
     }
   }
 
-  // Mock data generation
-  List<LikedUserModel> _generateMockLikedUsers() {
-    return [
-      LikedUserModel(
-        id: '1',
-        firstName: 'Emma',
-        lastName: 'Watson',
-        username: 'emmaw',
-        age: 32,
-        location: 'London',
-        coverImageUrl: 'https://example.com/cover1.jpg',
-        avatarUrl: 'https://example.com/avatar1.jpg',
-        bio: 'Actress and activist. Love books, travel, and meaningful conversations.',
-        photoUrls: ['https://example.com/photo1.jpg', 'https://example.com/photo2.jpg'],
-        isVip: true,
+  // Convert UserRecommendationModel to LikedUserModel
+  List<LikedUserModel> _convertDiscoveryToLikedUsers(
+    List<UserRecommendationModel> recommendations,
+  ) {
+    return recommendations.map((rec) {
+      return LikedUserModel(
+        id: rec.userId.toString(),
+        firstName: rec.firstName,
+        lastName: rec.lastName,
+        username: rec.username,
+        age: rec.age ?? 18, // Fallback age if null
+        location: rec.location ?? 'Unknown',
+        coverImageUrl:
+            rec.photos.isNotEmpty ? rec.photos.first.url : '/placeholder.jpg',
+        avatarUrl:
+            rec.photos.isNotEmpty
+                ? rec.photos.first.url
+                : '/placeholder-user.jpg',
+        bio: rec.bio ?? 'No bio available',
+        photoUrls: rec.photos.map((photo) => photo.url).toList(),
+        isVip: false, // Tạm thời set false vì không cần VIP
         profileDetails: {
-          'height': '165 cm',
-          'occupation': 'Actress',
-          'education': 'Brown University',
-          'interests': ['Reading', 'Yoga', 'Environmentalism']
+          'height': rec.height?.toString() ?? 'Unknown',
+          'sex': rec.sex ?? 'Unknown',
+          'interests': rec.interests.map((i) => i.name).toList(),
+          'pets': rec.pets.map((p) => p.name).toList(),
         },
-      ),
-      LikedUserModel(
-        id: '2',
-        firstName: 'Chris',
-        lastName: 'Evans',
-        username: 'captainamerica',
-        age: 40,
-        location: 'Los Angeles',
-        coverImageUrl: 'https://example.com/cover2.jpg',
-        avatarUrl: 'https://example.com/avatar2.jpg',
-        bio: 'Actor who loves dogs and sports. Looking for someone to share adventures with.',
-        photoUrls: ['https://example.com/photo3.jpg', 'https://example.com/photo4.jpg'],
-        profileDetails: {
-          'height': '183 cm',
-          'occupation': 'Actor',
-          'interests': ['Dogs', 'Sports', 'Movies']
-        },
-      ),
-      LikedUserModel(
-        id: '3',
-        firstName: 'Sofia',
-        lastName: 'Martinez',
-        username: 'sofiam',
-        age: 28,
-        location: 'Barcelona',
-        coverImageUrl: 'https://example.com/cover3.jpg',
-        avatarUrl: 'https://example.com/avatar3.jpg',
-        bio: 'Travel photographer and foodie. I speak 3 languages and love discovering new cultures.',
-        photoUrls: ['https://example.com/photo5.jpg', 'https://example.com/photo6.jpg'],
-        profileDetails: {
-          'height': '170 cm',
-          'occupation': 'Photographer',
-          'languages': ['English', 'Spanish', 'French'],
-          'interests': ['Photography', 'Travel', 'Cooking']
-        },
-      ),
-      LikedUserModel(
-        id: '4',
-        firstName: 'Keanu',
-        lastName: 'Reeves',
-        username: 'neo',
-        age: 57,
-        location: 'New York',
-        coverImageUrl: 'https://example.com/cover4.jpg',
-        avatarUrl: 'https://example.com/avatar4.jpg',
-        bio: 'Actor, musician, and motorcycle enthusiast. Kind heart and old soul.',
-        photoUrls: ['https://example.com/photo7.jpg', 'https://example.com/photo8.jpg'],
-        isVip: true,
-        profileDetails: {
-          'height': '186 cm',
-          'occupation': 'Actor',
-          'interests': ['Motorcycles', 'Music', 'Philosophy']
-        },
-      ),
-    ];
+      );
+    }).toList();
   }
 }

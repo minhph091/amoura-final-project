@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../widgets/settings_section_title.dart';
 import '../../widgets/settings_tile.dart';
-import 'authentication_viewmodel.dart';
 import 'widgets/change_password_view.dart';
 import 'widgets/change_email_view.dart';
 import 'widgets/change_phone_view.dart';
@@ -11,27 +11,37 @@ class AuthenticationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = AuthenticationViewModel();
-    final colorScheme = Theme.of(context).colorScheme;
+    final localizations = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SettingsSectionTitle(title: 'Password & Authentication'),
+        SettingsSectionTitle(
+          title: localizations.translate('password_and_authentication'),
+        ),
         SettingsTile(
           icon: Icons.key,
-          title: 'Change Password',
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePasswordView())),
+          title: localizations.translate('change_password'),
+          onTap:
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ChangePasswordView()),
+              ),
         ),
         SettingsTile(
           icon: Icons.email_outlined,
-          title: 'Change Email',
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangeEmailView())),
+          title: localizations.translate('change_email'),
+          onTap:
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ChangeEmailView()),
+              ),
         ),
         SettingsTile(
           icon: Icons.phone_android,
-          title: 'Change Phone Number',
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePhoneView())),
+          title: localizations.translate('change_phone'),
+          onTap:
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ChangePhoneView()),
+              ),
         ),
       ],
     );

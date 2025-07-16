@@ -23,13 +23,13 @@ class SetupProfileApi {
         if (!data.containsKey('bodyTypes') || data['bodyTypes'] == null) {
           data['bodyTypes'] = [];
         }
-        print('Received body types from API: ${data['bodyTypes']}');
+        debugPrint('Received body types from API: ${data['bodyTypes']}');
         return data;
       } else {
         throw Exception('Failed to fetch profile options: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in getProfileOptions: $e');
+      debugPrint('Error in getProfileOptions: $e');
       throw Exception('Error fetching profile options: $e');
     }
   }
@@ -59,10 +59,10 @@ class SetupProfileApi {
       });
 
       if (kDebugMode) {
-        print('Uploading photo to: $endpoint');
-        print('File path: ${file.path}');
-        print('File size: $fileSize bytes');
-        print('Access token: ${accessToken.substring(0, 10)}...');
+        debugPrint('Uploading photo to: $endpoint');
+        debugPrint('File path: ${file.path}');
+        debugPrint('File size: $fileSize bytes');
+        debugPrint('Access token: ${accessToken.substring(0, 10)}...');
       }
 
       final response = await _apiClient.dio.post(
@@ -79,8 +79,8 @@ class SetupProfileApi {
       );
 
       if (kDebugMode) {
-        print('Upload response status: ${response.statusCode}');
-        print('Upload response data: ${response.data}');
+        debugPrint('Upload response status: ${response.statusCode}');
+        debugPrint('Upload response data: ${response.data}');
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -110,10 +110,10 @@ class SetupProfileApi {
       }
     } on DioException catch (e) {
       if (kDebugMode) {
-        print('DioException: ${e.message}');
-        print('Response data: ${e.response?.data}');
-        print('Response status: ${e.response?.statusCode}');
-        print('Error type: ${e.type}');
+        debugPrint('DioException: ${e.message}');
+        debugPrint('Response data: ${e.response?.data}');
+        debugPrint('Response status: ${e.response?.statusCode}');
+        debugPrint('Error type: ${e.type}');
       }
 
       if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
@@ -128,7 +128,7 @@ class SetupProfileApi {
       throw Exception('Error uploading photo: ${e.message}');
     } catch (e) {
       if (kDebugMode) {
-        print('Error uploading photo: $e');
+        debugPrint('Error uploading photo: $e');
       }
       throw Exception('Error uploading photo: $e');
     }
@@ -155,9 +155,9 @@ class SetupProfileApi {
       }
     } catch (e) {
       if (e is DioException && e.response?.statusCode == 404) {
-        print('Photo not found, skipping deletion');
+        debugPrint('Photo not found, skipping deletion');
       } else {
-        print('Error in deletePhoto: $e');
+        debugPrint('Error in deletePhoto: $e');
         throw Exception('Error deleting photo: $e');
       }
     }
@@ -195,7 +195,7 @@ class SetupProfileApi {
       }
 
       // [API Integration - Debug] Log the data being sent to the backend for verification
-      print('Sending update profile request with data: $filteredData');
+      debugPrint('Sending update profile request with data: $filteredData');
 
       // [API Integration] Send PATCH request to update the user profile
       // - Endpoint: /profiles/me
@@ -215,7 +215,7 @@ class SetupProfileApi {
       );
 
       // [API Integration - Debug] Log the response from the backend for verification
-      print('Received update profile response: ${response.data}');
+      debugPrint('Received update profile response: ${response.data}');
 
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
@@ -224,12 +224,12 @@ class SetupProfileApi {
       }
     } on DioException catch (e) {
       // [API Integration - Debug] Log detailed error information from DioException
-      print('DioException during update profile: ${e.response?.data}');
-      print('DioException status code: ${e.response?.statusCode}');
-      print('DioException message: ${e.message}');
+      debugPrint('DioException during update profile: ${e.response?.data}');
+      debugPrint('DioException status code: ${e.response?.statusCode}');
+      debugPrint('DioException message: ${e.message}');
       throw Exception('Error updating profile: ${e.message} - ${e.response?.data['message'] ?? ''}');
     } catch (e) {
-      print('General error during update profile: $e');
+      debugPrint('General error during update profile: $e');
       throw Exception('Error updating profile: $e');
     }
   }

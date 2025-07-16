@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'nav_bar_icon.dart';
 import 'nav_bar_circle_burst.dart';
+import 'floating_ripple_effect.dart';
+import 'particle_system.dart';
 
 class NavBarItem extends StatefulWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? customIconPath;
+  final String? label;
   final bool isActive;
   final VoidCallback onTap;
   final int? badgeCount;
@@ -12,7 +16,9 @@ class NavBarItem extends StatefulWidget {
 
   const NavBarItem({
     super.key,
-    required this.icon,
+    this.icon,
+    this.customIconPath,
+    this.label,
     required this.isActive,
     required this.onTap,
     this.badgeCount,
@@ -43,8 +49,8 @@ class _NavBarItemState extends State<NavBarItem> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 350),
       value: widget.isActive ? 1 : 0,
     );
-    _iconSizeAnim = Tween<double>(begin: 24, end: 30).animate(
-      CurvedAnimation(parent: _mainController, curve: Curves.easeOutCubic),
+    _iconSizeAnim = Tween<double>(begin: 22, end: 26).animate(
+      CurvedAnimation(parent: _mainController, curve: Curves.easeOutBack),
     );
 
     // Animation for background opacity effect
@@ -84,36 +90,61 @@ class _NavBarItemState extends State<NavBarItem> with TickerProviderStateMixin {
   Widget _buildBadge() {
     if (widget.badgeCount != null && widget.badgeCount! > 0) {
       return Positioned(
-        right: -5,
-        top: -5,
+        right: 0,
+        top: 0,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: Colors.pinkAccent,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 1.3),
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 3)],
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF6B6B).withValues(alpha: 0.4),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Text(
             widget.badgeCount! > 9 ? '9+' : '${widget.badgeCount}',
-            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ),
       );
     } else if (widget.badge != null) {
       return Positioned(
-        right: -8,
-        top: -5,
+        right: 0,
+        top: 0,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Colors.amber, Colors.deepOrange]),
-            borderRadius: BorderRadius.circular(4),
-            boxShadow: const [BoxShadow(color: Colors.amberAccent, blurRadius: 2)],
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Text(
             widget.badge!,
-            style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
         ),
       );
@@ -136,12 +167,25 @@ class _NavBarItemState extends State<NavBarItem> with TickerProviderStateMixin {
         }
 
         return Container(
-          width: double.infinity,
-          height: double.infinity,
+          width: 60,
+          height: 60,
           decoration: BoxDecoration(
-            borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(20), right: Radius.circular(20)),
-            color: widget.activeColor.withOpacity(opacity),
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                widget.activeColor.withValues(alpha: opacity * 0.8),
+                widget.activeColor.withValues(alpha: opacity * 0.4),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.activeColor.withValues(alpha: opacity * 0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
         );
       },
@@ -157,24 +201,32 @@ class _NavBarItemState extends State<NavBarItem> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return FloatingRippleEffect(
+      rippleColor: widget.activeColor,
+      isActive: widget.isActive,
       onTap: () {
         if (!widget.isActive) {
           _doBurst();
           widget.onTap();
         }
       },
-      behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: double.infinity, // Sử dụng toàn bộ không gian được cấp
-        height: 60,
+        height: 80,
         child: Stack(
           alignment: Alignment.center,
           children: [
             // Hiệu ứng nền khi chạm vào
-            Positioned.fill(
-              child: _buildBackgroundEffect(),
-            ),
+            Positioned.fill(child: _buildBackgroundEffect()),
+
+            // Particle system for active items
+            if (widget.isActive)
+              Positioned.fill(
+                child: ParticleSystem(
+                  isActive: widget.isActive,
+                  particleColor: widget.activeColor,
+                ),
+              ),
 
             // Hiệu ứng burst khi ấn vào
             NavBarCircleBurst(
@@ -186,23 +238,47 @@ class _NavBarItemState extends State<NavBarItem> with TickerProviderStateMixin {
             // Icon + badge
             AnimatedBuilder(
               animation: Listenable.merge([_mainController, _burstController]),
-              builder: (context, child) => Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
+              builder:
+                  (context, child) => Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      NavBarIcon(
-                        icon: widget.icon,
-                        isActive: widget.isActive,
-                        activeColor: widget.activeColor,
-                        size: _iconSizeAnim.value,
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          NavBarIcon(
+                            icon: widget.icon,
+                            customIconPath: widget.customIconPath,
+                            isActive: widget.isActive,
+                            activeColor: widget.activeColor,
+                            size: _iconSizeAnim.value,
+                          ),
+                          _buildBadge(),
+                        ],
                       ),
-                      _buildBadge(),
+                      if (widget.label != null) ...[
+                        const SizedBox(height: 4),
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 200),
+                          style: TextStyle(
+                            fontSize: widget.isActive ? 11 : 10,
+                            fontWeight:
+                                widget.isActive
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                            color:
+                                widget.isActive
+                                    ? widget.activeColor
+                                    : Colors.grey.shade600,
+                          ),
+                          child: Text(
+                            widget.label!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                ],
-              ),
             ),
           ],
         ),
@@ -210,4 +286,3 @@ class _NavBarItemState extends State<NavBarItem> with TickerProviderStateMixin {
     );
   }
 }
-

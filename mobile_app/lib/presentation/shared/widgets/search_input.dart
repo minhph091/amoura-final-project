@@ -66,7 +66,7 @@ class _SearchInputState extends State<SearchInput> {
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 2.0,
                   offset: const Offset(0, 2),
                 )
@@ -122,3 +122,4 @@ class _SearchInputState extends State<SearchInput> {
     );
   }
 }
+

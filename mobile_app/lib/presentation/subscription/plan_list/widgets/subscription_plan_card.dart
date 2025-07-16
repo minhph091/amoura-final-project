@@ -8,12 +8,12 @@ class SubscriptionPlanCard extends StatelessWidget {
   final Animation<double>? animation;
 
   const SubscriptionPlanCard({
-    Key? key,
+    super.key,
     required this.plan,
     required this.isSelected,
     required this.onTap,
     this.animation,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

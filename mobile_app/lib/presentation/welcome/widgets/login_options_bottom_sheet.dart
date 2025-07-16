@@ -215,7 +215,7 @@ class LoginOptionsBottomSheet extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'CANCEL',
+                AppLocalizations.of(context).translate('cancel').toUpperCase(),
                 style: textTheme.labelLarge?.copyWith(
                   color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
                   fontWeight: FontWeight.bold,

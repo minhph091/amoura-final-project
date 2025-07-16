@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../../domain/usecases/auth/login_usecase.dart';
 import '../../../core/utils/validation_util.dart';
-import '../../discovery/discovery_recommendation_cache.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final formKey = GlobalKey<FormState>();
@@ -29,9 +28,7 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> onLoginPressed({
-    void Function()? onSuccess,
-  }) async {
+  Future<void> onLoginPressed({void Function()? onSuccess}) async {
     if (formKey.currentState?.validate() ?? false) {
       isLoading = true;
       errorMessage = null;
@@ -41,9 +38,13 @@ class LoginViewModel extends ChangeNotifier {
         final account = accountController.text.trim();
         final password = passwordController.text;
 
-        final loginType = ValidationUtil.isEmail(account) ? 'EMAIL_PASSWORD' : 'PHONE_PASSWORD';
+        final loginType =
+            ValidationUtil.isEmail(account)
+                ? 'EMAIL_PASSWORD'
+                : 'PHONE_PASSWORD';
         final email = ValidationUtil.isEmail(account) ? account : '';
-        final phoneNumber = ValidationUtil.isPhoneNumber(account) ? account : '';
+        final phoneNumber =
+            ValidationUtil.isPhoneNumber(account) ? account : '';
 
         final response = await _loginUseCase.execute(
           email: email,
@@ -53,7 +54,7 @@ class LoginViewModel extends ChangeNotifier {
           otpCode: null,
         );
 
-        print('API Response: $response');
+        debugPrint('API Response: $response');
         if (response['accessToken'] != null && response['user'] != null) {
           onSuccess?.call();
         } else {
@@ -61,7 +62,7 @@ class LoginViewModel extends ChangeNotifier {
         }
       } catch (e) {
         errorMessage = 'Email/Phone or password is incorrect';
-        print('Login error: $e');
+        debugPrint('Login error: $e');
         notifyListeners();
       } finally {
         isLoading = false;

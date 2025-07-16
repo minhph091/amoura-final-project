@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/language/app_localizations.dart';
 import '../shared/widgets/app_gradient_background.dart';
 import 'notification_viewmodel.dart';
-import 'widgets/notification_item.dart';
+import 'widgets/notification_group.dart';
 import '../../app/routes/app_routes.dart';
 
 class NotificationView extends StatefulWidget {
@@ -35,13 +35,15 @@ class _NotificationViewState extends State<NotificationView>
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return AppGradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('Notifications'),
+          title: Text(localizations.translate('notifications')),
           centerTitle: true,
           actions: [
             // Moving the three-dots menu to the app bar
@@ -64,16 +66,48 @@ class _NotificationViewState extends State<NotificationView>
               },
             ),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Theme.of(context).colorScheme.onSurface,
-            tabs: const [
-              Tab(text: 'Likes & Matches'),
-              Tab(text: 'Messages'),
-              Tab(text: 'System'),
-            ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(50),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                labelColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.white,
+                unselectedLabelColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black54,
+                labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                tabs: [
+                  Tab(
+                    text: AppLocalizations.of(
+                      context,
+                    ).translate('likes_matches'),
+                  ),
+                  Tab(text: AppLocalizations.of(context).translate('messages')),
+                  Tab(
+                    text: AppLocalizations.of(
+                      context,
+                    ).translate('notifications_system'),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
         body: ListenableBuilder(
@@ -95,7 +129,9 @@ class _NotificationViewState extends State<NotificationView>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Error loading notifications',
+                      AppLocalizations.of(
+                        context,
+                      ).translate('error_loading_notifications'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
@@ -108,7 +144,7 @@ class _NotificationViewState extends State<NotificationView>
                     TextButton.icon(
                       onPressed: _viewModel.loadNotifications,
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(localizations.translate('retry')),
                     ),
                   ],
                 ),
@@ -119,26 +155,30 @@ class _NotificationViewState extends State<NotificationView>
               controller: _tabController,
               children: [
                 // Likes tab
-                _buildNotificationList(
+                _buildGroupedNotificationList(
                   _viewModel.getLikeNotifications(),
-                  'No likes yet',
-                  'When someone likes your profile, you\'ll see it here.',
+                  localizations.translate('no_likes_yet'),
+                  localizations.translate('no_likes_description'),
                   NotificationType.like,
                 ),
 
                 // Messages tab
-                _buildNotificationList(
+                _buildGroupedNotificationList(
                   _viewModel.getMessageNotifications(),
-                  'No message notifications',
-                  'When you receive new messages, you\'ll see notifications here.',
+                  localizations.translate('no_message_notifications'),
+                  localizations.translate(
+                    'no_message_notifications_description',
+                  ),
                   NotificationType.message,
                 ),
 
                 // System tab
-                _buildNotificationList(
+                _buildGroupedNotificationList(
                   _viewModel.getSystemNotifications(),
-                  'No system notifications',
-                  'Important updates and announcements will appear here.',
+                  localizations.translate('no_system_notifications'),
+                  localizations.translate(
+                    'no_system_notifications_description',
+                  ),
                   NotificationType.system,
                 ),
               ],
@@ -149,7 +189,7 @@ class _NotificationViewState extends State<NotificationView>
     );
   }
 
-  Widget _buildNotificationList(
+  Widget _buildGroupedNotificationList(
     List<NotificationModel> notifications,
     String emptyTitle,
     String emptySubtitle,
@@ -159,22 +199,71 @@ class _NotificationViewState extends State<NotificationView>
       return _buildEmptyState(emptyTitle, emptySubtitle);
     }
 
+    // Group notifications by date
+    final groupedNotifications = _groupNotificationsByDate(
+      notifications,
+      context,
+    );
+
     return RefreshIndicator(
       onRefresh: _viewModel.loadNotifications,
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 8, bottom: 16),
-        itemCount: notifications.length,
+        padding: const EdgeInsets.only(top: 8, bottom: 100),
+        itemCount: groupedNotifications.length,
         itemBuilder: (context, index) {
-          final notification = notifications[index];
-
-          return NotificationItem(
-            notification: notification,
-            onTap: () => _handleNotificationTap(context, notification),
-            onDismiss: () => _viewModel.dismissNotification(notification.id),
+          final entry = groupedNotifications.entries.elementAt(index);
+          return NotificationGroup(
+            title: entry.key,
+            notifications: entry.value,
+            onNotificationTap:
+                (notification) => _handleNotificationTap(context, notification),
+            onNotificationDismiss:
+                (notification) =>
+                    _viewModel.dismissNotification(notification.id),
+            onMarkAllAsRead: () => _viewModel.markAllAsReadInGroup(entry.value),
+            onDeleteAll: () => _viewModel.deleteAllInGroup(entry.value),
           );
         },
       ),
     );
+  }
+
+  Map<String, List<NotificationModel>> _groupNotificationsByDate(
+    List<NotificationModel> notifications,
+    BuildContext context,
+  ) {
+    final localizations = AppLocalizations.of(context);
+    final Map<String, List<NotificationModel>> grouped = {};
+    final now = DateTime.now();
+
+    for (final notification in notifications) {
+      final notificationDate = notification.time;
+      String groupKey;
+
+      final difference = now.difference(notificationDate).inDays;
+
+      if (difference == 0) {
+        groupKey = localizations.translate('today');
+      } else if (difference == 1) {
+        groupKey = localizations.translate('yesterday');
+      } else if (difference < 7) {
+        groupKey = localizations.translate('this_week');
+      } else if (difference < 30) {
+        groupKey = localizations.translate('last_week');
+      } else {
+        groupKey = localizations.translate('older');
+      }
+
+      grouped.putIfAbsent(groupKey, () => []);
+      grouped[groupKey]!.add(notification);
+    }
+
+    // Sort each group by time (newest first)
+    grouped.forEach((key, value) {
+      value.sort((a, b) => b.time.compareTo(a.time));
+    });
+
+    return grouped;
   }
 
   Widget _buildEmptyState(String title, String subtitle) {
@@ -215,6 +304,7 @@ class _NotificationViewState extends State<NotificationView>
     BuildContext context,
     NotificationModel notification,
   ) {
+    final localizations = AppLocalizations.of(context);
     _viewModel.markAsRead(notification.id);
     if (notification.type == NotificationType.match ||
         notification.type == NotificationType.like) {
@@ -231,7 +321,7 @@ class _NotificationViewState extends State<NotificationView>
               children: [
                 ListTile(
                   leading: const Icon(Icons.chat),
-                  title: const Text('Chat'),
+                  title: Text(localizations.translate('chat')),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(
@@ -243,7 +333,7 @@ class _NotificationViewState extends State<NotificationView>
                 ),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('Xem thông tin'),
+                  title: Text(localizations.translate('view_info')),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(
@@ -281,6 +371,7 @@ class _NotificationViewState extends State<NotificationView>
   }
 
   void _showNotificationOptions(BuildContext context, NotificationType type) {
+    final localizations = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -302,7 +393,7 @@ class _NotificationViewState extends State<NotificationView>
               ),
               ListTile(
                 leading: const Icon(Icons.mark_email_read),
-                title: const Text('Mark all as read'),
+                title: Text(localizations.translate('mark_all_as_read')),
                 onTap: () {
                   Navigator.pop(context);
                   _viewModel.markAllAsReadByType(type);
@@ -318,9 +409,9 @@ class _NotificationViewState extends State<NotificationView>
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text(
-                  'Clear all notifications',
-                  style: TextStyle(color: Colors.red),
+                title: Text(
+                  localizations.translate('clear_all_notifications'),
+                  style: const TextStyle(color: Colors.red),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -343,14 +434,22 @@ class _NotificationViewState extends State<NotificationView>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text('Clear ${type.name} notifications?'),
+            title: Text(
+              AppLocalizations.of(context)
+                  .translate('clear_notifications_title')
+                  .replaceAll('{type}', type.name),
+            ),
             content: Text(
               'This will remove all ${type.name} notifications. This action cannot be undone.',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('CANCEL'),
+                child: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).translate('cancel').toUpperCase(),
+                ),
               ),
               TextButton(
                 onPressed: () {
@@ -358,12 +457,19 @@ class _NotificationViewState extends State<NotificationView>
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('All ${type.name} notifications cleared'),
+                      content: Text(
+                        AppLocalizations.of(context)
+                            .translate('all_notifications_cleared')
+                            .replaceAll('{type}', type.name),
+                      ),
                       duration: const Duration(seconds: 2),
                     ),
                   );
                 },
-                child: const Text('CLEAR', style: TextStyle(color: Colors.red)),
+                child: Text(
+                  AppLocalizations.of(context).translate('clear').toUpperCase(),
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),

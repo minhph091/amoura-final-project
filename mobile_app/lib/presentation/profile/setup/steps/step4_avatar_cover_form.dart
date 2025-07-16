@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +10,6 @@ import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step4_viewmodel.dart';
 import 'package:get_it/get_it.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 class Step4AvatarCoverForm extends StatefulWidget {
   const Step4AvatarCoverForm({super.key});
@@ -52,21 +52,29 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
       context: context,
       builder:
           (dialogContext) => AlertDialog(
-            title: const Text('Photo Options'),
+            title: Text(
+              AppLocalizations.of(context).translate('photo_options'),
+            ),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.pop(dialogContext);
                   step4ViewModel.editImage(context, path, isAvatar);
                 },
-                child: const Text('Edit Photo'),
+                child: Text(
+                  AppLocalizations.of(context).translate('edit_photo'),
+                ),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.pop(dialogContext);
                   step4ViewModel.pickImage(context, isAvatar);
                 },
-                child: const Text('Choose Another Photo'),
+                child: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).translate('choose_another_photo'),
+                ),
               ),
             ],
           ),
@@ -86,11 +94,11 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
           // Log URL để debug
           if (step4ViewModel.avatarPath != null) {
             final adjustedAvatarUrl = _adjustUrl(step4ViewModel.avatarPath!);
-            print('Adjusted Avatar image url: $adjustedAvatarUrl');
+            debugPrint('Adjusted Avatar image url: $adjustedAvatarUrl');
           }
           if (step4ViewModel.coverPath != null) {
             final adjustedCoverUrl = _adjustUrl(step4ViewModel.coverPath!);
-            print('Adjusted Cover image url: $adjustedCoverUrl');
+            debugPrint('Adjusted Cover image url: $adjustedCoverUrl');
           }
 
           return SingleChildScrollView(
@@ -98,14 +106,24 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Your Avatar & Cover Photo",
-                  style: ProfileTheme.getTitleStyle(context),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Upload a vertical or square photo (max 2MB, recommended 512x512 for avatar, 1024x1024 for cover).",
-                  style: ProfileTheme.getDescriptionStyle(context),
+                Builder(
+                  builder: (context) {
+                    final localizations = AppLocalizations.of(context);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          localizations.translate('step4_title'),
+                          style: ProfileTheme.getTitleStyle(context),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          localizations.translate('step4_description'),
+                          style: ProfileTheme.getDescriptionStyle(context),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -176,7 +194,7 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                                   url,
                                                   error,
                                                 ) {
-                                                  print(
+                                                  debugPrint(
                                                     'Error loading avatar: $error, URL: ${_adjustUrl(step4ViewModel.avatarPath!)}',
                                                   );
                                                   return const Center(
@@ -314,7 +332,7 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                                                   url,
                                                   error,
                                                 ) {
-                                                  print(
+                                                  debugPrint(
                                                     'Error loading cover: $error, URL: ${_adjustUrl(step4ViewModel.coverPath!)}',
                                                   );
                                                   return const Center(
@@ -389,7 +407,9 @@ class _Step4AvatarCoverFormState extends State<Step4AvatarCoverForm> {
                 ),
                 const SizedBox(height: 28),
                 SetupProfileButton(
-                  text: AppLocalizations.of(context).translate('next'),
+                  text: AppLocalizations.of(
+                    context,
+                  ).translate('continue_setup'),
                   onPressed: () {
                     final error = step4ViewModel.validate();
                     if (error != null) {

@@ -6,7 +6,6 @@ import 'package:amoura/presentation/discovery/discovery_viewmodel.dart';
 
 import '../../../data/models/profile/interest_model.dart';
 import '../../../data/models/match/user_recommendation_model.dart';
-import 'package:amoura/presentation/discovery/widgets/profile_card.dart';
 import 'swipeable_card.dart';
 
 class SwipeCardStack extends StatelessWidget {
@@ -28,16 +27,20 @@ class SwipeCardStack extends StatelessWidget {
     // Get next profile for peeking effect
     final viewModel = Provider.of<DiscoveryViewModel>(context, listen: false);
     final nextProfileIndex = viewModel.currentProfileIndex + 1;
-    final nextProfile = (nextProfileIndex < viewModel.recommendations.length)
-        ? viewModel.recommendations[nextProfileIndex]
-        : null;
+    final nextProfile =
+        (nextProfileIndex < viewModel.recommendations.length)
+            ? viewModel.recommendations[nextProfileIndex]
+            : null;
     final nextInterests = viewModel.interests;
 
     // Calculate distance for current profile
     final distance = viewModel.getDistanceToProfile(profile);
-    
+
     // Calculate distance for next profile
-    final nextDistance = nextProfile != null ? viewModel.getDistanceToProfile(nextProfile) : null;
+    final nextDistance =
+        nextProfile != null
+            ? viewModel.getDistanceToProfile(nextProfile)
+            : null;
 
     return Align(
       alignment: Alignment.topCenter,
@@ -49,8 +52,18 @@ class SwipeCardStack extends StatelessWidget {
         nextProfile: nextProfile,
         nextInterests: nextInterests,
         nextDistance: nextDistance,
-        onLike: () => Provider.of<DiscoveryViewModel>(context, listen: false).likeCurrentProfile(),
-        onPass: () => Provider.of<DiscoveryViewModel>(context, listen: false).dislikeCurrentProfile(),
+        onLike:
+            () =>
+                Provider.of<DiscoveryViewModel>(
+                  context,
+                  listen: false,
+                ).likeCurrentProfile(),
+        onPass:
+            () =>
+                Provider.of<DiscoveryViewModel>(
+                  context,
+                  listen: false,
+                ).dislikeCurrentProfile(),
         onHighlightLike: onHighlightLike,
         onHighlightPass: onHighlightPass,
       ),

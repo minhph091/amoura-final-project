@@ -1,15 +1,9 @@
 import 'package:flutter/foundation.dart';
 import '../../core/services/notification_service.dart';
 import '../../app/di/injection.dart';
-import '../../core/services/profile_service.dart';
 import 'dart:async';
 
-enum NotificationType {
-  match,
-  message,
-  like,
-  system,
-}
+enum NotificationType { match, message, like, system }
 
 class NotificationModel {
   final String id;
@@ -34,9 +28,7 @@ class NotificationModel {
     this.url,
   });
 
-  NotificationModel copyWith({
-    bool? isRead,
-  }) {
+  NotificationModel copyWith({bool? isRead}) {
     return NotificationModel(
       id: id,
       title: title,
@@ -59,7 +51,7 @@ class NotificationViewModel extends ChangeNotifier {
   int _currentTabIndex = 0;
   late final StreamSubscription _notificationStream;
   late final StreamSubscription _newNotificationStream;
-  bool _initialized = false;
+  final bool _initialized = false;
 
   List<NotificationModel> get notifications => _notifications;
   bool get isLoading => _isLoading;
@@ -74,15 +66,25 @@ class NotificationViewModel extends ChangeNotifier {
 
   List<NotificationModel> getLikeNotifications() {
     // Trả về cả like và match
-    return _notifications.where((n) => n.type == NotificationType.like || n.type == NotificationType.match).toList();
+    return _notifications
+        .where(
+          (n) =>
+              n.type == NotificationType.like ||
+              n.type == NotificationType.match,
+        )
+        .toList();
   }
 
   List<NotificationModel> getMessageNotifications() {
-    return _notifications.where((n) => n.type == NotificationType.message).toList();
+    return _notifications
+        .where((n) => n.type == NotificationType.message)
+        .toList();
   }
 
   List<NotificationModel> getSystemNotifications() {
-    return _notifications.where((n) => n.type == NotificationType.system).toList();
+    return _notifications
+        .where((n) => n.type == NotificationType.system)
+        .toList();
   }
 
   int getUnreadCountByType(NotificationType type) {
@@ -93,32 +95,122 @@ class NotificationViewModel extends ChangeNotifier {
     _isLoading = true;
     _error = null;
     notifyListeners();
-    try {
-      if (!_initialized) {
-        // Lấy userId thực tế từ profile
-        final profileService = getIt<ProfileService>();
-        final profile = await profileService.getProfile();
-        final userId = profile['userId']?.toString() ?? '';
-        await _service.initialize(userId);
-        _notificationStream = _service.notificationsStream.listen((data) {
-          _notifications = _mapServiceModelsToUI(data);
-          _isLoading = false;
-          notifyListeners();
-        });
-        _newNotificationStream = _service.newNotificationStream.listen((notification) {
-          notifyListeners();
-        });
-        _initialized = true;
-      }
-      await _service.refreshNotifications();
-      _notifications = _mapServiceModelsToUI(_service.notifications);
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
+
+    // Add mock data for demo purposes
+    _addMockNotifications();
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  void _addMockNotifications() {
+    final now = DateTime.now();
+    _notifications = [
+      // Likes & Matches
+      NotificationModel(
+        id: 'mock_like_1',
+        title: 'new_like',
+        body: 'like_body',
+        time: now.subtract(const Duration(hours: 2)),
+        type: NotificationType.like,
+        isRead: false,
+        avatar:
+            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
+      ),
+      NotificationModel(
+        id: 'mock_match_1',
+        title: 'new_match',
+        body: 'match_body_sarah',
+        time: now.subtract(const Duration(hours: 5)),
+        type: NotificationType.match,
+        isRead: false,
+        avatar:
+            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
+      ),
+      NotificationModel(
+        id: 'mock_like_2',
+        title: 'new_like',
+        body: 'like_body',
+        time: now.subtract(const Duration(days: 1, hours: 3)),
+        type: NotificationType.like,
+        isRead: true,
+        avatar:
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
+      ),
+      NotificationModel(
+        id: 'mock_match_2',
+        title: 'new_match',
+        body: 'match_body_emma',
+        time: now.subtract(const Duration(days: 2)),
+        type: NotificationType.match,
+        isRead: true,
+        avatar:
+            'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
+      ),
+      // Messages
+      NotificationModel(
+        id: 'mock_message_1',
+        title: 'new_message',
+        body: 'message_body_sarah',
+        time: now.subtract(const Duration(minutes: 30)),
+        type: NotificationType.message,
+        isRead: false,
+        avatar:
+            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
+      ),
+      NotificationModel(
+        id: 'mock_message_2',
+        title: 'new_message',
+        body: 'message_body_emma',
+        time: now.subtract(const Duration(hours: 6)),
+        type: NotificationType.message,
+        isRead: false,
+        avatar:
+            'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
+      ),
+      NotificationModel(
+        id: 'mock_message_3',
+        title: 'new_message',
+        body: 'message_body_michael',
+        time: now.subtract(const Duration(days: 1, hours: 2)),
+        type: NotificationType.message,
+        isRead: true,
+        avatar:
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
+      ),
+      // System notifications
+      NotificationModel(
+        id: 'mock_system_1',
+        title: 'welcome',
+        body: 'welcome_body',
+        time: now.subtract(const Duration(hours: 4)),
+        type: NotificationType.system,
+        isRead: false,
+      ),
+      NotificationModel(
+        id: 'mock_system_2',
+        title: 'app_update_available',
+        body: 'app_update_body',
+        time: now.subtract(const Duration(days: 1)),
+        type: NotificationType.system,
+        isRead: false,
+      ),
+      NotificationModel(
+        id: 'mock_system_3',
+        title: 'safety_reminder',
+        body: 'safety_reminder_body',
+        time: now.subtract(const Duration(days: 3)),
+        type: NotificationType.system,
+        isRead: true,
+      ),
+      NotificationModel(
+        id: 'mock_system_4',
+        title: 'profile_views_boost',
+        body: 'profile_views_boost_body',
+        time: now.subtract(const Duration(days: 5)),
+        type: NotificationType.system,
+        isRead: true,
+      ),
+    ];
   }
 
   void markAsRead(String notificationId) {
@@ -133,7 +225,11 @@ class NotificationViewModel extends ChangeNotifier {
 
   void markAllAsReadByType(NotificationType type) {
     // Lọc các id chưa đọc theo type rồi gọi markAsRead cho từng cái
-    final ids = _notifications.where((n) => n.type == type && !n.isRead).map((n) => n.id).toList();
+    final ids =
+        _notifications
+            .where((n) => n.type == type && !n.isRead)
+            .map((n) => n.id)
+            .toList();
     for (final id in ids) {
       _service.markAsRead(id);
     }
@@ -149,31 +245,23 @@ class NotificationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<NotificationModel> _mapServiceModelsToUI(List serviceList) {
-    // Mapping từ NotificationService sang NotificationModel UI
-    return serviceList.map<NotificationModel>((n) {
-      // Tùy chỉnh mapping cho đúng với NotificationModel UI
-      return NotificationModel(
-        id: n.id.toString(),
-        title: n.title ?? '',
-        body: n.content ?? '',
-        time: n.timestamp ?? DateTime.now(),
-        type: _mapType(n.type),
-        isRead: n.isRead ?? false,
-        userId: n.userId?.toString(),
-        avatar: n.avatar,
-        url: n.url,
-      );
-    }).toList();
+  void markAllAsReadInGroup(List<NotificationModel> groupNotifications) {
+    for (final notification in groupNotifications) {
+      if (!notification.isRead) {
+        final index = _notifications.indexWhere((n) => n.id == notification.id);
+        if (index != -1) {
+          _notifications[index] = notification.copyWith(isRead: true);
+        }
+      }
+    }
+    notifyListeners();
   }
 
-  NotificationType _mapType(dynamic type) {
-    final t = type.toString().toLowerCase();
-    if (t.contains('like')) return NotificationType.like;
-    if (t.contains('match')) return NotificationType.match;
-    if (t.contains('message')) return NotificationType.message;
-    if (t.contains('system')) return NotificationType.system;
-    return NotificationType.system;
+  void deleteAllInGroup(List<NotificationModel> groupNotifications) {
+    for (final notification in groupNotifications) {
+      _notifications.removeWhere((n) => n.id == notification.id);
+    }
+    notifyListeners();
   }
 
   @override

@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/profile/photo_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../core/utils/url_transformer.dart';
 
 class ImageCarouselController {
   void Function()? _reset;
@@ -45,7 +44,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
   @override
   void didUpdateWidget(covariant ImageCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.photos != oldWidget.photos || widget.uniqueKey != oldWidget.uniqueKey) {
+    if (widget.photos != oldWidget.photos ||
+        widget.uniqueKey != oldWidget.uniqueKey) {
       _resetToFirstImage();
     }
     widget.controller?._reset = _resetToFirstImage;
@@ -67,7 +67,11 @@ class _ImageCarouselState extends State<ImageCarousel> {
         setState(() {
           _currentIndex--;
         });
-        _pageController.animateToPage(_currentIndex, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+        _pageController.animateToPage(
+          _currentIndex,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
       }
     } else {
       // Tap right: next
@@ -75,7 +79,11 @@ class _ImageCarouselState extends State<ImageCarousel> {
         setState(() {
           _currentIndex++;
         });
-        _pageController.animateToPage(_currentIndex, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+        _pageController.animateToPage(
+          _currentIndex,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
       }
     }
   }
@@ -88,69 +96,83 @@ class _ImageCarouselState extends State<ImageCarousel> {
       );
     }
     return LayoutBuilder(
-      builder: (context, constraints) => Stack(
-        fit: StackFit.expand,
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (details) => _onTapDown(details, constraints),
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: widget.photos.length,
-              physics: const NeverScrollableScrollPhysics(), // Only allow tap navigation
-              itemBuilder: (context, index) {
-                final photo = widget.photos[index];
-                final imageUrl = photo.url;
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: CachedNetworkImage(
-                    key: ValueKey('${widget.uniqueKey}_${photo.id}_$index'),
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: CircularProgressIndicator(),
+      builder:
+          (context, constraints) => Stack(
+            fit: StackFit.expand,
+            children: [
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (details) => _onTapDown(details, constraints),
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: widget.photos.length,
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Only allow tap navigation
+                  itemBuilder: (context, index) {
+                    final photo = widget.photos[index];
+                    final imageUrl = photo.url;
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: CachedNetworkImage(
+                        key: ValueKey('${widget.uniqueKey}_${photo.id}_$index'),
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder:
+                            (context, url) => Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                        errorWidget:
+                            (context, url, error) => Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Icon(
+                                  Icons.error,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
                       ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(Icons.error, size: 50, color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          if (widget.showStoryProgress)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    children: List.generate(widget.photos.length, (i) {
-                      return Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: i <= _currentIndex ? Colors.white : Colors.white.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
+                    );
+                  },
                 ),
               ),
-            ),
-        ],
-      ),
+              if (widget.showStoryProgress)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: List.generate(widget.photos.length, (i) {
+                          return Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color:
+                                    i <= _currentIndex
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
     );
   }
 }

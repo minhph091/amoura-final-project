@@ -8,11 +8,11 @@ class PinnedMessagesSection extends StatefulWidget {
   final Function(MessageModel) onUnpinMessage;
 
   const PinnedMessagesSection({
-    Key? key,
+    super.key,
     required this.pinnedMessages,
     required this.onTapPinnedMessage,
     required this.onUnpinMessage,
-  }) : super(key: key);
+  });
 
   @override
   State<PinnedMessagesSection> createState() => _PinnedMessagesSectionState();

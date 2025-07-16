@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:amoura/data/repositories/user_repository.dart';
 
@@ -8,9 +10,11 @@ class ChangePasswordViewModel extends ChangeNotifier {
     confirmPasswordController.addListener(_validateConfirmPasswordRealtime);
   }
 
-  final TextEditingController currentPasswordController = TextEditingController();
+  final TextEditingController currentPasswordController =
+      TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   String? currentPasswordError;
   String? newPasswordError;
@@ -26,7 +30,9 @@ class ChangePasswordViewModel extends ChangeNotifier {
 
   // Validate new password: min 8, upper, number, special char
   bool _isValidPassword(String value) {
-    final regex = RegExp(r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*(),.?":{}|<>]).{8,}');
+    final regex = RegExp(
+      r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*(),.?":{}|<>]).{8,}',
+    );
     return regex.hasMatch(value);
   }
 
@@ -35,7 +41,8 @@ class ChangePasswordViewModel extends ChangeNotifier {
     if (value.isEmpty) {
       newPasswordError = 'New password is required';
     } else if (!_isValidPassword(value)) {
-      newPasswordError = 'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.';
+      newPasswordError =
+          'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.';
     } else {
       newPasswordError = null;
     }
@@ -57,7 +64,10 @@ class ChangePasswordViewModel extends ChangeNotifier {
   }
 
   void validateInputs() {
-    currentPasswordError = currentPasswordController.text.isEmpty ? 'Current password is required' : null;
+    currentPasswordError =
+        currentPasswordController.text.isEmpty
+            ? 'Current password is required'
+            : null;
     _validateNewPasswordRealtime();
     _validateConfirmPasswordRealtime();
   }
@@ -74,7 +84,9 @@ class ChangePasswordViewModel extends ChangeNotifier {
 
   Future<void> submit(BuildContext context) async {
     validateInputs();
-    if (currentPasswordError == null && newPasswordError == null && confirmPasswordError == null) {
+    if (currentPasswordError == null &&
+        newPasswordError == null &&
+        confirmPasswordError == null) {
       setLoading(true);
       try {
         await userRepository.changePassword(
@@ -83,7 +95,10 @@ class ChangePasswordViewModel extends ChangeNotifier {
         );
         setLoading(false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password changed successfully'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Password changed successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       } catch (e) {
@@ -91,10 +106,11 @@ class ChangePasswordViewModel extends ChangeNotifier {
         // Nếu lỗi là sai mật khẩu hiện tại, hiển thị lỗi ngay dưới trường nhập
         final msg = e.toString().toLowerCase();
         if (msg.contains('incorrect') || msg.contains('current password')) {
-          currentPasswordError = 'Current password is incorrect. Please try again.';
+          currentPasswordError =
+              'Current password is incorrect. Please try again.';
           notifyListeners();
         } else {
-          print('[ChangePassword] Change password failed: $e');
+          debugPrint('[ChangePassword] Change password failed: $e');
         }
       }
     }

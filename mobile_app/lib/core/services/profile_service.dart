@@ -1,4 +1,5 @@
 // lib/core/services/profile_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import '../../data/repositories/profile_repository.dart';
 import '../../data/remote/profile_api.dart';
@@ -52,7 +53,7 @@ class ProfileService {
       
       return profileData;
     } catch (e) {
-      print('Error in ProfileService.getProfile: $e');
+      debugPrint('Error in ProfileService.getProfile: $e');
       rethrow; // Propagate error to the upper layers
     }
   }
@@ -62,7 +63,7 @@ class ProfileService {
     try {
       return await _profileRepository.getProfileOptions();
     } catch (e) {
-      print('Error in ProfileService.getProfileOptions: $e');
+      debugPrint('Error in ProfileService.getProfileOptions: $e');
       rethrow;
     }
   }

@@ -40,7 +40,9 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
                 child: Row(
                   children: [
                     Text(
-                      '${_selectedUsers.length} selected',
+                      localizations
+                          .translate('selected_count')
+                          .replaceAll('%d', _selectedUsers.length.toString()),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const Spacer(),
@@ -77,7 +79,11 @@ class _BlockedUsersTabState extends State<BlockedUsersTab> {
                   blockingService.isLoadingUsers
                       ? const Center(child: CircularProgressIndicator())
                       : blockedUsers.isEmpty
-                      ? const Center(child: Text('No blocked users'))
+                      ? Center(
+                        child: Text(
+                          localizations.translate('no_blocked_users'),
+                        ),
+                      )
                       : buildBlockedUsersList(blockedUsers),
             ),
           ],

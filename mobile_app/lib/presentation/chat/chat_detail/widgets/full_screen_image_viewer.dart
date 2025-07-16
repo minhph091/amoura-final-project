@@ -6,10 +6,10 @@ class FullScreenImageViewer extends StatelessWidget {
   final String? caption;
 
   const FullScreenImageViewer({
-    Key? key,
+    super.key,
     required this.imageUrl,
     this.caption,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

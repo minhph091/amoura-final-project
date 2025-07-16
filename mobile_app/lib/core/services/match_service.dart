@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import '../../data/repositories/match_repository.dart';
 import '../../data/remote/match_api.dart';
@@ -19,7 +20,7 @@ class MatchService {
     try {
       return await _matchRepository.getRecommendations();
     } catch (e) {
-      print('Error in MatchService.getRecommendations: $e');
+      debugPrint('Error in MatchService.getRecommendations: $e');
       rethrow;
     }
   }
@@ -29,7 +30,7 @@ class MatchService {
     try {
       return await _matchRepository.getMatches();
     } catch (e) {
-      print('Error in MatchService.getMatches: $e');
+      debugPrint('Error in MatchService.getMatches: $e');
       rethrow;
     }
   }
@@ -39,7 +40,7 @@ class MatchService {
     try {
       return await _matchRepository.swipeUser(request);
     } catch (e) {
-      print('Error in MatchService.swipeUser: $e');
+      debugPrint('Error in MatchService.swipeUser: $e');
       rethrow;
     }
   }
@@ -53,7 +54,7 @@ class MatchService {
       );
       return await _matchRepository.swipeUser(request);
     } catch (e) {
-      print('Error in MatchService.likeUser: $e');
+      debugPrint('Error in MatchService.likeUser: $e');
       rethrow;
     }
   }
@@ -67,7 +68,7 @@ class MatchService {
       );
       return await _matchRepository.swipeUser(request);
     } catch (e) {
-      print('Error in MatchService.dislikeUser: $e');
+      debugPrint('Error in MatchService.dislikeUser: $e');
       rethrow;
     }
   }

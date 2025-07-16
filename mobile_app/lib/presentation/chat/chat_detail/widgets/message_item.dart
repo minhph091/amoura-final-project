@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../../../domain/models/message.dart';
 import '../../../../core/utils/url_transformer.dart';
@@ -29,7 +28,7 @@ class MessageItem extends StatefulWidget {
   final DateTime? readAt;
 
   const MessageItem({
-    Key? key,
+    super.key,
     required this.message,
     required this.senderName,
     this.senderAvatar,
@@ -49,7 +48,7 @@ class MessageItem extends StatefulWidget {
     this.recalled = false,
     this.isRead = false,
     this.readAt,
-  }) : super(key: key);
+  });
 
   @override
   State<MessageItem> createState() => _MessageItemState();
@@ -64,7 +63,7 @@ class _MessageItemState extends State<MessageItem> {
       setState(() {
         _showReadStatus = !_showReadStatus;
       });
-      
+
       // Auto-hide after 3 seconds
       if (_showReadStatus) {
         Future.delayed(const Duration(seconds: 3), () {
@@ -86,7 +85,8 @@ class _MessageItemState extends State<MessageItem> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       child: Row(
-        mainAxisAlignment: widget.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            widget.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Avatar for other user messages (not shown for current user)
@@ -99,8 +99,7 @@ class _MessageItemState extends State<MessageItem> {
           const SizedBox(width: 4.0),
 
           // Status indicator for current user's messages
-          if (widget.isMe)
-            _buildStatusIndicator(),
+          if (widget.isMe) _buildStatusIndicator(),
         ],
       ),
     );
@@ -120,13 +119,15 @@ class _MessageItemState extends State<MessageItem> {
         // Swipe to reply functionality
         if (widget.onSwipeReply != null) {
           // Detect swipe direction and distance
-          final velocity = details.velocity.pixelsPerSecond.dx;
           final primaryVelocity = details.primaryVelocity ?? 0;
-          
+
           // For other user's messages: swipe right to reply
           // For own messages: swipe left to reply
-          if ((!widget.isMe && primaryVelocity > 500) || (widget.isMe && primaryVelocity < -500)) {
-            debugPrint('MessageItem: Swipe to reply detected - isMe: ${widget.isMe}, velocity: $primaryVelocity');
+          if ((!widget.isMe && primaryVelocity > 500) ||
+              (widget.isMe && primaryVelocity < -500)) {
+            debugPrint(
+              'MessageItem: Swipe to reply detected - isMe: ${widget.isMe}, velocity: $primaryVelocity',
+            );
             widget.onSwipeReply!();
           }
         }
@@ -136,9 +137,12 @@ class _MessageItemState extends State<MessageItem> {
         children: [
           // Message content
           _buildMessageContent(maxWidth, theme),
-          
+
           // Simple "Seen" text for read messages
-          if (_showReadStatus && widget.isMe && widget.isRead && widget.readAt != null)
+          if (_showReadStatus &&
+              widget.isMe &&
+              widget.isRead &&
+              widget.readAt != null)
             _buildSeenIndicator(theme),
         ],
       ),
@@ -146,9 +150,13 @@ class _MessageItemState extends State<MessageItem> {
   }
 
   Widget _buildAvatar() {
-    final transformedAvatarUrl = UrlTransformer.transformAvatarUrl(widget.senderAvatar);
-    debugPrint('MessageItem: Building avatar for ${widget.senderName} with URL: $transformedAvatarUrl');
-    
+    final transformedAvatarUrl = UrlTransformer.transformAvatarUrl(
+      widget.senderAvatar,
+    );
+    debugPrint(
+      'MessageItem: Building avatar for ${widget.senderName} with URL: $transformedAvatarUrl',
+    );
+
     return Padding(
       padding: const EdgeInsets.only(right: 12.0),
       child: Container(
@@ -171,167 +179,93 @@ class _MessageItemState extends State<MessageItem> {
         child: CircleAvatar(
           radius: 18.0,
           backgroundColor: Colors.transparent,
-          child: transformedAvatarUrl.isNotEmpty
-              ? Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 2.0,
+          child:
+              transformedAvatarUrl.isNotEmpty
+                  ? Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2.0),
                     ),
-                  ),
-                  child: ClipOval(
-                    child: Image.network(
-                      transformedAvatarUrl,
-                      width: 32,
-                      height: 32,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        debugPrint('MessageItem: Error loading avatar for ${widget.senderName}: $error');
-                        return Container(
-                          width: 32,
-                          height: 32,
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                    child: ClipOval(
+                      child: Image.network(
+                        transformedAvatarUrl,
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint(
+                            'MessageItem: Error loading avatar for ${widget.senderName}: $error',
+                          );
+                          return Container(
+                            width: 32,
+                            height: 32,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
                             ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              widget.senderName.isNotEmpty ? widget.senderName[0].toUpperCase() : "?",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                letterSpacing: 0.5,
+                            child: Center(
+                              child: Text(
+                                widget.senderName.isNotEmpty
+                                    ? widget.senderName[0].toUpperCase()
+                                    : "?",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) {
-                          debugPrint('MessageItem: Avatar loaded successfully for ${widget.senderName}');
-                          return child;
-                        }
-                        return Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B9D)),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) {
+                            debugPrint(
+                              'MessageItem: Avatar loaded successfully for ${widget.senderName}',
+                            );
+                            return child;
+                          }
+                          return Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFFF6B9D),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                  : Center(
+                    child: Text(
+                      widget.senderName.isNotEmpty
+                          ? widget.senderName[0].toUpperCase()
+                          : "?",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                )
-              : Center(
-                  child: Text(
-                    widget.senderName.isNotEmpty ? widget.senderName[0].toUpperCase() : "?",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReplyPreview(ThemeData theme) {
-    return GestureDetector(
-      onTap: widget.onTapRepliedMessage,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
-        margin: const EdgeInsets.only(bottom: 6.0),
-        decoration: BoxDecoration(
-          gradient: widget.isMe
-              ? LinearGradient(
-                  colors: [
-                    Colors.white.withValues(alpha: 0.15),
-                    Colors.white.withValues(alpha: 0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : LinearGradient(
-                  colors: [
-                    Colors.grey.shade100,
-                    Colors.grey.shade50,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-          borderRadius: const BorderRadius.all(Radius.circular(14.0)),
-          border: Border.all(
-            color: widget.isMe 
-                ? Colors.white.withValues(alpha: 0.2)
-                : Colors.grey.shade300.withValues(alpha: 0.5),
-            width: 1.0,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 3.0,
-              height: 30.0,
-              decoration: BoxDecoration(
-                color: widget.isMe 
-                    ? Colors.white.withValues(alpha: 0.8)
-                    : const Color(0xFFFF6B9D),
-                borderRadius: BorderRadius.circular(1.5),
-              ),
-            ),
-            const SizedBox(width: 10.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.replyToSender ?? "Unknown User",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11.0,
-                      color: widget.isMe 
-                          ? Colors.white.withValues(alpha: 0.9)
-                          : const Color(0xFFFF6B9D),
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 3.0),
-                  Text(
-                    widget.replyToMessage!,
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      color: widget.isMe 
-                          ? Colors.white.withValues(alpha: 0.75)
-                          : Colors.grey.shade600,
-                      height: 1.2,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -339,14 +273,10 @@ class _MessageItemState extends State<MessageItem> {
 
   Widget _buildMessageContent(double maxWidth, ThemeData theme) {
     return Container(
-      constraints: BoxConstraints(
-        maxWidth: maxWidth * 0.8,
-        minWidth: 50,
-      ),
+      constraints: BoxConstraints(maxWidth: maxWidth * 0.8, minWidth: 50),
       decoration: BoxDecoration(
-        color: widget.isMe 
-            ? theme.colorScheme.primary
-            : theme.colorScheme.surface,
+        color:
+            widget.isMe ? theme.colorScheme.primary : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -360,12 +290,13 @@ class _MessageItemState extends State<MessageItem> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Reply section - hiển thị tin nhắn được reply (mờ)
-          if (widget.replyToMessage != null && widget.replyToMessage!.isNotEmpty)
+          if (widget.replyToMessage != null &&
+              widget.replyToMessage!.isNotEmpty)
             _buildReplySection(theme),
-          
+
           // Message content
           _buildMainContent(theme),
-          
+
           // Message footer with time, status, and "Seen" indicator
           _buildMessageFooter(theme),
         ],
@@ -379,11 +310,16 @@ class _MessageItemState extends State<MessageItem> {
       margin: const EdgeInsets.only(left: 12, right: 12, top: 8),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: (widget.isMe ? Colors.white : Colors.grey.shade600).withValues(alpha: 0.15),
+        color: (widget.isMe ? Colors.white : Colors.grey.shade600).withValues(
+          alpha: 0.15,
+        ),
         borderRadius: BorderRadius.circular(8),
         border: Border(
           left: BorderSide(
-            color: widget.isMe ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.primary.withValues(alpha: 0.6),
+            color:
+                widget.isMe
+                    ? Colors.white.withValues(alpha: 0.6)
+                    : theme.colorScheme.primary.withValues(alpha: 0.6),
             width: 3,
           ),
         ),
@@ -398,22 +334,24 @@ class _MessageItemState extends State<MessageItem> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: widget.isMe 
-                    ? Colors.white.withValues(alpha: 0.8)
-                    : theme.colorScheme.primary.withValues(alpha: 0.8),
+                color:
+                    widget.isMe
+                        ? Colors.white.withValues(alpha: 0.8)
+                        : theme.colorScheme.primary.withValues(alpha: 0.8),
               ),
             ),
-          
+
           const SizedBox(height: 2),
-          
+
           // Original message content (dimmed/mờ)
           Text(
             widget.replyToMessage!,
             style: TextStyle(
               fontSize: 13,
-              color: widget.isMe 
-                  ? Colors.white.withValues(alpha: 0.7)
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color:
+                  widget.isMe
+                      ? Colors.white.withValues(alpha: 0.7)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
               fontStyle: FontStyle.italic,
             ),
             maxLines: 3,
@@ -434,9 +372,10 @@ class _MessageItemState extends State<MessageItem> {
             Icon(
               Icons.undo,
               size: 16,
-              color: widget.isMe 
-                  ? Colors.white.withValues(alpha: 0.7)
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color:
+                  widget.isMe
+                      ? Colors.white.withValues(alpha: 0.7)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 6),
             Text(
@@ -444,9 +383,10 @@ class _MessageItemState extends State<MessageItem> {
               style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
-                color: widget.isMe 
-                    ? Colors.white.withValues(alpha: 0.7)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color:
+                    widget.isMe
+                        ? Colors.white.withValues(alpha: 0.7)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -470,104 +410,149 @@ class _MessageItemState extends State<MessageItem> {
 
   Widget _buildImageContent(ThemeData theme) {
     // Transform URL for Android emulator compatibility
-    final transformedImageUrl = UrlTransformer.transformImageUrl(widget.mediaUrl ?? '');
-    debugPrint('MessageItem: Building image message with URL: ${widget.mediaUrl} -> $transformedImageUrl');
-    
+    final transformedImageUrl = UrlTransformer.transformImageUrl(
+      widget.mediaUrl ?? '',
+    );
+    debugPrint(
+      'MessageItem: Building image message with URL: ${widget.mediaUrl} -> $transformedImageUrl',
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Builder(
-          builder: (context) => GestureDetector(
-            onTap: () {
-              if (transformedImageUrl.isNotEmpty) {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => FullScreenImageViewer(
-                      imageUrl: widget.mediaUrl!,
-                      caption: (widget.message.isNotEmpty && widget.message != 'Photo') ? widget.message : null,
-                    ),
-                    fullscreenDialog: true,
+          builder:
+              (context) => GestureDetector(
+                onTap: () {
+                  if (transformedImageUrl.isNotEmpty) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (context) => FullScreenImageViewer(
+                              imageUrl: widget.mediaUrl!,
+                              caption:
+                                  (widget.message.isNotEmpty &&
+                                          widget.message != 'Photo')
+                                      ? widget.message
+                                      : null,
+                            ),
+                        fullscreenDialog: true,
+                      ),
+                    );
+                  }
+                },
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16.0),
                   ),
-                );
-              }
-            },
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(16.0),
-            ),
-            child: transformedImageUrl.isNotEmpty
-                ? Image.network(
-                    transformedImageUrl,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 200,
-                    errorBuilder: (context, error, stackTrace) {
-                      debugPrint('MessageItem: Error loading image: $error');
-                      debugPrint('MessageItem: Image URL: $transformedImageUrl');
-                      return Container(
-                        width: double.infinity,
-                        height: 150,
-                        color: Colors.grey.shade300,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
-                            const SizedBox(height: 8),
-                            const Text('Failed to load image', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                          ],
-                        ),
-                      );
-                    },
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) {
-                        debugPrint('MessageItem: Image loaded successfully');
-                        return child;
-                      }
-                      return SizedBox(
-                        width: double.infinity,
-                        height: 150,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                                : null,
+                  child:
+                      transformedImageUrl.isNotEmpty
+                          ? Image.network(
+                            transformedImageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: 200,
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint(
+                                'MessageItem: Error loading image: $error',
+                              );
+                              debugPrint(
+                                'MessageItem: Image URL: $transformedImageUrl',
+                              );
+                              return Container(
+                                width: double.infinity,
+                                height: 150,
+                                color: Colors.grey.shade300,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.image_not_supported,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Failed to load image',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) {
+                                debugPrint(
+                                  'MessageItem: Image loaded successfully',
+                                );
+                                return child;
+                              }
+                              return SizedBox(
+                                width: double.infinity,
+                                height: 150,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
+                                            : null,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                          : Container(
+                            width: double.infinity,
+                            height: 150,
+                            color: Colors.grey.shade300,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.image,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'No image URL',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  )
-                : Container(
-                    width: double.infinity,
-                    height: 150,
-                    color: Colors.grey.shade300,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.image, size: 50, color: Colors.grey),
-                        const SizedBox(height: 8),
-                        const Text('No image URL', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-            ),
-          ),
+                ),
+              ),
         ),
         if (widget.message.isNotEmpty && widget.message != 'Photo')
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
             decoration: BoxDecoration(
-              gradient: widget.isMe
-                  ? const LinearGradient(
-                      colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : LinearGradient(
-                      colors: [Colors.white, Colors.grey.shade50],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+              gradient:
+                  widget.isMe
+                      ? const LinearGradient(
+                        colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                      : LinearGradient(
+                        colors: [Colors.white, Colors.grey.shade50],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
               borderRadius: const BorderRadius.vertical(
                 bottom: Radius.circular(16.0),
               ),
@@ -590,7 +575,7 @@ class _MessageItemState extends State<MessageItem> {
     // Extract file size and duration from message content or fileInfo
     String? fileSize;
     Duration? duration;
-    
+
     // Parse fileInfo if available (format: "filename.mp4 • 5.2 MB • 2:30")
     if (widget.fileInfo != null) {
       final parts = widget.fileInfo!.split(' • ');
@@ -627,7 +612,7 @@ class _MessageItemState extends State<MessageItem> {
   Widget _buildAudioContent(ThemeData theme) {
     // Extract duration from fileInfo if available (format: "voice_note.m4a • 3.2 MB • 1:45")
     Duration? duration;
-    
+
     if (widget.fileInfo != null) {
       final parts = widget.fileInfo!.split(' • ');
       if (parts.length >= 3) {
@@ -640,7 +625,7 @@ class _MessageItemState extends State<MessageItem> {
         }
       }
     }
-    
+
     // Fallback: parse duration from message content if it looks like time format
     if (duration == null && widget.message.contains(':')) {
       final timeParts = widget.message.split(':');
@@ -671,7 +656,10 @@ class _MessageItemState extends State<MessageItem> {
           Container(
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
-              color: widget.isMe ? Colors.white24 : theme.dividerColor.withValues(alpha: 0.2),
+              color:
+                  widget.isMe
+                      ? Colors.white24
+                      : theme.dividerColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
@@ -689,7 +677,10 @@ class _MessageItemState extends State<MessageItem> {
                   widget.message.isNotEmpty ? widget.message : "File",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: widget.isMe ? Colors.white : theme.colorScheme.onSurface,
+                    color:
+                        widget.isMe
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -699,7 +690,12 @@ class _MessageItemState extends State<MessageItem> {
                     widget.fileInfo!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: widget.isMe ? Colors.white70 : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      color:
+                          widget.isMe
+                              ? Colors.white70
+                              : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
                     ),
                   ),
               ],
@@ -729,7 +725,7 @@ class _MessageItemState extends State<MessageItem> {
   /// Build simple "Seen" indicator (like Tinder)
   Widget _buildSeenIndicator(ThemeData theme) {
     final readTime = DateFormat('HH:mm').format(widget.readAt!);
-    
+
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, right: 16.0),
       child: Row(
@@ -753,7 +749,12 @@ class _MessageItemState extends State<MessageItem> {
     final formattedTime = timeFormat.format(widget.timestamp);
 
     return Padding(
-      padding: const EdgeInsets.only(right: 16.0, bottom: 8.0, left: 16.0, top: 4.0),
+      padding: const EdgeInsets.only(
+        right: 16.0,
+        bottom: 8.0,
+        left: 16.0,
+        top: 4.0,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
@@ -761,9 +762,10 @@ class _MessageItemState extends State<MessageItem> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
             decoration: BoxDecoration(
-              color: widget.isMe 
-                  ? Colors.white.withValues(alpha: 0.15)
-                  : Colors.grey.shade100.withValues(alpha: 0.8),
+              color:
+                  widget.isMe
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : Colors.grey.shade100.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(12.0),
             ),
             child: Row(
@@ -773,7 +775,10 @@ class _MessageItemState extends State<MessageItem> {
                   formattedTime,
                   style: TextStyle(
                     fontSize: 10.0,
-                    color: widget.isMe ? Colors.white.withValues(alpha: 0.9) : Colors.grey.shade600,
+                    color:
+                        widget.isMe
+                            ? Colors.white.withValues(alpha: 0.9)
+                            : Colors.grey.shade600,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.5,
                   ),
@@ -786,12 +791,14 @@ class _MessageItemState extends State<MessageItem> {
                     Icon(
                       Icons.done_all_rounded,
                       size: 12.0,
-                      color: Colors.blue.shade400, // Blue color to indicate read
+                      color:
+                          Colors.blue.shade400, // Blue color to indicate read
                     ),
-                  ] else if (widget.status == MessageStatus.delivered || widget.status == MessageStatus.sent) ...[
+                  ] else if (widget.status == MessageStatus.delivered ||
+                      widget.status == MessageStatus.sent) ...[
                     // Single or double check marks for delivered/sent
                     Icon(
-                      widget.status == MessageStatus.delivered 
+                      widget.status == MessageStatus.delivered
                           ? Icons.done_all_rounded
                           : Icons.done_rounded,
                       size: 12.0,
@@ -803,12 +810,13 @@ class _MessageItemState extends State<MessageItem> {
                       widget.status == MessageStatus.sending
                           ? Icons.access_time_rounded
                           : widget.status == MessageStatus.failed
-                              ? Icons.error_outline_rounded
-                              : Icons.done_rounded,
+                          ? Icons.error_outline_rounded
+                          : Icons.done_rounded,
                       size: 12.0,
-                      color: widget.status == MessageStatus.failed
-                          ? Colors.red.shade300
-                          : Colors.white.withValues(alpha: 0.7),
+                      color:
+                          widget.status == MessageStatus.failed
+                              ? Colors.red.shade300
+                              : Colors.white.withValues(alpha: 0.7),
                     ),
                   ],
                 ],
@@ -835,25 +843,13 @@ class _MessageItemState extends State<MessageItem> {
         );
         break;
       case MessageStatus.sent:
-        statusIcon = const Icon(
-          Icons.check,
-          size: 14,
-          color: Colors.grey,
-        );
+        statusIcon = const Icon(Icons.check, size: 14, color: Colors.grey);
         break;
       case MessageStatus.delivered:
-        statusIcon = const Icon(
-          Icons.done_all,
-          size: 14,
-          color: Colors.grey,
-        );
+        statusIcon = const Icon(Icons.done_all, size: 14, color: Colors.grey);
         break;
       case MessageStatus.read:
-        statusIcon = const Icon(
-          Icons.done_all,
-          size: 14,
-          color: Colors.blue,
-        );
+        statusIcon = const Icon(Icons.done_all, size: 14, color: Colors.blue);
         break;
       case MessageStatus.failed:
         statusIcon = const Icon(
