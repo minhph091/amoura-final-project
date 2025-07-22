@@ -9,6 +9,10 @@ final Map<String, dynamic> en = {
   'delete_all': 'Delete all',
   'delete_notification_message':
       'Are you sure you want to delete this notification?',
+  'delete_all_notifications': 'Delete all notifications',
+  'delete_all_notifications_message':
+      'Are you sure you want to delete all {count} notifications?',
+  'delete_notification': 'Delete notification',
   'verify_identity': 'Verify your identity',
   'password_continue': 'Enter your password to continue',
   'account_security_title': 'Account Security',
@@ -32,6 +36,8 @@ final Map<String, dynamic> en = {
   'system_notifications': 'System notifications',
   'unblock_all': 'Unblock all',
   'unblock_all_confirmation': 'Are you sure you want to unblock all users?',
+  'unblock_message': 'Unblock message',
+  'unblock_messages_confirmation': 'Do you want to unblock messages from',
   'deactivate_account_title': 'Deactivate Account',
   'deactivate_confirmation': 'I understand the risks',
   'deactivate_now': 'Deactivate Now',
