@@ -20,7 +20,7 @@ public interface MatchingService {
     SwipeResponse swipeUser(String userEmail, SwipeRequest request);
     
     /**
-     * Lấy danh sách tất cả người đã like mình
+     * Lấy danh sách tất cả người đã like mình nhưng mình chưa like hoặc dislike
      */
     List<ReceivedLikeDTO> getReceivedLikes(String userEmail);
 } 

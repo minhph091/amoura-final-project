@@ -45,7 +45,7 @@ public class MatchingController {
     }
 
     @GetMapping("/received")
-    @Operation(summary = "Get all users who have liked the current user")
+    @Operation(summary = "Get all users who have liked the current user but not yet responded to")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<ReceivedLikeDTO>> getReceivedLikes(
             @AuthenticationPrincipal UserDetails userDetails) {

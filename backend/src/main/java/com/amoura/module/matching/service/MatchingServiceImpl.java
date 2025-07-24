@@ -272,11 +272,11 @@ public class MatchingServiceImpl implements MatchingService {
         User currentUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
 
-        // Lấy tất cả swipe mà người khác đã like mình
-        List<Swipe> receivedLikes = swipeRepository.findLikesReceivedByUser(currentUser.getId());
+        // Lấy tất cả swipe mà người khác đã like mình nhưng mình chưa phản hồi
+        List<Swipe> pendingLikes = swipeRepository.findPendingLikesReceivedByUser(currentUser.getId());
 
         // Chuyển đổi thành DTO
-        return receivedLikes.stream()
+        return pendingLikes.stream()
                 .map(swipe -> convertToReceivedLikeDTO(swipe.getInitiator(), swipe.getCreatedAt()))
                 .collect(Collectors.toList());
     }
