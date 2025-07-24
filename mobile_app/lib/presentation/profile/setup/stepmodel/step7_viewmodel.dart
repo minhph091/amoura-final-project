@@ -33,7 +33,7 @@ class Step7ViewModel extends BaseStepViewModel {
     try {
       isLoading = true;
       notifyListeners();
-      print('Fetching job and education options...');
+      debugPrint('Fetching job and education options...');
 
       final options = await _setupProfileService.fetchProfileOptions();
       final jobIndustries = options['jobIndustries'] as List<dynamic>?;
@@ -46,7 +46,7 @@ class Step7ViewModel extends BaseStepViewModel {
             return {'value': id, 'label': name};
           }).toList() ??
           [];
-      print('Fetched job industry options: $jobIndustryOptions');
+      debugPrint('Fetched job industry options: $jobIndustryOptions');
 
       // Map education levels to the required format
       educationLevelOptions = educationLevels?.map((option) {
@@ -55,7 +55,7 @@ class Step7ViewModel extends BaseStepViewModel {
             return {'value': id, 'label': name};
           }).toList() ??
           [];
-      print('Fetched education level options: $educationLevelOptions');
+      debugPrint('Fetched education level options: $educationLevelOptions');
 
       // Reset selections if they are invalid
       if (jobIndustryId != null && !jobIndustryOptions.any((o) => o['value'] == jobIndustryId)) {
@@ -68,7 +68,7 @@ class Step7ViewModel extends BaseStepViewModel {
       }
       _fetched = true;
     } catch (e) {
-      print('Error fetching job and education options: $e');
+      debugPrint('Error fetching job and education options: $e');
       errorMessage = 'Failed to load options. Please try again.';
       jobIndustryOptions = [];
       educationLevelOptions = [];
@@ -89,7 +89,7 @@ class Step7ViewModel extends BaseStepViewModel {
     parent.jobIndustryId = int.tryParse(id);
     parent.jobIndustry = name;
     notifyListeners();
-    print('Set job industry: id=$id, name=$name');
+    debugPrint('Set job industry: id=$id, name=$name');
   }
 
   void setEducationLevel(String id, String name) {
@@ -98,14 +98,14 @@ class Step7ViewModel extends BaseStepViewModel {
     parent.educationLevelId = int.tryParse(id);
     parent.educationLevel = name;
     notifyListeners();
-    print('Set education level: id=$id, name=$name');
+    debugPrint('Set education level: id=$id, name=$name');
   }
 
   void setDropOut(bool value) {
     dropOut = value;
     parent.dropOut = value;
     notifyListeners();
-    print('Set drop out: $value');
+    debugPrint('Set drop out: $value');
   }
 
   @override
@@ -126,6 +126,6 @@ class Step7ViewModel extends BaseStepViewModel {
     parent.profileData['educationLevelId'] = parent.educationLevelId;
     parent.profileData['educationLevel'] = educationLevel;
     parent.profileData['dropOut'] = dropOut;
-    print('Saved Step 7 data: $parent.profileData');
+    debugPrint('Saved Step 7 data: $parent.profileData');
   }
 }

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 import 'chat_list_viewmodel.dart';
 import 'widgets/chat_list_item.dart';
 import 'widgets/active_users_list.dart';
-import 'widgets/search_history_overlay.dart';
 import '../../shared/widgets/search_input.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/utils/url_transformer.dart';
 
 class ChatListView extends StatefulWidget {
-  const ChatListView({Key? key}) : super(key: key);
+  const ChatListView({super.key});
 
   @override
   State<ChatListView> createState() => _ChatListViewState();
@@ -19,136 +19,65 @@ class _ChatListViewState extends State<ChatListView> {
   final ChatListViewModel _viewModel = ChatListViewModel();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  bool _showSearchOverlay = false;
 
   @override
   void initState() {
     super.initState();
     _viewModel.loadChatList();
     _searchController.addListener(_onSearchChanged);
-    _searchFocusNode.addListener(_onSearchFocusChanged);
   }
 
   @override
   void dispose() {
-    _searchFocusNode.removeListener(_onSearchFocusChanged);
     _searchController.removeListener(_onSearchChanged);
     _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchFocusChanged() {
-    setState(() {
-      _showSearchOverlay = _searchFocusNode.hasFocus;
-    });
-  }
-
   void _onSearchChanged() {
     // Immediately search as the user types
     _viewModel.searchChats(_searchController.text);
-
-    // Only show the search overlay when focused and no search text
-    if (_searchController.text.isEmpty && _searchFocusNode.hasFocus) {
-      setState(() {
-        _showSearchOverlay = true;
-      });
-    } else if (_searchController.text.isNotEmpty) {
-      setState(() {
-        _showSearchOverlay = false;
-      });
-    }
-  }
-
-  void _closeSearchOverlay() {
-    // Clear focus and hide overlay
-    _searchFocusNode.unfocus();
-    setState(() {
-      _showSearchOverlay = false;
-    });
-  }
-
-  void _submitSearch(String query) {
-    _viewModel.searchChats(query);
-    _searchFocusNode.unfocus();
-    setState(() {
-      _showSearchOverlay = false;
-    });
-  }
-
-  void _navigateToUserProfile(String userId) {
-    Navigator.pushNamed(
-      context,
-      '/profile/view',
-      arguments: userId,
-    );
-    _searchFocusNode.unfocus();
-    setState(() {
-      _showSearchOverlay = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return AppGradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Chats'),
+          title: Text(localizations.translate('chats')),
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
         body: Column(
           children: [
-            // Full-width search bar
+            // Search bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
-                children: [
-                  // Show back button when search is focused
-                  if (_showSearchOverlay)
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: _closeSearchOverlay,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      iconSize: 24,
-                    ),
-
-                  // Search input field
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        _searchFocusNode.requestFocus();
-                      },
-                      child: SearchInput(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        hintText: 'Search chats or users',
-                        onClear: () {
-                          _searchController.clear();
-                          _viewModel.searchChats('');
-                        },
-                        onSubmitted: _submitSearch,
-                      ),
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: SearchInput(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                hintText: localizations.translate('search_conversations'),
+                onClear: () {
+                  _searchController.clear();
+                  _viewModel.searchChats('');
+                },
+                onSubmitted: (query) {
+                  _viewModel.searchChats(query);
+                  _searchFocusNode.unfocus();
+                },
               ),
             ),
 
-            // Show either search overlay or regular content
-            Expanded(
-              child: _showSearchOverlay
-                ? SearchHistoryOverlay(
-                    searchController: _searchController,
-                    onSearchSubmit: _submitSearch,
-                    onUserTap: _navigateToUserProfile,
-                    onClose: _closeSearchOverlay, // Add this to enable closing
-                  )
-                : _buildMainContent(),
-            ),
+            // Main content
+            Expanded(child: _buildMainContent()),
           ],
         ),
       ),
@@ -158,82 +87,6 @@ class _ChatListViewState extends State<ChatListView> {
   Widget _buildMainContent() {
     return Column(
       children: [
-        // Matches section (giống Tinder)
-        if (_viewModel.matches.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'Your Matches',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 80,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    itemCount: _viewModel.matches.length,
-                    itemBuilder: (context, index) {
-                      final match = _viewModel.matches[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 12.0),
-                        child: GestureDetector(
-                          onTap: () {
-                            // Tìm chat tương ứng với match này
-                            final matchChat = _viewModel.chatList.firstWhere(
-                              (c) => c.userId == match.userId,
-                              orElse: () => throw StateError('Chat not found for match'),
-                            );
-                            _navigateToChat(context, matchChat.chatRoomId, matchChat);
-                          },
-                          child: Column(
-                            children: [
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundImage: match.avatar.isNotEmpty
-                                    ? NetworkImage(UrlTransformer.transformAvatarUrl(match.avatar))
-                                    : null,
-                                child: match.avatar.isEmpty
-                                    ? Text(
-                                        match.name.isNotEmpty 
-                                            ? match.name[0].toUpperCase() 
-                                            : '?',
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                match.name,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
         // Active users horizontal scrolling list
         Padding(
           padding: const EdgeInsets.only(top: 8.0),
@@ -247,8 +100,8 @@ class _ChatListViewState extends State<ChatListView> {
                 );
                 _navigateToChat(context, userChat.chatRoomId, userChat);
               } catch (e) {
-                // Nếu không tìm thấy chat, có thể tạo chat mới hoặc hiển thị profile
-                _navigateToUserProfile(userId);
+                // Nếu không tìm thấy chat, không làm gì cả
+                debugPrint('No chat found for user $userId');
               }
             },
           ),
@@ -264,6 +117,8 @@ class _ChatListViewState extends State<ChatListView> {
           child: ListenableBuilder(
             listenable: _viewModel,
             builder: (context, child) {
+              final localizations = AppLocalizations.of(context);
+
               if (_viewModel.isLoading) {
                 return const Center(child: CircularProgressIndicator());
               }
@@ -280,7 +135,7 @@ class _ChatListViewState extends State<ChatListView> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Error loading chats',
+                        localizations.translate('error_loading_chats'),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
@@ -293,7 +148,7 @@ class _ChatListViewState extends State<ChatListView> {
                       TextButton.icon(
                         onPressed: _viewModel.loadChatList,
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
+                        label: Text(localizations.translate('retry')),
                       ),
                     ],
                   ),
@@ -301,7 +156,7 @@ class _ChatListViewState extends State<ChatListView> {
               }
 
               if (_viewModel.chatList.isEmpty) {
-                return _buildEmptyState();
+                return _buildEmptyState(localizations);
               }
 
               return ListView.builder(
@@ -310,7 +165,8 @@ class _ChatListViewState extends State<ChatListView> {
                   final chat = _viewModel.chatList[index];
                   return ChatListItem(
                     chat: chat,
-                    onTap: () => _navigateToChat(context, chat.chatRoomId, chat),
+                    onTap:
+                        () => _navigateToChat(context, chat.chatRoomId, chat),
                     onLongPress: () => _showChatOptions(context, chat),
                   );
                 },
@@ -322,7 +178,7 @@ class _ChatListViewState extends State<ChatListView> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations localizations) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -330,7 +186,9 @@ class _ChatListViewState extends State<ChatListView> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -340,16 +198,13 @@ class _ChatListViewState extends State<ChatListView> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'No conversations yet',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          Text(
+            localizations.translate('no_messages_yet'),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Match with more people to start\nconversations and find your perfect match!',
+          Text(
+            localizations.translate('start_conversation'),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -359,21 +214,25 @@ class _ChatListViewState extends State<ChatListView> {
               Navigator.of(context).pushReplacementNamed('/discovery');
             },
             icon: const Icon(Icons.explore),
-            label: const Text('Explore New Profiles'),
+            label: Text(localizations.translate('explore')),
           ),
         ],
       ),
     );
   }
 
-  void _navigateToChat(BuildContext context, String chatRoomId, ChatModel chat) {
+  void _navigateToChat(
+    BuildContext context,
+    String chatRoomId,
+    ChatModel chat,
+  ) {
     Navigator.pushNamed(
       context,
       AppRoutes.chatConversation,
       arguments: {
         'chatId': chatRoomId,
-        'recipientName': chat.name,
-        'recipientAvatar': chat.avatar,
+        'recipientName': chat.name, // Đúng tên đối phương
+        'recipientAvatar': chat.avatar, // Đúng avatar đối phương
         'isOnline': chat.isOnline,
       },
     );
@@ -385,97 +244,115 @@ class _ChatListViewState extends State<ChatListView> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(
-                chat.isUnread ? Icons.mark_email_read : Icons.mark_email_unread,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: Text(
-                chat.isUnread ? 'Mark as read' : 'Mark as unread',
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _viewModel.toggleReadStatus(chat.userId);
-              },
+      builder:
+          (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(
+                    chat.isUnread
+                        ? Icons.mark_email_read
+                        : Icons.mark_email_unread,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(
+                    chat.isUnread ? 'Mark as read' : 'Mark as unread',
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _viewModel.toggleReadStatus(chat.userId);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    chat.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(
+                    chat.isPinned ? 'Unpin conversation' : 'Pin conversation',
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _viewModel.togglePinned(chat.userId);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.notifications_off_outlined,
+                    color: Colors.orange,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(
+                      context,
+                    ).translate('mute_notifications'),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Implement mute notifications
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.visibility_off_outlined,
+                    color: Colors.orange,
+                  ),
+                  title: Text(
+                    AppLocalizations.of(context).translate('hide_conversation'),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _viewModel.hideChat(chat.userId);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text(
+                    AppLocalizations.of(
+                      context,
+                    ).translate('delete_conversation'),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showDeleteConfirmation(context, chat);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: Icon(
-                chat.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: Text(
-                chat.isPinned ? 'Unpin conversation' : 'Pin conversation',
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _viewModel.togglePinned(chat.userId);
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.notifications_off_outlined,
-                color: Colors.orange,
-              ),
-              title: const Text('Mute notifications'),
-              onTap: () {
-                Navigator.pop(context);
-                // Implement mute notifications
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.visibility_off_outlined,
-                color: Colors.orange,
-              ),
-              title: const Text('Hide conversation'),
-              onTap: () {
-                Navigator.pop(context);
-                _viewModel.hideChat(chat.userId);
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-              ),
-              title: const Text('Delete conversation'),
-              onTap: () {
-                Navigator.pop(context);
-                _showDeleteConfirmation(context, chat);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
   void _showDeleteConfirmation(BuildContext context, ChatModel chat) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete conversation?'),
-        content: const Text(
-          'This will delete all messages in this conversation for you. The other person will still see the conversation.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              AppLocalizations.of(
+                context,
+              ).translate('delete_conversation_question'),
+            ),
+            content: Text(
+              AppLocalizations.of(context).translate('message_deleted_for_you'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppLocalizations.of(context).translate('cancel')),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _viewModel.deleteChat(chat.userId);
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _viewModel.deleteChat(chat.userId);
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 }

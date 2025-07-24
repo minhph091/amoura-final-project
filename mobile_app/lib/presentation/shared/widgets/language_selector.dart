@@ -45,7 +45,7 @@ class LanguageSelector extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(isCompact ? 3 : 4),
               child: Image.asset(
-                'assets/icons/flag_${currentLanguageCode}.png',
+                'assets/icons/flag_$currentLanguageCode.png',
                 width: isCompact ? 16 : 24,
                 height: isCompact ? 12 : 16,
                 fit: BoxFit.cover,

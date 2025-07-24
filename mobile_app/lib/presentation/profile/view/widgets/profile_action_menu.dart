@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'report_form_dialog.dart';
 
-Future<void> showProfileActionMenu(BuildContext context, dynamic profile) async {
+Future<void> showProfileActionMenu(
+  BuildContext context,
+  dynamic profile,
+) async {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
@@ -59,33 +62,37 @@ Future<void> showProfileActionMenu(BuildContext context, dynamic profile) async 
   );
 }
 
-Future<void> _showBlockConfirmationDialog(BuildContext context, dynamic profile) async {
+Future<void> _showBlockConfirmationDialog(
+  BuildContext context,
+  dynamic profile,
+) async {
   showDialog(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Chặn người dùng'),
-      content: const Text('Bạn có muốn chặn người này không?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+    builder:
+        (context) => AlertDialog(
+          title: const Text('Chặn người dùng'),
+          content: const Text('Bạn có muốn chặn người này không?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Xử lý logic chặn người dùng ở đây
+                // Trong th���c tế, bạn sẽ gọi API hoặc cập nhật Provider
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã chặn người dùng thành công'),
+                  ),
+                );
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Chặn'),
+            ),
+          ],
         ),
-        TextButton(
-          onPressed: () {
-            // Xử lý logic chặn người dùng ở đây
-            // Trong th���c tế, bạn sẽ gọi API hoặc cập nhật Provider
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Đã chặn người dùng thành công')),
-            );
-          },
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.red,
-          ),
-          child: const Text('Chặn'),
-        ),
-      ],
-    ),
   );
 }
 

@@ -2,15 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../infrastructure/services/likes_service.dart';
-import '../../../infrastructure/services/subscription_service.dart';
 import '../../../app/core/navigation.dart' as app_navigation;
 import 'liked_users_viewmodel.dart';
 import 'widgets/liked_user_card.dart';
-import '../../subscription/widgets/vip_promotion_dialog.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class LikedUsersView extends StatelessWidget {
-  const LikedUsersView({Key? key}) : super(key: key);
+  const LikedUsersView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +16,7 @@ class LikedUsersView extends StatelessWidget {
       create: (_) => LikedUsersViewModel(),
       child: Consumer<LikedUsersViewModel>(
         builder: (context, viewModel, _) {
-          // Get subscription service to check if user is VIP
-          final subscriptionService = Provider.of<SubscriptionService>(context);
+          // Get likes service
           final likesService = Provider.of<LikesService>(context);
 
           return Scaffold(
@@ -27,27 +24,27 @@ class LikedUsersView extends StatelessWidget {
               title: const Text('Who Liked You'),
               elevation: 0,
               actions: [
-                if (subscriptionService.isVip)
-                  IconButton(
-                    icon: const Icon(Icons.filter_list),
-                    onPressed: () {
-                      // Filter functionality for VIP users
-                      viewModel.toggleFilterMenu();
-                    },
-                  ),
+                // Tạm thời cho phép tất cả user dùng filter, không cần VIP
+                IconButton(
+                  icon: const Icon(Icons.filter_list),
+                  onPressed: () {
+                    // Filter functionality - mở cho tất cả user
+                    viewModel.toggleFilterMenu();
+                  },
+                ),
               ],
             ),
             body: Stack(
               children: [
-                // Content - will be blurred if not VIP
+                // Content - hiển thị cho tất cả user, không cần VIP
                 RefreshIndicator(
                   onRefresh: () => likesService.fetchLikedUsers(),
                   child: _buildContent(context, viewModel, likesService),
                 ),
 
-                // VIP overlay if not subscribed
-                if (!subscriptionService.isVip)
-                  _buildVipOverlay(context),
+                // Đã loại bỏ VIP overlay - cho phép tất cả user xem
+                // if (!subscriptionService.isVip)
+                //   _buildVipOverlay(context),
               ],
             ),
           );
@@ -56,7 +53,11 @@ class LikedUsersView extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, LikedUsersViewModel viewModel, LikesService likesService) {
+  Widget _buildContent(
+    BuildContext context,
+    LikedUsersViewModel viewModel,
+    LikesService likesService,
+  ) {
     if (likesService.isLoading) {
       return _buildLoadingState();
     }
@@ -81,9 +82,12 @@ class LikedUsersView extends StatelessWidget {
       itemBuilder: (context, index) {
         final user = likesService.likedUsers[index];
         return LikedUserCard(
-          user: user,
-          onTap: () => viewModel.navigateToUserProfile(context, user),
-        ).animate().fadeIn(duration: 300.ms, delay: (50 * index).ms).slideY(
+              user: user,
+              onTap: () => viewModel.navigateToUserProfile(context, user),
+            )
+            .animate()
+            .fadeIn(duration: 300.ms, delay: (50 * index).ms)
+            .slideY(
               begin: 0.2,
               end: 0,
               duration: 300.ms,
@@ -95,9 +99,7 @@ class LikedUsersView extends StatelessWidget {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildErrorState(String error) {
@@ -116,7 +118,10 @@ class LikedUsersView extends StatelessWidget {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
-              final likesService = Provider.of<LikesService>(app_navigation.navigatorKey.currentContext!, listen: false);
+              final likesService = Provider.of<LikesService>(
+                app_navigation.navigatorKey.currentContext!,
+                listen: false,
+              );
               likesService.fetchLikedUsers();
             },
             child: const Text('Try Again'),
@@ -131,11 +136,7 @@ class LikedUsersView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.favorite_border,
-            size: 64,
-            color: Colors.grey.shade400,
-          ),
+          Icon(Icons.favorite_border, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           const Text(
             'No Likes Yet',
@@ -152,15 +153,6 @@ class LikedUsersView extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildVipOverlay(BuildContext context) {
-    return VipPromotionDialog(
-      featureTitle: 'See Who Likes You',
-      featureId: 'see_likes',
-      description: 'Upgrade to Amoura VIP to see all the users who have liked your profile!',
-      icon: Icons.favorite,
     );
   }
 }

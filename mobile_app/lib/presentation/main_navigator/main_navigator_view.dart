@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../config/language/app_localizations.dart';
 import 'main_navigator_viewmodel.dart';
 import 'widgets/nav_bar_item.dart';
+import 'widgets/animated_gradient_background.dart';
 import '../discovery/discovery_view.dart';
 import '../match/liked_users/liked_users_view.dart';
 import '../chat/chat_list/chat_list_view.dart';
@@ -13,6 +15,8 @@ class MainNavigatorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return ChangeNotifierProvider(
       create: (_) => MainNavigatorViewModel(),
       child: Consumer<MainNavigatorViewModel>(
@@ -28,55 +32,59 @@ class MainNavigatorView extends StatelessWidget {
                 const SettingsView(),
               ],
             ),
-            bottomNavigationBar: BottomAppBar(
-              elevation: 15,
-              color: Theme.of(context).colorScheme.surface,
-              child: SizedBox(
-                height: 70,
+            bottomNavigationBar: Container(
+              margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+              height: 90,
+              child: AnimatedGradientBackground(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Expanded(
                       child: NavBarItem(
-                        icon: Icons.explore,
+                        customIconPath: 'assets/icons/discover_icon.svg',
+                        label: localizations.translate('explore'),
                         isActive: vm.currentIndex == 0,
                         onTap: () => vm.setCurrentIndex(0),
-                        activeColor: Colors.blue,
+                        activeColor: const Color(0xFF6C63FF),
                       ),
                     ),
                     Expanded(
                       child: NavBarItem(
-                        icon: Icons.favorite,
+                        customIconPath: 'assets/icons/likes_icon.svg',
+                        label: localizations.translate('likes'),
                         isActive: vm.currentIndex == 1,
                         onTap: () => vm.setCurrentIndex(1),
                         badge: "VIP",
-                        activeColor: Colors.pink,
+                        activeColor: const Color(0xFFFF6B9D),
                       ),
                     ),
                     Expanded(
                       child: NavBarItem(
-                        icon: Icons.chat,
+                        customIconPath: 'assets/icons/chat_icon.svg',
+                        label: localizations.translate('chat'),
                         isActive: vm.currentIndex == 2,
                         onTap: () => vm.setCurrentIndex(2),
                         badgeCount: vm.chatBadgeCount,
-                        activeColor: Colors.green,
+                        activeColor: const Color(0xFF4ECDC4),
                       ),
                     ),
                     Expanded(
                       child: NavBarItem(
-                        icon: Icons.notifications,
+                        customIconPath: 'assets/icons/notification_icon.svg',
+                        label: localizations.translate('notifications'),
                         isActive: vm.currentIndex == 3,
                         onTap: () => vm.setCurrentIndex(3),
                         badgeCount: vm.notificationBadgeCount,
-                        activeColor: Colors.orange,
+                        activeColor: const Color(0xFFFFB347),
                       ),
                     ),
                     Expanded(
                       child: NavBarItem(
-                        icon: Icons.settings,
+                        customIconPath: 'assets/icons/settings_icon.svg',
+                        label: localizations.translate('settings'),
                         isActive: vm.currentIndex == 4,
                         onTap: () => vm.setCurrentIndex(4),
-                        activeColor: Colors.purple,
+                        activeColor: const Color(0xFF9B59B6),
                       ),
                     ),
                   ],

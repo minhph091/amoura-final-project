@@ -15,10 +15,10 @@ class PlanListView extends StatefulWidget {
   sourceFeature; // Which feature triggered the promotion (e.g., 'rewind', 'likes')
 
   const PlanListView({
-    Key? key,
+    super.key,
     this.fromVipPromotion = false,
     this.sourceFeature,
-  }) : super(key: key);
+  });
 
   @override
   State<PlanListView> createState() => _PlanListViewState();
@@ -39,10 +39,6 @@ class _PlanListViewState extends State<PlanListView>
     // If we have a specific feature that triggered this view, focus on it
     if (widget.sourceFeature != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final viewModel = Provider.of<PlanListViewModel>(
-          context,
-          listen: false,
-        );
         // Select appropriate tab based on source feature
       });
     }
@@ -104,9 +100,9 @@ class _PlanListViewState extends State<PlanListView>
                                 ),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Text(
-                                'Amoura VIP',
-                                style: TextStyle(
+                              child: Text(
+                                localizations.translate('amoura_vip'),
+                                style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -115,7 +111,9 @@ class _PlanListViewState extends State<PlanListView>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Unlock premium features',
+                              localizations.translate(
+                                'unlock_premium_features',
+                              ),
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
@@ -126,9 +124,17 @@ class _PlanListViewState extends State<PlanListView>
                     // Tabs for Benefits and Plans
                     TabBar(
                       controller: _tabController,
-                      tabs: const [
-                        Tab(text: 'VIP Benefits'),
-                        Tab(text: 'Choose a Plan'),
+                      tabs: [
+                        Tab(
+                          text: AppLocalizations.of(
+                            context,
+                          ).translate('vip_benefits'),
+                        ),
+                        Tab(
+                          text: AppLocalizations.of(
+                            context,
+                          ).translate('choose_a_plan'),
+                        ),
                       ],
                       labelColor: Theme.of(context).primaryColor,
                       unselectedLabelColor:
@@ -156,8 +162,10 @@ class _PlanListViewState extends State<PlanListView>
                       child: AppButton(
                         text:
                             _tabController.index == 0
-                                ? 'Choose a Plan'
-                                : 'Continue to Payment',
+                                ? localizations.translate('choose_a_plan')
+                                : localizations.translate(
+                                  'continue_to_payment',
+                                ),
                         isLoading: viewModel.isLoading,
                         onPressed: () {
                           if (_tabController.index == 0) {
@@ -188,9 +196,9 @@ class _PlanListViewState extends State<PlanListView>
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        const Text(
-          'Exclusive VIP Benefits',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Text(
+          AppLocalizations.of(context).translate('exclusive_vip_benefits'),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         // List of VIP features
@@ -242,7 +250,7 @@ class _PlanListViewState extends State<PlanListView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'What\'s included:',
+                      AppLocalizations.of(context).translate('whats_included'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),

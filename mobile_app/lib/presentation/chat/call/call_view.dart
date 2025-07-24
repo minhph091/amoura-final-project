@@ -12,15 +12,15 @@ class CallView extends StatefulWidget {
   final bool isVideoCall;
 
   const CallView({
-    Key? key,
+    super.key,
     required this.matchId,
     required this.matchName,
     required this.matchAvatar,
     this.isVideoCall = true,
-  }) : super(key: key);
+  });
 
   @override
-  _CallViewState createState() => _CallViewState();
+  State<CallView> createState() => _CallViewState();
 }
 
 class _CallViewState extends State<CallView> with WidgetsBindingObserver {
@@ -32,9 +32,7 @@ class _CallViewState extends State<CallView> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Lock the screen in portrait mode for the call
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     // Enter full screen mode for the call
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
   }
@@ -59,9 +57,7 @@ class _CallViewState extends State<CallView> with WidgetsBindingObserver {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -69,7 +65,8 @@ class _CallViewState extends State<CallView> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Handle app lifecycle changes
-    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
       // The app is in the background, handle accordingly
       viewModel.pauseCall();
     } else if (state == AppLifecycleState.resumed) {
@@ -120,13 +117,14 @@ class _CallViewState extends State<CallView> with WidgetsBindingObserver {
           return Container(
             color: Colors.black,
             child: Center(
-              child: model.remoteVideoWidget ??
-              const Center(
-                child: Text(
-                  "Connecting video...",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
+              child:
+                  model.remoteVideoWidget ??
+                  const Center(
+                    child: Text(
+                      "Connecting video...",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
             ),
           );
         } else {
@@ -152,9 +150,12 @@ class _CallViewState extends State<CallView> with WidgetsBindingObserver {
       child: Center(
         child: CircleAvatar(
           radius: 80,
-          backgroundImage: widget.matchAvatar.isNotEmpty
-              ? NetworkImage(widget.matchAvatar) as ImageProvider
-              : const AssetImage('assets/images/avatars/default_avatar.png'),
+          backgroundImage:
+              widget.matchAvatar.isNotEmpty
+                  ? NetworkImage(widget.matchAvatar) as ImageProvider
+                  : const AssetImage(
+                    'assets/images/avatars/default_avatar.png',
+                  ),
         ),
       ),
     );
@@ -180,14 +181,15 @@ class _CallViewState extends State<CallView> with WidgetsBindingObserver {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(11),
-                child: model.localVideoWidget ??
-                const Center(
-                  child: Text(
-                    "Loading camera...",
-                    style: TextStyle(color: Colors.white70),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+                child:
+                    model.localVideoWidget ??
+                    const Center(
+                      child: Text(
+                        "Loading camera...",
+                        style: TextStyle(color: Colors.white70),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
               ),
             ),
           ),
@@ -221,10 +223,7 @@ class _CallViewState extends State<CallView> with WidgetsBindingObserver {
                   const SizedBox(height: 8),
                   Text(
                     model.callStatusText,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   if (model.callDuration != null) ...[
                     const SizedBox(height: 4),

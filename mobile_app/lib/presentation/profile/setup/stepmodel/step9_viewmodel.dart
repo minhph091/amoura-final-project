@@ -29,7 +29,7 @@ class Step9ViewModel extends BaseStepViewModel {
     try {
       isLoading = true;
       notifyListeners();
-      print('Fetching interests and languages options...');
+      debugPrint('Fetching interests and languages options...');
 
       // [API Integration] Gọi API để lấy dữ liệu từ endpoint /profiles/options
       final options = await _setupProfileService.fetchProfileOptions();
@@ -42,7 +42,7 @@ class Step9ViewModel extends BaseStepViewModel {
         final name = option['name']?.toString() ?? 'Unknown';
         return {'value': id, 'label': name};
       }).toList().cast<Map<String, String>>();
-      print('Fetched interest options: $interestOptions');
+      debugPrint('Fetched interest options: $interestOptions');
 
       // [API Data Mapping] Chuyển đổi dữ liệu ngôn ngữ từ API sang định dạng Map<String, String>
       languageOptions = languages.map((option) {
@@ -50,11 +50,11 @@ class Step9ViewModel extends BaseStepViewModel {
         final name = option['name']?.toString() ?? 'Unknown';
         return {'value': id, 'label': name};
       }).toList().cast<Map<String, String>>();
-      print('Fetched language options: $languageOptions');
+      debugPrint('Fetched language options: $languageOptions');
 
       _fetched = true;
     } catch (e) {
-      print('Error fetching interests and languages options: $e');
+      debugPrint('Error fetching interests and languages options: $e');
       errorMessage = 'Failed to load options. Please try again.';
       interestOptions = [];
       languageOptions = [];
@@ -74,7 +74,7 @@ class Step9ViewModel extends BaseStepViewModel {
     selectedInterestIds = interests;
     parent.selectedInterestIds = interests;
     notifyListeners();
-    print('Set selected interests: $interests');
+    debugPrint('Set selected interests: $interests');
   }
 
   // Cập nhật danh sách ngôn ngữ được chọn
@@ -82,7 +82,7 @@ class Step9ViewModel extends BaseStepViewModel {
     selectedLanguageIds = languages;
     parent.selectedLanguageIds = languages;
     notifyListeners();
-    print('Set selected languages: $languages');
+    debugPrint('Set selected languages: $languages');
   }
 
   // Cập nhật trạng thái muốn học ngôn ngữ mới
@@ -90,7 +90,7 @@ class Step9ViewModel extends BaseStepViewModel {
     interestedInNewLanguage = value;
     parent.interestedInNewLanguage = value;
     notifyListeners();
-    print('Set interested in new language: $value');
+    debugPrint('Set interested in new language: $value');
   }
 
   @override
@@ -118,6 +118,6 @@ class Step9ViewModel extends BaseStepViewModel {
     parent.profileData['interestIds'] = interestIds.isNotEmpty ? interestIds : null;
     parent.profileData['languageIds'] = languageIds.isNotEmpty ? languageIds : null;
     parent.profileData['interestedInNewLanguage'] = interestedInNewLanguage;
-    print('Saved Step 9 data: $parent.profileData');
+    debugPrint('Saved Step 9 data: $parent.profileData');
   }
 }

@@ -1,17 +1,19 @@
 import '../constants/app_constants.dart';
+// ...existing code...
 
 class ValidationUtil {
   // Regex-based Validation
   static bool isEmail(String input) =>
-      RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(input);
+      RegExp(r"^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(input);
 
   static bool isPhoneNumber(String input) =>
       RegExp(r"^(\+?[0-9]{10,15})$").hasMatch(input);
 
   static bool isPasswordValid(String input) =>
       input.length >= AppConstants.passwordMinLength &&
-      RegExp(r"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!*()_])(?=\S+$).{8,}$")
-          .hasMatch(input);
+      RegExp(
+        r"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!*()_])(?=\S+$).{8,}$",
+      ).hasMatch(input);
 
   // Common Input Validators
   static String? validateEmail(String? value) {
@@ -21,7 +23,9 @@ class ValidationUtil {
   }
 
   static String? validatePhone(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Phone number is required!';
+    if (value == null || value.trim().isEmpty) {
+      return 'Phone number is required!';
+    }
     if (!isPhoneNumber(value)) return 'Invalid phone number!';
     return null;
   }
@@ -35,7 +39,9 @@ class ValidationUtil {
   }
 
   static String? validateConfirmPassword(String? password, String? confirm) {
-    if (confirm == null || confirm.trim().isEmpty) return 'Please confirm your password!';
+    if (confirm == null || confirm.trim().isEmpty) {
+      return 'Please confirm your password!';
+    }
     if (password != confirm) return 'Passwords do not match!';
     return null;
   }
@@ -48,26 +54,38 @@ class ValidationUtil {
 
   // Personal Info Validators
   String? validateUsernameLength(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Please enter your username.';
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your username.';
+    }
     if (value.length < 3) return 'Username must be at least 3 characters.';
     if (value.length > 50) return 'Username must be at most 50 characters.';
-    if (!RegExp(r"^[a-zA-Z0-9._-]+$").hasMatch(value.trim())) return 'Invalid username.';
+    if (!RegExp(r"^[a-zA-Z0-9._-]+$").hasMatch(value.trim())) {
+      return 'Invalid username.';
+    }
     return null;
   }
 
   String? validateFirstName(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Please enter your first name.';
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your first name.';
+    }
     if (value.length < 2) return 'First name must be at least 2 characters.';
     if (value.length > 50) return 'First name must be at most 50 characters.';
-    if (!RegExp(r"^[a-zA-ZÀ-ỹà-ỹ\s'-]+$").hasMatch(value.trim())) return 'Invalid first name.';
+    if (!RegExp(r"^[a-zA-ZÀ-ỹà-ỹ\s'-]+$").hasMatch(value.trim())) {
+      return 'Invalid first name.';
+    }
     return null;
   }
 
   String? validateLastName(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Please enter your last name.';
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your last name.';
+    }
     if (value.length < 2) return 'Last name must be at least 2 characters.';
     if (value.length > 50) return 'Last name must be at most 50 characters.';
-    if (!RegExp(r"^[a-zA-ZÀ-ỹà-ỹ\s'-]+$").hasMatch(value.trim())) return 'Invalid last name.';
+    if (!RegExp(r"^[a-zA-ZÀ-ỹà-ỹ\s'-]+$").hasMatch(value.trim())) {
+      return 'Invalid last name.';
+    }
     return null;
   }
 
@@ -88,7 +106,9 @@ class ValidationUtil {
   }
 
   String? validateBio(String? value) {
-    if (value != null && value.length > 1000) return 'Bio must be less than 1000 characters.';
+    if (value != null && value.length > 1000) {
+      return 'Bio must be less than 1000 characters.';
+    }
     return null;
   }
 }

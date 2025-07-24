@@ -2,6 +2,7 @@
 // Reusable dropdown widget for single-select options.
 
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 
 class CustomDropdown extends StatelessWidget {
   final List<Map<String, dynamic>> options;
@@ -26,7 +27,10 @@ class CustomDropdown extends StatelessWidget {
       decoration: InputDecoration(
         prefixIcon: Icon(
           Icons.category,
-          color: isValueSelected ? const Color(0xFFD81B60) : const Color(0xFFBA68C8),
+          color:
+              isValueSelected
+                  ? const Color(0xFFD81B60)
+                  : const Color(0xFFBA68C8),
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -39,20 +43,27 @@ class CustomDropdown extends StatelessWidget {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: isValueSelected ? const Color(0xFFD81B60) : const Color(0xFFBA68C8),
+            color:
+                isValueSelected
+                    ? const Color(0xFFD81B60)
+                    : const Color(0xFFBA68C8),
             width: isValueSelected ? 2.0 : 1.5,
           ),
         ),
         filled: true,
-        fillColor: isValueSelected
-            ? const Color(0xFFD81B60).withAlpha(25)
-            : Colors.white.withAlpha(240),
+        fillColor:
+            isValueSelected
+                ? const Color(0xFFD81B60).withAlpha(25)
+                : Colors.white.withAlpha(240),
         floatingLabelBehavior: FloatingLabelBehavior.never,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
       ),
       value: value,
       hint: Text(
-        'Select an option...',
+        AppLocalizations.of(context).translate('select_an_option'),
         style: theme.textTheme.bodyMedium?.copyWith(
           color: const Color(0xFFBA68C8),
         ),
@@ -63,40 +74,52 @@ class CustomDropdown extends StatelessWidget {
         color: const Color(0xFF424242),
         fontWeight: FontWeight.bold,
       ),
-      items: options.map((option) {
-        final isOptionSelected = value == option['value']?.toString();
-        return DropdownMenuItem<String>(
-          value: option['value']?.toString(),
-          child: Row(
-            children: [
-              if (option.containsKey('icon'))
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: _buildIcon(option['icon'], isOptionSelected, option['color']),
-                ),
-              Expanded(
-                child: Text(
-                  option['label']?.toString() ?? 'Unknown',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: isOptionSelected ? const Color(0xFFD81B60) : const Color(0xFF424242),
-                    fontWeight: isOptionSelected ? FontWeight.bold : FontWeight.normal,
+      items:
+          options.map((option) {
+            final isOptionSelected = value == option['value']?.toString();
+            return DropdownMenuItem<String>(
+              value: option['value']?.toString(),
+              child: Row(
+                children: [
+                  if (option.containsKey('icon'))
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: _buildIcon(
+                        option['icon'],
+                        isOptionSelected,
+                        option['color'],
+                      ),
+                    ),
+                  Expanded(
+                    child: Text(
+                      option['label']?.toString() ??
+                          AppLocalizations.of(context).translate('unknown'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color:
+                            isOptionSelected
+                                ? const Color(0xFFD81B60)
+                                : const Color(0xFF424242),
+                        fontWeight:
+                            isOptionSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  if (isOptionSelected)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 4.0),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Color(0xFFD81B60),
+                        size: 20,
+                      ),
+                    ),
+                ],
               ),
-              if (isOptionSelected)
-                const Padding(
-                  padding: EdgeInsets.only(left: 4.0),
-                  child: Icon(
-                    Icons.check_circle,
-                    color: Color(0xFFD81B60),
-                    size: 20,
-                  ),
-                ),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
       onChanged: (val) {
         if (val != null) {
           onChanged(val);
@@ -116,7 +139,8 @@ class CustomDropdown extends StatelessWidget {
                   ),
                 Expanded(
                   child: Text(
-                    option['label']?.toString() ?? 'Unknown',
+                    option['label']?.toString() ??
+                        AppLocalizations.of(context).translate('unknown'),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: const Color(0xFF424242),
                       fontWeight: FontWeight.bold,
@@ -137,23 +161,25 @@ class CustomDropdown extends StatelessWidget {
     if (icon is IconData) {
       return Icon(
         icon,
-        color: isSelected
-            ? const Color(0xFFD81B60)
-            : (color != null ? _parseColor(color) : const Color(0xFF424242)),
+        color:
+            isSelected
+                ? const Color(0xFFD81B60)
+                : (color != null
+                    ? _parseColor(color)
+                    : const Color(0xFF424242)),
         size: 20,
       );
     } else if (icon is String) {
-      try {
-        return Icon(
-          IconData(int.parse(icon), fontFamily: 'MaterialIcons'),
-          color: isSelected
-              ? const Color(0xFFD81B60)
-              : (color != null ? _parseColor(color) : const Color(0xFF424242)),
-          size: 20,
-        );
-      } catch (e) {
-        return const Icon(Icons.error, color: Colors.red, size: 20);
-      }
+      return Icon(
+        Icons.circle,
+        color:
+            isSelected
+                ? const Color(0xFFD81B60)
+                : (color != null
+                    ? _parseColor(color)
+                    : const Color(0xFF424242)),
+        size: 20,
+      );
     }
     return const Icon(Icons.error, color: Colors.red, size: 20);
   }

@@ -1,4 +1,5 @@
 // lib/presentation/profile/setup/stepmodel/step10_viewmodel.dart
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import '../../../../core/services/setup_profile_service.dart';
 import '../../../../core/constants/api_endpoints.dart';
@@ -42,7 +43,7 @@ class Step10ViewModel extends BaseStepViewModel {
       }
     } catch (e) {
       errorMessage = 'Failed to upload photo: $e';
-      print('Error uploading photo: $e');
+      debugPrint('Error uploading photo: $e');
       rethrow;
     } finally {
       isUploading = false;
@@ -58,12 +59,12 @@ class Step10ViewModel extends BaseStepViewModel {
       // - Method: DELETE
       // - Headers: Authorization Bearer <accessToken>
       // - Response: 200 OK or 404 if not found
-      print('Deleting photo with ID: $photoId'); // Debug log to verify photoId
+      debugPrint('Deleting photo with ID: $photoId'); // Debug log to verify photoId
       await _setupProfileService.deletePhoto(ApiEndpoints.deleteHighlight(int.parse(photoId)));
       additionalPhotos.removeWhere((photo) => photo['id'] == photoId);
       notifyListeners(); // Notify UI after successful deletion
     } catch (e) {
-      print('Error deleting photo: $e');
+      debugPrint('Error deleting photo: $e');
       throw Exception('Failed to delete photo: $e');
     }
   }

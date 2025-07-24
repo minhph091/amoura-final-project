@@ -31,7 +31,6 @@ class AppInitializationService {
     }
 
     _isInitializing = true;
-    print('AppInitializationService: Bắt đầu chuẩn bị dữ liệu...');
 
     try {
       // 1. Load current user profile để lấy user ID và location
@@ -46,14 +45,10 @@ class AppInitializationService {
       // Kiểm tra xem context còn valid không
       if (context.mounted) {
         await _loadAndPrecacheRecommendations(context);
-      } else {
-        print('AppInitializationService: Context không còn valid, bỏ qua precache');
       }
       
       _isInitialized = true;
-      print('AppInitializationService: Chuẩn bị dữ liệu hoàn tất');
     } catch (e) {
-      print('AppInitializationService: Lỗi khi chuẩn bị dữ liệu: $e');
       // Không throw error để không block việc vào app
     } finally {
       _isInitializing = false;
@@ -70,10 +65,8 @@ class AppInitializationService {
       if (profileData['userId'] != null) {
         _currentUserId = profileData['userId'] as int;
         RecommendationCache.instance.setCurrentUserId(_currentUserId);
-        print('AppInitializationService: Đã set current user ID: $_currentUserId');
       }
     } catch (e) {
-      print('AppInitializationService: Lỗi khi load current user profile: $e');
       // Không throw error để không block việc vào app
     }
   }
@@ -88,42 +81,36 @@ class AppInitializationService {
       final filteredRecommendations = _filterOutCurrentUser(recommendations);
       RecommendationCache.instance.setRecommendations(filteredRecommendations);
       
-      print('AppInitializationService: Đã load ${filteredRecommendations.length} recommendations');
-      
-      // Precache ảnh cho 3 profile đầu tiên để đảm bảo smooth experience
+      // Precache ảnh cho 10 profile đầu tiên thay vì 3 để đảm bảo smooth experience
       if (filteredRecommendations.isNotEmpty) {
         await _precacheInitialProfiles(filteredRecommendations, context);
       }
     } catch (e) {
-      print('AppInitializationService: Lỗi khi load recommendations: $e');
       // Không throw error để không block việc vào app
     }
   }
 
-  /// Precache ảnh cho các profile đầu tiên
+  /// Precache ảnh cho các profile đầu tiên với logic thông minh
   Future<void> _precacheInitialProfiles(List<UserRecommendationModel> profiles, BuildContext context) async {
     try {
-      await ImagePrecacheService.instance.precacheMultipleProfiles(profiles, context, count: 3);
+      // Sử dụng logic precache thông minh mới
+      await ImagePrecacheService.instance.precacheForDiscovery(profiles, context);
     } catch (e) {
-      print('AppInitializationService: Lỗi khi precache initial profiles: $e');
     }
   }
 
   /// Initialize WebSocket connection để user được đánh dấu online
   Future<void> _initializeWebSocketConnection() async {
     try {
-      print('AppInitializationService: Khởi tạo WebSocket connection cho user $_currentUserId');
       
       final socketClient = GetIt.I<SocketClient>();
       
-      // Test connection first to debug URL malformation
-      await socketClient.testConnection();
+      // TẠM THỜI TẮT TEST CONNECTION ĐỂ DEBUG LỖI
+      // await socketClient.testConnection();
       
       await socketClient.connect(_currentUserId.toString());
       
-      print('AppInitializationService: WebSocket connection thành công');
     } catch (e) {
-      print('AppInitializationService: Lỗi khi khởi tạo WebSocket: $e');
       // Không throw error để không block việc vào app
     }
   }
@@ -135,10 +122,6 @@ class AppInitializationService {
     }
     
     final filtered = recommendations.where((profile) => profile.userId != _currentUserId).toList();
-    
-    if (filtered.length != recommendations.length) {
-      print('AppInitializationService: Đã filter out current user profile (ID: $_currentUserId)');
-    }
     
     return filtered;
   }
@@ -155,11 +138,8 @@ class AppInitializationService {
     try {
       final socketClient = GetIt.I<SocketClient>();
       socketClient.disconnect();
-      print('AppInitializationService: Đã disconnect WebSocket');
     } catch (e) {
-      print('AppInitializationService: Lỗi khi disconnect WebSocket: $e');
     }
     
-    print('AppInitializationService: Đã reset trạng thái');
   }
-} 
+}

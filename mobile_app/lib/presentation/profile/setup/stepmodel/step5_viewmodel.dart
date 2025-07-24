@@ -1,4 +1,6 @@
 // lib/presentation/profile/setup/stepmodel/step5_viewmodel.dart
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -22,7 +24,8 @@ class Step5ViewModel extends BaseStepViewModel {
     cityController.text = parent.city ?? '';
     stateController.text = parent.state ?? '';
     countryController.text = parent.country ?? '';
-    locationPreference = parent.locationPreference ?? 50; // Default value changed to 50
+    locationPreference =
+        parent.locationPreference ?? 50; // Default value changed to 50
   }
 
   @override
@@ -30,19 +33,19 @@ class Step5ViewModel extends BaseStepViewModel {
 
   Future<void> getCurrentLocation(BuildContext context) async {
     try {
-      print('Starting to get current location...');
-      
+      debugPrint('Starting to get current location...');
+
       // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         throw 'Location services are disabled. Please enable them in settings.';
       }
-      print('Location services are enabled.');
+      debugPrint('Location services are enabled.');
 
       // Check and request permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        print('Location permission denied, requesting permission...');
+        debugPrint('Location permission denied, requesting permission...');
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           throw 'Location permissions are denied.';
@@ -51,7 +54,7 @@ class Step5ViewModel extends BaseStepViewModel {
       if (permission == LocationPermission.deniedForever) {
         throw 'Location permissions are permanently denied. Please enable them in settings.';
       }
-      print('Location permission granted.');
+      debugPrint('Location permission granted.');
 
       // Get current position
       Position position = await Geolocator.getCurrentPosition(
@@ -59,7 +62,7 @@ class Step5ViewModel extends BaseStepViewModel {
       );
       latitude = position.latitude;
       longitude = position.longitude;
-      print('Got position: lat=$latitude, lon=$longitude');
+      debugPrint('Got position: lat=$latitude, lon=$longitude');
 
       // Reverse geocoding to get address details
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -71,7 +74,9 @@ class Step5ViewModel extends BaseStepViewModel {
         city = place.subAdministrativeArea ?? 'Unknown City';
         state = place.administrativeArea ?? 'Unknown State';
         country = place.country ?? 'Unknown Country';
-        print('Geocoding result: city=$city, state=$state, country=$country');
+        debugPrint(
+          'Geocoding result: city=$city, state=$state, country=$country',
+        );
       } else {
         throw 'Could not get address from coordinates.';
       }
@@ -85,16 +90,18 @@ class Step5ViewModel extends BaseStepViewModel {
       parent.country = country;
       parent.latitude = latitude;
       parent.longitude = longitude;
-      print('Updated parent viewmodel and controllers with location data.');
+      debugPrint(
+        'Updated parent viewmodel and controllers with location data.',
+      );
 
       // Notify listeners to update UI
       notifyListeners();
-      print('Notified listeners to update UI.');
+      debugPrint('Notified listeners to update UI.');
     } catch (e) {
-      print('Error getting location: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to get location: $e')),
-      );
+      debugPrint('Error getting location: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to get location: $e')));
     }
   }
 
@@ -102,7 +109,9 @@ class Step5ViewModel extends BaseStepViewModel {
     locationPreference = value;
     parent.locationPreference = value;
     notifyListeners();
-    print('Set location preference: $value km'); // Log to verify slider change
+    debugPrint(
+      'Set location preference: $value km',
+    ); // Log to verify slider change
   }
 
   @override
@@ -125,8 +134,11 @@ class Step5ViewModel extends BaseStepViewModel {
     parent.profileData['country'] = country;
     parent.profileData['latitude'] = latitude;
     parent.profileData['longitude'] = longitude;
-    parent.profileData['locationPreference'] = parent.locationPreference; // Sync with parent value
-    print('Saved location data to parent profileData: ${parent.profileData}');
+    parent.profileData['locationPreference'] =
+        parent.locationPreference; // Sync with parent value
+    debugPrint(
+      'Saved location data to parent profileData: ${parent.profileData}',
+    );
   }
 
   @override

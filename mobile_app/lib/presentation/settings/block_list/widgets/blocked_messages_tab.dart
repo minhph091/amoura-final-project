@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../config/language/app_localizations.dart';
@@ -10,6 +12,7 @@ class BlockedMessagesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final blockingService = context.watch<BlockingService>();
     final blockedMessages = blockingService.blockedMessages;
 
@@ -18,15 +21,15 @@ class BlockedMessagesTab extends StatelessWidget {
     }
 
     if (blockedMessages.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.message_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
+            const Icon(Icons.message_outlined, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
             Text(
-              'No blocked messages',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              localizations.translate('no_blocked_messages'),
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),
@@ -164,7 +167,7 @@ class _BlockedChatView extends StatelessWidget {
               AppLocalizations.of(context).translate('unblock_message'),
             ),
             content: Text(
-              'Do you want to unblock messages from ${blockedMessage.userName}?',
+              '${AppLocalizations.of(context).translate('unblock_messages_confirmation')} ${blockedMessage.userName}?',
             ),
             actions: [
               TextButton(

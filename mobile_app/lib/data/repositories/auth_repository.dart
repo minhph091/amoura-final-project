@@ -1,12 +1,10 @@
 // lib/data/repositories/auth_repository.dart
 import '../remote/auth_api.dart';
-import '../../core/services/auth_service.dart';
 
 class AuthRepository {
   final AuthApi _authApi;
-  final AuthService _authService;
 
-  AuthRepository(this._authApi, this._authService);
+  AuthRepository(this._authApi);
 
   Future<void> logout(String refreshToken) async {
     await _authApi.logout(refreshToken);
@@ -84,9 +82,7 @@ class AuthRepository {
     );
   }
 
-  Future<Map<String, dynamic>> requestLoginOtp({
-    required String email,
-  }) async {
+  Future<Map<String, dynamic>> requestLoginOtp({required String email}) async {
     return await _authApi.requestLoginOtp(email: email);
   }
 

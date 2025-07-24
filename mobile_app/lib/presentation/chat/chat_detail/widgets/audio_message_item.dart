@@ -10,13 +10,13 @@ class AudioMessageItem extends StatefulWidget {
   final VoidCallback? onDoubleTap;
 
   const AudioMessageItem({
-    Key? key,
+    super.key,
     required this.audioUrl,
     this.duration,
     required this.isMe,
     this.onLongPress,
     this.onDoubleTap,
-  }) : super(key: key);
+  });
 
   @override
   State<AudioMessageItem> createState() => _AudioMessageItemState();
@@ -262,7 +262,7 @@ class _AudioMessageItemState extends State<AudioMessageItem>
         final progress = localPosition.dx / box.size.width;
         _onSeek(progress.clamp(0.0, 1.0));
       },
-      child: Container(
+      child: SizedBox(
         height: 32,
         child: Row(
           children: _waveformData.asMap().entries.map((entry) {

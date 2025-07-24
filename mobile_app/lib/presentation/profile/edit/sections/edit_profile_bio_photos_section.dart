@@ -10,20 +10,20 @@ import '../../../shared/widgets/image_source_bottom_sheet.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../edit_profile_viewmodel.dart';
 import '../../setup/theme/setup_profile_theme.dart';
+import '../../../../config/language/app_localizations.dart';
 
 class EditProfileBioPhotosSection extends StatefulWidget {
   final EditProfileViewModel viewModel;
 
-  const EditProfileBioPhotosSection({
-    super.key,
-    required this.viewModel,
-  });
+  const EditProfileBioPhotosSection({super.key, required this.viewModel});
 
   @override
-  State<EditProfileBioPhotosSection> createState() => _EditProfileBioPhotosSectionState();
+  State<EditProfileBioPhotosSection> createState() =>
+      _EditProfileBioPhotosSectionState();
 }
 
-class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSection> {
+class _EditProfileBioPhotosSectionState
+    extends State<EditProfileBioPhotosSection> {
   final TextEditingController _bioController = TextEditingController();
   final int maxAdditionalPhotos = 4;
 
@@ -40,18 +40,19 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
   }
 
   Future<bool> _requestPermissions(ImageSource source) async {
-    Permission permission = source == ImageSource.camera
-        ? Permission.camera
-        : Permission.photos;
+    Permission permission =
+        source == ImageSource.camera ? Permission.camera : Permission.photos;
     var status = await permission.status;
     if (!status.isGranted) {
       status = await permission.request();
       if (!status.isGranted) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Please grant ${source == ImageSource.camera
-                ? 'camera'
-                : 'photo'} permission.")),
+            SnackBar(
+              content: Text(
+                "Please grant ${source == ImageSource.camera ? 'camera' : 'photo'} permission.",
+              ),
+            ),
           );
         }
         return false;
@@ -61,11 +62,13 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
   }
 
   Future<void> _addPhoto() async {
-    final totalPhotos = widget.viewModel.existingPhotos.length + widget.viewModel.additionalPhotos.length;
+    final totalPhotos =
+        widget.viewModel.existingPhotos.length +
+        widget.viewModel.additionalPhotos.length;
     if (totalPhotos >= maxAdditionalPhotos) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Maximum 4 photos allowed")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Maximum 4 photos allowed")));
       return;
     }
 
@@ -85,14 +88,16 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
     if (pickedFile != null) {
       try {
         final image = await decodeImageFromList(
-            await File(pickedFile.path).readAsBytes());
-        
+          await File(pickedFile.path).readAsBytes(),
+        );
+
         // Kiểm tra kích thước và tỷ lệ ảnh
         if (image.width > image.height) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text("Please upload a vertical or square photo")),
+                content: Text("Please upload a vertical or square photo"),
+              ),
             );
           }
           return;
@@ -105,7 +110,10 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text("Please upload a valid image file (JPG, PNG, GIF, WEBP)")),
+                content: Text(
+                  "Please upload a valid image file (JPG, PNG, GIF, WEBP)",
+                ),
+              ),
             );
           }
           return;
@@ -125,9 +133,9 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Error processing image: $e")),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text("Error processing image: $e")));
         }
       }
     }
@@ -136,11 +144,12 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
   Future<void> _viewPhoto(String path, bool isExisting) async {
     await showDialog(
       context: context,
-      builder: (_) =>
-          Dialog(
+      builder:
+          (_) => Dialog(
             insetPadding: const EdgeInsets.all(20),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -151,7 +160,8 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
                   elevation: 0,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(16)),
+                      top: Radius.circular(16),
+                    ),
                   ),
                   centerTitle: true,
                   leading: IconButton(
@@ -165,12 +175,17 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
                         setState(() {
                           if (isExisting) {
                             // Tìm photo ID từ path
-                            final photo = widget.viewModel.profile?['photos']?.firstWhere(
-                              (p) => p['url'] == path && p['type'] == 'highlight',
-                              orElse: () => null,
-                            );
+                            final photo = widget.viewModel.profile?['photos']
+                                ?.firstWhere(
+                                  (p) =>
+                                      p['url'] == path &&
+                                      p['type'] == 'highlight',
+                                  orElse: () => null,
+                                );
                             if (photo != null && photo['id'] != null) {
-                              widget.viewModel.removeExistingPhoto(photo['id'] as int);
+                              widget.viewModel.removeExistingPhoto(
+                                photo['id'] as int,
+                              );
                             }
                           } else {
                             widget.viewModel.removePhoto(path);
@@ -184,28 +199,26 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
                 Flexible(
                   child: Container(
                     constraints: BoxConstraints(
-                      maxHeight: MediaQuery
-                          .of(context)
-                          .size
-                          .height * 0.7,
+                      maxHeight: MediaQuery.of(context).size.height * 0.7,
                     ),
                     child: InteractiveViewer(
                       minScale: 0.5,
                       maxScale: 3.0,
-                      child: isExisting
-                          ? Image.network(
-                        path,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) =>
-                        const Center(
-                          child: Icon(Icons.broken_image, size: 64,
-                              color: Colors.grey),
-                        ),
-                      )
-                          : Image.file(
-                        File(path),
-                        fit: BoxFit.contain,
-                      ),
+                      child:
+                          isExisting
+                              ? Image.network(
+                                path,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (_, __, ___) => const Center(
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 64,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                              )
+                              : Image.file(File(path), fit: BoxFit.contain),
                     ),
                   ),
                 ),
@@ -227,14 +240,18 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
       children: [
         Text('Your Bio', style: ProfileTheme.getLabelStyle(context)),
         const SizedBox(height: 6),
-        Text("Write a short introduction about yourself (max 1000 characters).",
-            style: ProfileTheme.getDescriptionStyle(context)),
+        Text(
+          "Write a short introduction about yourself (max 1000 characters).",
+          style: ProfileTheme.getDescriptionStyle(context),
+        ),
         const SizedBox(height: 12),
 
         // Bio Text Field
         AppTextField(
           controller: _bioController,
-          hintText: "Tell us about yourself...",
+          hintText: AppLocalizations.of(
+            context,
+          ).translate('tell_us_about_yourself'),
           prefixIcon: Icons.edit_note,
           prefixIconColor: ProfileTheme.darkPink,
           maxLines: 5,
@@ -248,12 +265,15 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
 
         const SizedBox(height: 24),
 
-        Text("Your Photos ($totalPhotos/$maxAdditionalPhotos)",
-            style: ProfileTheme.getLabelStyle(context)),
+        Text(
+          "Your Photos ($totalPhotos/$maxAdditionalPhotos)",
+          style: ProfileTheme.getLabelStyle(context),
+        ),
         const SizedBox(height: 6),
         Text(
-            "Upload up to 4 vertical or square photos that showcase your personality.",
-            style: ProfileTheme.getDescriptionStyle(context)),
+          "Upload up to 4 vertical or square photos that showcase your personality.",
+          style: ProfileTheme.getDescriptionStyle(context),
+        ),
         const SizedBox(height: 12),
 
         GridView.count(
@@ -266,48 +286,57 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
           padding: EdgeInsets.zero,
           children: [
             // Existing photos (highlights)
-            ...?widget.viewModel.profile?['photos']?.where((p) => p['type'] == 'highlight').map((photo) =>
-                _buildPhotoItem(
-                  isExisting: true,
-                  path: fixLocalhostUrl(photo['url']),
-                  onRemove: () {
-                    if (photo['id'] != null) {
-                      widget.viewModel.removeExistingPhoto(photo['id'] as int);
-                      setState(() {});
-                    }
-                  },
-                  onView: () => _viewPhoto(fixLocalhostUrl(photo['url']), true),
-                  photoId: photo['id'] as int?,
-                  type: photo['type'],
-                )),
+            ...?widget.viewModel.profile?['photos']
+                ?.where((p) => p['type'] == 'highlight')
+                .map(
+                  (photo) => _buildPhotoItem(
+                    isExisting: true,
+                    path: fixLocalhostUrl(photo['url']),
+                    onRemove: () {
+                      if (photo['id'] != null) {
+                        widget.viewModel.removeExistingPhoto(
+                          photo['id'] as int,
+                        );
+                        setState(() {});
+                      }
+                    },
+                    onView:
+                        () => _viewPhoto(fixLocalhostUrl(photo['url']), true),
+                    photoId: photo['id'] as int?,
+                    type: photo['type'],
+                  ),
+                ),
 
             // Newly added photos
-            ...widget.viewModel.additionalPhotos.map((path) =>
-                _buildPhotoItem(
-                  isExisting: false,
-                  path: path,
-                  onRemove: () =>
-                      setState(() {
-                        widget.viewModel.removePhoto(path);
-                      }),
-                  onView: () => _viewPhoto(path, false),
-                )),
+            ...widget.viewModel.additionalPhotos.map(
+              (path) => _buildPhotoItem(
+                isExisting: false,
+                path: path,
+                onRemove:
+                    () => setState(() {
+                      widget.viewModel.removePhoto(path);
+                    }),
+                onView: () => _viewPhoto(path, false),
+              ),
+            ),
 
             // Add photo button
-            if (totalPhotos < maxAdditionalPhotos)
-              _buildAddPhotoButton(),
+            if (totalPhotos < maxAdditionalPhotos) _buildAddPhotoButton(),
 
             // Empty spaces to maintain grid layout
             ...List.generate(
-              math.max(0, maxAdditionalPhotos - totalPhotos -
-                  (totalPhotos < maxAdditionalPhotos ? 1 : 0)),
-                  (index) =>
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+              math.max(
+                0,
+                maxAdditionalPhotos -
+                    totalPhotos -
+                    (totalPhotos < maxAdditionalPhotos ? 1 : 0),
+              ),
+              (index) => Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
             ),
           ],
         ),
@@ -334,7 +363,7 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
               border: Border.all(color: ProfileTheme.lightPurple),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha:0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -342,30 +371,33 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: isExisting
-                  ? Image.network(
-                path,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                errorBuilder: (_, __, ___) =>
-                    Container(
-                      color: Colors.grey.withValues(alpha:0.2),
-                      child: Center(
-                        child: Icon(
-                          Icons.broken_image,
-                          color: ProfileTheme.darkPurple.withValues(alpha:0.3),
-                          size: 40,
-                        ),
+              child:
+                  isExisting
+                      ? Image.network(
+                        path,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        errorBuilder:
+                            (_, __, ___) => Container(
+                              color: Colors.grey.withValues(alpha: 0.2),
+                              child: Center(
+                                child: Icon(
+                                  Icons.broken_image,
+                                  color: ProfileTheme.darkPurple.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                      )
+                      : Image.file(
+                        File(path),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
-                    ),
-              )
-                  : Image.file(
-                File(path),
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
             ),
           ),
         ),
@@ -385,7 +417,7 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha:0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 3,
                       offset: const Offset(0, 1),
                     ),
@@ -408,7 +440,7 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha:0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 3,
                       offset: const Offset(0, 1),
                     ),
@@ -434,15 +466,18 @@ class _EditProfileBioPhotosSectionState extends State<EditProfileBioPhotosSectio
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: ProfileTheme.darkPink.withValues(alpha:0.05),
+            color: ProfileTheme.darkPink.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(9),
           ),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add_photo_alternate, color: ProfileTheme.darkPink,
-                    size: 40),
+                Icon(
+                  Icons.add_photo_alternate,
+                  color: ProfileTheme.darkPink,
+                  size: 40,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'Add Photo',

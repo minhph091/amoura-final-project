@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'filter_section_header.dart';
+import '../../../../config/language/app_localizations.dart';
 
 // A filter widget for selecting a distance using a Slider.
 class DistanceRangeFilter extends StatelessWidget {
@@ -17,11 +18,12 @@ class DistanceRangeFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final localizations = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FilterSectionHeader(
-          title: 'Distance',
+          title: localizations.translate('distance'),
           valueDisplay: '${currentDistance.round()} km',
         ),
         Slider(

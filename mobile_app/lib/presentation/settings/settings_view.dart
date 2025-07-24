@@ -57,10 +57,12 @@ class SettingsView extends StatelessWidget {
                 },
               ),
               const SettingsDivider(),
-              const SettingsSectionTitle(title: 'Account & Profile'),
+              SettingsSectionTitle(
+                title: localizations.translate('account_profile'),
+              ),
               SettingsTile(
                 icon: Icons.person_outline_rounded,
-                title: 'View Profile',
+                title: localizations.translate('view_profile'),
                 onTap:
                     () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -70,7 +72,7 @@ class SettingsView extends StatelessWidget {
               ),
               SettingsTile(
                 icon: Icons.edit_outlined,
-                title: 'Edit Profile',
+                title: localizations.translate('edit_profile'),
                 onTap: () {
                   final profile = context.read<ProfileViewModel>().profile;
                   Navigator.of(context).push(
@@ -82,7 +84,7 @@ class SettingsView extends StatelessWidget {
               ),
               SettingsTile(
                 icon: Icons.security_outlined,
-                title: 'Account & Security',
+                title: localizations.translate('account_security'),
                 onTap:
                     () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const SecurityView()),
@@ -90,7 +92,7 @@ class SettingsView extends StatelessWidget {
               ),
               SettingsTile(
                 icon: Icons.notifications_active_outlined,
-                title: 'Notification Settings',
+                title: localizations.translate('notification_settings'),
                 onTap:
                     () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -100,7 +102,7 @@ class SettingsView extends StatelessWidget {
               ),
               SettingsTile(
                 icon: Icons.block_outlined,
-                title: 'Block List',
+                title: localizations.translate('block_list'),
                 onTap:
                     () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -113,7 +115,9 @@ class SettingsView extends StatelessWidget {
                     ),
               ),
               const SettingsDivider(),
-              const SettingsSectionTitle(title: 'App Experience'),
+              SettingsSectionTitle(
+                title: localizations.translate('app_experience'),
+              ),
               Consumer<ThemeModeController>(
                 builder:
                     (context, themeController, _) => SettingsThemePicker(
@@ -124,7 +128,7 @@ class SettingsView extends StatelessWidget {
               const SettingsLanguageSelector(), // Add language selector here
               SettingsTile(
                 icon: Icons.subscriptions_outlined,
-                title: 'Subscription Plans',
+                title: localizations.translate('subscription_plans'),
                 onTap:
                     () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -133,10 +137,12 @@ class SettingsView extends StatelessWidget {
                     ),
               ),
               const SettingsDivider(),
-              const SettingsSectionTitle(title: 'Support & Legal'),
+              SettingsSectionTitle(
+                title: localizations.translate('support_legal'),
+              ),
               SettingsTile(
                 icon: Icons.article_outlined,
-                title: 'Legal & Resources',
+                title: localizations.translate('legal_resources'),
                 onTap:
                     () => Navigator.of(context).push(
                       MaterialPageRoute(

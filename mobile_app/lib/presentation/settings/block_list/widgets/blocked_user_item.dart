@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../../../../domain/models/settings/blocked_user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -24,19 +25,23 @@ class BlockedUserItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-              : Theme.of(context).cardColor,
+          color:
+              isSelected
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                  : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).dividerColor,
+            color:
+                isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).dividerColor,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -63,21 +68,20 @@ class BlockedUserItem extends StatelessWidget {
                         width: 70,
                         height: 70,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[300],
-                          child: const Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Colors.white,
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[300],
-                          child: const Icon(
-                            Icons.error,
-                            color: Colors.red,
-                          ),
-                        ),
+                        placeholder:
+                            (context, url) => Container(
+                              color: Colors.grey[300],
+                              child: const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.white,
+                              ),
+                            ),
+                        errorWidget:
+                            (context, url, error) => Container(
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.error, color: Colors.red),
+                            ),
                       ),
                     ),
                   ),
@@ -137,10 +141,7 @@ class BlockedUserItem extends StatelessWidget {
                               color: Colors.grey[100],
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
-                              Icons.info_outline,
-                              size: 18,
-                            ),
+                            child: const Icon(Icons.info_outline, size: 18),
                           ),
                         ),
 
@@ -154,11 +155,12 @@ class BlockedUserItem extends StatelessWidget {
                             ),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            foregroundColor: Theme.of(context).colorScheme.error,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.error,
                           ),
-                          child: const Text(
-                            'Unblock',
-                            style: TextStyle(fontSize: 12),
+                          child: Text(
+                            localizations.translate('unblock'),
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ),
                       ],
@@ -177,23 +179,26 @@ class BlockedUserItem extends StatelessWidget {
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.white,
+                    color:
+                        isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.white,
                     border: Border.all(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey,
+                      color:
+                          isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey,
                       width: 2,
                     ),
                   ),
-                  child: isSelected
-                      ? const Icon(
-                          Icons.check,
-                          size: 16,
-                          color: Colors.white,
-                        )
-                      : null,
+                  child:
+                      isSelected
+                          ? const Icon(
+                            Icons.check,
+                            size: 16,
+                            color: Colors.white,
+                          )
+                          : null,
                 ),
               ),
           ],

@@ -18,13 +18,13 @@ class AccountManagementViewModel extends ChangeNotifier {
 
   void onDeactivateConfirmed(BuildContext context) {
     // Placeholder cho logic backend
-    print('Account Deactivated');
+    debugPrint('Account Deactivated');
     Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
   }
 
   void onDeleteConfirmed(BuildContext context) {
     // Placeholder cho logic backend
-    print('Account Permanently Deleted');
+    debugPrint('Account Permanently Deleted');
     Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
   }
 }

@@ -34,7 +34,7 @@ class Step8ViewModel extends BaseStepViewModel {
     try {
       isLoading = true;
       notifyListeners();
-      print('Fetching lifestyle options...');
+      debugPrint('Fetching lifestyle options...');
 
       final options = await _setupProfileService.fetchProfileOptions();
       final drinkStatuses = options['drinkStatuses'] as List<dynamic>?;
@@ -48,7 +48,7 @@ class Step8ViewModel extends BaseStepViewModel {
             return {'value': id, 'label': name};
           }).toList() ??
           [];
-      print('Fetched drink status options: $drinkStatusOptions');
+      debugPrint('Fetched drink status options: $drinkStatusOptions');
 
       // Map smoke statuses to the required format
       smokeStatusOptions = smokeStatuses?.map((option) {
@@ -57,7 +57,7 @@ class Step8ViewModel extends BaseStepViewModel {
             return {'value': id, 'label': name};
           }).toList() ??
           [];
-      print('Fetched smoke status options: $smokeStatusOptions');
+      debugPrint('Fetched smoke status options: $smokeStatusOptions');
 
       // Map pets to the required format
       petOptions = pets?.map((option) {
@@ -66,7 +66,7 @@ class Step8ViewModel extends BaseStepViewModel {
             return {'value': id, 'label': name};
           }).toList() ??
           [];
-      print('Fetched pet options: $petOptions');
+      debugPrint('Fetched pet options: $petOptions');
 
       // Reset selections if they are invalid
       if (drinkStatusId != null && !drinkStatusOptions.any((o) => o['value'] == drinkStatusId)) {
@@ -82,7 +82,7 @@ class Step8ViewModel extends BaseStepViewModel {
       }
       _fetched = true;
     } catch (e) {
-      print('Error fetching lifestyle options: $e');
+      debugPrint('Error fetching lifestyle options: $e');
       errorMessage = 'Failed to load options. Please try again.';
       drinkStatusOptions = [];
       smokeStatusOptions = [];
@@ -104,7 +104,7 @@ class Step8ViewModel extends BaseStepViewModel {
     parent.drinkStatusId = int.tryParse(id);
     parent.drinkStatus = name;
     notifyListeners();
-    print('Set drink status: id=$id, name=$name');
+    debugPrint('Set drink status: id=$id, name=$name');
   }
 
   void setSmokeStatus(String id, String name) {
@@ -113,14 +113,14 @@ class Step8ViewModel extends BaseStepViewModel {
     parent.smokeStatusId = int.tryParse(id);
     parent.smokeStatus = name;
     notifyListeners();
-    print('Set smoke status: id=$id, name=$name');
+    debugPrint('Set smoke status: id=$id, name=$name');
   }
 
   void setSelectedPets(List<String> pets) {
     selectedPets = pets;
     parent.selectedPets = pets;
     notifyListeners();
-    print('Set selected pets: $pets');
+    debugPrint('Set selected pets: $pets');
   }
 
   @override
@@ -141,6 +141,6 @@ class Step8ViewModel extends BaseStepViewModel {
     parent.profileData['smokeStatusId'] = parent.smokeStatusId;
     parent.profileData['smokeStatus'] = smokeStatus;
     parent.profileData['petIds'] = selectedPets; // Update to match backend field
-    print('Saved Step 8 data: $parent.profileData');
+    debugPrint('Saved Step 8 data: $parent.profileData');
   }
 }

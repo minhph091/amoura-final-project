@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 Future<void> showPhotoViewer(BuildContext context, String imageUrl, {String title = 'Photo'}) {
   return showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.7),
+    barrierColor: Colors.black.withValues(alpha: 0.7),
     builder: (_) => Dialog(
       insetPadding: const EdgeInsets.all(20),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -50,3 +50,4 @@ Future<void> showPhotoViewer(BuildContext context, String imageUrl, {String titl
     ),
   );
 }
+

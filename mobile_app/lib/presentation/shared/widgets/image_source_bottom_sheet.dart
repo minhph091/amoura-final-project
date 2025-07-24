@@ -1,6 +1,7 @@
 // lib/presentation/shared/widgets/image_source_bottom_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../config/language/app_localizations.dart';
 
 class ImageSourceBottomSheet extends StatelessWidget {
   const ImageSourceBottomSheet({super.key});
@@ -15,6 +16,8 @@ class ImageSourceBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -37,12 +40,9 @@ class ImageSourceBottomSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            "Choose Image Source",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Text(
+            localizations.translate("choose_image_source"),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 25),
           Row(
@@ -51,13 +51,13 @@ class ImageSourceBottomSheet extends StatelessWidget {
               _buildOptionButton(
                 context,
                 Icons.camera_alt_rounded,
-                "Camera",
+                localizations.translate("camera"),
                 ImageSource.camera,
               ),
               _buildOptionButton(
                 context,
                 Icons.photo_library_rounded,
-                "Gallery",
+                localizations.translate("gallery"),
                 ImageSource.gallery,
               ),
             ],
@@ -72,7 +72,7 @@ class ImageSourceBottomSheet extends StatelessWidget {
     BuildContext context,
     IconData icon,
     String label,
-    ImageSource source
+    ImageSource source,
   ) {
     return InkWell(
       onTap: () => Navigator.pop(context, source),
@@ -83,35 +83,23 @@ class ImageSourceBottomSheet extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Colors.purple.shade300,
-                  Colors.pink.shade300,
-                ],
+                colors: [Colors.purple.shade300, Colors.pink.shade300],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.pink.shade100.withOpacity(0.5),
+                  color: Colors.pink.shade100.withValues(alpha: 0.5),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 32,
-            ),
+            child: Icon(icon, color: Colors.white, size: 32),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
       ),
     );

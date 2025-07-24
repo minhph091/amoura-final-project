@@ -5,6 +5,7 @@ import '../widgets/setup_profile_button.dart';
 import '../setup_profile_viewmodel.dart';
 import '../stepmodel/step7_viewmodel.dart';
 import 'widgets/_step7_widgets.dart';
+import '../../../../config/language/app_localizations.dart';
 
 class Step7JobEducationForm extends StatefulWidget {
   const Step7JobEducationForm({super.key});
@@ -36,9 +37,14 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
     );
   }
 
-  Widget _buildContent(SetupProfileViewModel vm, Step7ViewModel step7ViewModel) {
+  Widget _buildContent(
+    SetupProfileViewModel vm,
+    Step7ViewModel step7ViewModel,
+  ) {
     // Debug: Track UI rebuilds
-    print('🔄 Step7 UI rebuilding - jobIndustry: ${step7ViewModel.jobIndustryId}, education: ${step7ViewModel.educationLevelId}, dropout: ${step7ViewModel.dropOut}');
+    debugPrint(
+      '🔄 Step7 UI rebuilding - jobIndustry: ${step7ViewModel.jobIndustryId}, education: ${step7ViewModel.educationLevelId}, dropout: ${step7ViewModel.dropOut}',
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -48,58 +54,64 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
           // Header Section
           const JobEducationHeader(),
           const SizedBox(height: 24),
-          
+
           // Content Section - Fixed layout without scrolling
           Expanded(
-            child: step7ViewModel.isLoading
-                ? const JobEducationLoadingState()
-              : step7ViewModel.errorMessage != null
+            child:
+                step7ViewModel.isLoading
+                    ? const JobEducationLoadingState()
+                    : step7ViewModel.errorMessage != null
                     ? _buildErrorState(step7ViewModel.errorMessage!)
-                    : step7ViewModel.jobIndustryOptions.isEmpty || step7ViewModel.educationLevelOptions.isEmpty
-                        ? _buildEmptyState()
-                  : Column(
+                    : step7ViewModel.jobIndustryOptions.isEmpty ||
+                        step7ViewModel.educationLevelOptions.isEmpty
+                    ? _buildEmptyState()
+                    : Column(
                       children: [
-                              // Job Industry Selector - always visible
-                              JobIndustrySelector(
-                                step7ViewModel: step7ViewModel,
-                                onToggleExpanded: (isExpanded) {
-                                  _setActiveDropdown(isExpanded ? 'job' : null);
-                                },
-                              ),
-                              
-                              // Show other elements only when job dropdown is not active
-                              if (_activeDropdown != 'job') ...[
-                                const SizedBox(height: 20),
-                                
-                                // Education Level Selector
-                                EducationLevelSelector(
-                                  step7ViewModel: step7ViewModel,
-                                  onToggleExpanded: (isExpanded) {
-                                    _setActiveDropdown(isExpanded ? 'education' : null);
-                                  },
-                                ),
-                                
-                                // Show dropout switch only when education dropdown is not active
-                                if (_activeDropdown != 'education') ...[
-                                  const SizedBox(height: 20),
-                                  
-                                  // Dropout Switch
-                                  DropoutSwitch(step7ViewModel: step7ViewModel),
-                                ],
-                              ],
-                              
-                              // Spacer to push button to bottom
-                              const Spacer(),
-                              
-                              // Next Button - always visible
-                              SetupProfileButton(
-                  text: 'Next',
-                  onPressed: () => vm.nextStep(context: context),
-                  width: double.infinity,
-                  height: 52,
-                ),
-                            ],
-              ),
+                        // Job Industry Selector - always visible
+                        JobIndustrySelector(
+                          step7ViewModel: step7ViewModel,
+                          onToggleExpanded: (isExpanded) {
+                            _setActiveDropdown(isExpanded ? 'job' : null);
+                          },
+                        ),
+
+                        // Show other elements only when job dropdown is not active
+                        if (_activeDropdown != 'job') ...[
+                          const SizedBox(height: 20),
+
+                          // Education Level Selector
+                          EducationLevelSelector(
+                            step7ViewModel: step7ViewModel,
+                            onToggleExpanded: (isExpanded) {
+                              _setActiveDropdown(
+                                isExpanded ? 'education' : null,
+                              );
+                            },
+                          ),
+
+                          // Show dropout switch only when education dropdown is not active
+                          if (_activeDropdown != 'education') ...[
+                            const SizedBox(height: 20),
+
+                            // Dropout Switch
+                            DropoutSwitch(step7ViewModel: step7ViewModel),
+                          ],
+                        ],
+
+                        // Spacer to push button to bottom
+                        const Spacer(),
+
+                        // Next Button - always visible
+                        SetupProfileButton(
+                          text: AppLocalizations.of(
+                            context,
+                          ).translate('continue_setup'),
+                          onPressed: () => vm.nextStep(context: context),
+                          width: double.infinity,
+                          height: 52,
+                        ),
+                      ],
+                    ),
           ),
         ],
       ),
@@ -112,17 +124,13 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
         padding: const EdgeInsets.all(20),
         margin: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.red.withOpacity(0.3)),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.error_outline,
-              color: Colors.red[400],
-              size: 40,
-            ),
+            Icon(Icons.error_outline, color: Colors.red[400], size: 40),
             const SizedBox(height: 12),
             Text(
               errorMessage,
@@ -145,16 +153,12 @@ class _Step7JobEducationFormState extends State<Step7JobEducationForm> {
         padding: const EdgeInsets.all(20),
         margin: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: const Color(0xFF666666).withOpacity(0.1),
+          color: const Color(0xFF666666).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.search_off,
-              color: const Color(0xFF666666),
-              size: 40,
-            ),
+            Icon(Icons.search_off, color: const Color(0xFF666666), size: 40),
             const SizedBox(height: 12),
             Text(
               'No career options available',

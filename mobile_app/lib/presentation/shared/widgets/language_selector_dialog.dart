@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:country_icons/country_icons.dart';
 import '../../../config/language/language_controller.dart';
 import '../../../config/language/app_localizations.dart';
 
@@ -28,24 +29,33 @@ class LanguageSelectorDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ...languages.map((language) => _buildLanguageItem(
-              context,
-              language['code'] ?? '',
-              language['name'] ?? '',
-              language['flag'] ?? '',
-              languageController.locale.languageCode == language['code'],
-              () {
-                languageController.changeLanguage(language['code'] ?? 'en');
-                Navigator.pop(context);
-              }
-            )).toList(),
+            ...languages.map(
+              (language) => _buildLanguageItem(
+                context,
+                language['code'] ?? '',
+                language['name'] ?? '',
+                language['flag'] ?? '',
+                languageController.locale.languageCode == language['code'],
+                () {
+                  languageController.changeLanguage(language['code'] ?? 'en');
+                  Navigator.pop(context);
+                },
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLanguageItem(BuildContext context, String code, String name, String flagAsset, bool isSelected, VoidCallback onTap) {
+  Widget _buildLanguageItem(
+    BuildContext context,
+    String code,
+    String name,
+    String flagAsset,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     final theme = Theme.of(context);
 
     return InkWell(
@@ -54,19 +64,28 @@ class LanguageSelectorDialog extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.1) : null,
+          color:
+              isSelected
+                  ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                  : null,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Image.asset(
-                flagAsset,
-                width: 24,
-                height: 16,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.language, size: 24),
+            // Modern flag icon
+            Container(
+              width: 32,
+              height: 24,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: 0.3),
+                  width: 0.5,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(3.5),
+                child: _getFlagIcon(code),
               ),
             ),
             const SizedBox(width: 16),
@@ -78,13 +97,21 @@ class LanguageSelectorDialog extends StatelessWidget {
             ),
             const Spacer(),
             if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: theme.colorScheme.primary,
-              ),
+              Icon(Icons.check_circle, color: theme.colorScheme.primary),
           ],
         ),
       ),
     );
+  }
+
+  Widget _getFlagIcon(String languageCode) {
+    switch (languageCode) {
+      case 'vi':
+        return CountryIcons.getSvgFlag('VN');
+      case 'en':
+        return CountryIcons.getSvgFlag('US');
+      default:
+        return const Icon(Icons.language, size: 20, color: Colors.grey);
+    }
   }
 }

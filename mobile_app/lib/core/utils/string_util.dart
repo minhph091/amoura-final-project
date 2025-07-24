@@ -12,6 +12,6 @@ class StringUtil {
   static String maskEmail(String email) {
     final atIdx = email.indexOf('@');
     if (atIdx <= 1) return email;
-    return email[0] + '***' + email.substring(atIdx - 1);
+    return '${email[0]}***${email.substring(atIdx - 1)}';
   }
 }

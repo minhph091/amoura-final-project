@@ -1,5 +1,6 @@
 // lib/presentation/shared/widgets/otp_input_form.dart
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 
 class OtpInputForm extends StatefulWidget {
   final int otpLength;
@@ -11,7 +12,7 @@ class OtpInputForm extends StatefulWidget {
   final bool isLoading;
 
   const OtpInputForm({
-    Key? key,
+    super.key,
     this.otpLength = 6,
     this.onSubmit,
     this.resendAvailable = false,
@@ -19,10 +20,10 @@ class OtpInputForm extends StatefulWidget {
     this.remainingSeconds,
     this.errorMessage,
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   @override
-  _OtpInputFormState createState() => _OtpInputFormState();
+  State<OtpInputForm> createState() => _OtpInputFormState();
 }
 
 class _OtpInputFormState extends State<OtpInputForm> {
@@ -36,7 +37,10 @@ class _OtpInputFormState extends State<OtpInputForm> {
     super.initState();
     _otpDigits = List.filled(widget.otpLength, '');
     _focusNodes = List.generate(widget.otpLength, (_) => FocusNode());
-    _controllers = List.generate(widget.otpLength, (_) => TextEditingController());
+    _controllers = List.generate(
+      widget.otpLength,
+      (_) => TextEditingController(),
+    );
   }
 
   void _onDigitChanged(int index, String value) {
@@ -45,7 +49,7 @@ class _OtpInputFormState extends State<OtpInputForm> {
       _otpDigits[index] = value.trim();
       _controllers[index].text = value.trim();
     });
-    print('Digit $index changed to: $value');
+    debugPrint('Digit $index changed to: $value');
 
     if (value.isNotEmpty && index < widget.otpLength - 1) {
       FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
@@ -54,19 +58,21 @@ class _OtpInputFormState extends State<OtpInputForm> {
     }
 
     final otp = _otpDigits.join();
-    if (otp.length == widget.otpLength && otp.trim().isNotEmpty && !_isSubmitting) {
-      print('Submitting OTP: $otp');
+    if (otp.length == widget.otpLength &&
+        otp.trim().isNotEmpty &&
+        !_isSubmitting) {
+      debugPrint('Submitting OTP: $otp');
       _submitOtp(otp);
     }
   }
 
   Future<void> _submitOtp(String otp) async {
     if (widget.onSubmit == null || _isSubmitting) return;
-    
+
     setState(() {
       _isSubmitting = true;
     });
-    
+
     try {
       await widget.onSubmit!(otp);
     } finally {
@@ -93,6 +99,7 @@ class _OtpInputFormState extends State<OtpInputForm> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final localizations = AppLocalizations.of(context);
 
     return Column(
       children: [
@@ -132,9 +139,9 @@ class _OtpInputFormState extends State<OtpInputForm> {
         // Hiển thị bộ đếm ngược hoặc nút Resend OTP
         if (widget.remainingSeconds != null && !widget.resendAvailable)
           Text(
-            'Resend OTP in ${widget.remainingSeconds}s',
+            '${localizations.translate('resend_otp_in')} ${widget.remainingSeconds}s',
             style: TextStyle(
-              color: colorScheme.onSurface.withOpacity(0.6),
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
               fontSize: 14,
             ),
           )
@@ -142,7 +149,7 @@ class _OtpInputFormState extends State<OtpInputForm> {
           TextButton(
             onPressed: widget.isLoading ? null : widget.onResend,
             child: Text(
-              'Resend OTP',
+              localizations.translate('resend_otp'),
               style: TextStyle(
                 color: colorScheme.primary,
                 fontWeight: FontWeight.w600,

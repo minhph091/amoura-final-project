@@ -1,6 +1,6 @@
 // lib/presentation/auth/register/widgets/register_form.dart
 import 'package:flutter/material.dart';
-import '../../../../core/utils/validation_util.dart';
+import '../../../../core/utils/localized_validation.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/language/app_localizations.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -18,6 +18,7 @@ class RegisterForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localizations = AppLocalizations.of(context);
+    final validator = LocalizedValidation.of(context);
 
     if (viewModel.showOtp) {
       return OtpInputForm(
@@ -41,7 +42,7 @@ class RegisterForm extends StatelessWidget {
             keyboardType: TextInputType.emailAddress,
             prefixIcon: Icons.email_outlined,
             prefixIconColor: theme.colorScheme.primary,
-            validator: ValidationUtil.validateEmail,
+            validator: validator.validateEmail,
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -51,7 +52,7 @@ class RegisterForm extends StatelessWidget {
             keyboardType: TextInputType.phone,
             prefixIcon: Icons.phone_outlined,
             prefixIconColor: theme.colorScheme.primary,
-            validator: ValidationUtil.validatePhone,
+            validator: validator.validatePhone,
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -62,10 +63,14 @@ class RegisterForm extends StatelessWidget {
             prefixIcon: Icons.lock_outline,
             prefixIconColor: theme.colorScheme.primary,
             suffixIcon: IconButton(
-              icon: Icon(viewModel.obscurePassword ? Icons.visibility_off : Icons.visibility),
+              icon: Icon(
+                viewModel.obscurePassword
+                    ? Icons.visibility_off
+                    : Icons.visibility,
+              ),
               onPressed: viewModel.toggleObscurePassword,
             ),
-            validator: ValidationUtil.validatePassword,
+            validator: validator.validatePassword,
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -76,13 +81,18 @@ class RegisterForm extends StatelessWidget {
             prefixIcon: Icons.lock_outline,
             prefixIconColor: theme.colorScheme.primary,
             suffixIcon: IconButton(
-              icon: Icon(viewModel.obscureConfirm ? Icons.visibility_off : Icons.visibility),
+              icon: Icon(
+                viewModel.obscureConfirm
+                    ? Icons.visibility_off
+                    : Icons.visibility,
+              ),
               onPressed: viewModel.toggleObscureConfirm,
             ),
-            validator: (value) => ValidationUtil.validateConfirmPassword(
-              viewModel.passwordController.text,
-              value,
-            ),
+            validator:
+                (value) => validator.validateConfirmPassword(
+                  viewModel.passwordController.text,
+                  value,
+                ),
           ),
 
           // Add Terms Agreement Widget
@@ -104,9 +114,15 @@ class RegisterForm extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
-            onPressed: viewModel.isLoading ? null : () => viewModel.initiateRegistration(context),
+            onPressed:
+                viewModel.isLoading
+                    ? null
+                    : () => viewModel.initiateRegistration(context),
             gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.secondary.withValues(alpha: 0.85)],
+              colors: [
+                AppColors.primary,
+                AppColors.secondary.withValues(alpha: 0.85),
+              ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),

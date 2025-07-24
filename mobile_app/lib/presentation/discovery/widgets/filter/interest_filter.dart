@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../../../config/theme/text_styles.dart';
 import 'filter_section_header.dart';
+import '../../../../config/language/app_localizations.dart';
 
 class InterestFilter extends StatelessWidget {
   final List<String> selectedInterestIds;
@@ -20,10 +21,11 @@ class InterestFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final localizations = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const FilterSectionHeader(title: 'Interests'),
+        FilterSectionHeader(title: localizations.translate('interests')),
         const SizedBox(height: 12),
         ProfileOptionSelector(
           options: interestOptions,
@@ -37,7 +39,7 @@ class InterestFilter extends StatelessWidget {
             }
             onChanged(newSelectedIds);
           },
-          labelText: 'Select your interests',
+          labelText: localizations.translate('select_your_interests'),
           labelStyle: AppTextStyles.body.copyWith(color: colorScheme.onSurface),
           isMultiSelect: true,
           scrollable: false,

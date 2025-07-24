@@ -23,22 +23,22 @@ class Step3ViewModel extends BaseStepViewModel {
     try {
       isLoading = true;
       notifyListeners();
-      print('Fetching orientation options...');
+      debugPrint('Fetching orientation options...');
 
       final options = await _setupProfileService.fetchProfileOptions();
       final orientations = options['orientations'] as List<dynamic>?;
 
       if (orientations == null || orientations.isEmpty) {
-        print('No orientations data received from API');
+        debugPrint('No orientations data received from API');
         orientationOptions = [];
       } else {
         orientationOptions = orientations.map((option) {
           final id = option['id']?.toString() ?? '0';
           final name = option['name']?.toString() ?? 'Unknown';
-          print('Mapped orientation option: id=$id, name=$name');
+          debugPrint('Mapped orientation option: id=$id, name=$name');
           return {'value': id, 'label': name};
         }).toList();
-        print('Fetched orientation options: $orientationOptions');
+        debugPrint('Fetched orientation options: $orientationOptions');
       }
 
       if (orientationId != null && !orientationOptions.any((o) => o['value'] == orientationId)) {
@@ -47,7 +47,7 @@ class Step3ViewModel extends BaseStepViewModel {
       }
       _fetched = true;
     } catch (e) {
-      print('Error fetching orientation options: $e');
+      debugPrint('Error fetching orientation options: $e');
       errorMessage = 'Failed to load orientation options. Please try again.';
       orientationOptions = [];
       if (context != null && context.mounted) {
@@ -67,7 +67,7 @@ class Step3ViewModel extends BaseStepViewModel {
     parent.orientationId = int.tryParse(id);
     parent.orientation = name;
     notifyListeners();
-    print('Set orientation: id=$id, name=$name');
+    debugPrint('Set orientation: id=$id, name=$name');
   }
 
   @override
@@ -82,6 +82,6 @@ class Step3ViewModel extends BaseStepViewModel {
     parent.orientation = orientation;
     parent.profileData['orientationId'] = parent.orientationId;
     parent.profileData['orientation'] = orientation;
-    print('Saved orientation data to parent profileData: orientationId=${parent.orientationId}, orientation=$orientation');
+    debugPrint('Saved orientation data to parent profileData: orientationId=${parent.orientationId}, orientation=$orientation');
   }
 }

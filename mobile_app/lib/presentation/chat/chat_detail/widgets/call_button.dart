@@ -15,7 +15,7 @@ class CallButton extends StatelessWidget {
   final Color? iconColor;
 
   const CallButton({
-    Key? key,
+    super.key,
     required this.matchId,
     required this.matchName,
     required this.matchAvatar,
@@ -23,7 +23,7 @@ class CallButton extends StatelessWidget {
     this.size = 50.0,
     this.backgroundColor,
     this.iconColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -114,14 +114,14 @@ class CallOptions extends StatelessWidget {
   final Color? iconColor;
 
   const CallOptions({
-    Key? key,
+    super.key,
     required this.matchId,
     required this.matchName,
     required this.matchAvatar,
     this.buttonSize = 40.0,
     this.backgroundColor,
     this.iconColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

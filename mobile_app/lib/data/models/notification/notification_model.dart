@@ -1,7 +1,5 @@
 // lib/data/models/notification/notification_model.dart
 
-import 'package:flutter/foundation.dart';
-
 // Model thông báo (Notification)
 class NotificationModel {
   final String id;
@@ -45,17 +43,27 @@ class NotificationModel {
       userId: json['userId']?.toString(),
       avatar: json['avatar'],
       url: json['url'],
-      relatedEntityId: json['relatedEntityId'] is int
-          ? json['relatedEntityId']
-          : int.tryParse(json['relatedEntityId']?.toString() ?? ''),
+      relatedEntityId:
+          json['relatedEntityId'] is int
+              ? json['relatedEntityId']
+              : int.tryParse(json['relatedEntityId']?.toString() ?? ''),
       relatedEntityType: json['relatedEntityType'],
-      timestamp: json['timestamp'] != null
-          ? DateTime.tryParse(json['timestamp'])
-          : (json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null),
+      timestamp:
+          json['timestamp'] != null
+              ? DateTime.tryParse(json['timestamp'])
+              : (json['createdAt'] != null
+                  ? DateTime.tryParse(json['createdAt'])
+                  : null),
       isRead: json['isRead'] ?? false,
       readAt: json['readAt'] != null ? DateTime.tryParse(json['readAt']) : null,
-      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
+      createdAt:
+          json['createdAt'] != null
+              ? DateTime.tryParse(json['createdAt'])
+              : null,
+      updatedAt:
+          json['updatedAt'] != null
+              ? DateTime.tryParse(json['updatedAt'])
+              : null,
     );
   }
 
@@ -78,10 +86,7 @@ class NotificationModel {
     };
   }
 
-  NotificationModel copyWith({
-    bool? isRead,
-    DateTime? readAt,
-  }) {
+  NotificationModel copyWith({bool? isRead, DateTime? readAt}) {
     return NotificationModel(
       id: id,
       title: title,

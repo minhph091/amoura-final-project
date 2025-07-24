@@ -1,30 +1,29 @@
 import 'package:flutter/material.dart';
 import '../../theme/setup_profile_theme.dart';
 import '../../stepmodel/step6_viewmodel.dart';
+import '../../../../../config/language/app_localizations.dart';
 
 class AppearanceHeader extends StatelessWidget {
   const AppearanceHeader({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Your Appearance',
-          style: ProfileTheme.getTitleStyle(context).copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+          localizations.translate('step6_title'),
+          style: ProfileTheme.getTitleStyle(
+            context,
+          ).copyWith(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Text(
-          'Help others get to know the beautiful you better ✨',
-          style: ProfileTheme.getDescriptionStyle(context).copyWith(
-            fontSize: 15,
-            height: 1.4,
-            color: const Color(0xFF666666),
-          ),
+          localizations.translate('step6_description'),
+          style: ProfileTheme.getDescriptionStyle(
+            context,
+          ).copyWith(fontSize: 15, height: 1.4, color: const Color(0xFF666666)),
         ),
       ],
     );
@@ -33,7 +32,7 @@ class AppearanceHeader extends StatelessWidget {
 
 class AppearanceLoadingState extends StatelessWidget {
   const AppearanceLoadingState({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -42,8 +41,8 @@ class AppearanceLoadingState extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color(0xFF9C27B0).withOpacity(0.1),
-              const Color(0xFFE91E63).withOpacity(0.1),
+              const Color(0xFF9C27B0).withValues(alpha: 0.1),
+              const Color(0xFFE91E63).withValues(alpha: 0.1),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
@@ -80,7 +79,7 @@ class BodyTypeSelector extends StatefulWidget {
   State<BodyTypeSelector> createState() => _BodyTypeSelectorState();
 }
 
-class _BodyTypeSelectorState extends State<BodyTypeSelector> 
+class _BodyTypeSelectorState extends State<BodyTypeSelector>
     with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
   late AnimationController _animationController;
@@ -141,7 +140,7 @@ class _BodyTypeSelectorState extends State<BodyTypeSelector>
           ),
         ),
         const SizedBox(height: 12),
-        
+
         // Collapsed/Selected State
         Material(
           color: Colors.transparent,
@@ -152,26 +151,30 @@ class _BodyTypeSelectorState extends State<BodyTypeSelector>
               duration: const Duration(milliseconds: 250),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: widget.step6ViewModel.bodyTypeId != null
-                    ? LinearGradient(
-                        colors: [
-                          const Color(0xFF9C27B0).withOpacity(0.1),
-                          const Color(0xFFE91E63).withOpacity(0.1),
-                        ],
-                      )
-                    : null,
-                color: widget.step6ViewModel.bodyTypeId == null 
-                    ? Colors.white : null,
+                gradient:
+                    widget.step6ViewModel.bodyTypeId != null
+                        ? LinearGradient(
+                          colors: [
+                            const Color(0xFF9C27B0).withValues(alpha: 0.1),
+                            const Color(0xFFE91E63).withValues(alpha: 0.1),
+                          ],
+                        )
+                        : null,
+                color:
+                    widget.step6ViewModel.bodyTypeId == null
+                        ? Colors.white
+                        : null,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: widget.step6ViewModel.bodyTypeId != null
-                      ? const Color(0xFF9C27B0)
-                      : const Color(0xFFE0E0E0),
+                  color:
+                      widget.step6ViewModel.bodyTypeId != null
+                          ? const Color(0xFF9C27B0)
+                          : const Color(0xFFE0E0E0),
                   width: widget.step6ViewModel.bodyTypeId != null ? 2 : 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -214,9 +217,10 @@ class _BodyTypeSelectorState extends State<BodyTypeSelector>
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: widget.step6ViewModel.bodyTypeId != null
-                            ? const Color(0xFF9C27B0)
-                            : const Color(0xFF666666),
+                        color:
+                            widget.step6ViewModel.bodyTypeId != null
+                                ? const Color(0xFF9C27B0)
+                                : const Color(0xFF666666),
                       ),
                     ),
                   ),
@@ -225,9 +229,10 @@ class _BodyTypeSelectorState extends State<BodyTypeSelector>
                     duration: const Duration(milliseconds: 250),
                     child: Icon(
                       Icons.keyboard_arrow_down,
-                      color: widget.step6ViewModel.bodyTypeId != null
-                          ? const Color(0xFF9C27B0)
-                          : const Color(0xFF666666),
+                      color:
+                          widget.step6ViewModel.bodyTypeId != null
+                              ? const Color(0xFF9C27B0)
+                              : const Color(0xFF666666),
                     ),
                   ),
                 ],
@@ -235,7 +240,7 @@ class _BodyTypeSelectorState extends State<BodyTypeSelector>
             ),
           ),
         ),
-        
+
         // Expanded Options
         SizeTransition(
           sizeFactor: _expandAnimation,
@@ -249,7 +254,7 @@ class _BodyTypeSelectorState extends State<BodyTypeSelector>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -263,11 +268,14 @@ class _BodyTypeSelectorState extends State<BodyTypeSelector>
                 itemCount: widget.step6ViewModel.bodyTypeOptions.length,
                 itemBuilder: (context, index) {
                   final option = widget.step6ViewModel.bodyTypeOptions[index];
-                  final isSelected = widget.step6ViewModel.bodyTypeId == option['value'];
+                  final isSelected =
+                      widget.step6ViewModel.bodyTypeId == option['value'];
                   return BodyTypeOption(
                     option: option,
                     isSelected: isSelected,
-                    onTap: () => _selectBodyType(option['value']!, option['label']!),
+                    onTap:
+                        () =>
+                            _selectBodyType(option['value']!, option['label']!),
                   );
                 },
               ),
@@ -320,22 +328,13 @@ class BodyTypeOption extends StatelessWidget {
     switch (label.toLowerCase()) {
       case 'slim':
       case 'skinny':
-        return {
-          'icon': Icons.person_outline,
-          'color': const Color(0xFF4CAF50),
-        };
+        return {'icon': Icons.person_outline, 'color': const Color(0xFF4CAF50)};
       case 'average':
       case 'normal':
-        return {
-          'icon': Icons.person,
-          'color': const Color(0xFF2196F3),
-        };
+        return {'icon': Icons.person, 'color': const Color(0xFF2196F3)};
       case 'athletic':
       case 'fit':
-        return {
-          'icon': Icons.fitness_center,
-          'color': const Color(0xFFFF9800),
-        };
+        return {'icon': Icons.fitness_center, 'color': const Color(0xFFFF9800)};
       case 'muscular':
       case 'strong':
         return {
@@ -344,10 +343,7 @@ class BodyTypeOption extends StatelessWidget {
         };
       case 'curvy':
       case 'voluptuous':
-        return {
-          'icon': Icons.favorite,
-          'color': const Color(0xFF9C27B0),
-        };
+        return {'icon': Icons.favorite, 'color': const Color(0xFF9C27B0)};
       case 'plus size':
       case 'full figured':
         return {
@@ -355,17 +351,14 @@ class BodyTypeOption extends StatelessWidget {
           'color': const Color(0xFF795548),
         };
       default:
-        return {
-          'icon': Icons.help_outline,
-          'color': const Color(0xFF607D8B),
-        };
+        return {'icon': Icons.help_outline, 'color': const Color(0xFF607D8B)};
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final bodyTypeData = _getBodyTypeData(option['label']!);
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -373,7 +366,10 @@ class BodyTypeOption extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF9C27B0).withOpacity(0.05) : null,
+            color:
+                isSelected
+                    ? const Color(0xFF9C27B0).withValues(alpha: 0.05)
+                    : null,
             border: const Border(
               bottom: BorderSide(color: Color(0xFFF0F0F0), width: 1),
             ),
@@ -383,7 +379,9 @@ class BodyTypeOption extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (bodyTypeData['color'] as Color).withOpacity(0.1),
+                  color: (bodyTypeData['color'] as Color).withValues(
+                    alpha: 0.1,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -399,7 +397,10 @@ class BodyTypeOption extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? const Color(0xFF9C27B0) : const Color(0xFF333333),
+                    color:
+                        isSelected
+                            ? const Color(0xFF9C27B0)
+                            : const Color(0xFF333333),
                   ),
                 ),
               ),
@@ -425,7 +426,7 @@ class HeightSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentHeight = step6ViewModel.height ?? 170;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -444,12 +445,12 @@ class HeightSelector extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFF9C27B0).withOpacity(0.2),
+              color: const Color(0xFF9C27B0).withValues(alpha: 0.2),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -471,16 +472,25 @@ class HeightSelector extends StatelessWidget {
                         color: Color(0xFF333333),
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Enter your height',
+                        hintText: AppLocalizations.of(
+                          context,
+                        ).translate('enter_your_height'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE0E0E0),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF9C27B0), width: 2),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF9C27B0),
+                            width: 2,
+                          ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
                         isDense: true,
                         suffixIcon: Container(
                           padding: const EdgeInsets.only(right: 12),
@@ -493,12 +503,17 @@ class HeightSelector extends StatelessWidget {
                             ),
                           ),
                         ),
-                        suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                        suffixIconConstraints: const BoxConstraints(
+                          minWidth: 0,
+                          minHeight: 0,
+                        ),
                       ),
                       onChanged: (value) {
                         if (value.isNotEmpty) {
                           int? heightValue = int.tryParse(value);
-                          if (heightValue != null && heightValue >= 140 && heightValue <= 220) {
+                          if (heightValue != null &&
+                              heightValue >= 140 &&
+                              heightValue <= 220) {
                             step6ViewModel.setHeight(heightValue);
                           }
                         }

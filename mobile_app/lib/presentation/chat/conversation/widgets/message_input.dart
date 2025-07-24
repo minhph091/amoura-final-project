@@ -13,7 +13,7 @@ class MessageInput extends StatefulWidget {
   final Function() onCancelEdit;
 
   const MessageInput({
-    Key? key,
+    super.key,
     required this.onSendMessage,
     required this.onAttachmentTap,
     required this.onCameraTap,
@@ -23,7 +23,7 @@ class MessageInput extends StatefulWidget {
     this.isEditing = false,
     this.editingText,
     required this.onCancelEdit,
-  }) : super(key: key);
+  });
 
   @override
   State<MessageInput> createState() => _MessageInputState();

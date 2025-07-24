@@ -4,8 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/utils/url_transformer.dart';
 import '../../core/utils/distance_calculator.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../data/models/profile/interest_model.dart';
-import '../../data/models/profile/profile_model.dart';
 import '../../data/models/match/user_recommendation_model.dart';
 import '../../data/models/match/swipe_response_model.dart';
 import '../../domain/models/match/liked_user_model.dart';
@@ -26,13 +26,15 @@ class DiscoveryViewModel extends ChangeNotifier {
   int _currentProfileIndex = 0;
   final List<UserRecommendationModel> _rejectedProfiles = [];
   bool _isLoading = false;
+  bool _isPrecacheDone = false;
+  bool get isPrecacheDone => _isPrecacheDone;
   String? _error;
   BuildContext? _context;
 
   // Current user location for distance calculation
   double? _currentUserLatitude;
   double? _currentUserLongitude;
-  
+
   // Current user ID to filter out own profile
   int? _currentUserId;
 
@@ -54,10 +56,12 @@ class DiscoveryViewModel extends ChangeNotifier {
   List<UserRecommendationModel> get recommendations => _recommendations;
   List<InterestModel> get interests => _interests;
   UserRecommendationModel? get currentProfile =>
-      _recommendations.isNotEmpty && _currentProfileIndex < _recommendations.length
+      _recommendations.isNotEmpty &&
+              _currentProfileIndex < _recommendations.length
           ? _recommendations[_currentProfileIndex]
           : null;
-  bool get hasMoreProfiles => _currentProfileIndex < _recommendations.length - 1;
+  bool get hasMoreProfiles =>
+      _currentProfileIndex < _recommendations.length - 1;
   bool get isLoading => _isLoading;
   String? get error => _error;
   int get currentProfileIndex => _currentProfileIndex;
@@ -65,7 +69,7 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Get current user's location coordinates
   double? get currentUserLatitude => _currentUserLatitude;
   double? get currentUserLongitude => _currentUserLongitude;
-  
+
   /// Get current user ID
   int? get currentUserId => _currentUserId;
 
@@ -80,140 +84,106 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Load current user's profile to get location information
   Future<void> loadCurrentUserProfile() async {
     try {
-      // Nếu AppStartupService đã được khởi tạo, sử dụng current user ID từ đó
       if (AppStartupService.instance.isReady) {
         _currentUserId = AppInitializationService.instance.currentUserId;
-        print('DiscoveryViewModel: Sử dụng current user ID từ AppStartupService: $_currentUserId');
       }
-      
       final profileData = await _profileService.getProfile();
-      
-      // Extract current user ID (nếu chưa có từ AppInitializationService)
       if (_currentUserId == null && profileData['userId'] != null) {
         _currentUserId = profileData['userId'] as int;
-        // Set current user ID in cache for filtering
         RecommendationCache.instance.setCurrentUserId(_currentUserId);
       }
-      
-      // Extract current user avatar
       if (profileData['avatarUrl'] != null) {
         _currentUserAvatarUrl = profileData['avatarUrl'] as String;
       }
-      
-      // Extract location data from profile
       if (profileData['location'] != null && profileData['location'] is Map<String, dynamic>) {
         final location = profileData['location'] as Map<String, dynamic>;
-        
-        // Handle both null and 0.0 values (backend might return 0.0 instead of null)
         final lat = location['latitude'];
         final lon = location['longitude'];
-        
         if (lat != null && lat is num && lat != 0.0) {
           _currentUserLatitude = lat.toDouble();
         }
-        
         if (lon != null && lon is num && lon != 0.0) {
           _currentUserLongitude = lon.toDouble();
         }
-        
-        print('Current user location extracted: $_currentUserLatitude, $_currentUserLongitude');
-      } else {
-        print('No location data found in profile response');
-        print('Profile data keys: ${profileData.keys.toList()}');
-        if (profileData['location'] != null) {
-          print('Location data type: ${profileData['location'].runtimeType}');
-          print('Location data: ${profileData['location']}');
-        }
       }
     } catch (e) {
-      print('Error loading current user profile: $e');
-      // Don't throw error, just log it - distance calculation will show "Distance unavailable"
+      // debugPrint('[Discovery] Lỗi khi load profile: $e');
     }
   }
 
-  /// Calculate distance between current user and a profile
+  /// Calculate distance between current user and a profile (localized)
   String getDistanceToProfile(UserRecommendationModel profile) {
-    final distance = DistanceCalculator.getDistanceText(
+    if (_context == null) return '';
+    final tr = AppLocalizations.of(_context!).translate;
+    return DistanceCalculator.getDistanceText(
       _currentUserLatitude,
       _currentUserLongitude,
       profile.latitude,
       profile.longitude,
+      tr: tr,
     );
-    
-    return distance;
   }
 
   /// Load recommendations from API
   /// This method fetches user recommendations from the backend API
   Future<void> loadRecommendations({bool forceRefresh = false}) async {
     _isLoading = true;
+    _isPrecacheDone = false;
     _error = null;
     notifyListeners();
-
     try {
-      // Load current user profile first to get location for distance calculation
       await loadCurrentUserProfile();
-      
-      // If forceRefresh, clear cache before calling API
       if (forceRefresh) {
         RecommendationCache.instance.clear();
         AppStartupService.instance.reset();
       }
-      
-      // Check if app data has been initialized
-      if (!forceRefresh && AppStartupService.instance.isReady) {
-        print('DiscoveryViewModel: Sử dụng dữ liệu đã được chuẩn bị từ AppStartupService');
+      if (AppStartupService.instance.isReady && !forceRefresh) {
         final cached = RecommendationCache.instance.recommendations;
-        if (cached != null && cached.isNotEmpty) {
-          _recommendations = _filterOutCurrentUser(cached);
-          _currentProfileIndex = 0;
-          _isLoading = false;
-          notifyListeners();
-          _precacheInitialImages();
-          return;
-        }
-      }
-      
-      // Check cache first
-      final cached = RecommendationCache.instance.recommendations;
-      if (!forceRefresh && cached != null && cached.isNotEmpty) {
-        _recommendations = _filterOutCurrentUser(cached);
-        _currentProfileIndex = 0;
+        _recommendations = cached != null ? _filterOutCurrentUser(cached) : [];
+        _isPrecacheDone = true;
         _isLoading = false;
         notifyListeners();
-        _precacheInitialImages();
         return;
       }
-      
-      // Call the service layer to get recommendations
       final recommendations = await _matchService.getRecommendations();
       _recommendations = _filterOutCurrentUser(recommendations);
       _currentProfileIndex = 0;
       _isLoading = false;
       notifyListeners();
-      // Cache the new recommendations
       RecommendationCache.instance.setRecommendations(_recommendations);
-      // After loading, pre-cache images for a smoother experience
-      _precacheInitialImages();
-    } catch (e) {
+      
+      // Sử dụng logic precache thông minh mới
+      await _precacheInitialImages();
+      _isPrecacheDone = true;
       _isLoading = false;
+      notifyListeners();
+    } catch (e, stack) {
+      // debugPrint('[Discovery][ERROR] $e\n$stack');
       _error = e.toString();
+      _isLoading = false;
       notifyListeners();
     }
   }
 
   /// Filter out current user's profile from recommendations
-  List<UserRecommendationModel> _filterOutCurrentUser(List<UserRecommendationModel> recommendations) {
+  List<UserRecommendationModel> _filterOutCurrentUser(
+    List<UserRecommendationModel> recommendations,
+  ) {
     if (_currentUserId == null) {
       return recommendations;
     }
-    
-    final filtered = recommendations.where((profile) => profile.userId != _currentUserId).toList();
-    
+
+    final filtered =
+        recommendations
+            .where((profile) => profile.userId != _currentUserId)
+            .toList();
+
     if (filtered.length != recommendations.length) {
-      print('Filtered out current user profile (ID: $_currentUserId) from recommendations');
+      // debugPrint(
+      //   'Filtered out current user profile (ID: $_currentUserId) from recommendations',
+      // );
     }
-    
+
     return filtered;
   }
 
@@ -228,16 +198,18 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_currentProfileIndex >= _recommendations.length) return;
 
     final currentProfile = _recommendations[_currentProfileIndex];
-    
+
+    // debugPrint('[DiscoveryViewModel] likeCurrentProfile: index=$_currentProfileIndex, userId= [32m${currentProfile.userId} [0m, total=${_recommendations.length}');
+
     try {
       // Call the service layer to like the user
       final response = await _matchService.likeUser(currentProfile.userId);
-      
+
       // Handle match if occurred
       if (response.isMatch) {
         _handleMatch(response, currentProfile);
       }
-      
+
       _moveToNextProfile();
     } catch (e) {
       _error = e.toString();
@@ -251,11 +223,13 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_currentProfileIndex >= _recommendations.length) return;
 
     final currentProfile = _recommendations[_currentProfileIndex];
-    
+
+    // debugPrint('[DiscoveryViewModel] dislikeCurrentProfile: index=$_currentProfileIndex, userId= [31m${currentProfile.userId} [0m, total=${_recommendations.length}');
+
     try {
       // Call the service layer to dislike the user
       await _matchService.dislikeUser(currentProfile.userId);
-      
+
       // Store the rejected profile for potential rewind
       _rejectedProfiles.add(currentProfile);
 
@@ -289,16 +263,50 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Move to the next profile in the stack
   void _moveToNextProfile() {
     if (_currentProfileIndex < _recommendations.length) {
+      // Xóa cache cho profile đã vuốt qua để tiết kiệm bộ nhớ
+      if (_currentProfileIndex < _recommendations.length) {
+        final swipedProfile = _recommendations[_currentProfileIndex];
+        ImagePrecacheService.instance.removeProfileFromCache(swipedProfile.userId);
+      }
       _currentProfileIndex++;
+      // Nếu còn 2 profile phía sau thì load thêm batch mới
+      if (_recommendations.length - _currentProfileIndex <= 2) {
+        _loadMoreProfilesIfNeeded();
+      }
       notifyListeners();
-      // Pre-cache images for the upcoming profile
       _precacheNextImageOnSwipe();
+      _precacheNextBatchIfNeeded();
+    }
+  }
+
+  /// Tự động load thêm 5 profile mới nếu còn ít hơn 5 profile phía sau
+  Future<void> _loadMoreProfilesIfNeeded() async {
+    try {
+      final newProfiles = await _matchService.getRecommendations();
+      if (newProfiles.isNotEmpty) {
+        final filtered = _filterOutCurrentUser(newProfiles);
+        final existingIds = _recommendations.map((e) => e.userId).toSet();
+        final uniqueNew = filtered.where((e) => !existingIds.contains(e.userId)).toList();
+        if (uniqueNew.isNotEmpty) {
+          _recommendations.addAll(uniqueNew);
+          RecommendationCache.instance.setRecommendations(_recommendations);
+          if (_context != null) {
+            await ImagePrecacheService.instance.precacheMultipleProfiles(uniqueNew, _context!, count: uniqueNew.length);
+          }
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      // Chỉ log ra terminal nếu cần
     }
   }
 
   /// Handle match response
   /// This method shows the match dialog when a match occurs
-  void _handleMatch(SwipeResponseModel response, UserRecommendationModel matchedProfile) {
+  void _handleMatch(
+    SwipeResponseModel response,
+    UserRecommendationModel matchedProfile,
+  ) {
     if (_context != null) {
       showMatchDialog(
         _context!,
@@ -308,24 +316,27 @@ class DiscoveryViewModel extends ChangeNotifier {
         onStartChat: () {
           // Sử dụng chatRoomId từ backend response thay vì matchId
           final chatId = response.chatRoomId?.toString();
-          
+
           if (chatId == null || chatId.isEmpty) {
-            print('Error: No chatRoomId found in match response');
-            print('Response data: ${response.toJson()}');
+            // debugPrint('Error: No chatRoomId found in match response');
+            // debugPrint('Response data: ${response.toJson()}');
             return;
           }
-          
-          print('Navigating to chat with chatRoomId: $chatId');
-          
+
+          // debugPrint('Navigating to chat with chatRoomId: $chatId');
+
           Navigator.pushNamed(
             _context!,
             AppRoutes.chatConversation,
             arguments: {
               'chatId': chatId,
               'recipientName': matchedProfile.fullName,
-              'recipientAvatar': matchedProfile.photos.isNotEmpty 
-                  ? UrlTransformer.transform(matchedProfile.photos.first.url) 
-                  : null,
+              'recipientAvatar':
+                  matchedProfile.photos.isNotEmpty
+                      ? UrlTransformer.transform(
+                        matchedProfile.photos.first.url,
+                      )
+                      : null,
               'isOnline': false, // TODO: Check actual online status
             },
           );
@@ -343,11 +354,7 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Convert UserRecommendationModel to LikedUserModel for rewind service
   /// This helper method ensures compatibility with the rewind service
   LikedUserModel _convertToLikedUserModel(UserRecommendationModel profile) {
-    // Debug URLs để kiểm tra data từ backend
-    if (profile.photos.isNotEmpty) {
-      UrlTransformer.debugUrl(profile.photos.first.url, UrlTransformer.transform(profile.photos.first.url));
-    }
-    
+    // Đã xóa hoàn toàn mọi dòng gọi UrlTransformer.debugUrl
     return LikedUserModel(
       id: profile.userId.toString(),
       firstName: profile.firstName,
@@ -355,10 +362,17 @@ class DiscoveryViewModel extends ChangeNotifier {
       username: profile.username,
       age: profile.age ?? 0,
       location: profile.location ?? 'Unknown',
-      coverImageUrl: profile.photos.isNotEmpty ? UrlTransformer.transform(profile.photos.first.url) : '',
-      avatarUrl: profile.photos.isNotEmpty ? UrlTransformer.transform(profile.photos.first.url) : '',
+      coverImageUrl:
+          profile.photos.isNotEmpty
+              ? UrlTransformer.transform(profile.photos.first.url)
+              : '',
+      avatarUrl:
+          profile.photos.isNotEmpty
+              ? UrlTransformer.transform(profile.photos.first.url)
+              : '',
       bio: profile.bio ?? '',
-      photoUrls: profile.photos.map((p) => UrlTransformer.transform(p.url)).toList(),
+      photoUrls:
+          profile.photos.map((p) => UrlTransformer.transform(p.url)).toList(),
       isVip: false,
     );
   }
@@ -366,34 +380,31 @@ class DiscoveryViewModel extends ChangeNotifier {
   // --- Image Pre-caching Logic ---
 
   /// Pre-caches images for the first few profiles to ensure a smooth initial experience.
-  void _precacheInitialImages() {
-    if (_context == null || _recommendations.length < 1) return;
-
-    // Sử dụng ImagePrecacheService để precache hiệu quả hơn
-    final int endIndex = _recommendations.length > 2 ? 2 : _recommendations.length;
-    final profilesToPrecache = _recommendations.take(endIndex).toList();
+  Future<void> _precacheInitialImages() async {
+    if (_context == null || _recommendations.isEmpty) return;
     
-    try {
-      ImagePrecacheService.instance.precacheMultipleProfiles(profilesToPrecache, _context!, count: endIndex);
-    } catch (e) {
-      print('DiscoveryViewModel: Lỗi khi precache initial images: $e');
-    }
+    // Sử dụng logic precache thông minh mới
+    await ImagePrecacheService.instance.precacheForDiscovery(_recommendations, _context!);
   }
 
   /// Pre-caches images for the profile that will be shown after the next one.
   void _precacheNextImageOnSwipe() {
-    // When the user swipes and `_currentProfileIndex` is updated,
-    // we pre-cache the profile that is now 2 positions away, so it's ready.
-    // e.g., if we are now showing index 1, we pre-cache index 2.
     final indexToPrecache = _currentProfileIndex + 1;
-
     if (indexToPrecache < _recommendations.length && _context != null) {
       final profile = _recommendations[indexToPrecache];
-      try {
+      if (!ImagePrecacheService.instance.isProfilePrecached(profile)) {
         ImagePrecacheService.instance.precacheProfileImages(profile, _context!);
-      } catch (e) {
-        print('DiscoveryViewModel: Lỗi khi precache next image: $e');
       }
+    }
+  }
+
+  /// Precache batch tiếp theo nếu cần thiết
+  void _precacheNextBatchIfNeeded() {
+    if (_context == null || _recommendations.isEmpty) return;
+    
+    // Nếu user đã vuốt qua 3 profile và còn ít hơn 5 profile được precache, thì precache thêm
+    if (_currentProfileIndex >= 3 && _currentProfileIndex < _recommendations.length - 5) {
+      ImagePrecacheService.instance.precacheNextBatch(_recommendations, _currentProfileIndex, _context!);
     }
   }
 
@@ -402,6 +413,14 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_context == null || profileIndex >= _recommendations.length) return;
 
     final profile = _recommendations[profileIndex];
-    ImagePrecacheService.instance.precacheProfileImages(profile, _context!);
+    if (profile.photos.isNotEmpty) {
+      for (final photo in profile.photos) {
+        final transformedUrl = UrlTransformer.transform(photo.url);
+
+        final provider = CachedNetworkImageProvider(transformedUrl);
+        precacheImage(provider, _context!);
+      }
+      // debugPrint('[Discovery] Đã precache ảnh cho profile index $profileIndex (userId: ${profile.userId})');
+    }
   }
 }

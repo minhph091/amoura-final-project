@@ -1,6 +1,7 @@
 // lib/presentation/settings/widgets/theme_mode_dialog.dart
 
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 
 class ThemeModeDialog extends StatefulWidget {
   final ThemeMode initialMode;
@@ -23,18 +24,18 @@ class _ThemeModeDialogState extends State<ThemeModeDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
-      // backgroundColor: Colors.white, // <-- BỎ DÒNG NÀY ĐI
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Choose App Appearance",
+              localizations.translate('choose_app_appearance'),
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
@@ -43,19 +44,19 @@ class _ThemeModeDialogState extends State<ThemeModeDialog> {
             const SizedBox(height: 10),
             _buildRadioTile(
               context,
-              title: "System",
+              title: localizations.translate('system'),
               value: ThemeMode.system,
               icon: Icons.settings_suggest_outlined,
             ),
             _buildRadioTile(
               context,
-              title: "Light",
+              title: localizations.translate('light'),
               value: ThemeMode.light,
               icon: Icons.light_mode_outlined,
             ),
             _buildRadioTile(
               context,
-              title: "Dark",
+              title: localizations.translate('dark'),
               value: ThemeMode.dark,
               icon: Icons.dark_mode_outlined,
             ),
@@ -66,7 +67,7 @@ class _ThemeModeDialogState extends State<ThemeModeDialog> {
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(
-                      "Cancel",
+                      localizations.translate('cancel'),
                       style: TextStyle(color: theme.colorScheme.primary),
                     ),
                   ),
@@ -74,12 +75,14 @@ class _ThemeModeDialogState extends State<ThemeModeDialog> {
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     onPressed: () => Navigator.of(context).pop(selectedMode),
-                    child: const Text("Apply"),
+                    child: Text(localizations.translate('apply')),
                   ),
                 ),
               ],
@@ -91,11 +94,11 @@ class _ThemeModeDialogState extends State<ThemeModeDialog> {
   }
 
   Widget _buildRadioTile(
-      BuildContext context, {
-        required String title,
-        required ThemeMode value,
-        required IconData icon,
-      }) {
+    BuildContext context, {
+    required String title,
+    required ThemeMode value,
+    required IconData icon,
+  }) {
     final theme = Theme.of(context);
     return RadioListTile<ThemeMode>(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -47,6 +47,9 @@ class ChatService {
   
   // WebSocket connection status
   bool get isConnected => _socketClient.isConnected;
+
+  // Thêm getter public cho connectionStream
+  Stream<bool> get connectionStream => _socketClient.connectionStream;
   
   /// Lấy danh sách conversations từ backend
   /// Sử dụng cache để cải thiện performance
@@ -284,7 +287,7 @@ class ChatService {
         if (originalMessage.id.isNotEmpty) {
           replyToMessage = originalMessage.content;
           replyToSenderName = originalMessage.senderName;
-          debugPrint('ChatService: Found original message for reply - Content: "${replyToMessage}", Sender: "$replyToSenderName"');
+          debugPrint('ChatService: Found original message for reply - Content: "$replyToMessage", Sender: "$replyToSenderName"');
         } else {
           debugPrint('ChatService: WARNING - Could not find original message with ID: $replyToMessageId');
         }
@@ -584,7 +587,7 @@ class ChatService {
           } else {
             _addMessageToCache(message);
           }
-          debugPrint('ChatService: Processed message type: ${messageType}');
+          debugPrint('ChatService: Processed message type: $messageType');
       }
     } catch (e) {
       debugPrint('ChatService: Error handling WebSocket message: $e');
@@ -846,3 +849,4 @@ class ChatService {
     }
   }
 } 
+

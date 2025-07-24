@@ -1,56 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../../infrastructure/services/likes_service.dart';
-import '../../../infrastructure/services/subscription_service.dart';
 import '../../../app/core/navigation.dart' as app_navigation;
 import 'liked_users_viewmodel.dart';
 import 'widgets/liked_user_card.dart';
-import '../../subscription/widgets/vip_promotion_dialog.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 
-class LikedUsersView extends StatelessWidget {
+class LikedUsersView extends StatefulWidget {
   const LikedUsersView({super.key});
 
   @override
+  State<LikedUsersView> createState() => _LikedUsersViewState();
+}
+
+class _LikedUsersViewState extends State<LikedUsersView> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch liked users when the view is first opened
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final likesService = Provider.of<LikesService>(context, listen: false);
+      likesService.fetchLikedUsers();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return ChangeNotifierProvider(
       create: (_) => LikedUsersViewModel(),
       child: Consumer<LikedUsersViewModel>(
         builder: (context, viewModel, _) {
-          // Get subscription service to check if user is VIP
-          final subscriptionService = Provider.of<SubscriptionService>(context);
+          // Get likes service
           final likesService = Provider.of<LikesService>(context);
 
           return AppGradientBackground(
             child: Scaffold(
               backgroundColor: Colors.transparent,
               appBar: AppBar(
-                title: Center(child: const Text('Who Liked You')),
+                title: Center(
+                  child: Text(localizations.translate('who_liked_you')),
+                ),
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                actions: [
-                  if (subscriptionService.isVip)
-                    IconButton(
-                      icon: const Icon(Icons.filter_list),
-                      onPressed: () {
-                        // Filter functionality for VIP users
-                        viewModel.toggleFilterMenu();
-                      },
-                    ),
-                ],
               ),
               body: Stack(
                 children: [
-                  // Content - will be blurred if not VIP
+                  // Content - hiển thị cho tất cả user, không cần VIP
                   RefreshIndicator(
                     onRefresh: () => likesService.fetchLikedUsers(),
                     child: _buildContent(context, viewModel, likesService),
                   ),
 
-                  // VIP overlay if not subscribed
-                  if (!subscriptionService.isVip)
-                    _buildVipOverlay(context),
+                  // Đã loại bỏ VIP overlay - cho phép tất cả user xem
+                  // if (!subscriptionService.isVip)
+                  //   _buildVipOverlay(context),
                 ],
               ),
             ),
@@ -60,7 +67,11 @@ class LikedUsersView extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, LikedUsersViewModel viewModel, LikesService likesService) {
+  Widget _buildContent(
+    BuildContext context,
+    LikedUsersViewModel viewModel,
+    LikesService likesService,
+  ) {
     if (likesService.isLoading) {
       return _buildLoadingState();
     }
@@ -85,10 +96,13 @@ class LikedUsersView extends StatelessWidget {
       itemBuilder: (context, index) {
         final user = likesService.likedUsers[index];
         return LikedUserCard(
-          user: user,
-          onTap: () => viewModel.navigateToUserProfile(context, user),
-          onLike: () => viewModel.likeUser(context, user),
-        ).animate().fadeIn(duration: 300.ms, delay: (50 * index).ms).slideY(
+              user: user,
+              onTap: () => viewModel.navigateToUserProfile(context, user),
+              onLike: () => viewModel.likeUser(context, user),
+            )
+            .animate()
+            .fadeIn(duration: 300.ms, delay: (50 * index).ms)
+            .slideY(
               begin: 0.2,
               end: 0,
               duration: 300.ms,
@@ -100,9 +114,7 @@ class LikedUsersView extends StatelessWidget {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildErrorState(String error) {
@@ -121,7 +133,10 @@ class LikedUsersView extends StatelessWidget {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
-              final likesService = Provider.of<LikesService>(app_navigation.navigatorKey.currentContext!, listen: false);
+              final likesService = Provider.of<LikesService>(
+                app_navigation.navigatorKey.currentContext!,
+                listen: false,
+              );
               likesService.fetchLikedUsers();
             },
             child: const Text('Try Again'),
@@ -136,11 +151,7 @@ class LikedUsersView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.favorite_border,
-            size: 64,
-            color: Colors.grey.shade400,
-          ),
+          Icon(Icons.favorite_border, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           const Text(
             'No Likes Yet',
@@ -157,15 +168,6 @@ class LikedUsersView extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildVipOverlay(BuildContext context) {
-    return VipPromotionDialog(
-      featureTitle: 'See Who Likes You',
-      featureId: 'see_likes',
-      description: 'Upgrade to Amoura VIP to see all the users who have liked your profile!',
-      icon: Icons.favorite,
     );
   }
 }

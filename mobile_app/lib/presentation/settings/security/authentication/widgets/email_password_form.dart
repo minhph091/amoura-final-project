@@ -38,7 +38,7 @@ class EmailPasswordForm extends StatelessWidget {
             Text(
               localizations.translate('password_continue'),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.8),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 24),
@@ -94,3 +94,4 @@ class EmailPasswordForm extends StatelessWidget {
     );
   }
 }
+

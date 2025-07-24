@@ -1,4 +1,6 @@
 // lib/presentation/settings/settings_viewmodel.dart
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../domain/usecases/auth/logout_usecase.dart';
@@ -17,28 +19,34 @@ class SettingsViewModel extends ChangeNotifier {
 
   Future<void> logout(BuildContext context) async {
     try {
-      print('Starting logout process');
+      debugPrint('Starting logout process');
       _isLoading = true;
       notifyListeners();
 
       String? refreshToken = await _authService.getRefreshToken();
-      print('Retrieved refreshToken: $refreshToken'); // Log giá trị refreshToken
+      debugPrint(
+        'Retrieved refreshToken: $refreshToken',
+      ); // Log giá trị refreshToken
       // Gọi logout với refreshToken, nếu null thì truyền chuỗi rỗng
       await _logoutUseCase.execute(refreshToken ?? '');
-      print('LogoutUseCase executed successfully'); // Log xác nhận gọi API thành công
+      debugPrint(
+        'LogoutUseCase executed successfully',
+      ); // Log xác nhận gọi API thành công
       await _authService.clearTokens();
-      print('Tokens cleared successfully'); // Log xác nhận xóa token
+      debugPrint('Tokens cleared successfully'); // Log xác nhận xóa token
       
       // Reset AppStartupService để clear cached data
       AppStartupService.instance.reset();
       print('AppStartupService reset successfully');
     } catch (e) {
-      print('Logout failed in SettingsViewModel: $e'); // Log lỗi chi tiết
+      debugPrint('Logout failed in SettingsViewModel: $e'); // Log lỗi chi tiết
       rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
-      print('Logout process completed, isLoading set to false'); // Log xác nhận hoàn thành
+      debugPrint(
+        'Logout process completed, isLoading set to false',
+      ); // Log xác nhận hoàn thành
       Provider.of<ProfileViewModel>(context, listen: false).clearProfile();
     }
   }

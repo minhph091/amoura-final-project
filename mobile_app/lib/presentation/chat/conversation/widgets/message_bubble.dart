@@ -15,7 +15,7 @@ class MessageBubble extends StatelessWidget {
   final Function(MessageModel) onDoubleTap;
 
   const MessageBubble({
-    Key? key,
+    super.key,
     required this.message,
     required this.isMyMessage,
     this.showTimestamp = true,
@@ -24,7 +24,7 @@ class MessageBubble extends StatelessWidget {
     this.senderAvatarUrl,
     required this.onMessageLongPress,
     required this.onDoubleTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,5 @@
 // lib/data/remote/auth_api.dart
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
@@ -263,8 +264,8 @@ class AuthApi {
     required Map<String, dynamic> profileData,
   }) async {
     try {
-      print('Calling updateProfile with sessionToken: ${sessionToken.substring(0, 10)}...');
-      print('Profile data to update: $profileData');
+      debugPrint('Calling updateProfile with sessionToken: ${sessionToken.substring(0, 10)}...');
+      debugPrint('Profile data to update: $profileData');
 
       final response = await _apiClient.dio.patch(
         ApiEndpoints.updateProfile,
@@ -278,8 +279,8 @@ class AuthApi {
         ),
       );
 
-      print('Update profile response status: ${response.statusCode}');
-      print('Update profile response data: ${response.data}');
+      debugPrint('Update profile response status: ${response.statusCode}');
+      debugPrint('Update profile response data: ${response.data}');
 
       final data = response.data as Map<String, dynamic>;
       // Backend trả về profile data thực tế thay vì wrapper với status
@@ -290,7 +291,7 @@ class AuthApi {
       return data;
     } on DioException catch (e) {
       final errorMessage = _handleDioError(e);
-      print('DioException in updateProfile: $errorMessage');
+      debugPrint('DioException in updateProfile: $errorMessage');
       throw ApiException(errorMessage);
     }
   }
@@ -300,7 +301,7 @@ class AuthApi {
       final data = e.response!.data as Map<String, dynamic>?;
       final statusCode = e.response!.statusCode;
       final message = data?['message'] ?? 'Unknown error (Status: $statusCode)';
-      print('DioError details - Status: $statusCode, Message: $message, Data: $data');
+      debugPrint('DioError details - Status: $statusCode, Message: $message, Data: $data');
       if (message.contains('Invalid OTP') || message.contains('expired')) {
         return 'Invalid or expired OTP';
       } else if (message.contains('not found') || message.contains('not registered')) {

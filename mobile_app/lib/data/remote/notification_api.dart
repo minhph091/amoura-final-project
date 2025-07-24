@@ -1,6 +1,4 @@
-import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
-import '../../core/constants/api_endpoints.dart';
 import '../models/notification/notification_model.dart';
 
 class NotificationApi {
@@ -8,7 +6,11 @@ class NotificationApi {
   NotificationApi(this._apiClient);
 
   // Lấy danh sách thông báo với cursor-based pagination
-  Future<Map<String, dynamic>> getNotifications({int? cursor, int limit = 20, String direction = 'NEXT'}) async {
+  Future<Map<String, dynamic>> getNotifications({
+    int? cursor,
+    int limit = 20,
+    String direction = 'NEXT',
+  }) async {
     final response = await _apiClient.get(
       '/notifications',
       queryParameters: {
@@ -18,7 +20,11 @@ class NotificationApi {
       },
     );
     final data = response.data;
-    final notifications = (data['data'] as List?)?.map((e) => NotificationModel.fromJson(e)).toList() ?? [];
+    final notifications =
+        (data['data'] as List?)
+            ?.map((e) => NotificationModel.fromJson(e))
+            .toList() ??
+        [];
     return {
       'notifications': notifications,
       'nextCursor': data['nextCursor'],

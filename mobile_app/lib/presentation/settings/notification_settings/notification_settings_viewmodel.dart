@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class NotificationSettingsViewModel extends ChangeNotifier {
@@ -69,3 +70,4 @@ class NotificationSettingsViewModel extends ChangeNotifier {
     debugPrint('Messages: $_messageNotifications');
   }
 }
+

@@ -12,12 +12,12 @@ class ChatItem extends StatelessWidget {
   final bool isSelected;
 
   const ChatItem({
-    Key? key,
+    super.key,
     required this.chat,
     required this.currentUserId,
     this.onChatSelected,
     this.isSelected = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -5,11 +5,7 @@ class VIPBenefitItem extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const VIPBenefitItem({
-    super.key,
-    required this.icon,
-    required this.text,
-  });
+  const VIPBenefitItem({super.key, required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +14,7 @@ class VIPBenefitItem extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -33,7 +29,7 @@ class VIPBenefitItem extends StatelessWidget {
             text,
             style: TextStyle(
               fontSize: 16,
-              color: Theme.of(context).colorScheme.onBackground,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),

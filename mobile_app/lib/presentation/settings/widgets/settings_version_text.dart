@@ -12,7 +12,7 @@ class SettingsVersionText extends StatelessWidget {
         child: Text(
           'App version 1.0.0',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.55),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
             letterSpacing: 0.1,
           ),
         ),
@@ -20,3 +20,4 @@ class SettingsVersionText extends StatelessWidget {
     );
   }
 }
+

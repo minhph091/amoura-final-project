@@ -1,4 +1,6 @@
 // lib/presentation/profile/setup/steps/step10_bio_review_form.dart
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../shared/widgets/image_source_bottom_sheet.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../theme/setup_profile_theme.dart';
 import '../widgets/setup_profile_button.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -24,13 +27,18 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
   final int maxAdditionalPhotos = 4;
 
   Future<bool> _requestPermissions(ImageSource source) async {
-    Permission permission = source == ImageSource.camera ? Permission.camera : Permission.photos;
+    Permission permission =
+        source == ImageSource.camera ? Permission.camera : Permission.photos;
     var status = await permission.status;
     if (!status.isGranted) {
       status = await permission.request();
       if (!status.isGranted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Please grant ${source == ImageSource.camera ? 'camera' : 'photo'} permission.")),
+          SnackBar(
+            content: Text(
+              "Please grant ${source == ImageSource.camera ? 'camera' : 'photo'} permission.",
+            ),
+          ),
         );
         return false;
       }
@@ -42,7 +50,13 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
     final vm = Provider.of<SetupProfileViewModel>(context, listen: false);
     final step10ViewModel = vm.stepViewModels[9] as Step10ViewModel;
     if (step10ViewModel.additionalPhotos.length >= maxAdditionalPhotos) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Max 4 additional photos allowed.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).translate('max_photos_allowed'),
+          ),
+        ),
+      );
       return;
     }
     final source = await _showImageSourceDialog();
@@ -54,13 +68,27 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
     return ImageSourceBottomSheet.show(context);
   }
 
-  Future<void> _pickAndUploadImage(Step10ViewModel viewModel, ImageSource source) async {
+  Future<void> _pickAndUploadImage(
+    Step10ViewModel viewModel,
+    ImageSource source,
+  ) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source, preferredCameraDevice: CameraDevice.rear);
+    final pickedFile = await picker.pickImage(
+      source: source,
+      preferredCameraDevice: CameraDevice.rear,
+    );
     if (pickedFile != null) {
-      final image = await decodeImageFromList(await File(pickedFile.path).readAsBytes());
+      final image = await decodeImageFromList(
+        await File(pickedFile.path).readAsBytes(),
+      );
       if (image.width > image.height) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Upload a vertical or square photo.")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).translate('upload_vertical_photo'),
+            ),
+          ),
+        );
         return;
       }
       final compressedFile = await FlutterImageCompress.compressAndGetFile(
@@ -97,9 +125,9 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
       // Force UI rebuild after successful deletion
       if (mounted) setState(() {});
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete photo: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete photo: $e')));
     }
   }
 
@@ -108,19 +136,20 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
     final step10ViewModel = vm.stepViewModels[9] as Step10ViewModel;
     final action = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Photo'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'replace'),
-            child: const Text('Replace Photo'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Edit Photo'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'replace'),
+                child: const Text('Replace Photo'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'cancel'),
+                child: const Text('Cancel'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'cancel'),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
     );
 
     if (action == 'replace') {
@@ -134,7 +163,9 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
       // - This ensures the old photo is removed via DELETE request to /profiles/photos/highlights/{photoId}
       await step10ViewModel.deletePhoto(oldPhotoId);
       // Remove the old photo from the local list to keep UI in sync
-      step10ViewModel.additionalPhotos.removeWhere((p) => p['id'] == oldPhotoId);
+      step10ViewModel.additionalPhotos.removeWhere(
+        (p) => p['id'] == oldPhotoId,
+      );
       // Force UI rebuild after successful replacement
       if (mounted) setState(() {});
     }
@@ -142,6 +173,7 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Consumer<SetupProfileViewModel>(
       builder: (context, vm, child) {
         final step10ViewModel = vm.stepViewModels[9] as Step10ViewModel;
@@ -152,10 +184,15 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Your Bio & Photos", style: ProfileTheme.getTitleStyle(context)),
+                Text(
+                  localizations.translate('step10_title'),
+                  style: ProfileTheme.getTitleStyle(context),
+                ),
                 const SizedBox(height: 6),
-                Text("Write a short introduction and upload up to 4 vertical or square photos (max 2MB, 512x512).",
-                    style: ProfileTheme.getDescriptionStyle(context)),
+                Text(
+                  localizations.translate('step10_description'),
+                  style: ProfileTheme.getDescriptionStyle(context),
+                ),
                 const SizedBox(height: 18),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,12 +207,16 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                             maxLength: 1000,
                             onChanged: (v) => step10ViewModel.setBio(v),
                             onSaved: (v) => step10ViewModel.setBio(v ?? ''),
-                            validator: (value) => value != null && value.length > 1000
-                              ? "Bio must not exceed 1000 characters."
-                              : null,
+                            validator:
+                                (value) =>
+                                    value != null && value.length > 1000
+                                        ? localizations.translate(
+                                          'bio_too_long',
+                                        )
+                                        : null,
                             style: ProfileTheme.getInputTextStyle(context),
                             decoration: InputDecoration(
-                              hintText: "Share something about yourself...",
+                              hintText: localizations.translate('bio_hint'),
                               hintStyle: TextStyle(
                                 color: Colors.grey.shade400,
                                 fontSize: 14,
@@ -183,13 +224,22 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                               // Remove the prefix icon - will add it as a positioned widget
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: ProfileTheme.darkPink),
+                                borderSide: BorderSide(
+                                  color: ProfileTheme.darkPink,
+                                ),
                               ),
-                              contentPadding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
+                              contentPadding: const EdgeInsets.fromLTRB(
+                                16,
+                                40,
+                                16,
+                                16,
+                              ),
                               // Remove the built-in counter
                               counterText: '',
                             ),
@@ -213,14 +263,20 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                       child: Align(
                         alignment: Alignment.bottomRight,
                         child: ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: TextEditingController(text: step10ViewModel.bio ?? ''),
+                          valueListenable: TextEditingController(
+                            text: step10ViewModel.bio ?? '',
+                          ),
                           builder: (context, value, child) {
-                            final currentLength = step10ViewModel.bio?.length ?? 0;
+                            final currentLength =
+                                step10ViewModel.bio?.length ?? 0;
                             return Text(
-                              '$currentLength/1000 characters',
+                              '$currentLength/1000 ${localizations.translate('characters')}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: currentLength > 1000 ? Colors.red : Colors.grey.shade600,
+                                color:
+                                    currentLength > 1000
+                                        ? Colors.red
+                                        : Colors.grey.shade600,
                               ),
                             );
                           },
@@ -230,38 +286,59 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                   ],
                 ),
                 const SizedBox(height: 22),
-                Text("Your Photos (${step10ViewModel.additionalPhotos.length}/$maxAdditionalPhotos)",
-                    style: ProfileTheme.getLabelStyle(context).copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  "Your Photos (${step10ViewModel.additionalPhotos.length}/$maxAdditionalPhotos)",
+                  style: ProfileTheme.getLabelStyle(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    ...step10ViewModel.additionalPhotos.map((photo) => Stack(
-                      alignment: Alignment.topRight,
-                      children: [
-                        GestureDetector(
-                          onTap: () => _editPhoto(photo),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.file(File(photo['path']), width: 80, height: 80, fit: BoxFit.cover),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => _deletePhoto(photo['id']),
-                          child: Container(
-                            margin: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(blurRadius: 2, color: Color(0xFF424242))],
+                    ...step10ViewModel.additionalPhotos.map(
+                      (photo) => Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          GestureDetector(
+                            onTap: () => _editPhoto(photo),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.file(
+                                File(photo['path']),
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                            child: Icon(Icons.close, color: ProfileTheme.darkPink, size: 18),
                           ),
-                        ),
-                      ],
-                    )),
-                    if (step10ViewModel.additionalPhotos.length < maxAdditionalPhotos)
+                          GestureDetector(
+                            onTap: () => _deletePhoto(photo['id']),
+                            child: Container(
+                              margin: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    blurRadius: 2,
+                                    color: Color(0xFF424242),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.close,
+                                color: ProfileTheme.darkPink,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (step10ViewModel.additionalPhotos.length <
+                        maxAdditionalPhotos)
                       GestureDetector(
                         onTap: _addImage,
                         child: DottedBorder(
@@ -275,7 +352,11 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                             width: 80,
                             height: 80,
                             alignment: Alignment.center,
-                            child: Icon(Icons.add_a_photo_rounded, color: ProfileTheme.darkPink, size: 32),
+                            child: Icon(
+                              Icons.add_a_photo_rounded,
+                              color: ProfileTheme.darkPink,
+                              size: 32,
+                            ),
                           ),
                         ),
                       ),
@@ -286,15 +367,22 @@ class _Step10BioReviewFormState extends State<Step10BioReviewForm> {
                   children: [
                     Expanded(
                       child: SetupProfileButton(
-                        text: "Finish",
+                        text: localizations.translate('finish_setup'),
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
                             _formKey.currentState!.save();
                             try {
-                              vm.nextStep(context: context); // Save and navigate
+                              vm.nextStep(
+                                context: context,
+                              ); // Save and navigate
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(step10ViewModel.errorMessage ?? 'An error occurred')),
+                                SnackBar(
+                                  content: Text(
+                                    step10ViewModel.errorMessage ??
+                                        'An error occurred',
+                                  ),
+                                ),
                               );
                             }
                           }

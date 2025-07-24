@@ -1,7 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../setup/theme/setup_profile_theme.dart';
 import 'dart:io';
+import '../../../../config/language/app_localizations.dart';
 
 class ReportFormDialog extends StatefulWidget {
   const ReportFormDialog({super.key});
@@ -47,7 +50,11 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
     // Kiểm tra đã đạt số lượng ảnh tối đa chưa
     if (_selectedImages.length >= _maxImages) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bạn chỉ có thể tải tối đa 4 hình ảnh')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).translate('report_max_images'),
+          ),
+        ),
       );
       return;
     }
@@ -63,7 +70,11 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
 
       if (fileSizeInMB > _maxFileSizeMB) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ảnh ${image.name} vượt quá kích thước tối đa $_maxFileSizeMB MB')),
+          SnackBar(
+            content: Text(
+              'Ảnh ${image.name} vượt quá kích thước tối đa $_maxFileSizeMB MB',
+            ),
+          ),
         );
         continue;
       }
@@ -101,14 +112,20 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
       // Focus vào trường còn thiếu
       if (_selectedReason == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng chọn lý do báo cáo')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).translate('select_report_reason'),
+            ),
+          ),
         );
       } else if (_detailsController.text.isEmpty) {
-        FocusScope.of(context).requestFocus(
-          FocusNode()..requestFocus(),
-        );
+        FocusScope.of(context).requestFocus(FocusNode()..requestFocus());
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng nhập chi tiết báo cáo')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).translate('enter_report_details'),
+            ),
+          ),
         );
       }
       return;
@@ -120,7 +137,11 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
     // Hiển thị thông báo thành công
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Báo cáo đã được gửi thành công')),
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context).translate('report_sent_successfully'),
+        ),
+      ),
     );
   }
 
@@ -139,7 +160,7 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: ProfileTheme.darkPink.withOpacity(0.1),
+                  color: ProfileTheme.darkPink.withValues(alpha: 0.1),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
@@ -147,7 +168,10 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.report_problem_outlined, color: ProfileTheme.darkPink),
+                    Icon(
+                      Icons.report_problem_outlined,
+                      color: ProfileTheme.darkPink,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -188,17 +212,22 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
                         child: DropdownButton<String>(
                           value: _selectedReason,
                           isExpanded: true,
-                          hint: const Padding(
-                            padding: EdgeInsets.only(left: 12),
-                            child: Text('Chọn lý do báo cáo'),
+                          hint: Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text(
+                              AppLocalizations.of(
+                                context,
+                              ).translate('select_report_reason_title'),
+                            ),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 12),
-                          items: _reportReasons.map((reason) {
-                            return DropdownMenuItem(
-                              value: reason,
-                              child: Text(reason),
-                            );
-                          }).toList(),
+                          items:
+                              _reportReasons.map((reason) {
+                                return DropdownMenuItem(
+                                  value: reason,
+                                  child: Text(reason),
+                                );
+                              }).toList(),
                           onChanged: (value) {
                             setState(() {
                               _selectedReason = value;
@@ -225,11 +254,13 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
                         controller: _detailsController,
                         maxLines: 5,
                         maxLength: _maxCharCount,
-                        decoration: const InputDecoration(
-                          hintText: 'Hãy nhập nội dung...',
-                          contentPadding: EdgeInsets.all(12),
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(
+                            context,
+                          ).translate('enter_content_hint'),
+                          contentPadding: const EdgeInsets.all(12),
                           border: InputBorder.none,
-                          counterText: '',  // Ẩn bộ đếm mặc định
+                          counterText: '', // Ẩn bộ đếm mặc định
                         ),
                         onChanged: (_) {
                           setState(() {});
@@ -248,7 +279,10 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
                       alignment: Alignment.centerRight,
                       child: Text(
                         '${_detailsController.text.length}/$_maxCharCount',
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
 
@@ -285,7 +319,10 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
                                   color: Colors.grey.shade100,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Icon(Icons.add_photo_alternate, size: 40),
+                                child: const Icon(
+                                  Icons.add_photo_alternate,
+                                  size: 40,
+                                ),
                               ),
                             ),
 
@@ -304,7 +341,9 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(8),
                                         image: DecorationImage(
-                                          image: FileImage(_selectedImages[index]),
+                                          image: FileImage(
+                                            _selectedImages[index],
+                                          ),
                                           fit: BoxFit.cover,
                                         ),
                                       ),
@@ -320,7 +359,11 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
                                             color: Colors.red,
                                             shape: BoxShape.circle,
                                           ),
-                                          child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                          child: const Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -340,7 +383,10 @@ class _ReportFormDialogState extends State<ReportFormDialog> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isFormValid ? ProfileTheme.darkPink : Colors.grey,
+                          backgroundColor:
+                              _isFormValid
+                                  ? ProfileTheme.darkPink
+                                  : Colors.grey,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(

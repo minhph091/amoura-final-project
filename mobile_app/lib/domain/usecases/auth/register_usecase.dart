@@ -1,4 +1,5 @@
 // lib/domain/usecases/auth/register_usecase.dart
+import 'package:flutter/foundation.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../core/services/auth_service.dart';
 import 'package:get_it/get_it.dart';
@@ -47,7 +48,7 @@ class RegisterUseCase {
       sex: sex,
     );
     // Log response để kiểm tra token
-    print('Complete registration response: $response');
+    debugPrint('Complete registration response: $response');
     // Save tokens if present
     if (response['authResponse'] != null &&
         response['authResponse']['accessToken'] != null &&
@@ -56,9 +57,9 @@ class RegisterUseCase {
         response['authResponse']['accessToken'],
         response['authResponse']['refreshToken'],
       );
-      print('Tokens saved successfully: accessToken=${response['authResponse']['accessToken']}');
+      debugPrint('Tokens saved successfully: accessToken=${response['authResponse']['accessToken']}');
     } else {
-      print('Warning: No tokens found in authResponse');
+      debugPrint('Warning: No tokens found in authResponse');
     }
     return response;
   }

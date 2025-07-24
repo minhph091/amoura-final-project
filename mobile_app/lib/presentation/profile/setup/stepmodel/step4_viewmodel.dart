@@ -1,4 +1,6 @@
 // lib/presentation/profile/setup/stepmodel/step4_viewmodel.dart
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -20,7 +22,7 @@ class Step4ViewModel extends BaseStepViewModel {
   bool isUploading = false;
 
   Step4ViewModel(super.parent, {SetupProfileService? setupProfileService})
-      : _setupProfileService = setupProfileService ?? SetupProfileService() {
+    : _setupProfileService = setupProfileService ?? SetupProfileService() {
     // Initialize initial values from parent
     avatarPath = parent.avatarPath;
     coverPath = parent.coverPath;
@@ -30,7 +32,8 @@ class Step4ViewModel extends BaseStepViewModel {
   bool get isRequired => false; // Change to show "Skip" button
 
   Future<bool> _requestPermissions(ImageSource source) async {
-    Permission permission = source == ImageSource.camera ? Permission.camera : Permission.photos;
+    Permission permission =
+        source == ImageSource.camera ? Permission.camera : Permission.photos;
     var status = await permission.status;
 
     if (!status.isGranted) {
@@ -45,19 +48,20 @@ class Step4ViewModel extends BaseStepViewModel {
   Future<void> pickImage(BuildContext context, bool isAvatar) async {
     final source = await showDialog<ImageSource>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Image Source'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, ImageSource.camera),
-            child: const Text('Camera'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Select Image Source'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, ImageSource.camera),
+                child: const Text('Camera'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, ImageSource.gallery),
+                child: const Text('Gallery'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, ImageSource.gallery),
-            child: const Text('Gallery'),
-          ),
-        ],
-      ),
     );
     if (source == null) return;
     if (!await _requestPermissions(source)) {
@@ -78,10 +82,14 @@ class Step4ViewModel extends BaseStepViewModel {
     );
     if (pickedFile == null) return;
 
-    final image = await decodeImageFromList(await File(pickedFile.path).readAsBytes());
+    final image = await decodeImageFromList(
+      await File(pickedFile.path).readAsBytes(),
+    );
     if (image.width > image.height) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please upload a vertical or square photo.")),
+        const SnackBar(
+          content: Text("Please upload a vertical or square photo."),
+        ),
       );
       return;
     }
@@ -106,12 +114,21 @@ class Step4ViewModel extends BaseStepViewModel {
     await uploadImage(context, compressedFile.path, isAvatar);
   }
 
-  Future<void> editImage(BuildContext context, String url, bool isAvatar) async {
+  Future<void> editImage(
+    BuildContext context,
+    String url,
+    bool isAvatar,
+  ) async {
     try {
       // Get access token to download image
       final authService = GetIt.I<AuthService>();
       final accessToken = await authService.getAccessToken();
-      final adjustedUrl = url.split('?')[0].replaceFirst('localhost', '10.0.2.2'); // Adjust URL for emulator, remove old timestamp
+      final adjustedUrl = url
+          .split('?')[0]
+          .replaceFirst(
+            'localhost',
+            '10.0.2.2',
+          ); // Adjust URL for emulator, remove old timestamp
       final response = await http.get(
         Uri.parse(adjustedUrl),
         headers: {
@@ -139,10 +156,7 @@ class Step4ViewModel extends BaseStepViewModel {
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
           ),
-          IOSUiSettings(
-            title: 'Edit Photo',
-            aspectRatioLockEnabled: true,
-          ),
+          IOSUiSettings(title: 'Edit Photo', aspectRatioLockEnabled: true),
         ],
       );
       if (croppedFile == null) return;
@@ -172,16 +186,24 @@ class Step4ViewModel extends BaseStepViewModel {
     }
   }
 
-  Future<void> uploadImage(BuildContext context, String path, bool isAvatar) async {
+  Future<void> uploadImage(
+    BuildContext context,
+    String path,
+    bool isAvatar,
+  ) async {
     isUploading = true;
     notifyListeners();
 
     try {
       final file = File(path);
-      final endpoint = isAvatar ? ApiEndpoints.uploadAvatar : ApiEndpoints.uploadCover;
+      final endpoint =
+          isAvatar ? ApiEndpoints.uploadAvatar : ApiEndpoints.uploadCover;
       final response = await _setupProfileService.uploadPhoto(file, endpoint);
       final url = response['url'] as String;
-      final baseUrl = url.replaceFirst('localhost', '10.0.2.2'); // Adjust URL for emulator
+      final baseUrl = url.replaceFirst(
+        'localhost',
+        '10.0.2.2',
+      ); // Adjust URL for emulator
 
       // Add timestamp to force reload of the new image
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -202,9 +224,9 @@ class Step4ViewModel extends BaseStepViewModel {
       }
       notifyListeners();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
     } finally {
       isUploading = false;
       notifyListeners();
@@ -213,13 +235,18 @@ class Step4ViewModel extends BaseStepViewModel {
 
   Future<void> deleteImage(BuildContext context, bool isAvatar) async {
     try {
-      final endpoint = isAvatar ? '/profiles/photos/avatar' : '/profiles/photos/cover';
+      final endpoint =
+          isAvatar ? '/profiles/photos/avatar' : '/profiles/photos/cover';
       await _setupProfileService.deletePhoto(endpoint);
       if (isAvatar) {
         // Clear cache of old avatar image
         if (avatarPath != null) {
-          await CachedNetworkImage.evictFromCache(avatarPath!.split('?')[0]); // Clear base URL
-          await CachedNetworkImage.evictFromCache(avatarPath!); // Clear timestamped URL
+          await CachedNetworkImage.evictFromCache(
+            avatarPath!.split('?')[0],
+          ); // Clear base URL
+          await CachedNetworkImage.evictFromCache(
+            avatarPath!,
+          ); // Clear timestamped URL
         }
         avatarPath = null;
         parent.avatarPath = null;
@@ -227,8 +254,12 @@ class Step4ViewModel extends BaseStepViewModel {
       } else {
         // Clear cache of old cover image
         if (coverPath != null) {
-          await CachedNetworkImage.evictFromCache(coverPath!.split('?')[0]); // Clear base URL
-          await CachedNetworkImage.evictFromCache(coverPath!); // Clear timestamped URL
+          await CachedNetworkImage.evictFromCache(
+            coverPath!.split('?')[0],
+          ); // Clear base URL
+          await CachedNetworkImage.evictFromCache(
+            coverPath!,
+          ); // Clear timestamped URL
         }
         coverPath = null;
         parent.coverPath = null;
@@ -236,9 +267,9 @@ class Step4ViewModel extends BaseStepViewModel {
       }
       notifyListeners();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete photo: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete photo: $e')));
     }
   }
 

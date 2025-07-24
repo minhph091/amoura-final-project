@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/profile_option_selector.dart';
 import '../../setup/theme/setup_profile_theme.dart';
+import '../../../../config/language/app_localizations.dart';
 import '../edit_profile_viewmodel.dart';
 
 class EditProfileJobEducationSection extends StatefulWidget {
   final EditProfileViewModel viewModel;
 
-  const EditProfileJobEducationSection({
-    super.key,
-    required this.viewModel,
-  });
+  const EditProfileJobEducationSection({super.key, required this.viewModel});
 
   @override
-  State<EditProfileJobEducationSection> createState() => _EditProfileJobEducationSectionState();
+  State<EditProfileJobEducationSection> createState() =>
+      _EditProfileJobEducationSectionState();
 }
 
-class _EditProfileJobEducationSectionState extends State<EditProfileJobEducationSection> {
+class _EditProfileJobEducationSectionState
+    extends State<EditProfileJobEducationSection> {
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -26,22 +26,29 @@ class _EditProfileJobEducationSectionState extends State<EditProfileJobEducation
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your Job & Education', style: ProfileTheme.getSubtitleStyle(context)),
+            Text(
+              'Your Job & Education',
+              style: ProfileTheme.getSubtitleStyle(context),
+            ),
             const SizedBox(height: 6),
-            Text('Tell us about your career and education.',
-                style: ProfileTheme.getDescriptionStyle(context)),
+            Text(
+              'Tell us about your career and education.',
+              style: ProfileTheme.getDescriptionStyle(context),
+            ),
             const SizedBox(height: 16),
 
             // Job Industry Dropdown
             ProfileOptionSelector(
-              options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['jobIndustries']),
+              options: widget.viewModel.safeOptions(
+                widget.viewModel.profileOptions?['jobIndustries'],
+              ),
               selectedValue: widget.viewModel.jobIndustry,
               onChanged: (value, selected) {
                 if (selected) {
                   setState(() => widget.viewModel.updateJobIndustry(value));
                 }
               },
-              labelText: 'Job Industry',
+              labelText: AppLocalizations.of(context).translate('job_industry'),
               labelStyle: ProfileTheme.getLabelStyle(context),
               isDropdown: true,
             ),
@@ -50,14 +57,18 @@ class _EditProfileJobEducationSectionState extends State<EditProfileJobEducation
 
             // Education Level Dropdown
             ProfileOptionSelector(
-              options: widget.viewModel.safeOptions(widget.viewModel.profileOptions?['educationLevels']),
+              options: widget.viewModel.safeOptions(
+                widget.viewModel.profileOptions?['educationLevels'],
+              ),
               selectedValue: widget.viewModel.educationLevel,
               onChanged: (value, selected) {
                 if (selected) {
                   setState(() => widget.viewModel.updateEducationLevel(value));
                 }
               },
-              labelText: 'Education Level',
+              labelText: AppLocalizations.of(
+                context,
+              ).translate('education_level'),
               labelStyle: ProfileTheme.getLabelStyle(context),
               isDropdown: true,
             ),
@@ -73,7 +84,9 @@ class _EditProfileJobEducationSectionState extends State<EditProfileJobEducation
               ),
               trailing: Switch(
                 value: widget.viewModel.dropOut ?? false,
-                onChanged: (val) => setState(() => widget.viewModel.updateDropOut(val)),
+                onChanged:
+                    (val) =>
+                        setState(() => widget.viewModel.updateDropOut(val)),
                 activeColor: ProfileTheme.darkPink,
                 inactiveThumbColor: ProfileTheme.darkPurple.withAlpha(128),
                 inactiveTrackColor: ProfileTheme.darkPurple.withAlpha(51),

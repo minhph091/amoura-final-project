@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../../../config/theme/text_styles.dart';
 import '../../../../core/constants/profile/interest_constants.dart';
+import '../../../../config/language/app_localizations.dart';
 
 // Import the new granular filter widgets
 import 'age_range_filter.dart';
@@ -14,10 +15,14 @@ import 'filter_action_buttons.dart';
 Future<void> showFilterDialog(BuildContext context) async {
   await showModalBottomSheet(
     context: context,
-    isScrollControlled: true, // Allows the bottom sheet to take up more screen space
-    backgroundColor: Colors.transparent, // For custom border radius on the inner container
+    isScrollControlled:
+        true, // Allows the bottom sheet to take up more screen space
+    backgroundColor:
+        Colors.transparent, // For custom border radius on the inner container
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(30)), // Top border radius
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(30),
+      ), // Top border radius
     ),
     builder: (ctx) => const FilterDialogContent(),
   );
@@ -55,8 +60,9 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
       _selectedInterestIds = [];
     });
     // Provides user feedback
+    final localizations = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Filters have been reset.')),
+      SnackBar(content: Text(localizations.translate('filters_reset'))),
     );
   }
 
@@ -64,10 +70,12 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
   // In a real application, this would pass data to a ViewModel/Bloc/Cubit/Service.
   void _applyFilters() {
     // This is where you would send the selected filter values to your logic layer.
-    print('Applying filters:');
-    print('Age Range: ${_ageRange.start.round()} - ${_ageRange.end.round()}');
-    print('Distance: ${_distanceValue.round()} km');
-    print('Selected Interests: $_selectedInterestIds');
+    debugPrint('Applying filters:');
+    debugPrint(
+      'Age Range: ${_ageRange.start.round()} - ${_ageRange.end.round()}',
+    );
+    debugPrint('Distance: ${_distanceValue.round()} km');
+    debugPrint('Selected Interests: $_selectedInterestIds');
 
     Navigator.of(context).pop(); // Closes the dialog
   }
@@ -75,12 +83,13 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final localizations = AppLocalizations.of(context);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.8, // Starts at 80% of screen height
-      minChildSize: 0.5,     // Can be dragged down to 50%
-      maxChildSize: 0.9,     // Can be dragged up to 90%
-      expand: false,         // Does not expand to full screen immediately
+      minChildSize: 0.5, // Can be dragged down to 50%
+      maxChildSize: 0.9, // Can be dragged up to 90%
+      expand: false, // Does not expand to full screen immediately
       builder: (BuildContext context, ScrollController scrollController) {
         return Container(
           decoration: BoxDecoration(
@@ -110,14 +119,20 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  controller: scrollController, // Links scroll to DraggableScrollableSheet
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  controller:
+                      scrollController, // Links scroll to DraggableScrollableSheet
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Discovery Filters',
-                        style: AppTextStyles.heading1.copyWith(color: colorScheme.primary),
+                        localizations.translate('filters'),
+                        style: AppTextStyles.heading1.copyWith(
+                          color: colorScheme.primary,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
@@ -152,7 +167,8 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
                             _selectedInterestIds = newSelectedIds;
                           });
                         },
-                        interestOptions: interestOptions, // Pass interestOptions here (simulating API data)
+                        interestOptions:
+                            interestOptions, // Pass interestOptions here (simulating API data)
                       ),
                       const SizedBox(height: 30),
                     ],

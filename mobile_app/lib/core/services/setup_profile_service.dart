@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:get_it/get_it.dart';
 import '../../data/remote/setup_profile_api.dart';
@@ -19,7 +20,7 @@ class SetupProfileService {
     try {
       return await _setupProfileRepository.getProfileOptions();
     } catch (e) {
-      print('Error in fetchProfileOptions service: $e'); // Log lỗi
+      debugPrint('Error in fetchProfileOptions service: $e'); // Log lỗi
       rethrow; // Ném lỗi để ViewModel xử lý
     }
   }
@@ -28,7 +29,7 @@ class SetupProfileService {
     try {
       return await _setupProfileRepository.uploadPhoto(file, endpoint);
     } catch (e) {
-      print('Error in uploadPhoto service: $e'); // Log lỗi
+      debugPrint('Error in uploadPhoto service: $e'); // Log lỗi
       rethrow;
     }
   }
@@ -37,7 +38,7 @@ class SetupProfileService {
     try {
       await _setupProfileRepository.deletePhoto(endpoint);
     } catch (e) {
-      print('Error in deletePhoto service: $e');
+      debugPrint('Error in deletePhoto service: $e');
       rethrow;
     }
   }

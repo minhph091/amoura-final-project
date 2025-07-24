@@ -3,15 +3,9 @@ import '../../../domain/models/match/liked_user_model.dart';
 
 class RewindService with ChangeNotifier {
   final List<LikedUserModel> _rewindableUsers = [];
-  bool _isVipRewindEnabled = false;
 
   List<LikedUserModel> get rewindableUsers => _rewindableUsers;
   bool get hasRewindableUsers => _rewindableUsers.isNotEmpty;
-
-  void setVipRewindEnabled(bool enabled) {
-    _isVipRewindEnabled = enabled;
-    notifyListeners();
-  }
 
   // Add a user to the rewindable list when swiped left
   void addToRewindable(LikedUserModel user) {

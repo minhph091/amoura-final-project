@@ -11,7 +11,7 @@ class VideoMessageItem extends StatefulWidget {
   final VoidCallback? onDoubleTap;
 
   const VideoMessageItem({
-    Key? key,
+    super.key,
     required this.videoUrl,
     this.thumbnailUrl,
     this.duration,
@@ -19,7 +19,7 @@ class VideoMessageItem extends StatefulWidget {
     required this.isMe,
     this.onLongPress,
     this.onDoubleTap,
-  }) : super(key: key);
+  });
 
   @override
   State<VideoMessageItem> createState() => _VideoMessageItemState();

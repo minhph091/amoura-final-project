@@ -113,107 +113,118 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) {
     debugPrint('Message.fromJson: Parsing message with data: $json');
-    
-    final senderId = json['senderId']?.toString() ?? json['sender']?['id']?.toString() ?? '';
-    final rawSenderName = json['senderName'] ?? 
-                          json['sender']?['name'] ?? 
-                          json['sender']?['firstName'] ?? 
-                          json['sender']?['username'];
+
+    final senderId =
+        json['senderId']?.toString() ?? json['sender']?['id']?.toString() ?? '';
+    final rawSenderName =
+        json['senderName'] ??
+        json['sender']?['name'] ??
+        json['sender']?['firstName'] ??
+        json['sender']?['username'];
     final content = json['content'] ?? json['message'] ?? '';
     final rawType = json['messageType'] ?? json['type'];
-    final typeString = rawType?.toString()?.toUpperCase() ?? '';
+    final typeString = rawType?.toString().toUpperCase() ?? '';
 
     // Enhanced filter cho WebSocket messages - Complete filtering
     bool isSystemMessage = false;
     final contentLower = content.trim().toLowerCase();
     final messageTypeUpper = json['type']?.toString().toUpperCase() ?? '';
-    final hasNullSender = rawSenderName == null || rawSenderName.toString().trim().isEmpty;
-    
+    final hasNullSender =
+        rawSenderName == null || rawSenderName.toString().trim().isEmpty;
+
     // Comprehensive filtering theo WebSocket protocol
-    if (// READ_RECEIPT messages - Complete filtering  
-        messageTypeUpper == 'READ_RECEIPT' ||
+    if ( // READ_RECEIPT messages - Complete filtering
+    messageTypeUpper == 'READ_RECEIPT' ||
         typeString == 'READ_RECEIPT' ||
         (contentLower == 'read' && hasNullSender) ||
         (contentLower == 'read' && senderId.trim().isEmpty) ||
         contentLower == 'messages marked as read' ||
         contentLower.startsWith('read_receipt') ||
-        
         // TYPING indicator messages - Complete filtering
         messageTypeUpper == 'TYPING' ||
         typeString == 'TYPING' ||
         (contentLower == 'true' && hasNullSender) ||
         (contentLower == 'false' && hasNullSender) ||
         contentLower.contains('typing') ||
-        
         // System and invalid messages
         typeString == 'SYSTEM' ||
         messageTypeUpper == 'SYSTEM' ||
-        
         // WebSocket artifacts and system content
         contentLower == 'false' ||
         contentLower == 'true' ||
         contentLower.contains('user_status') ||
         contentLower.contains('websocket') ||
         messageTypeUpper.contains('RECEIPT') ||
-        
         // Invalid sender cases - Enhanced
         hasNullSender ||
         senderId.trim().isEmpty ||
-        (rawSenderName != null && rawSenderName.toString().trim().toLowerCase().contains('unknown')) ||
-        (rawSenderName != null && rawSenderName.toString().trim().toLowerCase() == 'system') ||
-        (rawSenderName != null && rawSenderName.toString().trim().toLowerCase() == 'null') ||
-        
+        (rawSenderName != null &&
+            rawSenderName.toString().trim().toLowerCase().contains(
+              'unknown',
+            )) ||
+        (rawSenderName != null &&
+            rawSenderName.toString().trim().toLowerCase() == 'system') ||
+        (rawSenderName != null &&
+            rawSenderName.toString().trim().toLowerCase() == 'null') ||
         // Empty content for non-media messages
-        (content.trim().isEmpty && messageTypeUpper != 'IMAGE' && messageTypeUpper != 'VIDEO' && messageTypeUpper != 'AUDIO') ||
-        
+        (content.trim().isEmpty &&
+            messageTypeUpper != 'IMAGE' &&
+            messageTypeUpper != 'VIDEO' &&
+            messageTypeUpper != 'AUDIO') ||
         // Missing essential fields
         (json['id'] == null && json['messageId'] == null) ||
         (json['chatRoomId'] == null && json['chatId'] == null)) {
-      
       isSystemMessage = true;
-      debugPrint('Message.fromJson: Filtered system/WebSocket message - Type: "$messageTypeUpper", Content: "$content", SenderName: "${rawSenderName}", SenderId: "$senderId"');
+      debugPrint(
+        'Message.fromJson: Filtered system/WebSocket message - Type: "$messageTypeUpper", Content: "$content", SenderName: "$rawSenderName", SenderId: "$senderId"',
+      );
     }
 
     // Set final senderName after filtering
-    final senderName = hasNullSender ? 'Unknown User' : rawSenderName.toString();
-    
+    final senderName =
+        hasNullSender ? 'Unknown User' : rawSenderName.toString();
+
     final isRead = json['isRead'] ?? false;
     final imageUrl = json['imageUrl'];
     final messageType = _parseMessageType(rawType);
-    
-    debugPrint('Message.fromJson: Final - senderId=$senderId, senderName=$senderName, content=$content, isRead=$isRead, isSystem=$isSystemMessage');
+
+    debugPrint(
+      'Message.fromJson: Final - senderId=$senderId, senderName=$senderName, content=$content, isRead=$isRead, isSystem=$isSystemMessage',
+    );
     if (messageType == MessageType.image) {
-      debugPrint('Message.fromJson: IMAGE message - ImageUrl: $imageUrl, Content: "$content"');
+      debugPrint(
+        'Message.fromJson: IMAGE message - ImageUrl: $imageUrl, Content: "$content"',
+      );
     }
-    
+
     return Message(
       id: json['id']?.toString() ?? json['messageId']?.toString() ?? '',
-      chatId: json['chatRoomId']?.toString() ?? json['chatId']?.toString() ?? '',
+      chatId:
+          json['chatRoomId']?.toString() ?? json['chatId']?.toString() ?? '',
       senderId: senderId,
       senderName: senderName,
       senderAvatar: json['senderAvatar'] ?? json['sender']?['avatar'],
       content: content,
-      timestamp: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
-          : json['timestamp'] != null
+      timestamp:
+          json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'])
+              : json['timestamp'] != null
               ? DateTime.parse(json['timestamp'])
               : DateTime.now(),
       status: MessageStatus.sent,
       type: isSystemMessage ? MessageType.system : messageType,
       mediaUrl: imageUrl ?? json['mediaUrl'],
       isRead: isRead,
-      readAt: json['readAt'] != null 
-          ? DateTime.parse(json['readAt']) 
-          : null,
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt']) 
-          : null,
+      readAt: json['readAt'] != null ? DateTime.parse(json['readAt']) : null,
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       imageUrl: imageUrl,
       imageUploaderId: json['imageUploaderId']?.toString(),
       recalled: json['recalled'] ?? false,
-      recalledAt: json['recalledAt'] != null 
-          ? DateTime.parse(json['recalledAt']) 
-          : null,
+      recalledAt:
+          json['recalledAt'] != null
+              ? DateTime.parse(json['recalledAt'])
+              : null,
       // Parse reply information from backend
       replyToMessageId: json['replyToMessageId']?.toString(),
       replyToMessage: json['replyToMessage']?.toString(),
@@ -243,7 +254,7 @@ class Message {
 
   static MessageType _parseMessageType(dynamic messageType) {
     if (messageType == null) return MessageType.text;
-    
+
     final typeString = messageType.toString().toUpperCase();
     switch (typeString) {
       case 'TEXT':
@@ -266,20 +277,6 @@ class Message {
   }
 }
 
-enum MessageStatus {
-  sending,
-  sent,
-  delivered,
-  read,
-  failed,
-}
+enum MessageStatus { sending, sent, delivered, read, failed }
 
-enum MessageType {
-  text,
-  image,
-  video,
-  audio,
-  file,
-  emoji,
-  system,
-}
+enum MessageType { text, image, video, audio, file, emoji, system }
