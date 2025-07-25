@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../notification_viewmodel.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../shared/utils/time_formatter.dart';
 
 class NotificationItem extends StatelessWidget {
@@ -16,6 +17,7 @@ class NotificationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
@@ -55,7 +57,7 @@ class NotificationItem extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            notification.title,
+                            localizations.translate(notification.title),
                             style: TextStyle(
                               fontWeight:
                                   notification.isRead
@@ -84,7 +86,7 @@ class NotificationItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      notification.body,
+                      localizations.translate(notification.body),
                       style: TextStyle(
                         color:
                             notification.isRead
