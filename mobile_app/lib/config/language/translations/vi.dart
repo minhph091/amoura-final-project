@@ -27,7 +27,6 @@ final Map<String, dynamic> vi = {
   'friday': 'Thứ sáu',
   'saturday': 'Thứ bảy',
   'sunday': 'Chủ nhật',
-  // ...existing code...
   // Phone change keys
   'update_phone_number': 'Cập nhật số điện thoại',
   'phone_change_info': 'Thay đổi số điện thoại để bảo vệ tài khoản của bạn',
@@ -35,9 +34,6 @@ final Map<String, dynamic> vi = {
   'current_password_required': 'Vui lòng nhập mật khẩu hiện tại',
   'new_password': 'Mật khẩu mới',
   'confirm_new_password': 'Xác nhận mật khẩu mới',
-  // Mock messages for chat
-  'mock_message_1': 'Xin chào! Bạn khỏe không?',
-  'mock_message_2': 'Tôi ổn, cảm ơn! Tôi đang làm một dự án mới.',
   'update_your_password': 'Thay đổi mật khẩu',
   'system_notifications': 'Thông báo hệ thống',
   'unblock_all': 'Bỏ chặn tất cả',
@@ -57,13 +53,14 @@ final Map<String, dynamic> vi = {
   'proceed_to_payment': 'Tiến hành thanh toán',
   // 'save_changes': 'Lưu thay đổi',
   'users': 'Người dùng',
-  'mock_message_3': 'Nghe thú vị đấy! Dự án đó là gì vậy?',
-  'mock_message_4':
-      'Đó là một ứng dụng kết nối những người có cùng sở thích. Tôi gọi nó là Amoura.',
-  // ...existing code...
-  // Common
+  'blocked_users': 'Người dùng bị chặn',
+  'blocked_messages': 'Tin nhắn bị chặn',
   'app_name': 'Amoura',
   'ok': 'Đồng ý',
+  'unblock_message': 'Bỏ chặn tin nhắn',
+  'clear_notifications_type': 'Xóa thông báo {type}?',
+  'notifications_cleared_type': 'Đã xóa tất cả thông báo {type}',
+  'widget_error_message': 'Lỗi widget: {error}',
   'cancel': 'Hủy',
   'yes': 'Có',
   'no': 'Không',
@@ -602,6 +599,28 @@ final Map<String, dynamic> vi = {
   'continue_to_payment': 'Tiếp tục thanh toán',
   'exclusive_vip_benefits': 'Quyền lợi VIP độc quyền',
   'whats_included': 'Bao gồm những gì:',
+  'plan_monthly': 'Gói tháng',
+  'plan_monthly_desc': 'Đăng ký theo tháng với đầy đủ quyền VIP',
+  'plan_6_months': 'Gói 6 tháng',
+  'plan_6_months_desc': 'Đăng ký 6 tháng với đầy đủ quyền VIP',
+  'plan_annual': 'Gói năm',
+  'plan_annual_desc': 'Đăng ký theo năm với đầy đủ quyền VIP',
 
-  // Security Settings
+  'benefit_unlimited_swipes': 'Vuốt không giới hạn',
+  'benefit_see_who_likes_you': 'Xem ai thích bạn',
+  'benefit_enhanced_profile_visibility': 'Tăng độ nổi bật hồ sơ',
+  'benefit_priority_matching': 'Ưu tiên ghép đôi',
+  'benefit_special_event_access': 'Tham gia sự kiện đặc biệt',
+  'benefit_exclusive_seasonal_gifts': 'Quà tặng độc quyền theo mùa',
+
+  'feature_unlimited_rewind': 'Quay lại không giới hạn',
+  'feature_unlimited_rewind_desc': 'Quay lại hồ sơ bạn đã vuốt trái nhầm',
+  'feature_see_who_likes_you': 'Xem ai thích bạn',
+  'feature_see_who_likes_you_desc':
+      'Xem tất cả những người đã thích hồ sơ của bạn',
+  'feature_enhanced_profile': 'Hồ sơ nổi bật',
+  'feature_enhanced_profile_desc':
+      'Làm hồ sơ của bạn nổi bật với hiệu ứng đặc biệt',
+  'feature_special_events': 'Sự kiện đặc biệt',
+  'feature_special_events_desc': 'Tham gia sự kiện và nhận quà tặng độc quyền',
 };

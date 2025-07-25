@@ -13,47 +13,47 @@ class SubscriptionService with ChangeNotifier {
   final List<SubscriptionPlan> availablePlans = [
     SubscriptionPlan(
       id: 'monthly',
-      name: 'Monthly',
-      description: 'Monthly subscription with all VIP benefits',
+      name: 'plan_monthly',
+      description: 'plan_monthly_desc',
       price: 9.99,
       durationInMonths: 1,
       benefits: [
-        'Unlimited swipes',
-        'See who likes you',
-        'Enhanced profile visibility',
-        'Priority matching',
+        'benefit_unlimited_swipes',
+        'benefit_see_who_likes_you',
+        'benefit_enhanced_profile_visibility',
+        'benefit_priority_matching',
       ],
     ),
     SubscriptionPlan(
       id: 'semi_annual',
-      name: '6 Months',
-      description: '6-month subscription with all VIP benefits',
+      name: 'plan_6_months',
+      description: 'plan_6_months_desc',
       price: 49.99,
       durationInMonths: 6,
       isPopular: true,
       discountPercentage: 15,
       benefits: [
-        'Unlimited swipes',
-        'See who likes you',
-        'Enhanced profile visibility',
-        'Priority matching',
-        'Special event access',
+        'benefit_unlimited_swipes',
+        'benefit_see_who_likes_you',
+        'benefit_enhanced_profile_visibility',
+        'benefit_priority_matching',
+        'benefit_special_event_access',
       ],
     ),
     SubscriptionPlan(
       id: 'annual',
-      name: 'Annual',
-      description: 'Annual subscription with all VIP benefits',
+      name: 'plan_annual',
+      description: 'plan_annual_desc',
       price: 79.99,
       durationInMonths: 12,
       discountPercentage: 33,
       benefits: [
-        'Unlimited swipes',
-        'See who likes you',
-        'Enhanced profile visibility',
-        'Priority matching',
-        'Special event access',
-        'Exclusive seasonal gifts',
+        'benefit_unlimited_swipes',
+        'benefit_see_who_likes_you',
+        'benefit_enhanced_profile_visibility',
+        'benefit_priority_matching',
+        'benefit_special_event_access',
+        'benefit_exclusive_seasonal_gifts',
       ],
     ),
   ];
@@ -62,26 +62,26 @@ class SubscriptionService with ChangeNotifier {
   final List<SubscriptionFeature> vipFeatures = [
     SubscriptionFeature(
       id: 'rewind',
-      title: 'Unlimited Rewind',
-      description: 'Get back to profiles you accidentally swiped left on',
+      title: 'feature_unlimited_rewind',
+      description: 'feature_unlimited_rewind_desc',
       iconPath: 'assets/icons/rewind.png',
     ),
     SubscriptionFeature(
       id: 'likes',
-      title: 'See Who Likes You',
-      description: 'See all the people who have already liked your profile',
+      title: 'feature_see_who_likes_you',
+      description: 'feature_see_who_likes_you_desc',
       iconPath: 'assets/icons/likes.png',
     ),
     SubscriptionFeature(
       id: 'visibility',
-      title: 'Enhanced Profile',
-      description: 'Make your profile stand out with special highlights',
+      title: 'feature_enhanced_profile',
+      description: 'feature_enhanced_profile_desc',
       iconPath: 'assets/icons/visibility.png',
     ),
     SubscriptionFeature(
       id: 'events',
-      title: 'Special Events',
-      description: 'Get access to exclusive events and special gifts',
+      title: 'feature_special_events',
+      description: 'feature_special_events_desc',
       iconPath: 'assets/icons/gifts.png',
     ),
   ];
@@ -99,7 +99,9 @@ class SubscriptionService with ChangeNotifier {
     try {
       // Mock implementation - in a real app this would call payment processing
       _isVip = true;
-      _subscriptionEndDate = DateTime.now().add(Duration(days: 30 * plan.durationInMonths));
+      _subscriptionEndDate = DateTime.now().add(
+        Duration(days: 30 * plan.durationInMonths),
+      );
       notifyListeners();
       return true;
     } catch (e) {

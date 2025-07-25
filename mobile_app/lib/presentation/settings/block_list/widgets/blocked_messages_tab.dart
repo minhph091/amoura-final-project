@@ -66,7 +66,7 @@ class BlockedMessagesTab extends StatelessWidget {
   }
 }
 
-// Blocked chat view with white overlay and "Unblock" button
+// Blocked chat view
 class _BlockedChatView extends StatelessWidget {
   final BlockedMessage blockedMessage;
 

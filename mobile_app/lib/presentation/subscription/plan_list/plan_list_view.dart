@@ -265,7 +265,11 @@ class _PlanListViewState extends State<PlanListView>
                               size: 18,
                             ),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(benefit)),
+                            Expanded(
+                              child: Text(
+                                AppLocalizations.of(context).translate(benefit),
+                              ),
+                            ),
                           ],
                         ),
                       ),

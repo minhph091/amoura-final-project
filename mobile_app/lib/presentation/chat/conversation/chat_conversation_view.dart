@@ -352,50 +352,76 @@ class _ChatConversationViewState extends State<ChatConversationView> {
       appBar: AppBar(
         title: Row(
           children: [
-            // Avatar
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.2),
-              ),
-              child:
-                  widget.recipientAvatarUrl != null &&
-                          widget.recipientAvatarUrl!.isNotEmpty
-                      ? ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: Image.network(
-                          widget.recipientAvatarUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder:
-                              (context, error, stackTrace) => Center(
-                                child: Text(
-                                  widget.recipientName.isNotEmpty
-                                      ? widget.recipientName[0].toUpperCase()
-                                      : '?',
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+            // Avatar with tap to view full image
+            GestureDetector(
+              onTap: () {
+                if (widget.recipientAvatarUrl != null &&
+                    widget.recipientAvatarUrl!.isNotEmpty) {
+                  showDialog(
+                    context: context,
+                    builder:
+                        (context) => Dialog(
+                          backgroundColor: Colors.transparent,
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: InteractiveViewer(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  widget.recipientAvatarUrl!,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
-                        ),
-                      )
-                      : Center(
-                        child: Text(
-                          widget.recipientName.isNotEmpty
-                              ? widget.recipientName[0].toUpperCase()
-                              : '?',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
+                  );
+                }
+              },
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.2),
+                ),
+                child:
+                    widget.recipientAvatarUrl != null &&
+                            widget.recipientAvatarUrl!.isNotEmpty
+                        ? ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Image.network(
+                            widget.recipientAvatarUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) => Center(
+                                  child: Text(
+                                    widget.recipientName.isNotEmpty
+                                        ? widget.recipientName[0].toUpperCase()
+                                        : '?',
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                          ),
+                        )
+                        : Center(
+                          child: Text(
+                            widget.recipientName.isNotEmpty
+                                ? widget.recipientName[0].toUpperCase()
+                                : '?',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+              ),
             ),
             const SizedBox(width: 8),
 

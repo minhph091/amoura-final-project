@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../domain/models/subscription/subscription_plan.dart';
+import '../../../config/language/app_localizations.dart';
 
 class SubscriptionPlanCard extends StatelessWidget {
   final SubscriptionPlan plan;
@@ -20,7 +21,10 @@ class SubscriptionPlanCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+          color:
+              isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
           width: isSelected ? 2 : 0,
         ),
       ),
@@ -35,7 +39,10 @@ class SubscriptionPlanCard extends StatelessWidget {
               // Popular tag if applicable
               if (plan.isPopular)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.secondary,
@@ -53,11 +60,12 @@ class SubscriptionPlanCard extends StatelessWidget {
 
               // Plan name
               Text(
-                plan.name,
+                AppLocalizations.of(context).translate(plan.name),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                  color:
+                      isSelected ? Theme.of(context).colorScheme.primary : null,
                 ),
               ),
 
@@ -68,7 +76,9 @@ class SubscriptionPlanCard extends StatelessWidget {
                 plan.formattedDuration,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
 
@@ -85,12 +95,13 @@ class SubscriptionPlanCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         decoration: TextDecoration.lineThrough,
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                       ),
                     ),
 
-                  if (plan.discountPercentage != null)
-                    const SizedBox(width: 8),
+                  if (plan.discountPercentage != null) const SizedBox(width: 8),
 
                   Text(
                     plan.discountPercentage != null
@@ -116,7 +127,10 @@ class SubscriptionPlanCard extends StatelessWidget {
               if (plan.discountPercentage != null)
                 Container(
                   margin: const EdgeInsets.only(top: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
                     borderRadius: BorderRadius.circular(8),
