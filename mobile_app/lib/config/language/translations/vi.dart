@@ -13,6 +13,10 @@ final Map<String, dynamic> vi = {
   'mark_all_read': 'Đánh dấu tất cả đã đọc',
   'delete_all': 'Xóa tất cả',
   'delete_notification_message': 'Bạn có chắc muốn xóa thông báo này không?',
+  'delete_all_notifications': 'Xóa tất cả thông báo',
+  'delete_all_notifications_message':
+      'Bạn có chắc muốn xóa tất cả {count} thông báo không?',
+  'delete_notification': 'Xóa thông báo',
   'verify_identity': 'Xác minh danh tính',
   'password_continue': 'Nhập mật khẩu để tiếp tục',
   'account_security_title': 'Bảo mật tài khoản',
