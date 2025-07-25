@@ -19,28 +19,41 @@ import {
   Legend,
 } from "recharts";
 
-// Generate consistent data for days of the week
-const generateData = () => {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  // Use consistent data instead of random
-  const matchesData = [26, 29, 18, 21, 19, 38, 32];
-
-  return days.map((day, index) => ({
-    day,
-    matches: matchesData[index],
-  }));
-};
+import { statsService } from "@/src/services/stats.service";
 
 export function MatchesChart() {
-  const [data, setData] = useState([]);
-  const [mounted, setMounted] = useState(false);
+  const [data, setData] = useState<{ day: string; matches: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    setData(generateData());
+    const fetchMatches = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await statsService.getStats();
+        if (!response.success || !response.data?.weeklyMatches)
+          throw new Error(response.error || "Failed to fetch matches data");
+        // Transform backend weeklyMatches to expected array
+        const backendData = response.data.weeklyMatches;
+        let chartData: { day: string; matches: number }[] = [];
+        if (Array.isArray(backendData)) {
+          chartData = backendData.map((item: any) => ({
+            day: item.day || item.date || "",
+            matches: item.matches || item.count || 0,
+          }));
+        }
+        setData(chartData);
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMatches();
   }, []);
 
-  if (!mounted) {
+  if (loading) {
     return (
       <Card>
         <CardHeader>
@@ -49,6 +62,19 @@ export function MatchesChart() {
         </CardHeader>
         <CardContent className="h-80 flex items-center justify-center">
           Loading...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Weekly Matches</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80 flex items-center justify-center text-red-500">
+          Error: {error}
         </CardContent>
       </Card>
     );

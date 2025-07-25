@@ -35,53 +35,44 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
 
-    // BYPASS AUTHENTICATION FOR TESTING
-    // Just simulate loading and redirect to dashboard
-    setTimeout(() => {
-      // Set fake login state
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userRole", "admin");
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: "admin-test",
-          email: email || "admin@amoura.space",
-          name: "Admin Test User",
-          role: "admin",
-        })
-      );
-
+    if (!email || !password) {
+      setError(t.login.invalidCredentials);
       setIsLoading(false);
-      router.push("/dashboard");
-    }, 1000); // Simulate 1 second loading
+      return;
+    }
 
-    // ORIGINAL CODE - COMMENTED OUT FOR TESTING
-    // // Simple validation
-    // if (!email || !password) {
-    //   setError(t.login.invalidCredentials);
-    //   setIsLoading(false);
-    //   return;
-    // }
-
-    // try {
-    //   const loginRequest: LoginRequest = {
-    //     email,
-    //     password,
-    //     loginType: "EMAIL_PASSWORD",
-    //   };
-
-    //   const response = await authService.login(loginRequest);
-
-    //   if (response.success) {
-    //     router.push("/dashboard");
-    //   } else {
-    //     setError(response.error || "Login failed");
-    //   }
-    // } catch (error) {
-    //   setError("An unexpected error occurred");
-    // } finally {
-    //   setIsLoading(false);
-    // }
+    try {
+      const res = await fetch("/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Kiểm tra role
+        if (data.user?.role === "admin" || data.user?.role === "moderator") {
+          localStorage.setItem("accessToken", data.accessToken);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          router.push("/dashboard");
+        } else {
+          setError(
+            "Bạn không có quyền truy cập trang quản trị. Chỉ admin hoặc moderator mới được phép đăng nhập."
+          );
+        }
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Login failed");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

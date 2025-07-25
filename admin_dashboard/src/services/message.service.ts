@@ -181,23 +181,25 @@ export class MessageService {
 
   // Delete message (admin action)
   async deleteMessage(messageId: string): Promise<ApiResponse<void>> {
-    return apiClient.post<void>(API_ENDPOINTS.CHAT.DELETE_MESSAGE(messageId));
+    try {
+      return await apiClient.post<void>(
+        API_ENDPOINTS.CHAT.DELETE_MESSAGE(messageId)
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to delete message",
+      };
+    }
   }
 
   // Get message statistics (mock data since backend doesn't have this)
   async getMessageStats(): Promise<ApiResponse<MessageStats>> {
-    // Mock data since backend doesn't have statistics endpoint
-    const stats: MessageStats = {
-      totalMessages: 15420,
-      textMessages: 12340,
-      imageMessages: 3080,
-      todayMessages: 234,
-      reportedMessages: 12,
-    };
-
+    // TODO: Replace with real API when backend provides statistics endpoint
     return {
-      success: true,
-      data: stats,
+      success: false,
+      error: "Message statistics API not implemented on backend",
     };
   }
 }

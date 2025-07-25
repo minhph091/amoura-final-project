@@ -19,44 +19,46 @@ import {
   Legend,
 } from "recharts";
 
-// Generate consistent data for the past 12 months
-const generateData = () => {
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+import { statsService } from "@/src/services/stats.service";
 
-  // Use consistent data instead of random
-  const baseData = [
-    520, 750, 980, 1400, 1650, 1890, 2200, 2580, 2950, 3300, 3680, 4100,
-  ];
-
-  return months.map((month, index) => ({
-    month,
-    users: baseData[index],
-  }));
-};
+interface UserGrowthData {
+  month: string;
+  users: number;
+}
 
 export function UserGrowthChart() {
-  const [data, setData] = useState([]);
-  const [mounted, setMounted] = useState(false);
+  const [data, setData] = useState<UserGrowthData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    setData(generateData());
+    const fetchUserGrowth = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await statsService.getStats();
+        if (!response.success)
+          throw new Error(response.error || "Failed to fetch user growth data");
+        // Transform backend stats to chart format if needed
+        const backendData = response.data?.monthlyRegistrations;
+        let chartData: UserGrowthData[] = [];
+        if (Array.isArray(backendData)) {
+          chartData = backendData.map((item: any) => ({
+            month: item.month || item.date || "",
+            users: item.users || item.count || 0,
+          }));
+        }
+        setData(chartData);
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserGrowth();
   }, []);
 
-  if (!mounted) {
+  if (loading) {
     return (
       <Card>
         <CardHeader>
@@ -64,7 +66,20 @@ export function UserGrowthChart() {
           <CardDescription>Monthly user registrations</CardDescription>
         </CardHeader>
         <CardContent className="h-80 flex items-center justify-center">
-          Loading...
+          Loading user growth data...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User Growth</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80 flex items-center justify-center text-red-500">
+          Error: {error}
         </CardContent>
       </Card>
     );

@@ -17,24 +17,56 @@ import {
   Legend,
 } from "recharts";
 
-// Consistent data for subscription plans (only Free and Premium)
-const generateData = () => {
-  return [
-    { name: "Free", value: 9200, color: "#94a3b8" },
-    { name: "Premium", value: 3900, color: "#e11d48" },
-  ];
-};
+import { subscriptionService } from "@/src/services/subscription.service";
 
 export function RevenueChart() {
-  const [data, setData] = useState([]);
-  const [mounted, setMounted] = useState(false);
+  type SubscriptionPlan = {
+    name: string;
+    value: number;
+    color: string;
+  };
+  const [data, setData] = useState<SubscriptionPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    setData(generateData());
+    const fetchRevenueData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await subscriptionService.getSubscriptions({
+          page: 1,
+          limit: 100,
+        });
+        if (!response.success)
+          throw new Error(
+            response.error || "Failed to fetch subscription data"
+          );
+        // Transform backend data to chart format if needed
+        const plans = (response.data ?? []).reduce((acc: any, sub: any) => {
+          const plan = acc.find((p: any) => p.name === sub.plan);
+          if (plan) {
+            plan.value += 1;
+          } else {
+            acc.push({
+              name: sub.plan,
+              value: 1,
+              color: sub.plan === "Premium" ? "#e11d48" : "#94a3b8",
+            });
+          }
+          return acc;
+        }, []);
+        setData(plans);
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRevenueData();
   }, []);
 
-  if (!mounted) {
+  if (loading) {
     return (
       <Card>
         <CardHeader>
@@ -50,11 +82,24 @@ export function RevenueChart() {
     );
   }
 
-  const formatNumber = (value) => {
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscription Distribution</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80 flex items-center justify-center text-red-500">
+          Error: {error}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const formatNumber = (value: number) => {
     return value.toLocaleString();
   };
 
-  const totalUsers = data.reduce((sum, item) => sum + item.value, 0);
+  const totalUsers = data.reduce((sum, item) => sum + (item.value || 0), 0);
 
   return (
     <Card className="card-hover h-full">
@@ -76,17 +121,17 @@ export function RevenueChart() {
               fill="#8884d8"
               dataKey="value"
               label={({ name, percent }) =>
-                `${name} ${(percent * 100).toFixed(0)}%`
+                `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
               }
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+                <Cell key={`cell-${index}`} fill={entry.color || "#8884d8"} />
               ))}
             </Pie>
             <Tooltip
               formatter={(value, name) => [
-                `${formatNumber(value)} users (${(
-                  (value / totalUsers) *
+                `${formatNumber(value as number)} users (${(
+                  ((value as number) / totalUsers) *
                   100
                 ).toFixed(1)}%)`,
                 name,

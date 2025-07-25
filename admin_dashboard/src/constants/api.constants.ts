@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
     USERS: "/admin/users",
     MODERATORS: "/admin/moderators",
     REPORTS: "/admin/reports",
+    SUBSCRIPTIONS: "/admin/subscriptions",
     STATS: "/admin/stats",
   },
 } as const;

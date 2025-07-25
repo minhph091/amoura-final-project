@@ -1,6 +1,8 @@
 "use client";
 
 import type React from "react";
+import { profileService } from "@/src/services/profile.service";
+import { apiClient } from "@/src/services/api.service";
 
 import { useState, useEffect, useRef } from "react";
 import {
@@ -29,43 +31,102 @@ import {
 
 export function AdminProfile() {
   const [isLoading, setIsLoading] = useState(false);
-  const [avatarSrc, setAvatarSrc] = useState(
-    "https://randomuser.me/api/portraits/men/44.jpg"
-  );
+  const [user, setUser] = useState<any>(null);
+  const [avatarSrc, setAvatarSrc] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load avatar from localStorage on component mount
   useEffect(() => {
-    const savedAvatar = localStorage.getItem("adminAvatar");
-    if (savedAvatar) {
-      setAvatarSrc(savedAvatar);
-    }
+    const fetchProfile = async () => {
+      setIsLoading(true);
+      try {
+        const response = await profileService.getMyProfile();
+        if (response.success && response.data) {
+          setUser(response.data);
+          setAvatarSrc(
+            response.data.photos?.find(
+              (p: { type: string; url: string }) => p.type === "AVATAR"
+            )?.url || "/placeholder-user.jpg"
+          );
+        } else {
+          toast({
+            title: "Error",
+            description: response.error || "Failed to fetch profile info.",
+          });
+        }
+      } catch (err) {
+        toast({ title: "Error", description: "Failed to fetch profile info." });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+    try {
+      const response = await profileService.updateProfile({
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        jobTitle: user?.jobTitle,
+        bio: user?.bio,
       });
-    }, 1000);
+      if (response.success) {
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.error || "Failed to update profile.",
+        });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to update profile." });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully.",
+    try {
+      const currentPassword = (
+        document.getElementById("current-password") as HTMLInputElement
+      )?.value;
+      const newPassword = (
+        document.getElementById("new-password") as HTMLInputElement
+      )?.value;
+      const confirmPassword = (
+        document.getElementById("confirm-password") as HTMLInputElement
+      )?.value;
+      if (newPassword !== confirmPassword) {
+        toast({ title: "Error", description: "New passwords do not match." });
+        setIsLoading(false);
+        return;
+      }
+      // Use apiClient directly for password change (or create a service if needed)
+      const response = await apiClient.post("/user/change-password", {
+        currentPassword,
+        newPassword,
       });
-    }, 1000);
+      if (response.success) {
+        toast({
+          title: "Password updated",
+          description: "Your password has been changed successfully.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.error || "Failed to change password.",
+        });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to change password." });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAvatarClick = () => {
@@ -79,18 +140,24 @@ export function AdminProfile() {
       reader.onload = (e) => {
         const result = e.target?.result as string;
         setAvatarSrc(result);
-        localStorage.setItem("adminAvatar", result);
+        // Optionally, call backend to update avatar
       };
       reader.readAsDataURL(file);
     }
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!user) {
+    return <div>No user data found.</div>;
+  }
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="relative">
           <div className="absolute top-6 right-6">
-            <Badge className="bg-primary">Super Admin</Badge>
+            <Badge className="bg-primary">{user.role || "Admin"}</Badge>
           </div>
           <div className="flex flex-col items-center sm:flex-row sm:items-start sm:gap-6">
             <div className="relative">
@@ -99,8 +166,8 @@ export function AdminProfile() {
                 onClick={handleAvatarClick}
               >
                 <AvatarImage
-                  src={avatarSrc || "/placeholder.svg"}
-                  alt="Admin User"
+                  src={avatarSrc || "/placeholder-user.jpg"}
+                  alt={user.firstName || "Admin User"}
                 />
                 <AvatarFallback>AD</AvatarFallback>
               </Avatar>
@@ -112,37 +179,39 @@ export function AdminProfile() {
                 onChange={handleFileChange}
               />
               <Button
-                size="icon"
-                variant="outline"
-                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full"
+                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full flex items-center justify-center border"
                 onClick={handleAvatarClick}
               >
                 <Upload className="h-4 w-4" />
               </Button>
             </div>
             <div className="mt-4 sm:mt-0 text-center sm:text-left">
-              <CardTitle className="text-xl">Admin User</CardTitle>
-              <CardDescription>Super Administrator</CardDescription>
+              <CardTitle className="text-xl">
+                {user.firstName} {user.lastName}
+              </CardTitle>
+              <CardDescription>
+                {user.jobTitle || "Administrator"}
+              </CardDescription>
               <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Mail className="mr-1 h-4 w-4" />
-                  admin@amoura.space
+                  {user.email}
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Phone className="mr-1 h-4 w-4" />
-                  +1 (555) 123-4567
+                  {user.phone}
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <MapPin className="mr-1 h-4 w-4" />
-                  San Francisco, CA
+                  {user.city}, {user.state}
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <CalendarDays className="mr-1 h-4 w-4" />
-                  Joined Jan 2023
+                  Joined {user.joinedDate || "N/A"}
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Shield className="mr-1 h-4 w-4" />
-                  Full Access
+                  {user.accessLevel || "Full Access"}
                 </div>
               </div>
             </div>
@@ -160,157 +229,96 @@ export function AdminProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="first-name">First Name</Label>
-                  <Input id="first-name" defaultValue="Admin" />
+                  <Input
+                    id="first-name"
+                    value={user.firstName || ""}
+                    readOnly
+                  />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="last-name">Last Name</Label>
-                  <Input id="last-name" defaultValue="User" />
+                  <Input id="last-name" value={user.lastName || ""} readOnly />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
-                    defaultValue="admin@amoura.space"
+                    value={user.email || ""}
+                    readOnly
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    defaultValue="+1 (555) 123-4567"
+                    value={user.phone || ""}
+                    readOnly
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="job-title">Job Title</Label>
-                  <Input id="job-title" defaultValue="Super Administrator" />
+                  <Input id="job-title" value={user.jobTitle || ""} readOnly />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
-                  <Input id="department" defaultValue="Administration" />
+                  <Input
+                    id="department"
+                    value={user.department || ""}
+                    readOnly
+                  />
                 </div>
-
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address">Address</Label>
-                  <Input id="address" defaultValue="123 Tech Street" />
+                  <Input id="address" value={user.address || ""} readOnly />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Input id="city" defaultValue="San Francisco" />
+                  <Input id="city" value={user.city || ""} readOnly />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="state">State/Province</Label>
-                  <Input id="state" defaultValue="CA" />
+                  <Input id="state" value={user.state || ""} readOnly />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="zip">Zip/Postal Code</Label>
-                  <Input id="zip" defaultValue="94105" />
+                  <Input id="zip" value={user.zip || ""} readOnly />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="country">Country</Label>
-                  <Input id="country" defaultValue="United States" />
+                  <Input id="country" value={user.country || ""} readOnly />
                 </div>
-
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea
                     id="bio"
-                    placeholder="Tell us about yourself"
-                    defaultValue="Experienced administrator with a background in dating app management and user moderation."
+                    value={user.bio || ""}
+                    readOnly
                     className="min-h-[100px]"
                   />
                 </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button onClick={handleSave} disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save Changes"}
-                </Button>
               </div>
             </TabsContent>
 
             <TabsContent value="security" className="space-y-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Change Password</h3>
-
                 <div className="space-y-2">
                   <Label htmlFor="current-password">Current Password</Label>
                   <Input id="current-password" type="password" />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="new-password">New Password</Label>
                   <Input id="new-password" type="password" />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm New Password</Label>
                   <Input id="confirm-password" type="password" />
                 </div>
-
                 <div className="flex justify-end">
                   <Button onClick={handlePasswordChange} disabled={isLoading}>
                     {isLoading ? "Updating..." : "Change Password"}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">
-                  Two-Factor Authentication
-                </h3>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">
-                      Two-factor authentication is enabled
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Your account is secured with two-factor authentication
-                    </p>
-                  </div>
-                  <Button variant="outline">Manage</Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Login Sessions</h3>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border rounded-lg p-3">
-                    <div>
-                      <p className="font-medium">Current Session</p>
-                      <p className="text-sm text-muted-foreground">
-                        San Francisco, CA • Chrome on macOS • IP: 192.168.1.1
-                      </p>
-                    </div>
-                    <Badge>Active Now</Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between border rounded-lg p-3">
-                    <div>
-                      <p className="font-medium">Previous Session</p>
-                      <p className="text-sm text-muted-foreground">
-                        San Francisco, CA • Safari on iOS • IP: 192.168.1.2
-                      </p>
-                    </div>
-                    <Badge variant="outline">2 days ago</Badge>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button variant="outline" className="text-destructive">
-                    Log Out All Other Sessions
                   </Button>
                 </div>
               </div>
@@ -319,7 +327,6 @@ export function AdminProfile() {
             <TabsContent value="activity" className="space-y-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Recent Activity</h3>
-
                 <div className="space-y-4">
                   <div className="border-l-2 border-primary pl-4 pb-4">
                     <p className="font-medium">Updated user settings</p>
@@ -327,40 +334,6 @@ export function AdminProfile() {
                       Today at 10:30 AM
                     </p>
                   </div>
-
-                  <div className="border-l-2 border-muted pl-4 pb-4">
-                    <p className="font-medium">Resolved report #REP-1234</p>
-                    <p className="text-sm text-muted-foreground">
-                      Yesterday at 2:15 PM
-                    </p>
-                  </div>
-
-                  <div className="border-l-2 border-muted pl-4 pb-4">
-                    <p className="font-medium">Created new moderator account</p>
-                    <p className="text-sm text-muted-foreground">
-                      Yesterday at 11:30 AM
-                    </p>
-                  </div>
-
-                  <div className="border-l-2 border-muted pl-4 pb-4">
-                    <p className="font-medium">Updated system settings</p>
-                    <p className="text-sm text-muted-foreground">
-                      2 days ago at 4:45 PM
-                    </p>
-                  </div>
-
-                  <div className="border-l-2 border-muted pl-4 pb-4">
-                    <p className="font-medium">
-                      Suspended user account #U-7826
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      3 days ago at 9:20 AM
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex justify-center">
-                  <Button variant="outline">View Full Activity Log</Button>
                 </div>
               </div>
             </TabsContent>

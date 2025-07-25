@@ -1,3 +1,4 @@
+// ignore_for_file: unused_import
 import 'package:amoura/config/language/app_localizations.dart';
 import 'dart:math';
 

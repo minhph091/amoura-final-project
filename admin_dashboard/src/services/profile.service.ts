@@ -75,24 +75,62 @@ export interface ProfileOptions {
 export class ProfileService {
   // Get profile by user ID
   async getProfile(userId: string): Promise<ApiResponse<Profile>> {
-    return apiClient.get<Profile>(API_ENDPOINTS.PROFILES.GET(userId));
+    try {
+      return await apiClient.get<Profile>(API_ENDPOINTS.PROFILES.GET(userId));
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get profile",
+      };
+    }
   }
 
   // Get current admin's profile
   async getMyProfile(): Promise<ApiResponse<Profile>> {
-    return apiClient.get<Profile>(API_ENDPOINTS.PROFILES.GET_ME);
+    try {
+      return await apiClient.get<Profile>(API_ENDPOINTS.PROFILES.GET_ME);
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to get my profile",
+      };
+    }
   }
 
   // Update current admin's profile
   async updateProfile(
     profileData: Partial<Profile>
   ): Promise<ApiResponse<Profile>> {
-    return apiClient.patch<Profile>(API_ENDPOINTS.PROFILES.UPDATE, profileData);
+    try {
+      return await apiClient.patch<Profile>(
+        API_ENDPOINTS.PROFILES.UPDATE,
+        profileData
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to update profile",
+      };
+    }
   }
 
   // Get profile configuration options
   async getProfileOptions(): Promise<ApiResponse<ProfileOptions>> {
-    return apiClient.get<ProfileOptions>(API_ENDPOINTS.PROFILES.OPTIONS);
+    try {
+      return await apiClient.get<ProfileOptions>(
+        API_ENDPOINTS.PROFILES.OPTIONS
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to get profile options",
+      };
+    }
   }
 
   // Helper method to get user's basic info for admin dashboard

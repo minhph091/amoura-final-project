@@ -1,125 +1,130 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Eye } from "lucide-react"
-import { useEffect, useState } from "react"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Eye } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface Report {
-  id: string
+  id: string;
   reporter: {
-    name: string
-    avatar: string
-    initials: string
-  }
+    name: string;
+    avatar: string;
+    initials: string;
+  };
   reported: {
-    name: string
-    avatar: string
-    initials: string
-  }
-  type: string
-  status: "pending" | "resolved" | "dismissed"
-  date: string
+    name: string;
+    avatar: string;
+    initials: string;
+  };
+  type: string;
+  status: "pending" | "resolved" | "dismissed";
+  date: string;
 }
 
-// Random avatar URLs
-const avatarUrls = [
-  "https://randomuser.me/api/portraits/women/1.jpg",
-  "https://randomuser.me/api/portraits/men/1.jpg",
-  "https://randomuser.me/api/portraits/women/2.jpg",
-  "https://randomuser.me/api/portraits/men/2.jpg",
-  "https://randomuser.me/api/portraits/women/3.jpg",
-  "https://randomuser.me/api/portraits/men/3.jpg",
-  "https://randomuser.me/api/portraits/women/4.jpg",
-  "https://randomuser.me/api/portraits/men/4.jpg",
-]
-
-const reports: Report[] = [
-  {
-    id: "REP-1234",
-    reporter: {
-      name: "Emma Wilson",
-      avatar: avatarUrls[0],
-      initials: "EW",
-    },
-    reported: {
-      name: "Jake Smith",
-      avatar: avatarUrls[1],
-      initials: "JS",
-    },
-    type: "Inappropriate Content",
-    status: "pending",
-    date: "2 hours ago",
-  },
-  {
-    id: "REP-1235",
-    reporter: {
-      name: "Michael Chen",
-      avatar: avatarUrls[2],
-      initials: "MC",
-    },
-    reported: {
-      name: "Olivia Brown",
-      avatar: avatarUrls[3],
-      initials: "OB",
-    },
-    type: "Harassment",
-    status: "pending",
-    date: "5 hours ago",
-  },
-  {
-    id: "REP-1236",
-    reporter: {
-      name: "Sophia Garcia",
-      avatar: avatarUrls[4],
-      initials: "SG",
-    },
-    reported: {
-      name: "William Johnson",
-      avatar: avatarUrls[5],
-      initials: "WJ",
-    },
-    type: "Fake Profile",
-    status: "resolved",
-    date: "1 day ago",
-  },
-  {
-    id: "REP-1237",
-    reporter: {
-      name: "Liam Taylor",
-      avatar: avatarUrls[6],
-      initials: "LT",
-    },
-    reported: {
-      name: "Ava Martinez",
-      avatar: avatarUrls[7],
-      initials: "AM",
-    },
-    type: "Inappropriate Messages",
-    status: "dismissed",
-    date: "2 days ago",
-  },
-]
+import { reportService } from "@/src/services/report.service";
+import type {
+  Report as UIReport,
+  ReportStatus,
+} from "@/src/types/report.types";
 
 export function RecentReports() {
-  const [visibleReports, setVisibleReports] = useState<Report[]>([])
+  const [visibleReports, setVisibleReports] = useState<UIReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate loading reports with a delay
-    const timer = setTimeout(() => {
-      setVisibleReports(reports)
-    }, 500)
+    const fetchReports = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await reportService.getReports({ page: 1, limit: 10 });
+        if (!response.success)
+          throw new Error(response.error || "Failed to fetch reports");
+        // Transform backend reports to UIReport format
+        const backendReports = response.data ?? [];
+        const uiReports: UIReport[] = backendReports.map((r: any) => ({
+          id: String(r.id),
+          reporter: {
+            id: String(r.reporterId),
+            name: r.reporterName || "Unknown",
+            avatar: r.reporterAvatar || "",
+            initials:
+              r.reporterInitials || (r.reporterName ? r.reporterName[0] : "U"),
+          },
+          reported: {
+            id: String(r.reportedUserId),
+            name: r.reportedName || "Unknown",
+            avatar: r.reportedAvatar || "",
+            initials:
+              r.reportedInitials || (r.reportedName ? r.reportedName[0] : "U"),
+          },
+          type: r.type || "other",
+          category: r.category || "profile",
+          description: r.reason || "",
+          status: r.status || "pending",
+          date: r.createdAt || "",
+          assignedTo: r.assignedTo || "",
+          resolvedAt: r.resolvedAt || "",
+          resolvedBy: r.resolvedBy || "",
+          resolutionNotes: r.resolutionNotes || "",
+          severity: r.severity || "low",
+          attachments: r.attachments || [],
+        }));
+        setVisibleReports(uiReports);
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
 
-    return () => clearTimeout(timer)
-  }, [])
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Reports</CardTitle>
+          <CardDescription>
+            Latest user reports that need attention
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="h-40 flex items-center justify-center">
+          Loading reports...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Reports</CardTitle>
+        </CardHeader>
+        <CardContent className="h-40 flex items-center justify-center text-red-500">
+          Error: {error}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="card-hover">
       <CardHeader>
         <CardTitle>Recent Reports</CardTitle>
-        <CardDescription>Latest user reports that need attention</CardDescription>
+        <CardDescription>
+          Latest user reports that need attention
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -132,46 +137,64 @@ export function RecentReports() {
                 <div className="flex items-center gap-4">
                   <div className="flex -space-x-2">
                     <Avatar className="border-2 border-background">
-                      <AvatarImage src={report.reporter.avatar || "/placeholder.svg"} alt={report.reporter.name} />
-                      <AvatarFallback>{report.reporter.initials}</AvatarFallback>
+                      <AvatarImage
+                        src={report.reporter.avatar || "/placeholder.svg"}
+                        alt={report.reporter.name}
+                      />
+                      <AvatarFallback>
+                        {report.reporter.initials}
+                      </AvatarFallback>
                     </Avatar>
                     <Avatar className="border-2 border-background">
-                      <AvatarImage src={report.reported.avatar || "/placeholder.svg"} alt={report.reported.name} />
-                      <AvatarFallback>{report.reported.initials}</AvatarFallback>
+                      <AvatarImage
+                        src={report.reported.avatar || "/placeholder.svg"}
+                        alt={report.reported.name}
+                      />
+                      <AvatarFallback>
+                        {report.reported.initials}
+                      </AvatarFallback>
                     </Avatar>
                   </div>
                   <div>
                     <div className="font-medium">{report.id}</div>
-                    <div className="text-sm text-muted-foreground">{report.type}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {report.type}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <Badge
-                    variant={
-                      report.status === "pending" ? "outline" : report.status === "resolved" ? "default" : "secondary"
-                    }
                     className={
                       report.status === "pending"
                         ? "border-yellow-500 text-yellow-500"
                         : report.status === "resolved"
-                          ? "bg-green-500"
-                          : ""
+                        ? "bg-green-500 text-white"
+                        : report.status === "dismissed"
+                        ? "bg-gray-400 text-white"
+                        : "bg-gray-300 text-black"
                     }
                   >
-                    {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                    {report.status
+                      ? report.status.charAt(0).toUpperCase() +
+                        report.status.slice(1)
+                      : "Unknown"}
                   </Badge>
-                  <div className="text-sm text-muted-foreground hidden md:block">{report.date}</div>
-                  <Button variant="ghost" size="icon">
+                  <div className="text-sm text-muted-foreground hidden md:block">
+                    {report.date}
+                  </div>
+                  <Button className="btn-ghost btn-icon">
                     <Eye className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             ))
           ) : (
-            <div className="flex items-center justify-center h-40 text-muted-foreground">Loading reports...</div>
+            <div className="flex items-center justify-center h-40 text-muted-foreground">
+              No reports found.
+            </div>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

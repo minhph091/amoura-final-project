@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:flutter/material.dart';
 import '../../../config/language/app_localizations.dart';
 import 'chat_list_viewmodel.dart';
