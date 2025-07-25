@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import '../../profile/view/profile_viewmodel.dart';
 import '../../../config/language/app_localizations.dart';
 
+// Đổi từ StatelessWidget sang StatefulWidget
 class ProfileCard extends StatelessWidget {
   final UserRecommendationModel profile;
   final List<InterestModel> interests;
@@ -84,19 +85,18 @@ class ProfileCard extends StatelessWidget {
 
     // Controller for resetting image index
     final ImageCarouselController imageController = ImageCarouselController();
-    // Có thể truyền cacheManager tùy chỉnh nếu muốn (ví dụ: DefaultCacheManager())
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: Stack(
         children: [
           // Main image carousel with story progress bar
           ImageCarousel(
-            key: ValueKey('profile_card_${profile.userId}_${profile.photos.map((p) => p.url).join()}'),
+            key: ValueKey('profile_${profile.userId}_${profile.photos.map((p) => p.url).join()}'),
             photos: displayPhotos,
             showStoryProgress: true,
             controller: imageController,
             uniqueKey: 'profile_${profile.userId}_${profile.photos.map((p) => p.url).join()}',
-            cacheManager: null, // Truyền cacheManager nếu có
           ),
           // Overlay user info at the bottom with backdrop blur
           Positioned(

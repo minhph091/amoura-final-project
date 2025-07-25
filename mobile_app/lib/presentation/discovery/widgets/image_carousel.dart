@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/profile/photo_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart'; // Thêm nếu dùng cacheManager tùy chỉnh
 
 class ImageCarouselController {
   void Function()? _reset;
@@ -18,7 +17,6 @@ class ImageCarousel extends StatefulWidget {
   final bool showStoryProgress;
   final ImageCarouselController? controller;
   final String? uniqueKey;
-  final BaseCacheManager? cacheManager; // Thêm tuỳ chọn cacheManager
 
   const ImageCarousel({
     super.key,
@@ -26,7 +24,6 @@ class ImageCarousel extends StatefulWidget {
     this.showStoryProgress = false,
     this.controller,
     this.uniqueKey,
-    this.cacheManager, // Thêm cacheManager
   });
 
   @override
@@ -47,8 +44,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
   @override
   void didUpdateWidget(covariant ImageCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Chỉ reset khi uniqueKey thực sự thay đổi (profile mới)
-    if (widget.uniqueKey != oldWidget.uniqueKey) {
+    if (widget.photos != oldWidget.photos ||
+        widget.uniqueKey != oldWidget.uniqueKey) {
       _resetToFirstImage();
     }
     widget.controller?._reset = _resetToFirstImage;
@@ -58,18 +55,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
     setState(() {
       _currentIndex = 0;
     });
-    
-    // Kiểm tra xem PageController đã được attach chưa trước khi gọi jumpToPage
-    if (_pageController.hasClients) {
-      _pageController.jumpToPage(0);
-    } else {
-      // Nếu chưa attach, sử dụng Future.delayed để đợi widget được build
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _pageController.hasClients) {
-          _pageController.jumpToPage(0);
-        }
-      });
-    }
+    _pageController.jumpToPage(0);
   }
 
   void _onTapDown(TapDownDetails details, BoxConstraints constraints) {
@@ -81,7 +67,11 @@ class _ImageCarouselState extends State<ImageCarousel> {
         setState(() {
           _currentIndex--;
         });
-        _pageController.animateToPage(_currentIndex, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+        _pageController.animateToPage(
+          _currentIndex,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
       }
     } else {
       // Tap right: next
@@ -89,31 +79,13 @@ class _ImageCarouselState extends State<ImageCarousel> {
         setState(() {
           _currentIndex++;
         });
-        _pageController.animateToPage(_currentIndex, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+        _pageController.animateToPage(
+          _currentIndex,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
       }
     }
-  }
-
-  Widget _buildImage(int index) {
-    final photo = widget.photos[index];
-    return FutureBuilder(
-      future: precacheImage(CachedNetworkImageProvider(photo.url), context),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return CachedNetworkImage(
-            key: ValueKey('carousel_image_${widget.uniqueKey}_$index'),
-            imageUrl: photo.url,
-            cacheManager: widget.cacheManager,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            errorWidget: (context, url, error) {
-              return const Icon(Icons.broken_image, size: 48, color: Colors.grey);
-            },
-          );
-        }
-        return Container(color: Colors.grey[200]);
-      },
-    );
   }
 
   @override
@@ -132,13 +104,39 @@ class _ImageCarouselState extends State<ImageCarousel> {
                 behavior: HitTestBehavior.opaque,
                 onTapDown: (details) => _onTapDown(details, constraints),
                 child: PageView.builder(
-                  key: ValueKey('carousel_${widget.uniqueKey}'),
                   controller: _pageController,
                   itemCount: widget.photos.length,
                   physics:
                       const NeverScrollableScrollPhysics(), // Only allow tap navigation
                   itemBuilder: (context, index) {
-                    return _buildImage(index);
+                    final photo = widget.photos[index];
+                    final imageUrl = photo.url;
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: CachedNetworkImage(
+                        key: ValueKey(' {widget.uniqueKey}_${photo.id}_$index'),
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder:
+                            (context, url) => Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                        errorWidget:
+                            (context, url, error) => Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Icon(
+                                  Icons.error,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                      ),
+                    );
                   },
                 ),
               ),
