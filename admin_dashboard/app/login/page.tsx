@@ -50,23 +50,29 @@ export default function LoginPage() {
         body: JSON.stringify({
           email,
           password,
+          loginType: "EMAIL_PASSWORD", // Chuẩn backend
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        // Kiểm tra role
-        if (data.user?.role === "admin" || data.user?.role === "moderator") {
-          localStorage.setItem("accessToken", data.accessToken);
-          localStorage.setItem("user", JSON.stringify(data.user));
+        // Kiểm tra roleName chuẩn backend
+        if (data.user?.roleName === "ADMIN" || data.user?.roleName === "MODERATOR") {
+          localStorage.setItem("auth_token", data.accessToken);
+          localStorage.setItem("refresh_token", data.refreshToken);
+          localStorage.setItem("user_data", JSON.stringify(data.user));
           router.push("/dashboard");
         } else {
           setError(
-            "Bạn không có quyền truy cập trang quản trị. Chỉ admin hoặc moderator mới được phép đăng nhập."
+            "Bạn không có quyền truy cập trang quản trị. Chỉ ADMIN hoặc MODERATOR mới được phép đăng nhập."
           );
         }
       } else {
-        const errorData = await res.json();
-        setError(errorData.message || "Login failed");
+        let errorMsg = "Login failed";
+        try {
+          const errorData = await res.json();
+          errorMsg = errorData.message || errorMsg;
+        } catch {}
+        setError(errorMsg);
       }
     } catch (error) {
       setError("An unexpected error occurred");
@@ -85,10 +91,8 @@ export default function LoginPage() {
         <div className="floating-shape pulse-shape"></div>
         <div className="floating-shape"></div>
         <div className="floating-shape pulse-shape"></div>
-
         {/* Wave decoration */}
         <div className="wave-shape"></div>
-
         <div className="flex flex-col justify-center items-center px-12 text-white relative z-10 w-full h-full">
           <div className="text-center space-y-8 flex flex-col items-center justify-center">
             <div className="flex justify-center mb-8">
@@ -96,34 +100,29 @@ export default function LoginPage() {
                 <AmouraLogo size="large" />
               </div>
             </div>
-
             <h1 className="font-heading text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Amoura
             </h1>
-
             <p className="font-primary text-white/90 text-xl leading-relaxed max-w-md text-center">
               Where stars align for love to begin.
             </p>
-
             <div className="flex items-center justify-center space-x-2 text-sm text-white/70 mt-12">
               <span className="font-medium">WWW.AMOURA.SPACE</span>
             </div>
           </div>
         </div>
-      </div>{" "}
+      </div>
       {/* Right Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8 relative">
         {/* Language Switcher */}
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
-
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <AmouraLogo size="large" />
           </div>
-
           <div className="space-y-8">
             <div className="text-left">
               <h1 className="font-heading text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 bg-clip-text text-transparent mb-4">
@@ -133,14 +132,12 @@ export default function LoginPage() {
                 {t.login.subtitle}
               </p>
             </div>
-
             <form onSubmit={handleLogin} className="space-y-6">
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">
                   {error}
                 </div>
               )}
-
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
@@ -160,7 +157,6 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label
                   htmlFor="password"
@@ -191,13 +187,13 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     id="remember"
                     className="w-4 h-4 text-pink-500 bg-transparent border-gray-400 rounded focus:ring-pink-500"
+                    title={t.login.rememberMe}
                   />
                   <Label htmlFor="remember" className="text-sm text-gray-600">
                     {t.login.rememberMe}
@@ -210,7 +206,6 @@ export default function LoginPage() {
                   Forgot password?
                 </button>
               </div>
-
               <Button
                 className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-lg font-medium py-4 rounded-full transition-all duration-300 text-lg"
                 type="submit"

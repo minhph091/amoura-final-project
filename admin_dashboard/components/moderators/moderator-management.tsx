@@ -218,6 +218,8 @@ export function ModeratorManagement() {
                           checked={newModeratorRole === "moderator"}
                           onChange={() => setNewModeratorRole("moderator")}
                           className="mr-2"
+                          title="Moderator"
+                          placeholder="Moderator"
                         />
                         <Label htmlFor="moderator">Moderator</Label>
                       </div>
@@ -232,6 +234,8 @@ export function ModeratorManagement() {
                             setNewModeratorRole("senior moderator")
                           }
                           className="mr-2"
+                          title="Senior Moderator"
+                          placeholder="Senior Moderator"
                         />
                         <Label htmlFor="senior">Senior Moderator</Label>
                       </div>

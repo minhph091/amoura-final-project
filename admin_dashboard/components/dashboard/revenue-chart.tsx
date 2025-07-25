@@ -147,7 +147,7 @@ export function RevenueChart() {
             />
             <Legend
               formatter={(value, entry) => (
-                <span style={{ color: "var(--foreground)" }}>{value}</span>
+                <span className="legend-text">{value}</span>
               )}
               layout="horizontal"
               verticalAlign="bottom"

@@ -177,6 +177,8 @@ export function AdminProfile() {
                 className="hidden"
                 accept="image/*"
                 onChange={handleFileChange}
+                placeholder="Upload avatar"
+                title="Upload avatar"
               />
               <Button
                 className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full flex items-center justify-center border"
