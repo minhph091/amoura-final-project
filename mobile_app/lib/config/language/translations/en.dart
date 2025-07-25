@@ -5,6 +5,7 @@ final Map<String, dynamic> en = {
   'away_by': 'away by',
   'common_interests': 'Common interests',
   'unlock': 'Unlock',
+  'create_account': 'Create Account',
   'mark_all_read': 'Mark all read',
   'delete_all': 'Delete all',
   'delete_notification_message':
@@ -315,6 +316,7 @@ final Map<String, dynamic> en = {
 
   // Filter and Discovery
   'reset': 'Reset',
+  'filters_reset': 'Filters have been reset.',
 
   // Settings - Authentication
   'new_phone_number': 'New Phone Number',

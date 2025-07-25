@@ -327,6 +327,7 @@ final Map<String, dynamic> vi = {
 
   // Filter and Discovery
   'reset': 'Đặt lại',
+  'filters_reset': 'Bộ lọc đã được đặt lại.',
 
   // Settings - Authentication
   'new_phone_number': 'Số điện thoại mới',
@@ -356,7 +357,7 @@ final Map<String, dynamic> vi = {
   // Block List
   'unblock': 'Bỏ chặn',
 
-  // Legal Resources
+  'create_account': 'Tạo tài khoản',
   'legal_resources': 'Tài nguyên pháp lý',
   'help_center': 'Trung tâm trợ giúp',
   'privacy_policy': 'Chính sách bảo mật',
