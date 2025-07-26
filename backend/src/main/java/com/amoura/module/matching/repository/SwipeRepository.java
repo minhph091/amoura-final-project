@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,4 +38,11 @@ public interface SwipeRepository extends JpaRepository<Swipe, Long> {
            "AND NOT EXISTS (SELECT s2 FROM Swipe s2 WHERE s2.initiator.id = :targetUserId AND s2.targetUser.id = s.initiator.id) " +
            "ORDER BY s.createdAt DESC")
     List<Swipe> findPendingLikesReceivedByUser(@Param("targetUserId") Long targetUserId);
+    
+    // Admin Dashboard Statistics  
+    @Query("SELECT DATE(s.createdAt) as date, COUNT(s) as totalSwipes, " +
+           "SUM(CASE WHEN s.isLike = true THEN 1 ELSE 0 END) as likes FROM Swipe s " +
+           "WHERE s.createdAt >= :startDate " +
+           "GROUP BY DATE(s.createdAt) ORDER BY DATE(s.createdAt)")
+    List<Object[]> getSwipeStatistics(@Param("startDate") LocalDateTime startDate);
 } 

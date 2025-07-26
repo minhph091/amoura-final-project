@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,4 +30,16 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
            "(m.user1.id = :userId1 AND m.user2.id = :userId2) OR " +
            "(m.user1.id = :userId2 AND m.user2.id = :userId1)")
     Optional<Match> findByUsers(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
+    
+    // Admin Dashboard Statistics
+    @Query("SELECT COUNT(m) FROM Match m")
+    Long countTotalMatches();
+    
+    @Query("SELECT COUNT(m) FROM Match m WHERE DATE(m.matchedAt) = :date")
+    Long countMatchesByDate(@Param("date") LocalDate date);
+    
+    @Query("SELECT DATE(m.matchedAt) as date, COUNT(m) as matches FROM Match m " +
+           "WHERE m.matchedAt >= :startDate " +
+           "GROUP BY DATE(m.matchedAt) ORDER BY DATE(m.matchedAt)")
+    List<Object[]> getMatchesData(@Param("startDate") LocalDateTime startDate);
 } 
