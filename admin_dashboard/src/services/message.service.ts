@@ -194,14 +194,6 @@ export class MessageService {
     }
   }
 
-  // Get message statistics (mock data since backend doesn't have this)
-  async getMessageStats(): Promise<ApiResponse<MessageStats>> {
-    // TODO: Replace with real API when backend provides statistics endpoint
-    return {
-      success: false,
-      error: "Message statistics API not implemented on backend",
-    };
-  }
 }
 
 export const messageService = new MessageService();

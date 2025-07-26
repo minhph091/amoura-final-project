@@ -26,9 +26,12 @@ export default function LoginPage() {
   // Check if already logged in
   useEffect(() => {
     if (authService.isAuthenticated() && authService.isAdminOrModerator()) {
-      router.push("/dashboard");
+      if (window.location.pathname === "/login") {
+        window.location.assign("/dashboard");
+      }
     }
-  }, [router]);
+    // eslint-disable-next-line
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,37 +45,15 @@ export default function LoginPage() {
     }
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          loginType: "EMAIL_PASSWORD", // Chuẩn backend
-        }),
+      const res = await authService.login({
+        email,
+        password,
+        loginType: "EMAIL_PASSWORD",
       });
-      if (res.ok) {
-        const data = await res.json();
-        // Kiểm tra roleName chuẩn backend
-        if (data.user?.roleName === "ADMIN" || data.user?.roleName === "MODERATOR") {
-          localStorage.setItem("auth_token", data.accessToken);
-          localStorage.setItem("refresh_token", data.refreshToken);
-          localStorage.setItem("user_data", JSON.stringify(data.user));
-          router.push("/dashboard");
-        } else {
-          setError(
-            "Bạn không có quyền truy cập trang quản trị. Chỉ ADMIN hoặc MODERATOR mới được phép đăng nhập."
-          );
-        }
+      if (res.success && res.data) {
+        window.location.assign("/dashboard");
       } else {
-        let errorMsg = "Login failed";
-        try {
-          const errorData = await res.json();
-          errorMsg = errorData.message || errorMsg;
-        } catch {}
-        setError(errorMsg);
+        setError(res.error || t.login.invalidCredentials || "Login failed");
       }
     } catch (error) {
       setError("An unexpected error occurred");
@@ -173,10 +154,12 @@ export default function LoginPage() {
                     className="pl-10 pr-10 bg-transparent border-0 border-b-2 border-gray-300 focus:border-pink-500 text-gray-900 placeholder-gray-500 rounded-none py-3 focus:ring-0"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
                     className="absolute right-3 top-3 h-5 w-5 text-gray-500 hover:text-gray-700"
+                    tabIndex={-1}
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (

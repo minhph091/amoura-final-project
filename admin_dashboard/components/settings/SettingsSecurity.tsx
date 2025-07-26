@@ -16,7 +16,7 @@ export function SettingsSecurity() {
   const handleSave = () => {
     setIsLoading(true)
 
-    // Simulate API call
+    // Feature not available: No backend endpoint for admin to manage security settings.
     setTimeout(() => {
       setIsLoading(false)
       toast({

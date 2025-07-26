@@ -157,7 +157,7 @@ export function AdminProfile() {
       <Card>
         <CardHeader className="relative">
           <div className="absolute top-6 right-6">
-            <Badge className="bg-primary">{user.role || "Admin"}</Badge>
+            <Badge className="bg-primary">{user.roleName === "ADMIN" ? "Admin" : user.roleName === "MODERATOR" ? "Moderator" : user.roleName}</Badge>
           </div>
           <div className="flex flex-col items-center sm:flex-row sm:items-start sm:gap-6">
             <div className="relative">
@@ -192,7 +192,7 @@ export function AdminProfile() {
                 {user.firstName} {user.lastName}
               </CardTitle>
               <CardDescription>
-                {user.jobTitle || "Administrator"}
+                {user.jobTitle || (user.roleName === "ADMIN" ? "Administrator" : user.roleName === "MODERATOR" ? "Moderator" : "")}
               </CardDescription>
               <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
                 <div className="flex items-center text-sm text-muted-foreground">

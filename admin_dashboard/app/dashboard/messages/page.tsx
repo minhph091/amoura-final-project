@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { MessagesList } from "@/components/messages/messages-list"
+import { MessagesList } from "@/components/messages/MessagesList"
 
 export const metadata: Metadata = {
   title: "Messages | Amoura Admin",

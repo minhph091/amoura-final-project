@@ -38,56 +38,7 @@ interface Moderator {
   lastActive: string;
 }
 
-const moderators: Moderator[] = [
-  {
-    id: "MOD-001",
-    name: "John Davis",
-    email: "john.d@amoura.space",
-    avatar: "https://randomuser.me/api/portraits/men/75.jpg",
-    initials: "JD",
-    status: "active",
-    role: "senior moderator",
-    joinDate: "Jan 15, 2023",
-    reportsHandled: 156,
-    lastActive: "1 hour ago",
-  },
-  {
-    id: "MOD-002",
-    name: "Lisa Chen",
-    email: "lisa.c@amoura.space",
-    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-    initials: "LC",
-    status: "active",
-    role: "moderator",
-    joinDate: "Feb 3, 2023",
-    reportsHandled: 89,
-    lastActive: "3 hours ago",
-  },
-  {
-    id: "MOD-003",
-    name: "Robert Kim",
-    email: "robert.k@amoura.space",
-    avatar: "https://randomuser.me/api/portraits/men/55.jpg",
-    initials: "RK",
-    status: "active",
-    role: "moderator",
-    joinDate: "Mar 12, 2023",
-    reportsHandled: 67,
-    lastActive: "2 days ago",
-  },
-  {
-    id: "MOD-004",
-    name: "Emily Johnson",
-    email: "emily.j@amoura.space",
-    avatar: "https://randomuser.me/api/portraits/women/35.jpg",
-    initials: "EJ",
-    status: "disabled",
-    role: "moderator",
-    joinDate: "Apr 5, 2023",
-    reportsHandled: 42,
-    lastActive: "2 weeks ago",
-  },
-];
+
 
 export function ModeratorManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -106,12 +57,8 @@ export function ModeratorManagement() {
   const [newModeratorRole, setNewModeratorRole] = useState("moderator");
 
   useEffect(() => {
-    // Simulate loading moderators with a delay
-    const timer = setTimeout(() => {
-      setVisibleModerators(moderators);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    // Feature not available: No backend endpoint for admin to fetch or manage moderators.
+    setVisibleModerators([]);
   }, []);
 
   const filteredModerators = visibleModerators.filter((moderator) => {

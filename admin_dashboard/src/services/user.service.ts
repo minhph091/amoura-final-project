@@ -1,99 +1,29 @@
+
 import { apiClient } from "./api.service";
 import { API_ENDPOINTS } from "../constants/api.constants";
-import type {
-  User,
-  UserFilters,
-  CreateUserRequest,
-  UpdateUserRequest,
-  UserStats,
-  PaginatedResponse,
-  ApiResponse,
-} from "../types";
+import type { ApiResponse } from "../types/common.types";
+import type { User } from "../types/user.types";
 
 export class UserService {
-  async getUsers(filters?: UserFilters): Promise<PaginatedResponse<User>> {
+  async getCurrentUser(): Promise<ApiResponse<User>> {
     try {
-      const res = await apiClient.get(
-        API_ENDPOINTS.ADMIN.USERS,
-        filters as Record<string, unknown>
-      );
-      return res as PaginatedResponse<User>;
+      return await apiClient.get<User>(API_ENDPOINTS.USER.GET);
     } catch (error) {
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch user",
+      };
     }
   }
 
-  async getUser(id: string): Promise<ApiResponse<User>> {
+  async isUserOnline(id: string): Promise<ApiResponse<boolean>> {
     try {
-      const res = await apiClient.get(`${API_ENDPOINTS.ADMIN.USERS}/${id}`);
-      return res as ApiResponse<User>;
+      return await apiClient.get<boolean>(API_ENDPOINTS.USER.ONLINE(id));
     } catch (error) {
-      throw error;
-    }
-  }
-
-  async createUser(userData: CreateUserRequest): Promise<ApiResponse<User>> {
-    try {
-      const res = await apiClient.post(API_ENDPOINTS.ADMIN.USERS, userData);
-      return res as ApiResponse<User>;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async updateUser(
-    id: string,
-    userData: UpdateUserRequest
-  ): Promise<ApiResponse<User>> {
-    try {
-      const res = await apiClient.patch(
-        `${API_ENDPOINTS.ADMIN.USERS}/${id}`,
-        userData
-      );
-      return res as ApiResponse<User>;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async deleteUser(id: string): Promise<ApiResponse<void>> {
-    try {
-      const res = await apiClient.delete(`${API_ENDPOINTS.ADMIN.USERS}/${id}`);
-      return res as ApiResponse<void>;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async suspendUser(id: string, reason?: string): Promise<ApiResponse<User>> {
-    try {
-      const res = await apiClient.post(
-        `${API_ENDPOINTS.ADMIN.USERS}/${id}/suspend`,
-        { reason }
-      );
-      return res as ApiResponse<User>;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async restoreUser(id: string): Promise<ApiResponse<User>> {
-    try {
-      const res = await apiClient.post(
-        `${API_ENDPOINTS.ADMIN.USERS}/${id}/restore`
-      );
-      return res as ApiResponse<User>;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getUserStats(): Promise<ApiResponse<UserStats>> {
-    try {
-      const res = await apiClient.get(API_ENDPOINTS.ADMIN.STATS);
-      return res as ApiResponse<UserStats>;
-    } catch (error) {
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to check user online status",
+      };
     }
   }
 }

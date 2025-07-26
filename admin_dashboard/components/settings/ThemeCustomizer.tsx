@@ -40,7 +40,7 @@ export function ThemeCustomizer() {
 
     const max = Math.max(r, g, b)
     const min = Math.min(r, g, b)
-    let h,
+    let h = 0,
       s,
       l = (max + min) / 2
 
@@ -84,7 +84,7 @@ export function ThemeCustomizer() {
     localStorage.setItem("primaryColor", primaryColor)
     localStorage.setItem("theme", theme || "system")
 
-    // Simulate API call
+    // Feature not available: No backend endpoint for admin to manage theme customization.
     setTimeout(() => {
       setIsLoading(false)
       toast({
@@ -158,11 +158,22 @@ export function ThemeCustomizer() {
                 <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-md border" style={{ backgroundColor: primaryColor }}></div>
+                <div
+                  className="w-10 h-10 rounded-md border"
+                  data-primary-color={primaryColor}
+                ></div>
+                <style>
+                  {`
+                    [data-primary-color] {
+                      background-color: ${primaryColor};
+                    }
+                  `}
+                </style>
                 <input
                   type="text"
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
+                  placeholder="Enter hex color"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>

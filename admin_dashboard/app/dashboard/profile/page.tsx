@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { AdminProfile } from "@/components/profile/admin-profile"
+import { AdminProfile } from "@/components/profile/AdminProfile"
 
 export const metadata: Metadata = {
   title: "Admin Profile | Amoura Admin",

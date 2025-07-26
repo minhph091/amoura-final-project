@@ -53,19 +53,40 @@ export class ApiClient {
         headers,
       });
 
-      const data = await response.json();
+      let data: any = null;
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType && contentType.includes("application/json");
+      const isNoContent = response.status === 204;
+      if (!isNoContent && isJson) {
+        try {
+          data = await response.json();
+        } catch (err) {
+          return {
+            success: false,
+            error: "Invalid JSON response from server.",
+          };
+        }
+      }
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || `HTTP Error: ${response.status}`,
+          error: (data && data.message) || `HTTP Error: ${response.status}`,
+        };
+      }
+
+      // Nếu response trả về accessToken và user (login), bọc lại thành data
+      if (data && data.accessToken && data.user) {
+        return {
+          success: true,
+          data: data,
         };
       }
 
       return {
         success: true,
-        data: data.data || data,
-        message: data.message,
+        data: data && (data.data || data),
+        message: data && data.message,
       };
     } catch (error) {
       return {

@@ -43,35 +43,5 @@ export interface ApiError {
   details?: unknown;
 }
 
-export interface DashboardStats {
-  users: {
-    total: number;
-    active: number;
-    newThisMonth: number;
-    growth: number;
-  };
-  moderators: {
-    total: number;
-    active: number;
-    online: number;
-    growth: number;
-  };
-  reports: {
-    total: number;
-    pending: number;
-    resolved: number;
-    trend: number;
-  };
-  matches: {
-    total: number;
-    thisMonth: number;
-    successRate: number;
-    growth: number;
-  };
-  revenue: {
-    thisMonth: number;
-    lastMonth: number;
-    growth: number;
-    subscriptions: number;
-  };
-}
+
+// Đã chuyển sang dùng AdminDashboardDTO trong stats.service.ts

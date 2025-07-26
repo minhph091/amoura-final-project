@@ -1,56 +1,67 @@
+
 export const API_ENDPOINTS = {
-  // Backend Authentication APIs
   AUTH: {
     LOGIN: "/auth/login",
     LOGOUT: "/auth/logout",
     REFRESH: "/auth/refresh",
-    PROFILE: "/user", // GET current user info
+    REGISTER_INITIATE: "/auth/register/initiate",
+    REGISTER_RESEND_OTP: "/auth/register/resend-otp",
+    REGISTER_VERIFY_OTP: "/auth/register/verify-otp",
+    REGISTER_COMPLETE: "/auth/register/complete",
+    PASSWORD_RESET_REQUEST: "/auth/password/reset/request",
+    PASSWORD_RESET_VERIFY_OTP: "/auth/password/reset/verify-otp",
+    PASSWORD_RESET: "/auth/password/reset",
+    PASSWORD_RESET_RESEND_OTP: "/auth/password/reset/resend-otp",
+    EMAIL_AVAILABLE: "/auth/email-available",
+    LOGIN_OTP_REQUEST: "/auth/login/otp/request",
+    PROFILE: "/user",
     CHANGE_PASSWORD: "/user/change-password",
+    CHANGE_EMAIL_REQUEST: "/user/change-email/request",
+    CHANGE_EMAIL_CONFIRM: "/user/change-email/confirm",
   },
-  // Backend User APIs (limited access for admin)
-  USERS: {
-    LIST: "/users",
-    CREATE: "/users",
-    GET: (id: string) => `/users/${id}/online`,
-    UPDATE: (id: string) => `/user`,
-    DELETE: (id: string) => `/users/${id}`,
-    SUSPEND: (id: string) => `/users/${id}/suspend`,
-    RESTORE: (id: string) => `/users/${id}/restore`,
-    STATS: "/users/stats",
+  USER: {
+    GET: "/user",
+    PATCH: "/user",
+    ONLINE: (id: string) => `/users/${id}/online`,
   },
-  // Backend Profile APIs
-  PROFILES: {
-    GET: (id: string) => `/profiles/${id}`,
-    GET_ME: "/profiles/me",
-    UPDATE: "/profiles/me",
+  ADMIN: {
+    DASHBOARD: "/admin/dashboard",
+  },
+  PROFILE: {
+    ME: "/profiles/me",
+    BY_ID: (id: string) => `/profiles/${id}`,
     OPTIONS: "/profiles/options",
+    PHOTOS: "/profiles/photos",
+    PHOTOS_HIGHLIGHTS: "/profiles/photos/highlights",
+    PHOTOS_COVER: "/profiles/photos/cover",
+    PHOTOS_AVATAR: "/profiles/photos/avatar",
+    PHOTOS_BY_USER: (id: string) => `/profiles/photos/${id}`,
+    PHOTOS_HIGHLIGHTS_BY_USER: (id: string) => `/profiles/photos/${id}/highlights`,
+    PHOTOS_COVER_BY_USER: (id: string) => `/profiles/photos/${id}/cover`,
+    PHOTOS_AVATAR_BY_USER: (id: string) => `/profiles/photos/${id}/avatar`,
   },
-  // Backend Chat APIs (for admin monitoring)
+  MATCHING: {
+    SWIPE: "/matching/swipe",
+    RECOMMENDATIONS: "/matching/recommendations",
+    RECEIVED: "/matching/received",
+  },
   CHAT: {
     ROOMS: "/chat/rooms",
-    MESSAGES: (roomId: string) => `/chat/rooms/${roomId}/messages`,
-    DELETE_MESSAGE: (messageId: string) =>
-      `/chat/messages/${messageId}/delete-for-me`,
+    ROOM_BY_ID: (id: string) => `/chat/rooms/${id}`,
+    MESSAGES: (id: string) => `/chat/rooms/${id}/messages`,
+    MESSAGES_READ: (id: string) => `/chat/rooms/${id}/messages/read`,
+    MESSAGES_UNREAD_COUNT: (id: string) => `/chat/rooms/${id}/messages/unread-count`,
+    UPLOAD_IMAGE: "/chat/upload-image",
+    MESSAGE_RECALL: (id: string) => `/chat/messages/${id}/recall`,
+    MESSAGE_DELETE_FOR_ME: (id: string) => `/chat/messages/${id}/delete-for-me`,
+    DELETE_IMAGE: "/chat/delete-image",
   },
-  // Backend Matching APIs
-  MATCHING: {
-    RECOMMENDATIONS: "/matching/recommendations",
-    SWIPE: "/matching/swipe",
-  },
-  // Backend Notification APIs
   NOTIFICATIONS: {
     LIST: "/notifications",
     UNREAD: "/notifications/unread",
     UNREAD_COUNT: "/notifications/unread/count",
     MARK_READ: (id: string) => `/notifications/${id}/read`,
     MARK_ALL_READ: "/notifications/read-all",
-  },
-  ADMIN: {
-    USERS: "/admin/users",
-    MODERATORS: "/admin/moderators",
-    REPORTS: "/admin/reports",
-    SUBSCRIPTIONS: "/admin/subscriptions",
-    STATS: "/admin/stats",
   },
 } as const;
 

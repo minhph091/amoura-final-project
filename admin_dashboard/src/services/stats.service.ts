@@ -1,27 +1,50 @@
+
 import { apiClient } from "./api.service";
-import { API_ENDPOINTS } from "../constants/api.constants";
 import type { ApiResponse } from "../types/common.types";
 
-export interface AdminStats {
+// Định nghĩa đúng kiểu dữ liệu trả về từ backend
+export interface AdminDashboardDTO {
   totalUsers: number;
-  activeUsers: number;
-  totalReports: number;
-  resolvedReports: number;
-  totalSubscriptions: number;
-  activeSubscriptions: number;
-  [key: string]: number;
+  totalMatches: number;
+  totalMessages: number;
+  todayUsers: number;
+  todayMatches: number;
+  todayMessages: number;
+  activeUsersToday: number;
+  userGrowthChart: Array<{
+    date: string;
+    newUsers: number;
+    totalUsers: number;
+  }>;
+  matchingSuccessChart: Array<{
+    date: string;
+    totalSwipes: number;
+    totalMatches: number;
+    successRate: number;
+  }>;
+  recentActivities: Array<{
+    activityType: string;
+    description: string;
+    timestamp: string;
+    userId: number | null;
+    username: string;
+  }>;
 }
 
 export class StatsService {
-  async getStats(): Promise<ApiResponse<AdminStats>> {
-    try {
-      return await apiClient.get<AdminStats>(API_ENDPOINTS.ADMIN.STATS);
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch stats",
-      };
+  async getDashboard(): Promise<AdminDashboardDTO> {
+    // Chỉ gọi API nếu user là ADMIN
+    const user = JSON.parse(localStorage.getItem("user_data") || "null");
+    if (!user || user.roleName !== "ADMIN") {
+      throw new Error("Bạn không có quyền truy cập dashboard quản trị.");
     }
+    // Gọi API và trả về object backend trực tiếp
+    const res = await apiClient.get<AdminDashboardDTO>("/admin/dashboard");
+    // Nếu backend trả về {success, data}, lấy data; nếu trả về object trực tiếp, trả về luôn
+    if (res && typeof res === "object" && "data" in res && res.data) {
+      return res.data;
+    }
+    return res as unknown as AdminDashboardDTO;
   }
 }
 

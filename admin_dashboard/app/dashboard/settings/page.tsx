@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import { SettingsGeneral } from "@/components/settings/settings-general"
-import { SettingsSecurity } from "@/components/settings/settings-security"
-import { SettingsNotifications } from "@/components/settings/settings-notifications"
-import { SettingsAppearance } from "@/components/settings/settings-appearance"
+import { SettingsGeneral } from "@/components/settings/SettingsGeneral"
+import { SettingsSecurity } from "@/components/settings/SettingsSecurity"
+import { SettingsNotifications } from "@/components/settings/SettingsNotifications"
+import { SettingsAppearance } from "@/components/settings/SettingsAppearance"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export const metadata: Metadata = {

@@ -28,7 +28,7 @@ export function SettingsGeneral() {
   const handleSave = () => {
     setIsLoading(true);
 
-    // Simulate API call
+    // Feature not available: No backend endpoint for admin to manage general settings.
     setTimeout(() => {
       setIsLoading(false);
       toast({

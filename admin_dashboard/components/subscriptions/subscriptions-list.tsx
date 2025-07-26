@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useEffect } from "react";
-import { subscriptionService } from "@/src/services/subscription.service";
+// Feature not available: No backend endpoint for admin to fetch subscriptions.
 
 interface Subscription {
   id: string;
@@ -61,52 +61,9 @@ export function SubscriptionsList() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSubscriptions = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await subscriptionService.getSubscriptions({
-          status: statusFilter !== "all" ? statusFilter : undefined,
-          plan: planFilter !== "all" ? planFilter : undefined,
-        });
-        if (!response.success)
-          throw new Error(response.error || "Failed to fetch subscriptions");
-        // Map backend Subscription to UI Subscription type
-        const mapped = (response.data || []).map((sub: any) => ({
-          id: String(sub.id),
-          user: {
-            name: sub.userName || "Unknown",
-            email: sub.userEmail || "",
-            avatar: sub.userAvatar || "",
-            initials: sub.userInitials || "",
-          },
-          plan:
-            sub.plan === "premium" ? "premium" : ("free" as "free" | "premium"),
-          status:
-            sub.status === "active"
-              ? "active"
-              : sub.status === "expired"
-              ? "expired"
-              : ("canceled" as "active" | "expired" | "canceled"),
-          startDate: sub.startDate || sub.createdAt || "",
-          endDate: sub.endDate || "",
-          billingCycle:
-            sub.billingCycle === "yearly"
-              ? "yearly"
-              : ("monthly" as "monthly" | "yearly"),
-          amount: sub.amount ? String(sub.amount) : "0",
-          paymentMethod: sub.paymentMethod || "",
-          autoRenew: !!sub.autoRenew,
-        }));
-        setSubscriptions(mapped as Subscription[]);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSubscriptions();
-  }, [statusFilter, planFilter, searchTerm]);
+    // No backend support for fetching subscriptions as admin. Show not available.
+    setLoading(false);
+  }, []);
 
   const filteredSubscriptions = subscriptions.filter(
     (subscription: Subscription) => {
@@ -126,41 +83,9 @@ export function SubscriptionsList() {
     }
   );
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="h-80 flex items-center justify-center">
-            Loading subscriptions...
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="h-80 flex items-center justify-center text-red-500">
-            Error: {error}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Subscription Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* ...existing code for search/filter UI and table rendering, unchanged... */}
-          {/* Table rendering logic remains, but now uses backend data only */}
-        </CardContent>
-      </Card>
+    <div className="flex items-center justify-center h-40 text-muted-foreground">
+      Feature not available: No backend support for admin to view subscriptions.
     </div>
   );
 }

@@ -17,7 +17,7 @@ export function SettingsAppearance() {
   const handleSave = () => {
     setIsLoading(true)
 
-    // Simulate API call
+    // Feature not available: No backend endpoint for admin to manage appearance settings.
     setTimeout(() => {
       setIsLoading(false)
       toast({

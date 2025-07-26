@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { MatchesList } from "@/components/matches/matches-list"
+import { MatchesList } from "@/components/matches/MatchesList"
 
 export const metadata: Metadata = {
   title: "Matches | Amoura Admin",

@@ -19,11 +19,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useEffect, useState } from "react";
-import { userService } from "@/src/services/user.service";
-import type { User } from "@/src/types/user.types";
 
-export function RecentUsers() {
-  const [visibleUsers, setVisibleUsers] = useState<User[]>([]);
+import { statsService } from "@/src/services/stats.service";
+
+
+export default function RecentUsers() {
+  const [visibleUsers, setVisibleUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,10 +33,12 @@ export function RecentUsers() {
       setLoading(true);
       setError(null);
       try {
-        const response = await userService.getUsers({ page: 1, limit: 10 });
-        if (!response.success)
-          throw new Error(response.error || "Failed to fetch users");
-        setVisibleUsers(response.data ?? []);
+        const response = await statsService.getDashboard();
+        // Lấy các hoạt động đăng ký user gần đây
+        const activities = response.recentActivities || [];
+        // Lọc các hoạt động đăng ký user
+        const recentUserActivities = activities.filter((a: any) => a.activityType === "USER_REGISTRATION");
+        setVisibleUsers(recentUserActivities.slice(0, 10));
       } catch (err: any) {
         setError(err.message || "Unknown error");
       } finally {
@@ -102,60 +105,36 @@ export function RecentUsers() {
             </thead>
             <tbody>
               {visibleUsers.length > 0 ? (
-                visibleUsers.map((user) => (
-                  <tr key={user.id} className="border-b animate-fade-in">
+                visibleUsers.map((activity) => (
+                  <tr key={activity.userId + activity.timestamp} className="border-b animate-fade-in">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage
-                            src={user.avatar || "/placeholder.svg"}
-                            alt={user.fullName || user.username || "User"}
+                            src={"/placeholder.svg"}
+                            alt={activity.username || "User"}
                           />
                           <AvatarFallback>
-                            {user.initials ||
-                              (user.fullName
-                                ? user.fullName[0]
-                                : user.username
-                                ? user.username[0]
-                                : "U")}
+                            {activity.username ? activity.username[0] : "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <div className="font-medium">
-                            {user.fullName || user.username || "Unknown"}
+                            {activity.username || "Unknown"}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {user.email}
+                            User ID: {activity.userId ?? "-"}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <Badge
-                        className={
-                          user.status === "ACTIVE"
-                            ? "bg-green-500 text-white"
-                            : user.status === "SUSPENDED"
-                            ? "bg-red-500 text-white"
-                            : user.status === "PENDING"
-                            ? "bg-yellow-500 text-black"
-                            : user.status === "BLOCKED"
-                            ? "bg-gray-500 text-white"
-                            : "bg-gray-300 text-black"
-                        }
-                      >
-                        {user.status
-                          ? user.status.charAt(0) +
-                            user.status.slice(1).toLowerCase()
-                          : "Unknown"}
-                      </Badge>
+                      <Badge className="bg-green-500 text-white">New</Badge>
                     </td>
                     <td className="py-3 px-4 hidden md:table-cell">
-                      {user.joinDate || user.createdAt || "-"}
+                      {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : "-"}
                     </td>
-                    <td className="py-3 px-4 hidden lg:table-cell">
-                      {user.location || "-"}
-                    </td>
+                    <td className="py-3 px-4 hidden lg:table-cell">-</td>
                     <td className="py-3 px-4 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -165,10 +144,6 @@ export function RecentUsers() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>View Profile</DropdownMenuItem>
-                          <DropdownMenuItem>Edit User</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            Suspend User
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>

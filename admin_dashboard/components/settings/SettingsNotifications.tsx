@@ -13,7 +13,7 @@ export function SettingsNotifications() {
   const handleSave = () => {
     setIsLoading(true)
 
-    // Simulate API call
+    // Feature not available: No backend endpoint for admin to manage notification settings.
     setTimeout(() => {
       setIsLoading(false)
       toast({

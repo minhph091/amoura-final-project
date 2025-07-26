@@ -16,34 +16,53 @@ export class AuthService {
       );
 
       if (response.success && response.data) {
-        // Store tokens
+        // Store tokens (always store accessToken as 'auth_token')
         apiClient.setToken(response.data.accessToken);
+        localStorage.setItem("auth_token", response.data.accessToken);
         localStorage.setItem("refresh_token", response.data.refreshToken);
         localStorage.setItem("user_data", JSON.stringify(response.data.user));
+        document.cookie = `auth_token=${response.data.accessToken}; path=/; max-age=86400`;
 
         // Check if user is admin or moderator
         if (
           response.data.user.roleName === "ADMIN" ||
           response.data.user.roleName === "MODERATOR"
         ) {
+          localStorage.setItem("isLoggedIn", "true");
           return response;
         } else {
           // Clear tokens if not admin/moderator
-          this.logout();
+          await this.logout();
           return {
             success: false,
-            error: "Access denied. Admin or Moderator role required.",
+            error: "Bạn không có quyền truy cập trang quản trị. Chỉ ADMIN hoặc MODERATOR mới được phép đăng nhập.",
           };
         }
       }
 
+      // Nếu login thất bại, xóa sạch token, refresh_token, user_data
+      this.clearAllAuthData();
+      if (response.error) {
+        console.error("Login failed:", response.error);
+      }
       return response;
     } catch (error) {
+      this.clearAllAuthData();
+      console.error("Login exception:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Login failed",
       };
     }
+  }
+
+  clearAllAuthData() {
+    apiClient.clearToken();
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user_data");
+    localStorage.removeItem("isLoggedIn");
+    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
   }
 
   async refreshToken(): Promise<ApiResponse<LoginResponse>> {
@@ -76,7 +95,6 @@ export class AuthService {
 
   async logout(): Promise<void> {
     const refreshToken = localStorage.getItem("refresh_token");
-
     if (refreshToken) {
       try {
         await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, refreshToken);
@@ -84,11 +102,7 @@ export class AuthService {
         console.warn("Logout API call failed:", error);
       }
     }
-
-    // Clear stored data
-    apiClient.clearToken();
-    localStorage.removeItem("user_data");
-    localStorage.removeItem("isLoggedIn");
+    this.clearAllAuthData();
   }
 
   async changePassword(
@@ -105,12 +119,12 @@ export class AuthService {
   isAuthenticated(): boolean {
     const token = localStorage.getItem("auth_token");
     const userData = localStorage.getItem("user_data");
-    return !!(token && userData);
+    return Boolean(token && userData);
   }
 
   isAdminOrModerator(): boolean {
     const user = this.getCurrentUser();
-    return user && (user.roleName === "ADMIN" || user.roleName === "MODERATOR");
+    return !!(user && (user.roleName === "ADMIN" || user.roleName === "MODERATOR"));
   }
 }
 

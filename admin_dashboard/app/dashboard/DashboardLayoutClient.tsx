@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/sidebar";
 import { Header } from "@/components/header";
 import { DashboardFooter } from "@/components/ui/DashboardFooter";
 import { ClientOnly } from "@/components/ClientOnly";
+import { authService } from "@/src/services/auth.service";
 
 export default function DashboardLayoutClient({
   children,
@@ -16,27 +17,41 @@ export default function DashboardLayoutClient({
 }>) {
   const router = useRouter();
 
-  // Check if logged in - DISABLED FOR TESTING
+
+
+  // Check if logged in - real backend validation
   useEffect(() => {
-    // Always set logged in for testing
-    localStorage.setItem("isLoggedIn", "true");
+    // Chỉ kiểm tra token và role trong localStorage, không gọi API backend
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    const userDataRaw = typeof window !== "undefined" ? localStorage.getItem("user_data") : null;
+    let roleName = undefined;
+    if (userDataRaw) {
+      try {
+        const userObj = JSON.parse(userDataRaw);
+        roleName = userObj.roleName;
+      } catch {}
+    }
+    if (!token || !["ADMIN","MODERATOR"].includes(roleName)) {
+      authService.logout();
+      router.push("/login");
+    }
   }, [router]);
 
   // Apply saved theme settings on page load
   useEffect(() => {
+    // Only apply real user settings, no demo/mocked logic
     const savedColor = localStorage.getItem("primaryColor");
     const savedFontSize = localStorage.getItem("fontSize");
-    const savedTheme = localStorage.getItem("theme");
-    const sidebarCollapsed =
-      localStorage.getItem("sidebarCollapsed") === "true";
+    const sidebarCollapsed = localStorage.getItem("sidebarCollapsed") === "true";
 
-    // Set sidebar collapsed state on body
+    // Set sidebar collapsed state on body (default: false)
     document.body.setAttribute(
       "data-sidebar-collapsed",
-      String(sidebarCollapsed)
+      String(!!sidebarCollapsed)
     );
 
-    if (savedColor) {
+    // Set primary color if present and valid
+    if (savedColor && /^#[0-9A-Fa-f]{6}$/.test(savedColor)) {
       // Convert hex to hsl for CSS variables
       const r = Number.parseInt(savedColor.slice(1, 3), 16) / 255;
       const g = Number.parseInt(savedColor.slice(3, 5), 16) / 255;
@@ -44,13 +59,11 @@ export default function DashboardLayoutClient({
 
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
-      let h,
-        s,
-        l = (max + min) / 2;
+      let h: number = 0;
+      let s: number = 0;
+      let l: number = (max + min) / 2;
 
-      if (max === min) {
-        h = s = 0; // achromatic
-      } else {
+      if (max !== min) {
         const d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         switch (max) {
@@ -67,9 +80,9 @@ export default function DashboardLayoutClient({
         h /= 6;
       }
 
-      h = Math.round(h * 360);
-      s = Math.round(s * 100);
-      l = Math.round(l * 100);
+      h = Math.round((h ?? 0) * 360);
+      s = Math.round((s ?? 0) * 100);
+      l = Math.round((l ?? 0) * 100);
 
       document.documentElement.style.setProperty(
         "--primary",
@@ -77,7 +90,8 @@ export default function DashboardLayoutClient({
       );
     }
 
-    if (savedFontSize) {
+    // Set font size if present and valid
+    if (savedFontSize && !isNaN(Number(savedFontSize))) {
       document.documentElement.style.fontSize = `${savedFontSize}px`;
     }
   }, []);

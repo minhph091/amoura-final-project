@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { ReportManagement } from "@/components/reports/report-management"
+import { ReportManagement } from "@/components/reports/ReportManagement"
 
 export const metadata: Metadata = {
   title: "Report Management | Amoura Admin",

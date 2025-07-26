@@ -16,6 +16,7 @@ import {
   Crown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { authService } from "@/src/services/auth.service";
 import { useMobile } from "@/hooks/use-mobile";
 import { AmouraLogo } from "@/components/ui/AmouraLogo";
 import { useLanguage } from "@/src/contexts/LanguageContext";
@@ -64,36 +65,45 @@ export function Sidebar() {
     setIsCollapsed(!isCollapsed);
   };
 
+  const user = authService.getCurrentUser();
+  const isAdmin = user?.roleName === "ADMIN";
+  const isModerator = user?.roleName === "MODERATOR";
   const sidebarItems = [
     {
       href: "/dashboard",
       title: t.dashboard,
       icon: <LayoutDashboard className="h-5 w-5" />,
+      visible: isAdmin,
     },
     {
       href: "/dashboard/users",
       title: t.users,
       icon: <Users className="h-5 w-5" />,
+      visible: isAdmin || isModerator,
     },
     {
       href: "/dashboard/moderators",
       title: t.moderators,
       icon: <ShieldAlert className="h-5 w-5" />,
+      visible: isAdmin,
     },
     {
       href: "/dashboard/reports",
       title: t.reports,
       icon: <Flag className="h-5 w-5" />,
+      visible: isAdmin || isModerator,
     },
     {
       href: "/dashboard/matches",
       title: t.matches,
       icon: <Heart className="h-5 w-5" />,
+      visible: isAdmin,
     },
     {
       href: "/dashboard/subscriptions",
       title: t.subscriptions,
       icon: <Crown className="h-5 w-5" />,
+      visible: isAdmin,
     },
   ];
 
@@ -139,15 +149,13 @@ export function Sidebar() {
         <div className="flex-grow flex flex-col h-[calc(100vh-80px)] relative">
           <ScrollArea className="flex-1">
             <nav className="grid gap-1 px-3 py-4">
-              {sidebarItems.map((item) => (
+              {sidebarItems.filter((item) => item.visible).map((item) => (
                 <button
                   key={item.href}
                   onClick={() => router.push(item.href)}
                   className={cn(
                     "sidebar-item group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium font-primary transition-all duration-200 relative overflow-hidden w-full text-left",
-                    // Hover states for light and dark mode
                     "hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-primary",
-                    // Active state
                     pathname === item.href
                       ? "bg-primary/20 text-primary shadow-lg shadow-primary/20"
                       : "text-slate-700 dark:text-slate-300",

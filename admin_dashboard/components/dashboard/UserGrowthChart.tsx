@@ -21,9 +21,11 @@ import {
 
 import { statsService } from "@/src/services/stats.service";
 
+
 interface UserGrowthData {
-  month: string;
-  users: number;
+  date: string;
+  newUsers: number;
+  totalUsers: number;
 }
 
 export function UserGrowthChart() {
@@ -36,16 +38,14 @@ export function UserGrowthChart() {
       setLoading(true);
       setError(null);
       try {
-        const response = await statsService.getStats();
-        if (!response.success)
-          throw new Error(response.error || "Failed to fetch user growth data");
-        // Transform backend stats to chart format if needed
-        const backendData = response.data?.monthlyRegistrations;
+        const response = await statsService.getDashboard();
+        const backendData = response.userGrowthChart;
         let chartData: UserGrowthData[] = [];
         if (Array.isArray(backendData)) {
           chartData = backendData.map((item: any) => ({
-            month: item.month || item.date || "",
-            users: item.users || item.count || 0,
+            date: item.date,
+            newUsers: item.newUsers,
+            totalUsers: item.totalUsers,
           }));
         }
         setData(chartData);
@@ -89,7 +89,7 @@ export function UserGrowthChart() {
     <Card className="card-hover">
       <CardHeader>
         <CardTitle>User Growth</CardTitle>
-        <CardDescription>Monthly user registrations</CardDescription>
+        <CardDescription>New users per day (last 30 days)</CardDescription>
       </CardHeader>
       <CardContent className="h-80">
         <ResponsiveContainer width="100%" height="100%">
@@ -103,7 +103,7 @@ export function UserGrowthChart() {
             }}
           >
             <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-            <XAxis dataKey="month" />
+            <XAxis dataKey="date" />
             <YAxis />
             <Tooltip
               contentStyle={{
@@ -117,10 +117,10 @@ export function UserGrowthChart() {
             />
             <Area
               type="monotone"
-              dataKey="users"
+              dataKey="newUsers"
               stroke="hsl(346, 77%, 49%)"
               fill="hsl(346, 77%, 49%, 0.2)"
-              name="Users"
+              name="New Users"
             />
             <Legend />
           </AreaChart>

@@ -60,24 +60,9 @@ export function MatchesList() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMatches = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Replace with actual matchesService when available
-        // Example: const response = await matchesService.getMatches({ status: statusFilter, search: searchTerm });
-        // For now, simulate with empty array
-        const response = { success: true, data: [] };
-        if (!response.success) throw new Error("Failed to fetch matches");
-        setVisibleMatches(response.data || []);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMatches();
-  }, [statusFilter, searchTerm]);
+    // No backend support for fetching matches as admin. Do nothing.
+    setLoading(false);
+  }, []);
 
   const filteredMatches = visibleMatches.filter((match) => {
     const matchesSearch =
@@ -114,13 +99,8 @@ export function MatchesList() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="p-6">
-          {/* ...existing code for search/filter UI and table rendering, unchanged... */}
-          {/* Table rendering logic remains, but now uses backend data only */}
-        </CardContent>
-      </Card>
+    <div className="flex items-center justify-center h-40 text-muted-foreground">
+      Feature not available: No backend support for admin to view matches.
     </div>
   );
 }

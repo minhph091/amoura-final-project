@@ -31,16 +31,13 @@ export function MatchesChart() {
       setLoading(true);
       setError(null);
       try {
-        const response = await statsService.getStats();
-        if (!response.success || !response.data?.weeklyMatches)
-          throw new Error(response.error || "Failed to fetch matches data");
-        // Transform backend weeklyMatches to expected array
-        const backendData = response.data.weeklyMatches;
+        const response = await statsService.getDashboard();
+        const backendData = response.matchingSuccessChart;
         let chartData: { day: string; matches: number }[] = [];
         if (Array.isArray(backendData)) {
           chartData = backendData.map((item: any) => ({
-            day: item.day || item.date || "",
-            matches: item.matches || item.count || 0,
+            day: item.date,
+            matches: item.totalMatches,
           }));
         }
         setData(chartData);

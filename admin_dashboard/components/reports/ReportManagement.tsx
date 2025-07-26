@@ -1,4 +1,7 @@
+
 "use client"
+import { reportService } from "@/src/services/report.service";
+import { userService } from "@/src/services/user.service";
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -40,106 +43,7 @@ interface Report {
   assignedTo?: string
 }
 
-const reports: Report[] = [
-  {
-    id: "REP-1234",
-    reporter: {
-      id: "U-7823",
-      name: "Emma Wilson",
-      avatar: "https://randomuser.me/api/portraits/women/17.jpg",
-      initials: "EW",
-    },
-    reported: {
-      id: "U-7826",
-      name: "Jake Smith",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      initials: "JS",
-    },
-    type: "Inappropriate Content",
-    description: "Profile contains inappropriate images that violate community guidelines.",
-    status: "pending",
-    date: "May 15, 2023",
-    assignedTo: "John Davis",
-  },
-  {
-    id: "REP-1235",
-    reporter: {
-      id: "U-7824",
-      name: "Michael Chen",
-      avatar: "https://randomuser.me/api/portraits/men/22.jpg",
-      initials: "MC",
-    },
-    reported: {
-      id: "U-7827",
-      name: "Olivia Brown",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      initials: "OB",
-    },
-    type: "Harassment",
-    description: "User is sending threatening messages and won't stop after being asked to.",
-    status: "pending",
-    date: "May 14, 2023",
-  },
-  {
-    id: "REP-1236",
-    reporter: {
-      id: "U-7825",
-      name: "Sophia Garcia",
-      avatar: "https://randomuser.me/api/portraits/women/28.jpg",
-      initials: "SG",
-    },
-    reported: {
-      id: "U-7828",
-      name: "William Johnson",
-      avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-      initials: "WJ",
-    },
-    type: "Fake Profile",
-    description: "This profile is using stolen photos from a celebrity.",
-    status: "resolved",
-    date: "May 13, 2023",
-    assignedTo: "Lisa Chen",
-  },
-  {
-    id: "REP-1237",
-    reporter: {
-      id: "U-7826",
-      name: "Liam Taylor",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      initials: "LT",
-    },
-    reported: {
-      id: "U-7829",
-      name: "Ava Martinez",
-      avatar: "https://randomuser.me/api/portraits/women/17.jpg",
-      initials: "AM",
-    },
-    type: "Inappropriate Messages",
-    description: "User is sending explicit content without consent.",
-    status: "dismissed",
-    date: "May 12, 2023",
-    assignedTo: "Robert Kim",
-  },
-  {
-    id: "REP-1238",
-    reporter: {
-      id: "U-7827",
-      name: "Noah Wilson",
-      avatar: "https://randomuser.me/api/portraits/men/67.jpg",
-      initials: "NW",
-    },
-    reported: {
-      id: "U-7830",
-      name: "Isabella Lopez",
-      avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-      initials: "IL",
-    },
-    type: "Underage User",
-    description: "This user appears to be under 18 based on their messages.",
-    status: "pending",
-    date: "May 11, 2023",
-  },
-]
+
 
 export function ReportManagement() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -153,13 +57,36 @@ export function ReportManagement() {
   const [activeTab, setActiveTab] = useState("all")
 
   useEffect(() => {
-    // Simulate loading reports with a delay
-    const timer = setTimeout(() => {
-      setVisibleReports(reports)
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [])
+    async function fetchReports() {
+      try {
+        const res = await reportService.getReports({ status: statusFilter === "all" ? undefined : statusFilter });
+        if (res.success && res.data) setVisibleReports(res.data.map((r: any) => ({
+          id: r.id.toString(),
+          reporter: {
+            id: r.reporterId?.toString() || "",
+            name: r.reporterName || "Unknown",
+            avatar: r.reporterAvatar || "",
+            initials: r.reporterInitials || "?"
+          },
+          reported: {
+            id: r.reportedUserId?.toString() || "",
+            name: r.reportedUserName || "Unknown",
+            avatar: r.reportedUserAvatar || "",
+            initials: r.reportedUserInitials || "?"
+          },
+          type: r.type,
+          description: r.reason,
+          status: r.status,
+          date: r.createdAt,
+          assignedTo: r.resolvedBy ? r.resolvedBy.toString() : undefined
+        })));
+        else setVisibleReports([]);
+      } catch {
+        setVisibleReports([]);
+      }
+    }
+    fetchReports();
+  }, [statusFilter]);
 
   const filteredReports = visibleReports.filter((report) => {
     const matchesSearch =
@@ -197,22 +124,37 @@ export function ReportManagement() {
     setDismissDialogOpen(true)
   }
 
-  const confirmSuspend = () => {
-    // In a real app, this would call an API to suspend the user
-    setSuspendDialogOpen(false)
-    // Show success message or update UI
+  const confirmSuspend = async () => {
+    if (!selectedReport) return;
+    try {
+      await userService.suspendUser(selectedReport.reported.id, "Suspended by admin via report");
+      setSuspendDialogOpen(false);
+      // Optionally, refresh reports
+    } catch {
+      setSuspendDialogOpen(false);
+    }
   }
 
-  const confirmResolve = () => {
-    // In a real app, this would call an API to resolve the report
-    setResolveDialogOpen(false)
-    // Show success message or update UI
+  const confirmResolve = async () => {
+    if (!selectedReport) return;
+    try {
+      await reportService.resolveReport(selectedReport.id);
+      setResolveDialogOpen(false);
+      // Optionally, refresh reports
+    } catch {
+      setResolveDialogOpen(false);
+    }
   }
 
-  const confirmDismiss = () => {
-    // In a real app, this would call an API to dismiss the report
-    setDismissDialogOpen(false)
-    // Show success message or update UI
+  const confirmDismiss = async () => {
+    if (!selectedReport) return;
+    try {
+      await reportService.rejectReport(selectedReport.id);
+      setDismissDialogOpen(false);
+      // Optionally, refresh reports
+    } catch {
+      setDismissDialogOpen(false);
+    }
   }
 
   const renderReportsList = (reports: Report[]) => {
@@ -254,7 +196,7 @@ export function ReportManagement() {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src={report.reported.avatar || "/placeholder.svg"} alt={report.reported.name} />
+                        <AvatarImage src={report.reported.avatar} alt={report.reported.name} />
                         <AvatarFallback>{report.reported.initials}</AvatarFallback>
                       </Avatar>
                       <div className="font-medium">{report.reported.name}</div>
@@ -505,7 +447,7 @@ export function ReportManagement() {
                     <div className="mt-2 flex items-center gap-3 border rounded-lg p-4 bg-muted/10">
                       <Avatar>
                         <AvatarImage
-                          src={selectedReport.reporter.avatar || "/placeholder.svg"}
+                          src={selectedReport.reporter.avatar}
                           alt={selectedReport.reporter.name}
                         />
                         <AvatarFallback>{selectedReport.reporter.initials}</AvatarFallback>
@@ -524,7 +466,7 @@ export function ReportManagement() {
                     <div className="mt-2 flex items-center gap-3 border rounded-lg p-4 bg-muted/10">
                       <Avatar>
                         <AvatarImage
-                          src={selectedReport.reported.avatar || "/placeholder.svg"}
+                          src={selectedReport.reported.avatar}
                           alt={selectedReport.reported.name}
                         />
                         <AvatarFallback>{selectedReport.reported.initials}</AvatarFallback>
@@ -536,26 +478,7 @@ export function ReportManagement() {
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-sm font-medium">Previous Reports</h3>
-                    <div className="border rounded-lg p-4 bg-muted/10">
-                      <p className="text-sm text-muted-foreground mt-2">
-                        This user has {selectedReport.reported.id === "U-7826" ? "2" : "0"} previous reports.
-                      </p>
-                      {selectedReport.reported.id === "U-7826" && (
-                        <div className="mt-2 space-y-2">
-                          <div className="text-xs border-l-2 border-primary pl-2 py-1">
-                            <p className="font-medium">Report #REP-1001</p>
-                            <p className="text-muted-foreground">April 28, 2023 - Inappropriate behavior</p>
-                          </div>
-                          <div className="text-xs border-l-2 border-primary pl-2 py-1">
-                            <p className="font-medium">Report #REP-1129</p>
-                            <p className="text-muted-foreground">May 5, 2023 - Harassment</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+
                 </div>
               </div>
 
@@ -625,7 +548,7 @@ export function ReportManagement() {
             <div className="flex items-center gap-4 py-4">
               <Avatar>
                 <AvatarImage
-                  src={selectedReport.reported.avatar || "/placeholder.svg"}
+                  src={selectedReport.reported.avatar}
                   alt={selectedReport.reported.name}
                 />
                 <AvatarFallback>{selectedReport.reported.initials}</AvatarFallback>
@@ -701,7 +624,7 @@ export function ReportManagement() {
               <div className="flex items-center gap-4 mb-4">
                 <Avatar>
                   <AvatarImage
-                    src={selectedReport.reported.avatar || "/placeholder.svg"}
+                    src={selectedReport.reported.avatar}
                     alt={selectedReport.reported.name}
                   />
                   <AvatarFallback>{selectedReport.reported.initials}</AvatarFallback>

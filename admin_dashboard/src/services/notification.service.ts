@@ -178,43 +178,6 @@ export class NotificationService {
     }
   }
 
-  // Get notification statistics (mock data since backend may not have this)
-  async getNotificationStats(): Promise<ApiResponse<NotificationStats>> {
-    try {
-      // Try to get real data first
-      const unreadResponse = await this.getUnreadCount();
-      const unreadCount = unreadResponse.success ? unreadResponse.data || 0 : 0;
-
-      // Mock data for other stats since backend doesn't have statistics endpoint
-      const stats: NotificationStats = {
-        totalNotifications: 5420,
-        unreadNotifications: unreadCount,
-        readNotifications: 5420 - unreadCount,
-        todayNotifications: 89,
-        byType: {
-          MATCH: 1200,
-          MESSAGE: 2300,
-          LIKE: 1500,
-          VIEW: 300,
-          SYSTEM: 100,
-          MODERATION: 20,
-        },
-      };
-
-      return {
-        success: true,
-        data: stats,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch notification stats",
-      };
-    }
-  }
 }
 
 export const notificationService = new NotificationService();

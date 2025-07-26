@@ -88,7 +88,7 @@ export class ProfileService {
   // Get current admin's profile
   async getMyProfile(): Promise<ApiResponse<Profile>> {
     try {
-      return await apiClient.get<Profile>(API_ENDPOINTS.PROFILES.GET_ME);
+      return await apiClient.get<Profile>(API_ENDPOINTS.AUTH.PROFILE);
     } catch (error) {
       return {
         success: false,
@@ -104,7 +104,7 @@ export class ProfileService {
   ): Promise<ApiResponse<Profile>> {
     try {
       return await apiClient.patch<Profile>(
-        API_ENDPOINTS.PROFILES.UPDATE,
+        API_ENDPOINTS.AUTH.PROFILE,
         profileData
       );
     } catch (error) {
