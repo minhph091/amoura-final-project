@@ -18,9 +18,11 @@ jobs:
 
     - name: Build
       working-directory: ./backend
-      run: ./mvnw clean package -DskipTests
+      run: |
+        chmod +x ./mvnw 
+        ./mvnw clean package -DskipTests
 
-    - name: Deploy
+    - name: Stop Service
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -29,19 +31,23 @@ jobs:
         script: |
           sudo systemctl stop amoura
         
-    - uses: appleboy/scp-action@v0.1.7
+    - name: Copy JAR file
+      uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "./backend/target/amoura-0.0.1-SNAPSHOT.jar"
-        target: "${{ secrets.DEPLOY_PATH }}/amoura.jar"
-        strip_components: 3
+        target: "${{ secrets.DEPLOY_PATH }}/"
+        overwrite: true
 
-    - name: Start
+    - name: Start Service
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: sudo systemctl start amoura
+        script: |
+          cd ${{ secrets.DEPLOY_PATH }}
+          mv amoura-0.0.1-SNAPSHOT.jar amoura.jar
+          sudo systemctl start amoura 
