@@ -48,7 +48,7 @@ jobs:
         SPRING_DATASOURCE_PASSWORD: test_password
       run: |
         chmod +x ./mvnw 
-        ./mvnw clean test -B -ntp
+        ./mvnw clean test
 
   build-and-deploy:
     runs-on: ubuntu-latest
