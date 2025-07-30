@@ -61,15 +61,19 @@ jobs:
         done
         echo "App failed to start" && exit 1
 
-    - name: Run Rest Assured Tests
+    - name: Run All Tests (unit + integration + e2e)
       working-directory: ./backend
+      env:
+        SPRING_PROFILES_ACTIVE: test
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/amoura_test
+        SPRING_DATASOURCE_USERNAME: test_user
+        SPRING_DATASOURCE_PASSWORD: test_password
       run: |
-        ./mvnw -Dtest=*RestAssured* test
+        ./mvnw test
 
     - name: Print server logs if failed
       if: failure()
       run: cat backend/server.log
-
 
   build-and-deploy:
     runs-on: ubuntu-latest
