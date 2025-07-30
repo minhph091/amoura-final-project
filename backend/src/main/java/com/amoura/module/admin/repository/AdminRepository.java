@@ -1,5 +1,6 @@
 package com.amoura.module.admin.repository;
 
+import com.amoura.module.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface AdminRepository extends JpaRepository<Object, Long> {
+public interface AdminRepository extends JpaRepository<User, Long> {
     
     // User Statistics
     @Query(value = "SELECT COUNT(*) FROM users", nativeQuery = true)
