@@ -37,7 +37,7 @@ public class AuthControllerTests {
                 .contentType("application/json")
                 .body(body)
                 .when()
-                .post("/api/auth/login");
+                .post("/auth/login");
 
         Assertions.assertEquals(200, response.getStatusCode(), "Sai mã trạng thái");
         Assertions.assertNotNull(response.jsonPath().getString("accessToken"), "accessToken không được null");
@@ -57,7 +57,7 @@ public class AuthControllerTests {
                 .contentType("application/json")
                 .body(body)
                 .when()
-                .post("/api/auth/login");
+                .post("/auth/login");
 
         Assertions.assertEquals(400, response.getStatusCode(), "API phải trả về 400 khi thiếu email");
         Assertions.assertEquals("EMAIL_REQUIRED", response.jsonPath().getString("errorCode"));
@@ -79,7 +79,7 @@ public class AuthControllerTests {
                 .contentType("application/json")
                 .body(body)
                 .when()
-                .post("/api/auth/login");
+                .post("/auth/login");
 
 
         Assertions.assertEquals(400, response.getStatusCode(), "Sai định dạng email phải trả về 400");
@@ -100,7 +100,7 @@ public class AuthControllerTests {
                 .contentType("application/json")
                 .body(body)
                 .when()
-                .post("/api/auth/login");
+                .post("/auth/login");
 
 
         Assertions.assertEquals(400, response.getStatusCode(), "Thiếu mật khẩu phải trả về 400");
