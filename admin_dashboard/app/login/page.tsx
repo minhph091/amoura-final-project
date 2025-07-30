@@ -13,8 +13,10 @@ import { authService } from "@/src/services/auth.service";
 import type { LoginRequest } from "@/src/types/auth.types";
 import { useLanguage } from "@/src/contexts/LanguageContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ForgotPasswordDialog } from "./ForgotPasswordDialog";
 
 export default function LoginPage() {
+  const [forgotOpen, setForgotOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -63,7 +65,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-purple-600 relative overflow-hidden">
+    <>
+      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} />
+      <div className="min-h-screen flex bg-purple-600 relative overflow-hidden">
       {/* Left Side - Welcome Section with Fluid Background */}
       <div className="hidden lg:flex lg:w-1/2 bg-fluid-gradient relative">
         {/* Animated floating shapes */}
@@ -185,6 +189,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                  onClick={() => setForgotOpen(true)}
                 >
                   Forgot password?
                 </button>
@@ -207,6 +212,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

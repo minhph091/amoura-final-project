@@ -14,7 +14,7 @@ export interface Moderator {
 }
 
 export type ModeratorStatus = "active" | "disabled" | "suspended";
-export type ModeratorRole = "moderator" | "senior_moderator" | "admin";
+export type ModeratorRole = "moderator" | "admin";
 
 export interface ModeratorPermission {
   id: string;

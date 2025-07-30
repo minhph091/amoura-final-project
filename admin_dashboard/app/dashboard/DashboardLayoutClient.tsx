@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { Header } from "@/components/header";
-import { DashboardFooter } from "@/components/ui/DashboardFooter";
+// Removed DashboardFooter import
 import { ClientOnly } from "@/components/ClientOnly";
 import { authService } from "@/src/services/auth.service";
 
@@ -119,8 +119,7 @@ export default function DashboardLayoutClient({
             <main className="flex-1 p-6 pt-20 overflow-y-auto">{children}</main>
           </div>
         </div>
-        {/* Full width footer */}
-        <DashboardFooter />
+        {/* Footer is now handled globally in app/layout.tsx */}
       </div>
     </ClientOnly>
   );

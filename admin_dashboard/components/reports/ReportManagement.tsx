@@ -46,63 +46,71 @@ interface Report {
 
 
 export function ReportManagement() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
-  const [reportDetailsOpen, setReportDetailsOpen] = useState(false)
-  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
-  const [resolveDialogOpen, setResolveDialogOpen] = useState(false)
-  const [dismissDialogOpen, setDismissDialogOpen] = useState(false)
-  const [visibleReports, setVisibleReports] = useState<Report[]>([])
-  const [activeTab, setActiveTab] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [reportDetailsOpen, setReportDetailsOpen] = useState(false);
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
+  const [dismissDialogOpen, setDismissDialogOpen] = useState(false);
+  const [visibleReports, setVisibleReports] = useState<Report[]>([]);
+  const [activeTab, setActiveTab] = useState("all");
+  const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    async function fetchReports() {
-      try {
-        const res = await reportService.getReports({ status: statusFilter === "all" ? undefined : statusFilter });
-        if (res.success && res.data) setVisibleReports(res.data.map((r: any) => ({
-          id: r.id.toString(),
-          reporter: {
-            id: r.reporterId?.toString() || "",
-            name: r.reporterName || "Unknown",
-            avatar: r.reporterAvatar || "",
-            initials: r.reporterInitials || "?"
-          },
-          reported: {
-            id: r.reportedUserId?.toString() || "",
-            name: r.reportedUserName || "Unknown",
-            avatar: r.reportedUserAvatar || "",
-            initials: r.reportedUserInitials || "?"
-          },
-          type: r.type,
-          description: r.reason,
-          status: r.status,
-          date: r.createdAt,
-          assignedTo: r.resolvedBy ? r.resolvedBy.toString() : undefined
-        })));
-        else setVisibleReports([]);
-      } catch {
-        setVisibleReports([]);
-      }
-    }
-    fetchReports();
-  }, [statusFilter]);
+    let mounted = true;
+    setLoading(true);
+    reportService.getReports({ status: statusFilter === "all" ? undefined : statusFilter })
+      .then((res) => {
+        if (!mounted) return;
+        if (res.success && res.data) {
+          setVisibleReports(res.data.map((r: any) => ({
+            id: r.id.toString(),
+            reporter: {
+              id: r.reporterId?.toString() || "",
+              name: r.reporterName || "Unknown",
+              avatar: r.reporterAvatar || "",
+              initials: r.reporterInitials || "?"
+            },
+            reported: {
+              id: r.reportedUserId?.toString() || "",
+              name: r.reportedUserName || "Unknown",
+              avatar: r.reportedUserAvatar || "",
+              initials: r.reportedUserInitials || "?"
+            },
+            type: r.type,
+            description: r.reason,
+            status: r.status,
+            date: r.createdAt,
+            assignedTo: r.resolvedBy ? r.resolvedBy.toString() : undefined
+          })));
+        } else {
+          setVisibleReports([]);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (mounted) {
+          setVisibleReports([]);
+          setLoading(false);
+        }
+      });
+    return () => { mounted = false; };
+  }, [statusFilter, refreshKey]);
 
   const filteredReports = visibleReports.filter((report) => {
     const matchesSearch =
       report.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.reporter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.reported.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.type.toLowerCase().includes(searchTerm.toLowerCase())
+      report.type.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
 
-    const matchesStatus = statusFilter === "all" || report.status === statusFilter
-
-    return matchesSearch && matchesStatus
-  })
-
-  const pendingReports = filteredReports.filter((report) => report.status === "pending")
-  const resolvedReports = filteredReports.filter((report) => report.status === "resolved")
-  const dismissedReports = filteredReports.filter((report) => report.status === "dismissed")
+  const pendingReports = filteredReports.filter((report) => report.status === "pending");
+  const resolvedReports = filteredReports.filter((report) => report.status === "resolved");
+  const dismissedReports = filteredReports.filter((report) => report.status === "dismissed");
 
   const handleViewReport = (report: Report) => {
     setSelectedReport(report)
@@ -126,50 +134,63 @@ export function ReportManagement() {
 
   const confirmSuspend = async () => {
     if (!selectedReport) return;
+    setLoading(true);
     try {
-      await userService.suspendUser(selectedReport.reported.id, "Suspended by admin via report");
+      await userService.suspendUser(selectedReport.reported.id);
       setSuspendDialogOpen(false);
-      // Optionally, refresh reports
+      setSelectedReport(null);
+      setRefreshKey((k) => k + 1);
     } catch {
       setSuspendDialogOpen(false);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const confirmResolve = async () => {
     if (!selectedReport) return;
+    setLoading(true);
     try {
       await reportService.resolveReport(selectedReport.id);
       setResolveDialogOpen(false);
-      // Optionally, refresh reports
+      setSelectedReport(null);
+      setRefreshKey((k) => k + 1);
     } catch {
       setResolveDialogOpen(false);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const confirmDismiss = async () => {
     if (!selectedReport) return;
+    setLoading(true);
     try {
       await reportService.rejectReport(selectedReport.id);
       setDismissDialogOpen(false);
-      // Optionally, refresh reports
+      setSelectedReport(null);
+      setRefreshKey((k) => k + 1);
     } catch {
       setDismissDialogOpen(false);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const renderReportsList = (reports: Report[]) => {
     if (reports.length === 0) {
       return (
         <div className="flex items-center justify-center h-40 bg-muted/10 rounded-lg">
-          <p className="text-muted-foreground">No reports found matching your criteria.</p>
+          <p className="text-muted-foreground">No data</p>
         </div>
-      )
+      );
     }
-
+    // ...existing code for table rendering...
     return (
       <div className="bg-card rounded-lg border shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
+            {/* ...existing code for table head and body... */}
             <thead>
               <tr className="border-b bg-muted/40">
                 <th className="text-left py-4 px-4 font-bold text-base">Report ID</th>
@@ -281,8 +302,8 @@ export function ReportManagement() {
           </table>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -351,32 +372,32 @@ export function ReportManagement() {
             </TabsList>
 
             <TabsContent value="all" className="m-0 space-y-4">
-              {visibleReports.length === 0 ? (
-                <div className="py-10 text-center text-muted-foreground">Loading reports...</div>
+              {loading ? (
+                <div className="py-10 text-center text-muted-foreground">Loading...</div>
               ) : (
                 renderReportsList(filteredReports)
               )}
             </TabsContent>
 
             <TabsContent value="pending" className="m-0 space-y-4">
-              {visibleReports.length === 0 ? (
-                <div className="py-10 text-center text-muted-foreground">Loading reports...</div>
+              {loading ? (
+                <div className="py-10 text-center text-muted-foreground">Loading...</div>
               ) : (
                 renderReportsList(pendingReports)
               )}
             </TabsContent>
 
             <TabsContent value="resolved" className="m-0 space-y-4">
-              {visibleReports.length === 0 ? (
-                <div className="py-10 text-center text-muted-foreground">Loading reports...</div>
+              {loading ? (
+                <div className="py-10 text-center text-muted-foreground">Loading...</div>
               ) : (
                 renderReportsList(resolvedReports)
               )}
             </TabsContent>
 
             <TabsContent value="dismissed" className="m-0 space-y-4">
-              {visibleReports.length === 0 ? (
-                <div className="py-10 text-center text-muted-foreground">Loading reports...</div>
+              {loading ? (
+                <div className="py-10 text-center text-muted-foreground">Loading...</div>
               ) : (
                 renderReportsList(dismissedReports)
               )}

@@ -22,28 +22,37 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 );
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("vi");
+  const [language, setLanguage] = useState<Language | undefined>(undefined);
 
   // Load language from localStorage on mount
   useEffect(() => {
     const savedLanguage = localStorage.getItem("adminLanguage") as Language;
     if (savedLanguage && (savedLanguage === "vi" || savedLanguage === "en")) {
       setLanguage(savedLanguage);
+    } else {
+      setLanguage("vi"); // fallback default
     }
   }, []);
 
   // Save language to localStorage when changed
   useEffect(() => {
-    localStorage.setItem("adminLanguage", language);
+    if (language) {
+      localStorage.setItem("adminLanguage", language);
+    }
   }, [language]);
 
-  const t = dashboardTranslations[language];
+  const t = dashboardTranslations[language || "vi"];
 
   const value: LanguageContextType = {
-    language,
+    language: language || "vi",
     setLanguage,
     t,
   };
+
+  if (!language) {
+    // Avoid rendering children until language is loaded
+    return null;
+  }
 
   return (
     <LanguageContext.Provider value={value}>

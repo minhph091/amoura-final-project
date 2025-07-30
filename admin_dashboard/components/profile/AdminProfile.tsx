@@ -1,345 +1,194 @@
 "use client";
 
-import type React from "react";
-import { profileService } from "@/src/services/profile.service";
-import { apiClient } from "@/src/services/api.service";
-
-import { useState, useEffect, useRef } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import {
-  CalendarDays,
-  Mail,
-  MapPin,
-  Phone,
-  Shield,
-  Upload,
-} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { authService } from "@/src/services/auth.service";
+import type { User } from "@/src/types/user.types";
+import { API_ENDPOINTS } from "@/src/constants/api.constants";
+import { apiClient } from "@/src/services/api.service";
 
 export function AdminProfile() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [avatarSrc, setAvatarSrc] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [edit, setEdit] = useState(false);
+  // Only allow editing fields present in UpdateUserRequest
+  const [form, setForm] = useState({
+    username: "",
+    firstName: "",
+    lastName: "",
+    phoneNumber: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [pw, setPw] = useState({ current: "", new: "", confirm: "" });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      try {
-        const response = await profileService.getMyProfile();
-        if (response.success && response.data) {
-          setUser(response.data);
-          setAvatarSrc(
-            response.data.photos?.find(
-              (p: { type: string; url: string }) => p.type === "AVATAR"
-            )?.url || "/placeholder-user.jpg"
-          );
-        } else {
-          toast({
-            title: "Error",
-            description: response.error || "Failed to fetch profile info.",
-          });
-        }
-      } catch (err) {
-        toast({ title: "Error", description: "Failed to fetch profile info." });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProfile();
+    const u = authService.getCurrentUser();
+    setUser(u);
+    if (u) {
+      setForm({
+        username: u.username || "",
+        firstName: u.firstName || "",
+        lastName: u.lastName || "",
+        phoneNumber: u.phoneNumber || ""
+      });
+    }
   }, []);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
   const handleSave = async () => {
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const response = await profileService.updateProfile({
-        firstName: user?.firstName,
-        lastName: user?.lastName,
-        jobTitle: user?.jobTitle,
-        bio: user?.bio,
-      });
-      if (response.success) {
-        toast({
-          title: "Profile updated",
-          description: "Your profile has been updated successfully.",
-        });
+      // Only send fields allowed by UpdateUserRequest
+      const updatePayload = {
+        username: form.username,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        phoneNumber: form.phoneNumber
+      };
+      const res = await apiClient.patch(API_ENDPOINTS.USER.PATCH, updatePayload);
+      if (res.success) {
+        toast({ title: "Profile updated", description: "Your profile has been updated." });
+        setUser({ ...user, ...updatePayload } as User);
+        setEdit(false);
       } else {
-        toast({
-          title: "Error",
-          description: response.error || "Failed to update profile.",
-        });
+        toast({ title: "Error", description: res.error || "Update failed" });
       }
     } catch (err) {
-      toast({ title: "Error", description: "Failed to update profile." });
-    } finally {
-      setIsLoading(false);
+      toast({ title: "Error", description: "Update failed" });
     }
+    setLoading(false);
   };
 
   const handlePasswordChange = async () => {
-    setIsLoading(true);
+    if (!pw.current || !pw.new || !pw.confirm) {
+      toast({ title: "Error", description: "Please fill all password fields." });
+      return;
+    }
+    if (pw.new !== pw.confirm) {
+      toast({ title: "Error", description: "New passwords do not match." });
+      return;
+    }
+    setLoading(true);
     try {
-      const currentPassword = (
-        document.getElementById("current-password") as HTMLInputElement
-      )?.value;
-      const newPassword = (
-        document.getElementById("new-password") as HTMLInputElement
-      )?.value;
-      const confirmPassword = (
-        document.getElementById("confirm-password") as HTMLInputElement
-      )?.value;
-      if (newPassword !== confirmPassword) {
-        toast({ title: "Error", description: "New passwords do not match." });
-        setIsLoading(false);
-        return;
-      }
-      // Use apiClient directly for password change (or create a service if needed)
-      const response = await apiClient.post("/user/change-password", {
-        currentPassword,
-        newPassword,
+      const res = await apiClient.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+        currentPassword: pw.current,
+        newPassword: pw.new,
       });
-      if (response.success) {
-        toast({
-          title: "Password updated",
-          description: "Your password has been changed successfully.",
-        });
+      if (res.success) {
+        toast({ title: "Password changed", description: "Password updated successfully." });
+        setPw({ current: "", new: "", confirm: "" });
       } else {
-        toast({
-          title: "Error",
-          description: response.error || "Failed to change password.",
-        });
+        toast({ title: "Error", description: res.error || "Change password failed" });
       }
     } catch (err) {
-      toast({ title: "Error", description: "Failed to change password." });
-    } finally {
-      setIsLoading(false);
+      toast({ title: "Error", description: "Change password failed" });
     }
+    setLoading(false);
   };
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
+  if (!user) return <div>Loading...</div>;
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setAvatarSrc(result);
-        // Optionally, call backend to update avatar
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  if (!user) {
-    return <div>No user data found.</div>;
-  }
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="relative">
-          <div className="absolute top-6 right-6">
-            <Badge className="bg-primary">{user.roleName === "ADMIN" ? "Admin" : user.roleName === "MODERATOR" ? "Moderator" : user.roleName}</Badge>
-          </div>
-          <div className="flex flex-col items-center sm:flex-row sm:items-start sm:gap-6">
-            <div className="relative">
-              <Avatar
-                className="h-24 w-24 cursor-pointer"
-                onClick={handleAvatarClick}
-              >
-                <AvatarImage
-                  src={avatarSrc || "/placeholder-user.jpg"}
-                  alt={user.firstName || "Admin User"}
-                />
-                <AvatarFallback>AD</AvatarFallback>
-              </Avatar>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileChange}
-                placeholder="Upload avatar"
-                title="Upload avatar"
-              />
-              <Button
-                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full flex items-center justify-center border"
-                onClick={handleAvatarClick}
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="mt-4 sm:mt-0 text-center sm:text-left">
-              <CardTitle className="text-xl">
-                {user.firstName} {user.lastName}
-              </CardTitle>
-              <CardDescription>
-                {user.jobTitle || (user.roleName === "ADMIN" ? "Administrator" : user.roleName === "MODERATOR" ? "Moderator" : "")}
-              </CardDescription>
-              <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Mail className="mr-1 h-4 w-4" />
-                  {user.email}
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Phone className="mr-1 h-4 w-4" />
-                  {user.phone}
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <MapPin className="mr-1 h-4 w-4" />
-                  {user.city}, {user.state}
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <CalendarDays className="mr-1 h-4 w-4" />
-                  Joined {user.joinedDate || "N/A"}
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Shield className="mr-1 h-4 w-4" />
-                  {user.accessLevel || "Full Access"}
-                </div>
-              </div>
-            </div>
-          </div>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>My Profile</CardTitle>
+          <Badge>{user.roleName}</Badge>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="personal" className="mt-6">
-            <TabsList className="mb-4">
-              <TabsTrigger value="personal">Personal Information</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
-              <TabsTrigger value="activity">Activity Log</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="personal" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="first-name">First Name</Label>
-                  <Input
-                    id="first-name"
-                    value={user.firstName || ""}
-                    readOnly
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last-name">Last Name</Label>
-                  <Input id="last-name" value={user.lastName || ""} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={user.email || ""}
-                    readOnly
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={user.phone || ""}
-                    readOnly
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="job-title">Job Title</Label>
-                  <Input id="job-title" value={user.jobTitle || ""} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
-                  <Input
-                    id="department"
-                    value={user.department || ""}
-                    readOnly
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" value={user.address || ""} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" value={user.city || ""} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">State/Province</Label>
-                  <Input id="state" value={user.state || ""} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zip">Zip/Postal Code</Label>
-                  <Input id="zip" value={user.zip || ""} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Input id="country" value={user.country || ""} readOnly />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    value={user.bio || ""}
-                    readOnly
-                    className="min-h-[100px]"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="security" className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Change Password</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
-                  <Input id="current-password" type="password" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input id="new-password" type="password" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input id="confirm-password" type="password" />
-                </div>
-                <div className="flex justify-end">
-                  <Button onClick={handlePasswordChange} disabled={isLoading}>
-                    {isLoading ? "Updating..." : "Change Password"}
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="activity" className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Recent Activity</h3>
-                <div className="space-y-4">
-                  <div className="border-l-2 border-primary pl-4 pb-4">
-                    <p className="font-medium">Updated user settings</p>
-                    <p className="text-sm text-muted-foreground">
-                      Today at 10:30 AM
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+          <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label>Email</Label>
+              <Input value={user.email || ""} readOnly disabled />
+            </div>
+            <div>
+              <Label>Username</Label>
+              <Input name="username" value={form.username} onChange={handleChange} readOnly={!edit} />
+            </div>
+            <div>
+              <Label>First Name</Label>
+              <Input name="firstName" value={form.firstName} onChange={handleChange} readOnly={!edit} />
+            </div>
+            <div>
+              <Label>Last Name</Label>
+              <Input name="lastName" value={form.lastName} onChange={handleChange} readOnly={!edit} />
+            </div>
+            <div>
+              <Label>Phone Number</Label>
+              <Input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} readOnly={!edit} />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Input value={user.status || ""} readOnly disabled />
+            </div>
+            <div>
+              <Label>Role</Label>
+              <Input value={user.roleName || ""} readOnly disabled />
+            </div>
+            <div>
+              <Label>Last Login</Label>
+              <Input value={user.lastLogin || ""} readOnly disabled />
+            </div>
+            <div>
+              <Label>Created At</Label>
+              <Input value={user.createdAt || ""} readOnly disabled />
+            </div>
+            <div>
+              <Label>Updated At</Label>
+              <Input value={user.updatedAt || ""} readOnly disabled />
+            </div>
+          </form>
+          <div className="flex gap-2 mt-6">
+            {!edit ? (
+              <Button onClick={() => setEdit(true)} type="button">Edit</Button>
+            ) : (
+              <>
+                <Button onClick={handleSave} type="button" disabled={loading}>Save</Button>
+                <Button onClick={() => {
+                  setEdit(false);
+                  if (user) {
+                    setForm({
+                      username: user.username || "",
+                      firstName: user.firstName || "",
+                      lastName: user.lastName || "",
+                      phoneNumber: user.phoneNumber || ""
+                    });
+                  }
+                }} type="button" variant="outline">Cancel</Button>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label>Current Password</Label>
+              <Input type="password" value={pw.current} onChange={e => setPw({ ...pw, current: e.target.value })} />
+            </div>
+            <div>
+              <Label>New Password</Label>
+              <Input type="password" value={pw.new} onChange={e => setPw({ ...pw, new: e.target.value })} />
+            </div>
+            <div>
+              <Label>Confirm New Password</Label>
+              <Input type="password" value={pw.confirm} onChange={e => setPw({ ...pw, confirm: e.target.value })} />
+            </div>
+          </form>
+          <div className="flex gap-2 mt-6">
+            <Button onClick={handlePasswordChange} type="button" disabled={loading}>Change Password</Button>
+          </div>
         </CardContent>
       </Card>
     </div>

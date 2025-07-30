@@ -24,44 +24,31 @@ export class ModeratorService {
     filters?: ModeratorFilters
   ): Promise<PaginatedResponse<Moderator>> {
     try {
-      const params: Record<string, unknown> = {};
-      if (filters?.role) params.role = filters.role;
-      if (filters?.status) params.status = filters.status;
+      // Lấy tất cả user, lọc role MODERATOR (vì backend không có endpoint riêng cho moderator)
+      const userRes = await apiClient.get<Moderator[]>("/user/all");
+      let data = userRes.data || [];
+      // Lọc role MODERATOR
+      data = data.filter((u: any) => u.roleName === "MODERATOR");
+      // Áp dụng filter status nếu có
+      if (filters?.status) {
+        data = data.filter((u: any) => u.status === filters.status);
+      }
+      // Phân trang thủ công
       const page = filters?.page || 1;
       const limit = filters?.limit || 20;
-      if (filters?.page) params.page = filters.page;
-      if (filters?.limit) params.limit = filters.limit;
-      const response = await apiClient.get<Moderator[]>(
-        API_ENDPOINTS.ADMIN.MODERATORS,
-        params
-      );
-      const total = response.data ? response.data.length : 0;
+      const total = data.length;
       const totalPages = Math.ceil(total / limit);
-      if (response.success && response.data) {
-        return {
-          success: true,
-          data: response.data,
-          pagination: {
-            page,
-            limit,
-            total,
-            totalPages,
-            hasNext: page < totalPages,
-            hasPrev: page > 1,
-          },
-        };
-      }
+      const paged = data.slice((page - 1) * limit, page * limit);
       return {
-        success: false,
-        error: response.error || "Failed to fetch moderators",
-        data: [],
+        success: true,
+        data: paged,
         pagination: {
           page,
           limit,
-          total: 0,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
         },
       };
     } catch (error) {

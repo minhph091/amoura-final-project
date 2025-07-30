@@ -30,17 +30,22 @@ export default function Footer() {
         <div>
           <h3 className="font-semibold text-gray-800 mb-3">Quick Links</h3>
           <ul className="space-y-2 text-sm">
-            {isAdmin && (
-              <li>
-                <Link href="/dashboard" className="hover:text-pink-600">Dashboard</Link>
-              </li>
-            )}
+            <li>
+              <Link href="/dashboard" className="hover:text-pink-600">Dashboard</Link>
+            </li>
             <li>
               <Link href="/dashboard/users" className="hover:text-pink-600">Users</Link>
             </li>
-            <li>
-              <Link href="/dashboard/moderators" className="hover:text-pink-600">Moderators</Link>
-            </li>
+            {isAdmin && (
+              <>
+                <li>
+                  <Link href="/dashboard/moderators" className="hover:text-pink-600">Moderators</Link>
+                </li>
+                <li>
+                  <Link href="/add-account" className="hover:text-pink-600">Add Account</Link>
+                </li>
+              </>
+            )}
             <li>
               <Link href="/dashboard/settings" className="hover:text-pink-600">Settings</Link>
             </li>
@@ -64,10 +69,10 @@ export default function Footer() {
           <h3 className="font-semibold text-gray-800 mb-3">Legal</h3>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link href="/privacy" className="hover:text-pink-600">Data Protection</Link>
+              <Link href="/privacy" className="hover:text-pink-600">Privacy Policy</Link>
             </li>
             <li>
-              <Link href="/terms" className="hover:text-pink-600">Compliance</Link>
+              <Link href="/terms" className="hover:text-pink-600">Terms of Service</Link>
             </li>
           </ul>
         </div>

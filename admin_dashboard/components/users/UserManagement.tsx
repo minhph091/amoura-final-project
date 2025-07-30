@@ -34,23 +34,47 @@ export function UserManagement() {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
   const [visibleUsers, setVisibleUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  // Polling for realtime updates, but pause when any dialog is open
   useEffect(() => {
+    let isMounted = true;
+    let interval: NodeJS.Timeout | null = null;
     async function fetchUsers() {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await userService.getUsers()
-        if (res && Array.isArray(res.data)) {
-          setVisibleUsers(res.data)
-        } else {
-          setVisibleUsers([])
+        // Use real backend API for user list
+        const res = await userService.getUsers();
+        if (isMounted && res && res.data) {
+          setVisibleUsers(res.data);
+        } else if (isMounted) {
+          setVisibleUsers([]);
         }
       } catch {
-        setVisibleUsers([])
+        if (isMounted) setVisibleUsers([]);
       }
-      setLoading(false)
+      if (isMounted) setLoading(false);
     }
-    fetchUsers()
-  }, [])
+
+    function isAnyDialogOpen() {
+      return userDetailsOpen || suspendDialogOpen || restoreDialogOpen;
+    }
+
+    function startPolling() {
+      if (interval) clearInterval(interval);
+      interval = setInterval(() => {
+        if (!isAnyDialogOpen()) {
+          fetchUsers();
+        }
+      }, 5000);
+    }
+
+    fetchUsers();
+    startPolling();
+
+    return () => {
+      isMounted = false;
+      if (interval) clearInterval(interval);
+    };
+  }, [userDetailsOpen, suspendDialogOpen, restoreDialogOpen]);
 
   const filteredUsers = visibleUsers.filter((user) => {
     const fullName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim();
@@ -84,13 +108,16 @@ export function UserManagement() {
   const confirmSuspend = () => {
     // In a real app, this would call an API to suspend the user
     setSuspendDialogOpen(false)
-    // Show success message or update UI
+    // Refresh user list after suspend
+    // (Assume fetchUsers is available in closure, or trigger a state update to force polling)
+    window.dispatchEvent(new Event('users-updated'));
   }
 
   const confirmRestore = () => {
     // In a real app, this would call an API to restore the user
     setRestoreDialogOpen(false)
-    // Show success message or update UI
+    // Refresh user list after restore
+    window.dispatchEvent(new Event('users-updated'));
   }
 
   return (
@@ -142,15 +169,14 @@ export function UserManagement() {
                     <tr className="border-b bg-muted/40">
                       <th className="text-left py-4 px-4 font-bold text-base">User</th>
                       <th className="text-left py-4 px-4 font-bold text-base">Status</th>
-                      <th className="text-left py-4 px-4 font-bold text-base hidden md:table-cell">Join Date</th>
-                      <th className="text-left py-4 px-4 font-bold text-base hidden lg:table-cell">Location</th>
+                      <th className="text-left py-4 px-4 font-bold text-base">Created At</th>
                       <th className="text-right py-4 px-4 font-bold text-base">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={5} className="py-10 text-center text-muted-foreground">
+                        <td colSpan={4} className="py-10 text-center text-muted-foreground">
                           Loading users...
                         </td>
                       </tr>
@@ -159,13 +185,6 @@ export function UserManagement() {
                         <tr key={user.id} className="border-b animate-fade-in">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
-                              <Avatar>
-                                {user.avatar ? (
-                                  <AvatarImage src={user.avatar} alt={user.fullName || user.email} />
-                                ) : (
-                                  <AvatarFallback>{user.fullName?.[0] || user.email?.[0] || ''}</AvatarFallback>
-                                )}
-                              </Avatar>
                               <div>
                                 <div className="font-medium">{user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}</div>
                                 <div className="text-sm text-muted-foreground">{user.email}</div>
@@ -192,8 +211,7 @@ export function UserManagement() {
                               {user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1).toLowerCase() : ''}
                             </Badge>
                           </td>
-                          <td className="py-3 px-4 hidden md:table-cell">{user.joinDate || user.createdAt}</td>
-                          <td className="py-3 px-4 hidden lg:table-cell">{user.location || ''}</td>
+                          <td className="py-3 px-4">{user.createdAt}</td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="icon" onClick={() => handleViewUser(user)}>
@@ -250,7 +268,7 @@ export function UserManagement() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="py-10 text-center text-muted-foreground">
+                        <td colSpan={4} className="py-10 text-center text-muted-foreground">
                           No users found matching your criteria.
                         </td>
                       </tr>
@@ -293,119 +311,54 @@ export function UserManagement() {
           </DialogHeader>
 
           {selectedUser && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4">
-              <div className="md:col-span-1 flex flex-col items-center">
-                <Avatar className="h-24 w-24 mb-4">
-                  {selectedUser.avatar ? (
-                    <AvatarImage src={selectedUser.avatar} alt={selectedUser.fullName || selectedUser.email} />
-                  ) : (
-                    <AvatarFallback>{selectedUser.fullName?.[0] || selectedUser.email?.[0] || ''}</AvatarFallback>
-                  )}
-                </Avatar>
-                <h3 className="text-lg font-semibold">{selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() || selectedUser.email}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{selectedUser.email}</p>
-                <Badge
-                  variant={
-                    selectedUser.status === "ACTIVE"
-                      ? "default"
-                      : selectedUser.status === "SUSPENDED"
-                        ? "destructive"
-                        : "outline"
-                  }
-                  className={
-                    selectedUser.status === "ACTIVE"
-                      ? "bg-green-500"
-                      : selectedUser.status === "PENDING"
-                        ? "border-yellow-500 text-yellow-500"
-                        : ""
-                  }
-                >
-                  {selectedUser.status ? selectedUser.status.charAt(0).toUpperCase() + selectedUser.status.slice(1).toLowerCase() : ''}
-                </Badge>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+              <div>
+                <p className="text-sm font-medium">User ID</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.id}</p>
               </div>
-
-              <div className="md:col-span-2">
-                <Tabs defaultValue="info">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="info">Basic Info</TabsTrigger>
-                    <TabsTrigger value="activity">Activity</TabsTrigger>
-                    <TabsTrigger value="reports">Reports</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="info" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium">User ID</p>
-                        <p className="text-sm text-muted-foreground">{selectedUser.id}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Join Date</p>
-                        <p className="text-sm text-muted-foreground">{selectedUser.joinDate || selectedUser.createdAt}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Age</p>
-                        <p className="text-sm text-muted-foreground">{selectedUser.age || ''}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Gender</p>
-                        <p className="text-sm text-muted-foreground">{selectedUser.gender || ''}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Location</p>
-                        <p className="text-sm text-muted-foreground">{selectedUser.location || ''}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Last Active</p>
-                        <p className="text-sm text-muted-foreground">{selectedUser.lastActive || ''}</p>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="activity">
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-medium">Total Matches</p>
-                        <p className="text-sm text-muted-foreground">{selectedUser.matches || ''}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Last Login</p>
-                        <p className="text-sm text-muted-foreground">{selectedUser.lastActive || ''}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Account Status</p>
-                        <Badge
-                          variant={
-                            selectedUser.status === "ACTIVE"
-                              ? "default"
-                              : selectedUser.status === "SUSPENDED"
-                                ? "destructive"
-                                : "outline"
-                          }
-                          className={
-                            selectedUser.status === "ACTIVE"
-                              ? "bg-green-500"
-                              : selectedUser.status === "PENDING"
-                                ? "border-yellow-500 text-yellow-500"
-                                : ""
-                          }
-                        >
-                          {selectedUser.status ? selectedUser.status.charAt(0).toUpperCase() + selectedUser.status.slice(1).toLowerCase() : ''}
-                        </Badge>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="reports">
-                    {selectedUser.reports && selectedUser.reports > 0 ? (
-                      <div className="space-y-4">
-                        <p>This user has {selectedUser.reports} reports against them.</p>
-                        {/* List of reports would go here */}
-                      </div>
-                    ) : (
-                      <p>This user has no reports against them.</p>
-                    )}
-                  </TabsContent>
-                </Tabs>
+              <div>
+                <p className="text-sm font-medium">Username</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.username || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Email</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Phone Number</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.phoneNumber || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">First Name</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.firstName || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Last Name</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.lastName || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Full Name</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.fullName || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Role</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.roleName || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Status</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.status || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Last Login</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.lastLogin || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Created At</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.createdAt || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Updated At</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.updatedAt || ''}</p>
               </div>
             </div>
           )}
@@ -451,59 +404,13 @@ export function UserManagement() {
             </DialogDescription>
           </DialogHeader>
 
+
           {selectedUser && (
-            <div className="flex items-center gap-4 py-4">
-              <Avatar>
-                {selectedUser.avatar ? (
-                  <AvatarImage src={selectedUser.avatar} alt={selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() || selectedUser.email} />
-                ) : (
-                  <AvatarFallback>{selectedUser.initials || selectedUser.fullName?.[0] || selectedUser.email?.[0] || ''}</AvatarFallback>
-                )}
-              </Avatar>
-              <div>
-                <p className="font-medium">{selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() || selectedUser.email}</p>
-                <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-              </div>
+            <div className="py-4">
+              <p className="font-medium">{selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() || selectedUser.email}</p>
+              <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
             </div>
           )}
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="reason" className="text-sm font-medium">
-                Suspension Reason
-              </label>
-              <Select defaultValue="inappropriate">
-                <SelectTrigger id="reason">
-                  <SelectValue placeholder="Select a reason" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="inappropriate">Inappropriate Content</SelectItem>
-                  <SelectItem value="harassment">Harassment</SelectItem>
-                  <SelectItem value="fake">Fake Profile</SelectItem>
-                  <SelectItem value="spam">Spam</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label htmlFor="duration" className="text-sm font-medium">
-                Suspension Duration
-              </label>
-              <Select defaultValue="7">
-                <SelectTrigger id="duration">
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 Day</SelectItem>
-                  <SelectItem value="3">3 Days</SelectItem>
-                  <SelectItem value="7">7 Days</SelectItem>
-                  <SelectItem value="30">30 Days</SelectItem>
-                  <SelectItem value="permanent">Permanent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setSuspendDialogOpen(false)}>
@@ -527,18 +434,9 @@ export function UserManagement() {
           </DialogHeader>
 
           {selectedUser && (
-            <div className="flex items-center gap-4 py-4">
-              <Avatar>
-                {selectedUser.avatar ? (
-                  <AvatarImage src={selectedUser.avatar} alt={selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() || selectedUser.email} />
-                ) : (
-                  <AvatarFallback>{selectedUser.initials || selectedUser.fullName?.[0] || selectedUser.email?.[0] || ''}</AvatarFallback>
-                )}
-              </Avatar>
-              <div>
-                <p className="font-medium">{selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() || selectedUser.email}</p>
-                <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-              </div>
+            <div className="py-4">
+              <p className="font-medium">{selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() || selectedUser.email}</p>
+              <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
             </div>
           )}
 

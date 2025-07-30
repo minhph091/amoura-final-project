@@ -8,6 +8,17 @@ import type {
 import type { ApiResponse } from "../types/common.types";
 
 export class AuthService {
+
+  async registerInitiate(data: any): Promise<ApiResponse<any>> {
+    try {
+      return await apiClient.post(API_ENDPOINTS.AUTH.REGISTER_INITIATE, data);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to register",
+      };
+    }
+  }
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     try {
       const response = await apiClient.post<LoginResponse>(

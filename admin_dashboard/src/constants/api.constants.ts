@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
   },
   ADMIN: {
     DASHBOARD: "/admin/dashboard",
+    MODERATORS: "/admin/moderators",
   },
   PROFILE: {
     ME: "/profiles/me",

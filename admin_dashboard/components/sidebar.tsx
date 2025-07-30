@@ -15,7 +15,8 @@ import {
   X,
   Crown,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { HeaderSearchContext } from "./header";
 import { authService } from "@/src/services/auth.service";
 import { useMobile } from "@/hooks/use-mobile";
 import { AmouraLogo } from "@/components/ui/AmouraLogo";
@@ -68,11 +69,18 @@ export function Sidebar() {
   const user = authService.getCurrentUser();
   const isAdmin = user?.roleName === "ADMIN";
   const isModerator = user?.roleName === "MODERATOR";
+  const { search } = useContext(HeaderSearchContext);
   const sidebarItems = [
     {
       href: "/dashboard",
       title: t.dashboard,
       icon: <LayoutDashboard className="h-5 w-5" />,
+      visible: isAdmin,
+    },
+    {
+      href: "/add-account",
+      title: "Add Account",
+      icon: <Users className="h-5 w-5" />,
       visible: isAdmin,
     },
     {
@@ -149,42 +157,53 @@ export function Sidebar() {
         <div className="flex-grow flex flex-col h-[calc(100vh-80px)] relative">
           <ScrollArea className="flex-1">
             <nav className="grid gap-1 px-3 py-4">
-              {sidebarItems.filter((item) => item.visible).map((item) => (
-                <button
-                  key={item.href}
-                  onClick={() => router.push(item.href)}
-                  className={cn(
-                    "sidebar-item group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium font-primary transition-all duration-200 relative overflow-hidden w-full text-left",
-                    "hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-primary",
-                    pathname === item.href
-                      ? "bg-primary/20 text-primary shadow-lg shadow-primary/20"
-                      : "text-slate-700 dark:text-slate-300",
-                    isCollapsed ? "justify-center px-2" : ""
-                  )}
-                >
-                  {pathname === item.href && (
-                    <div className="absolute left-0 top-0 w-1 h-full bg-primary rounded-r-full shadow-lg shadow-primary/50" />
-                  )}
-                  <div
+              {sidebarItems.filter((item) => item.visible).map((item) => {
+                const isActive = pathname === item.href;
+                const isSearchMatch = search && item.title.toLowerCase().includes(search.toLowerCase());
+                return (
+                  <button
+                    key={item.href}
+                    onClick={() => router.push(item.href)}
                     className={cn(
-                      "flex items-center justify-center transition-transform group-hover:scale-110",
-                      pathname === item.href
-                        ? "text-primary"
-                        : "group-hover:text-primary"
+                      "sidebar-item group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium font-primary transition-all duration-200 relative overflow-hidden w-full text-left",
+                      "hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-primary",
+                      isActive
+                        ? "bg-primary/20 text-primary shadow-lg shadow-primary/20"
+                        : isSearchMatch
+                          ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700"
+                          : "text-slate-700 dark:text-slate-300",
+                      isCollapsed ? "justify-center px-2" : ""
                     )}
                   >
-                    {item.icon}
-                  </div>
-                  {!isCollapsed && (
-                    <span className="sidebar-text transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary">
-                      {item.title}
-                    </span>
-                  )}
-                  {pathname === item.href && !isCollapsed && (
-                    <div className="ml-auto w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  )}
-                </button>
-              ))}
+                    {isActive && (
+                      <div className="absolute left-0 top-0 w-1 h-full bg-primary rounded-r-full shadow-lg shadow-primary/50" />
+                    )}
+                    <div
+                      className={cn(
+                        "flex items-center justify-center transition-transform group-hover:scale-110",
+                        isActive
+                          ? "text-primary"
+                          : isSearchMatch
+                            ? "text-yellow-700 dark:text-yellow-300"
+                            : "group-hover:text-primary"
+                      )}
+                    >
+                      {item.icon}
+                    </div>
+                    {!isCollapsed && (
+                      <span className={cn(
+                        "sidebar-text transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary",
+                        isSearchMatch ? "font-bold" : ""
+                      )}>
+                        {item.title}
+                      </span>
+                    )}
+                    {isActive && !isCollapsed && (
+                      <div className="ml-auto w-2 h-2 bg-primary rounded-full animate-pulse" />
+                    )}
+                  </button>
+                );
+              })}
             </nav>
           </ScrollArea>
 
