@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -88,4 +89,11 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     ORDER BY m.createdAt DESC
     """)
     List<Message> findVisibleMessagesForUser(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId, Pageable pageable);
+    
+    // Admin Dashboard Statistics
+    @Query("SELECT COUNT(m) FROM Message m")
+    Long countTotalMessages();
+    
+    @Query("SELECT COUNT(m) FROM Message m WHERE DATE(m.createdAt) = :date")
+    Long countMessagesByDate(@Param("date") LocalDate date);
 } 
