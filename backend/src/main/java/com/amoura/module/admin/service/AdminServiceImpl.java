@@ -390,34 +390,7 @@ public class AdminServiceImpl implements AdminService {
         return getUserById(userId);
     }
     
-    @Override
-    @Transactional
-    public void suspendUser(Long userId) {
-        log.info("Suspending user with ID: {}", userId);
-        
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
-        
-        user.setStatus("SUSPEND");
-        userRepository.save(user);
-        
-        log.info("User {} has been suspended (status set to SUSPEND)", userId);
-    }
-    
-    @Override
-    @Transactional
-    public void restoreUser(Long userId) {
-        log.info("Restoring user with ID: {}", userId);
-        
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
-        
-        String oldStatus = user.getStatus();
-        user.setStatus("ACTIVE");
-        userRepository.save(user);
-        
-        log.info("User {} has been restored from {} to ACTIVE", userId, oldStatus);
-    }
+
     
     // Helper methods
     private int normalizeLimit(Integer limit) {

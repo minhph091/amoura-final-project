@@ -33,13 +33,5 @@ public interface AdminService {
      */
     UserManagementDTO updateUserStatus(Long userId, UserStatusUpdateRequest request);
     
-    /**
-     * Suspend user account (set status to SUSPEND)
-     */
-    void suspendUser(Long userId);
-    
-    /**
-     * Restore user account (set status to ACTIVE)
-     */
-    void restoreUser(Long userId);
+
 } 
