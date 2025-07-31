@@ -429,16 +429,42 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber((String) row[3])
                 .firstName((String) row[4])
                 .lastName((String) row[5])
-                .fullName(((String) row[4]) + " " + ((String) row[5]))
+                .fullName(buildFullName((String) row[4], (String) row[5]))
                 .roleName((String) row[6])
                 .status((String) row[7])
-                .lastLogin((LocalDateTime) row[8])
-                .createdAt((LocalDateTime) row[9])
-                .updatedAt((LocalDateTime) row[10])
+                .lastLogin(convertToLocalDateTime(row[8]))
+                .createdAt(convertToLocalDateTime(row[9]))
+                .updatedAt(convertToLocalDateTime(row[10]))
                 .hasProfile((Boolean) row[11])
                 .photoCount(((Number) row[12]).intValue())
                 .totalMatches(((Number) row[13]).longValue())
                 .totalMessages(((Number) row[14]).longValue())
                 .build();
+    }
+    
+    private LocalDateTime convertToLocalDateTime(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof java.sql.Timestamp) {
+            return ((java.sql.Timestamp) obj).toLocalDateTime();
+        }
+        if (obj instanceof LocalDateTime) {
+            return (LocalDateTime) obj;
+        }
+        return null;
+    }
+    
+    private String buildFullName(String firstName, String lastName) {
+        if (firstName == null && lastName == null) {
+            return "";
+        }
+        if (firstName == null) {
+            return lastName;
+        }
+        if (lastName == null) {
+            return firstName;
+        }
+        return firstName + " " + lastName;
     }
 } 
