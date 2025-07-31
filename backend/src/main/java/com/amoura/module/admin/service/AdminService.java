@@ -1,4 +1,4 @@
-package com.amoura.module.admin.service;
+gpackage com.amoura.module.admin.service;
 
 import com.amoura.module.admin.dto.AdminDashboardDTO;
 import com.amoura.module.admin.dto.CursorPaginationRequest;
