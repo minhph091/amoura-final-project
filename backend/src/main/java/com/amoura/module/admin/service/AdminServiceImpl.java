@@ -244,19 +244,34 @@ public class AdminServiceImpl implements AdminService {
         
         // Check if there are more items
         if (users.size() > limit) {
-            hasNext = "NEXT".equals(direction) || request.getCursor() == null;
-            hasPrevious = "PREVIOUS".equals(direction);
+            if ("NEXT".equals(direction) || request.getCursor() == null) {
+                hasNext = true;
+            }
+            if ("PREVIOUS".equals(direction)) {
+                hasPrevious = true;
+            }
             users = users.subList(0, limit);
         }
         
-        // Set cursors
+        // Set cursors BEFORE reversing data
         if (!users.isEmpty()) {
             if ("PREVIOUS".equals(direction)) {
-                // For previous direction, reverse the order to maintain correct sorting
+                // For PREVIOUS: query returns ASC order, so first item has smallest ID, last item has largest ID
+                previousCursor = ((Number) users.get(0)[0]).longValue();        // Smallest ID (for going further back)
+                nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue(); // Largest ID (for going forward)
+                
+                // Reverse to maintain DESC display order
                 java.util.Collections.reverse(users);
+            } else {
+                // For NEXT: query returns DESC order, so first item has largest ID, last item has smallest ID
+                previousCursor = ((Number) users.get(0)[0]).longValue();        // Largest ID (for going back)
+                nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue(); // Smallest ID (for going forward)
             }
-            nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue();
-            previousCursor = ((Number) users.get(0)[0]).longValue();
+            
+            // Set hasPrevious for non-PREVIOUS directions
+            if (!"PREVIOUS".equals(direction) && request.getCursor() != null) {
+                hasPrevious = true;
+            }
         }
         
         // Convert to DTOs
