@@ -80,4 +80,71 @@ public interface AdminRepository extends JpaRepository<User, Long> {
                    "(SELECT COUNT(*) FROM matches WHERE matched_at >= CURRENT_DATE - INTERVAL '7 days') as new_matches_week",
                    nativeQuery = true)
     List<Object[]> getSystemHealthMetrics();
+    
+    // User Management with Cursor Pagination
+    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
+                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
+                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
+                   "(SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id) as photo_count, " +
+                   "(SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id) as total_matches, " +
+                   "(SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id) as total_messages " +
+                   "FROM users u " +
+                   "LEFT JOIN roles r ON u.role_id = r.id " +
+                   "LEFT JOIN profiles p ON u.id = p.user_id " +
+                   "WHERE r.name != 'ADMIN' " +
+                   "ORDER BY u.id DESC",
+                   nativeQuery = true)
+    List<Object[]> findAllUsersForManagement(org.springframework.data.domain.Pageable pageable);
+    
+    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
+                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
+                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
+                   "(SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id) as photo_count, " +
+                   "(SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id) as total_matches, " +
+                   "(SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id) as total_messages " +
+                   "FROM users u " +
+                   "LEFT JOIN roles r ON u.role_id = r.id " +
+                   "LEFT JOIN profiles p ON u.id = p.user_id " +
+                   "WHERE r.name != 'ADMIN' AND u.id < :cursor " +
+                   "ORDER BY u.id DESC",
+                   nativeQuery = true)
+    List<Object[]> findUsersForManagementWithCursorNext(@Param("cursor") Long cursor, org.springframework.data.domain.Pageable pageable);
+    
+    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
+                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
+                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
+                   "(SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id) as photo_count, " +
+                   "(SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id) as total_matches, " +
+                   "(SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id) as total_messages " +
+                   "FROM users u " +
+                   "LEFT JOIN roles r ON u.role_id = r.id " +
+                   "LEFT JOIN profiles p ON u.id = p.user_id " +
+                   "WHERE r.name != 'ADMIN' AND u.id > :cursor " +
+                   "ORDER BY u.id ASC",
+                   nativeQuery = true)
+    List<Object[]> findUsersForManagementWithCursorPrevious(@Param("cursor") Long cursor, org.springframework.data.domain.Pageable pageable);
+    
+    // User Management Search
+    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
+                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
+                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
+                   "(SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id) as photo_count, " +
+                   "(SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id) as total_matches, " +
+                   "(SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id) as total_messages " +
+                   "FROM users u " +
+                   "LEFT JOIN roles r ON u.role_id = r.id " +
+                   "LEFT JOIN profiles p ON u.id = p.user_id " +
+                   "WHERE r.name != 'ADMIN' AND " +
+                   "(LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+                   "LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+                   "LOWER(CONCAT(u.first_name, ' ', u.last_name)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+                   "ORDER BY u.id DESC",
+                   nativeQuery = true)
+    List<Object[]> searchUsersForManagement(@Param("searchTerm") String searchTerm, org.springframework.data.domain.Pageable pageable);
+    
+    // Count total non-admin users for pagination
+    @Query(value = "SELECT COUNT(*) FROM users u " +
+                   "LEFT JOIN roles r ON u.role_id = r.id " +
+                   "WHERE r.name != 'ADMIN'", nativeQuery = true)
+    Long countNonAdminUsers();
 } 

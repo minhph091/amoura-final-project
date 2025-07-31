@@ -1,9 +1,16 @@
 package com.amoura.module.admin.service;
 
 import com.amoura.module.admin.dto.AdminDashboardDTO;
+import com.amoura.module.admin.dto.CursorPaginationRequest;
+import com.amoura.module.admin.dto.CursorPaginationResponse;
+import com.amoura.module.admin.dto.UserManagementDTO;
+import com.amoura.module.admin.dto.UserStatusUpdateRequest;
 import com.amoura.module.admin.repository.AdminRepository;
+import com.amoura.module.user.domain.User;
+import com.amoura.module.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +26,7 @@ import java.util.List;
 public class AdminServiceImpl implements AdminService {
 
     private final AdminRepository adminRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -195,5 +203,227 @@ public class AdminServiceImpl implements AdminService {
         activities.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
         
         return activities;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPaginationResponse<UserManagementDTO> getUsersWithCursor(CursorPaginationRequest request) {
+        log.info("Fetching users with cursor pagination - cursor: {}, limit: {}, direction: {}", 
+                request.getCursor(), request.getLimit(), request.getDirection());
+        
+        // Validate and normalize parameters
+        int limit = normalizeLimit(request.getLimit());
+        String direction = normalizeDirection(request.getDirection());
+        
+        if (!isValidDirection(direction)) {
+            throw new RuntimeException("Invalid direction parameter: " + direction);
+        }
+        
+        List<Object[]> users;
+        Long nextCursor = null;
+        Long previousCursor = null;
+        Boolean hasNext = false;
+        Boolean hasPrevious = false;
+        
+        PageRequest pageable = PageRequest.of(0, limit + 1); // Fetch one extra to check if there are more
+        
+        if (request.getCursor() == null) {
+            // First page - get the most recent users
+            users = adminRepository.findAllUsersForManagement(pageable);
+        } else {
+            if ("NEXT".equals(direction)) {
+                // Next page - get users with ID less than cursor
+                users = adminRepository.findUsersForManagementWithCursorNext(request.getCursor(), pageable);
+            } else {
+                // Previous page - get users with ID greater than cursor
+                users = adminRepository.findUsersForManagementWithCursorPrevious(request.getCursor(), pageable);
+            }
+        }
+        
+        // Check if there are more items
+        if (users.size() > limit) {
+            hasNext = "NEXT".equals(direction) || request.getCursor() == null;
+            hasPrevious = "PREVIOUS".equals(direction);
+            users = users.subList(0, limit);
+        }
+        
+        // Set cursors
+        if (!users.isEmpty()) {
+            if ("PREVIOUS".equals(direction)) {
+                // For previous direction, reverse the order to maintain correct sorting
+                java.util.Collections.reverse(users);
+            }
+            nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue();
+            previousCursor = ((Number) users.get(0)[0]).longValue();
+        }
+        
+        // Convert to DTOs
+        List<UserManagementDTO> userDTOs = users.stream()
+                .map(this::convertToUserManagementDTO)
+                .toList();
+        
+        return CursorPaginationResponse.<UserManagementDTO>builder()
+                .data(userDTOs)
+                .nextCursor(nextCursor)
+                .previousCursor(previousCursor)
+                .hasNext(hasNext)
+                .hasPrevious(hasPrevious)
+                .count(userDTOs.size())
+                .build();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPaginationResponse<UserManagementDTO> searchUsers(String searchTerm, CursorPaginationRequest request) {
+        log.info("Searching users with term: {} and cursor pagination", searchTerm);
+        
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getUsersWithCursor(request);
+        }
+        
+        int limit = normalizeLimit(request.getLimit());
+        PageRequest pageable = PageRequest.of(0, limit + 1);
+        
+        List<Object[]> users = adminRepository.searchUsersForManagement(searchTerm.trim(), pageable);
+        
+        Boolean hasNext = users.size() > limit;
+        if (hasNext) {
+            users = users.subList(0, limit);
+        }
+        
+        Long nextCursor = null;
+        Long previousCursor = null;
+        
+        if (!users.isEmpty()) {
+            nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue();
+            previousCursor = ((Number) users.get(0)[0]).longValue();
+        }
+        
+        List<UserManagementDTO> userDTOs = users.stream()
+                .map(this::convertToUserManagementDTO)
+                .toList();
+        
+        return CursorPaginationResponse.<UserManagementDTO>builder()
+                .data(userDTOs)
+                .nextCursor(nextCursor)
+                .previousCursor(previousCursor)
+                .hasNext(hasNext)
+                .hasPrevious(false) // Search doesn't support previous navigation
+                .count(userDTOs.size())
+                .build();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public UserManagementDTO getUserById(Long userId) {
+        log.info("Fetching user details for ID: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        
+        // Fetch additional data using native query
+        List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, PageRequest.of(0, 1));
+        if (userData.isEmpty()) {
+            userData = adminRepository.findAllUsersForManagement(PageRequest.of(0, Integer.MAX_VALUE))
+                    .stream()
+                    .filter(row -> ((Number) row[0]).longValue() == userId.longValue())
+                    .toList();
+        }
+        
+        if (!userData.isEmpty()) {
+            return convertToUserManagementDTO(userData.get(0));
+        }
+        
+        // Fallback to basic conversion
+        return UserManagementDTO.builder()
+                .id(user.getId())
+                .username(user.getActualUsername())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .fullName(user.getFullName())
+                .roleName(user.getRole() != null ? user.getRole().getName() : "USER")
+                .status(user.getStatus())
+                .lastLogin(user.getLastLogin())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .hasProfile(user.getProfile() != null)
+                .photoCount(0)
+                .totalMatches(0L)
+                .totalMessages(0L)
+                .build();
+    }
+    
+    @Override
+    @Transactional
+    public UserManagementDTO updateUserStatus(Long userId, UserStatusUpdateRequest request) {
+        log.info("Updating user status for ID: {} to status: {}", userId, request.getStatus());
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        
+        String oldStatus = user.getStatus();
+        user.setStatus(request.getStatus());
+        userRepository.save(user);
+        
+        log.info("User {} status updated from {} to {} for reason: {}", 
+                userId, oldStatus, request.getStatus(), request.getReason());
+        
+        return getUserById(userId);
+    }
+    
+    @Override
+    @Transactional
+    public void deleteUser(Long userId) {
+        log.info("Soft deleting user with ID: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        
+        user.setStatus("INACTIVE");
+        userRepository.save(user);
+        
+        log.info("User {} has been soft deleted (status set to INACTIVE)", userId);
+    }
+    
+    // Helper methods
+    private int normalizeLimit(Integer limit) {
+        if (limit == null || limit < 1) {
+            return 20; // Default limit
+        }
+        return Math.min(limit, 100); // Max limit of 100
+    }
+    
+    private String normalizeDirection(String direction) {
+        if (direction == null) {
+            return "NEXT";
+        }
+        return direction.toUpperCase();
+    }
+    
+    private boolean isValidDirection(String direction) {
+        return "NEXT".equals(direction) || "PREVIOUS".equals(direction);
+    }
+    
+    private UserManagementDTO convertToUserManagementDTO(Object[] row) {
+        return UserManagementDTO.builder()
+                .id(((Number) row[0]).longValue())
+                .username((String) row[1])
+                .email((String) row[2])
+                .phoneNumber((String) row[3])
+                .firstName((String) row[4])
+                .lastName((String) row[5])
+                .fullName(((String) row[4]) + " " + ((String) row[5]))
+                .roleName((String) row[6])
+                .status((String) row[7])
+                .lastLogin((LocalDateTime) row[8])
+                .createdAt((LocalDateTime) row[9])
+                .updatedAt((LocalDateTime) row[10])
+                .hasProfile((Boolean) row[11])
+                .photoCount(((Number) row[12]).intValue())
+                .totalMatches(((Number) row[13]).longValue())
+                .totalMessages(((Number) row[14]).longValue())
+                .build();
     }
 } 
