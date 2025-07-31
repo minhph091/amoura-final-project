@@ -8,9 +8,11 @@ import com.amoura.module.admin.dto.UserStatusUpdateRequest;
 import com.amoura.module.admin.repository.AdminRepository;
 import com.amoura.module.user.domain.User;
 import com.amoura.module.user.repository.UserRepository;
+import com.amoura.common.exception.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -216,7 +218,7 @@ public class AdminServiceImpl implements AdminService {
         String direction = normalizeDirection(request.getDirection());
         
         if (!isValidDirection(direction)) {
-            throw new RuntimeException("Invalid direction parameter: " + direction);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid direction parameter: " + direction, "INVALID_DIRECTION");
         }
         
         List<Object[]> users;
@@ -319,7 +321,7 @@ public class AdminServiceImpl implements AdminService {
         log.info("Fetching user details for ID: {}", userId);
         
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         // Fetch additional data using native query
         List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, PageRequest.of(0, 1));
@@ -361,7 +363,7 @@ public class AdminServiceImpl implements AdminService {
         log.info("Updating user status for ID: {} to status: {}", userId, request.getStatus());
         
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         String oldStatus = user.getStatus();
         user.setStatus(request.getStatus());
@@ -379,7 +381,7 @@ public class AdminServiceImpl implements AdminService {
         log.info("Suspending user with ID: {}", userId);
         
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         user.setStatus("SUSPEND");
         userRepository.save(user);
@@ -393,7 +395,7 @@ public class AdminServiceImpl implements AdminService {
         log.info("Restoring user with ID: {}", userId);
         
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         String oldStatus = user.getStatus();
         user.setStatus("ACTIVE");
