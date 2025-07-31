@@ -375,16 +375,31 @@ public class AdminServiceImpl implements AdminService {
     
     @Override
     @Transactional
-    public void deleteUser(Long userId) {
-        log.info("Soft deleting user with ID: {}", userId);
+    public void suspendUser(Long userId) {
+        log.info("Suspending user with ID: {}", userId);
         
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
         
-        user.setStatus("INACTIVE");
+        user.setStatus("SUSPEND");
         userRepository.save(user);
         
-        log.info("User {} has been soft deleted (status set to INACTIVE)", userId);
+        log.info("User {} has been suspended (status set to SUSPEND)", userId);
+    }
+    
+    @Override
+    @Transactional
+    public void restoreUser(Long userId) {
+        log.info("Restoring user with ID: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        
+        String oldStatus = user.getStatus();
+        user.setStatus("ACTIVE");
+        userRepository.save(user);
+        
+        log.info("User {} has been restored from {} to ACTIVE", userId, oldStatus);
     }
     
     // Helper methods

@@ -34,7 +34,12 @@ public interface AdminService {
     UserManagementDTO updateUserStatus(Long userId, UserStatusUpdateRequest request);
     
     /**
-     * Delete user account (soft delete by setting status to INACTIVE)
+     * Suspend user account (set status to SUSPEND)
      */
-    void deleteUser(Long userId);
+    void suspendUser(Long userId);
+    
+    /**
+     * Restore user account (set status to ACTIVE)
+     */
+    void restoreUser(Long userId);
 } 

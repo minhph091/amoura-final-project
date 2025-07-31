@@ -154,25 +154,48 @@ public class AdminController {
         return ResponseEntity.ok(updatedUser);
     }
     
-    @DeleteMapping("/users/{userId}")
+    @PutMapping("/users/{userId}/suspend")
     @Operation(
-        summary = "Delete user account",
-        description = "Soft delete user account by setting status to INACTIVE"
+        summary = "Suspend user account",
+        description = "Suspend user account by setting status to SUSPEND"
     )
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+        @ApiResponse(responseCode = "204", description = "User suspended successfully"),
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "403", description = "Access denied - admin role required")
     })
-    public ResponseEntity<Void> deleteUser(
+    public ResponseEntity<Void> suspendUser(
             @Parameter(description = "User ID") @PathVariable Long userId) {
         
-        log.info("Admin user deletion requested for ID: {}", userId);
+        log.info("Admin user suspension requested for ID: {}", userId);
         
-        adminService.deleteUser(userId);
+        adminService.suspendUser(userId);
         
-        log.info("User soft deleted successfully for ID: {}", userId);
+        log.info("User suspended successfully for ID: {}", userId);
+        
+        return ResponseEntity.noContent().build();
+    }
+    
+    @PutMapping("/users/{userId}/restore")
+    @Operation(
+        summary = "Restore user account",
+        description = "Restore user account by setting status to ACTIVE"
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "User restored successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied - admin role required")
+    })
+    public ResponseEntity<Void> restoreUser(
+            @Parameter(description = "User ID") @PathVariable Long userId) {
+        
+        log.info("Admin user restoration requested for ID: {}", userId);
+        
+        adminService.restoreUser(userId);
+        
+        log.info("User restored successfully for ID: {}", userId);
         
         return ResponseEntity.noContent().build();
     }
