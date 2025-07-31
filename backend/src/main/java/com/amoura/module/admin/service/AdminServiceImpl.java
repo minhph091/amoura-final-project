@@ -1,10 +1,7 @@
 package com.amoura.module.admin.service;
 
 import com.amoura.module.admin.dto.AdminDashboardDTO;
-import com.amoura.module.chat.repository.MessageRepository;
-import com.amoura.module.matching.repository.MatchRepository;
-import com.amoura.module.matching.repository.SwipeRepository;
-import com.amoura.module.user.repository.UserRepository;
+import com.amoura.module.admin.repository.AdminRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,10 +18,7 @@ import java.util.List;
 @Slf4j
 public class AdminServiceImpl implements AdminService {
 
-    private final UserRepository userRepository;
-    private final MatchRepository matchRepository;
-    private final MessageRepository messageRepository;
-    private final SwipeRepository swipeRepository;
+    private final AdminRepository adminRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -36,13 +31,13 @@ public class AdminServiceImpl implements AdminService {
         LocalDateTime last30Days = LocalDateTime.now().minusDays(30);
 
         // Basic counts
-        Long totalUsers = userRepository.countTotalUsers();
-        Long totalMatches = matchRepository.countTotalMatches();
-        Long totalMessages = messageRepository.countTotalMessages();
-        Long todayUsers = userRepository.countUsersByDate(today);
-        Long todayMatches = matchRepository.countMatchesByDate(today);
-        Long todayMessages = messageRepository.countMessagesByDate(today);
-        Long activeUsersToday = userRepository.countActiveUsersSince(startOfDay);
+        Long totalUsers = adminRepository.countTotalUsers();
+        Long totalMatches = adminRepository.countTotalMatches();
+        Long totalMessages = adminRepository.countTotalMessages();
+        Long todayUsers = adminRepository.countUsersByDate(today);
+        Long todayMatches = adminRepository.countMatchesByDate(today);
+        Long todayMessages = adminRepository.countMessagesByDate(today);
+        Long activeUsersToday = adminRepository.countActiveUsersSince(startOfDay);
 
         // User growth chart data (last 30 days)
         List<AdminDashboardDTO.UserGrowthData> userGrowthChart = buildUserGrowthChart(last30Days);
@@ -71,7 +66,7 @@ public class AdminServiceImpl implements AdminService {
         List<AdminDashboardDTO.UserGrowthData> chartData = new ArrayList<>();
         
         try {
-            List<Object[]> userGrowthData = userRepository.getUserGrowthData(startDate);
+            List<Object[]> userGrowthData = adminRepository.getUserGrowthData(startDate);
             Long cumulativeTotal = 0L;
             
             for (Object[] row : userGrowthData) {
@@ -97,8 +92,8 @@ public class AdminServiceImpl implements AdminService {
         
         try {
             // Get swipe statistics
-            List<Object[]> swipeData = swipeRepository.getSwipeStatistics(startDate);
-            List<Object[]> matchData = matchRepository.getMatchesData(startDate);
+            List<Object[]> swipeData = adminRepository.getSwipeStatistics(startDate);
+            List<Object[]> matchData = adminRepository.getMatchesData(startDate);
             
             // Create a map for easier lookup of match data by date
             var matchMap = new java.util.HashMap<LocalDate, Long>();
@@ -135,23 +130,69 @@ public class AdminServiceImpl implements AdminService {
 
     private List<AdminDashboardDTO.RecentActivityData> buildRecentActivities() {
         List<AdminDashboardDTO.RecentActivityData> activities = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         
         try {
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime last24Hours = LocalDateTime.now().minusDays(1);
             
-            // Add sample recent activities (you can expand this based on your needs)
+            // Get recent user registrations
+            List<Object[]> recentUsers = adminRepository.getRecentUserRegistrations(last24Hours, 5);
+            for (Object[] row : recentUsers) {
+                Long userId = ((Number) row[0]).longValue();
+                String username = (String) row[1];
+                String firstName = (String) row[2];
+                LocalDateTime createdAt = (LocalDateTime) row[4];
+                
+                activities.add(AdminDashboardDTO.RecentActivityData.builder()
+                        .activityType("USER_REGISTRATION")
+                        .description(String.format("New user %s (%s) registered", firstName, username))
+                        .timestamp(createdAt.format(formatter))
+                        .userId(userId)
+                        .username(username)
+                        .build());
+            }
+            
+            // Get recent matches
+            List<Object[]> recentMatches = adminRepository.getRecentMatches(last24Hours, 5);
+            for (Object[] row : recentMatches) {
+                Long matchId = ((Number) row[0]).longValue();
+                String user1Name = (String) row[1];
+                String user2Name = (String) row[2];
+                LocalDateTime matchedAt = (LocalDateTime) row[3];
+                
+                activities.add(AdminDashboardDTO.RecentActivityData.builder()
+                        .activityType("MATCH_CREATED")
+                        .description(String.format("Match created between %s and %s", user1Name, user2Name))
+                        .timestamp(matchedAt.format(formatter))
+                        .userId(matchId)
+                        .username("System")
+                        .build());
+            }
+            
+            // Add system info
             activities.add(AdminDashboardDTO.RecentActivityData.builder()
                     .activityType("SYSTEM_INFO")
                     .description("Dashboard data refreshed")
-                    .timestamp(now.toString())
+                    .timestamp(LocalDateTime.now().format(formatter))
                     .userId(null)
                     .username("System")
                     .build());
-                    
             
         } catch (Exception e) {
             log.error("Error building recent activities: {}", e.getMessage());
+            
+            // Fallback activity
+            activities.add(AdminDashboardDTO.RecentActivityData.builder()
+                    .activityType("SYSTEM_INFO")
+                    .description("Dashboard data refreshed")
+                    .timestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                    .userId(null)
+                    .username("System")
+                    .build());
         }
+        
+        // Sort by timestamp descending
+        activities.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
         
         return activities;
     }
