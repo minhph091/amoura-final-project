@@ -2,19 +2,19 @@
   "best_model_name": "Logistic Regression",
   "saved_filename": "best_overall_model.joblib",
   "validation_metrics": {
-    "accuracy": 0.852449133383572,
-    "precision": 0.7723671947809879,
+    "accuracy": 0.8614920874152223,
+    "precision": 0.7833175803402647,
     "recall": 0.999397045523063,
-    "f1": 0.8713365751084242,
-    "roc_auc": 0.8703877753251328
+    "f1": 0.878262021459796,
+    "roc_auc": 0.8789655205625105
   },
   "parameters": {
-    "model_type": "Logistic Regression",
+    "max_iter": 1000,
     "random_state": 42,
-    "max_iter": 1000
+    "class_weight": "balanced"
   },
   "tuning_details": {
-    "best_cv_score": 0.8703877753251328,
+    "best_cv_score": 0.8789655205625105,
     "cv_scoring_metric": "roc_auc"
   }
 }

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import json
+from datetime import datetime
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -234,74 +235,82 @@ def save_models_and_artifacts(models_results, feature_cols):
     joblib.dump(numerical_cols_to_scale, os.path.join(MODELS_DIR, 'numerical_pairwise_cols_to_scale.joblib'))
     print(f"Đã lưu numerical columns to scale")
     
-    # Lưu best_model_summary.json theo format chuẩn
+    # Tạo comprehensive training summary với kết quả của cả 3 mô hình
+    comprehensive_summary = {
+        "training_info": {
+            "models_trained": list(models_results.keys()),
+            "best_model": best_model_name,
+            "best_roc_auc": best_roc_auc,
+            "total_features": len(feature_cols),
+            "feature_columns": feature_cols,
+            "training_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        },
+        "model_performance": {},
+        "model_parameters": {}
+    }
+    
+    # Thêm performance metrics cho từng model
+    for model_name, (model, scaler, metrics) in models_results.items():
+        comprehensive_summary["model_performance"][model_name] = {
+            "roc_auc": metrics['roc_auc'],
+            "accuracy": metrics['accuracy'],
+            "precision": metrics['precision'],
+            "recall": metrics['recall'],
+            "f1_score": metrics['f1']
+        }
+        
+        # Thêm parameters cho từng model
+        if model_name == "LightGBM":
+            comprehensive_summary["model_parameters"][model_name] = {
+                "boosting_type": "gbdt",
+                "num_leaves": 63,
+                "learning_rate": 0.03,
+                "n_estimators": 200,
+                "class_weight": "balanced",
+                "feature_fraction": 0.9,
+                "bagging_fraction": 0.8,
+                "bagging_freq": 5,
+                "early_stopping_rounds": 50,
+                "random_state": 42
+            }
+        elif model_name == "Logistic Regression":
+            comprehensive_summary["model_parameters"][model_name] = {
+                "max_iter": 1000,
+                "random_state": 42,
+                "class_weight": "balanced"
+            }
+        elif model_name == "Random Forest":
+            comprehensive_summary["model_parameters"][model_name] = {
+                "n_estimators": 100,
+                "max_depth": 10,
+                "random_state": 42,
+                "class_weight": "balanced"
+            }
+    
+    # Lưu comprehensive summary
+    comprehensive_summary_path = os.path.join(MODELS_DIR, 'training_summary.json')
+    with open(comprehensive_summary_path, 'w') as f:
+        json.dump(comprehensive_summary, f, indent=2)
+    print(f"Đã lưu comprehensive training summary: {comprehensive_summary_path}")
+    
+    # Vẫn lưu best_model_summary.json cho backward compatibility
     best_summary = {
         "best_model_name": best_model_name,
         "saved_filename": "best_overall_model.joblib",
         "validation_metrics": best_metrics,
-        "parameters": {
-            "model_type": best_model_name,
-            "random_state": 42
-        },
+        "parameters": comprehensive_summary["model_parameters"][best_model_name],
         "tuning_details": {
             "best_cv_score": best_roc_auc,
             "cv_scoring_metric": "roc_auc"
         }
     }
     
-    # Thêm parameters chi tiết cho từng loại model
-    if best_model_name == "LightGBM":
-        best_summary["parameters"].update({
-            "boosting_type": "gbdt",
-            "num_leaves": 31,
-            "learning_rate": 0.05,
-            "feature_fraction": 0.9,
-            "bagging_fraction": 0.8,
-            "bagging_freq": 5
-        })
-    elif best_model_name == "Logistic Regression":
-        best_summary["parameters"].update({
-            "max_iter": 1000,
-            "random_state": 42
-        })
-    elif best_model_name == "Random Forest":
-        best_summary["parameters"].update({
-            "n_estimators": 100,
-            "max_depth": 10,
-            "random_state": 42
-        })
-    
     best_summary_path = os.path.join(MODELS_DIR, 'best_model_summary.json')
     with open(best_summary_path, 'w') as f:
         json.dump(best_summary, f, indent=2)
-    print(f"Đã lưu model summary: {best_summary_path}")
-    
-    # Tạo summary tổng quan
-    summary = {
-        'models_trained': list(models_results.keys()),
-        'best_model': best_model_name,
-        'best_roc_auc': best_roc_auc,
-        'feature_columns': feature_cols,
-        'total_features': len(feature_cols),
-        'files_created': [
-            'best_overall_model.joblib',
-            'best_model_summary.json',
-            'pairwise_model_input_columns.joblib',
-            'pairwise_features_scaler.joblib',
-            'numerical_pairwise_cols_to_scale.joblib'
-        ]
-    }
-    
-    # Lưu summary
-    summary_path = os.path.join(MODELS_DIR, 'training_summary.json')
-    with open(summary_path, 'w') as f:
-        json.dump(summary, f, indent=2)
-    print(f"Đã lưu training summary: {summary_path}")
+    print(f"Đã lưu best model summary: {best_summary_path}")
     
     print(f"\n✅ Đã lưu model tốt nhất và artifacts vào {MODELS_DIR}")
-    print(f"📁 Files được tạo:")
-    for file in summary['files_created']:
-        print(f"   - {file}")
     print(f"\n💡 Lưu ý: Model được lưu theo cấu hình MODELS_DIR trong config")
 
 def train_all_models():
