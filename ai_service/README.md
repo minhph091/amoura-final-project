@@ -10,6 +10,8 @@ A professional FastAPI-based microservice for AI-powered features in the Amoura 
 - **📊 Conversation Analysis**: Sentiment analysis and conversation insights
 - **🔒 Enterprise Security**: Proper authentication, validation, and error handling
 - **📈 Monitoring & Logging**: Comprehensive logging and health monitoring
+- **🔄 Database Integration**: Full compatibility with backend PostgreSQL schema
+- **🧪 New User Support**: Predictions work for users not in training data
 
 ## 🏗️ Architecture
 
@@ -21,6 +23,8 @@ The service follows clean architecture principles with:
 - **Logging**: Structured logging with configurable levels
 - **Configuration Management**: Environment-based configuration with validation
 - **Type Safety**: Full type hints and Pydantic validation
+- **Database Integration**: SQLAlchemy ORM with PostgreSQL
+- **ML Pipeline**: Scikit-learn with feature engineering and preprocessing
 
 ## 📂 Project Structure
 
@@ -71,8 +75,22 @@ ai_service/
 │
 ├── train_model/                        # ML training pipeline
 │   ├── data/                           # Training data
+│   │   ├── labeled_pairs.csv          # Training pairs with labels
+│   │   ├── match_profiles.csv         # User profiles for training
+│   │   └── matched_pairs.csv          # Matched user pairs
 │   ├── models/                         # Trained models and artifacts
-│   └── *.py                            # Training scripts
+│   │   ├── best_overall_model.joblib  # Main trained model
+│   │   ├── best_model_summary.json    # Model performance metrics
+│   │   ├── scaler_age.joblib          # Age scaler
+│   │   ├── scaler_height.joblib       # Height scaler
+│   │   ├── tfidf_vectorizer_bio.joblib # Bio text vectorizer
+│   │   ├── onehot_encoder_categorical.joblib # Categorical encoder
+│   │   └── [other preprocessing artifacts]
+│   ├── train_models.py                 # Main training script
+│   ├── feature_engineering.py          # Feature engineering utilities
+│   ├── generate_labels.py              # Label generation script
+│   ├── inspect_data.py                 # Data inspection utilities
+│   └── main.py                         # Training pipeline entry point
 │
 ├── env.example                         # Environment variables template
 ├── requirements.txt                    # Python dependencies
@@ -83,11 +101,13 @@ ai_service/
 
 - **Framework**: FastAPI 0.115+
 - **Database**: PostgreSQL with SQLAlchemy ORM
-- **ML**: scikit-learn, Logistic Regression
+- **ML**: scikit-learn, Logistic Regression, NLTK
 - **AI**: Google Gemini API
 - **Validation**: Pydantic with custom validators
 - **Logging**: Python logging with structured output
 - **Testing**: pytest (recommended)
+- **Text Processing**: NLTK, Unidecode
+- **Geographic**: Geopy for distance calculations
 
 ## 📋 Prerequisites
 
@@ -174,6 +194,13 @@ GET /api/v1/users/{user1_id}/match-probability/{user2_id}
 
 Returns match probability between two specific users using **Logistic Regression**.
 
+#### Get Backup Recommendations
+```http
+GET /api/v1/users/{user_id}/backup-recommendations?limit=10
+```
+
+Returns backup recommendations when AI predictions are exhausted.
+
 ### Message Endpoints
 
 #### Edit Message
@@ -184,8 +211,8 @@ Content-Type: application/json
 {
   "original_message": "Hey, how are you?",
   "edit_prompt": "Make it more engaging",
-  "user_id": 1,
-  "other_user_id": 2
+  "sender_id": 1,
+  "receiver_id": 2
 }
 ```
 
@@ -301,12 +328,64 @@ For support and questions:
 ```
 
 ### **Features Used:**
-- Demographic features (age, height, gender)
-- Geographic features (distance, location preference)
-- Compatibility features (orientation, interests, languages)
-- Behavioral features (drink/smoke status, education)
-- User feature similarity (cosine similarity, MAE difference)
+- **Demographic features**: Age, height, gender
+- **Geographic features**: Distance, location preference
+- **Compatibility features**: Orientation, interests, languages
+- **Behavioral features**: Drink/smoke status, education
+- **User feature similarity**: Cosine similarity, MAE difference
+- **Text features**: Bio text using TF-IDF vectorization
+
+### **Model Artifacts:**
+- `best_overall_model.joblib` - Main trained model
+- `scaler_age.joblib` - Age normalization
+- `scaler_height.joblib` - Height normalization
+- `tfidf_vectorizer_bio.joblib` - Bio text processing
+- `onehot_encoder_categorical.joblib` - Categorical encoding
+- `pairwise_features_scaler.joblib` - Pairwise features scaling
+- `numerical_pairwise_cols_to_scale.joblib` - Numerical columns list
+- `pairwise_model_input_columns.joblib` - Model input columns
+- `user_features_final_columns.joblib` - User feature columns
+
+## 🔄 Database Integration
+
+### **Compatible Tables:**
+- ✅ `users` - User accounts and authentication
+- ✅ `profiles` - User profile information
+- ✅ `locations` - Geographic location data
+- ✅ `body_types`, `orientations`, `job_industries` - Reference tables
+- ✅ `drink_statuses`, `smoke_statuses`, `education_levels` - Status tables
+- ✅ `pets`, `interests`, `languages` - Multi-value features
+- ✅ `users_pets`, `users_interests`, `users_languages` - Many-to-many relationships
+
+### **New User Prediction:**
+✅ **Model CAN predict for new users** not in training data through:
+- Generalizable feature engineering with 'other' categories
+- Scalable numerical features with StandardScaler
+- Text processing with TF-IDF for new vocabulary
+- Robust data handling with fallbacks for missing information
+
+## 🚀 Deployment
+
+### **Docker Deployment:**
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### **Environment Setup:**
+```bash
+# Production environment variables
+export ENVIRONMENT=production
+export DEBUG=false
+export LOG_LEVEL=INFO
+export GEMINI_API_KEY=your_api_key
+export MATCH_PROBABILITY_THRESHOLD=0.5
+```
 
 ---
 
-**🎉 API đã sẵn sàng sử dụng với Logistic Regression model!**
+**🎉 Amoura AI Service is production-ready with Logistic Regression model!**
