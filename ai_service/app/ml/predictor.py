@@ -61,8 +61,21 @@ class MatchPredictor(LoggerMixin):
         try:
             # Load main model
             model_path = self.models_dir / "best_overall_model.joblib"
-            self.model = joblib.load(model_path)
+            loaded_model = joblib.load(model_path)
             self.logger.debug(f"Loaded main model from: {model_path}")
+            
+            # Check model type and handle accordingly
+            model_type = type(loaded_model).__name__
+            self.logger.debug(f"Model type: {model_type}")
+            
+            # All sklearn models (LGBMClassifier, LogisticRegression, RandomForestClassifier) have predict_proba
+            if hasattr(loaded_model, 'predict_proba'):
+                self.model = loaded_model
+                self.logger.debug(f"Loaded sklearn model: {model_type}")
+            else:
+                # Fallback for any other model types
+                self.logger.warning(f"Unknown model type: {model_type}, attempting to use as-is")
+                self.model = loaded_model
             
             # Load feature column definitions
             pairwise_cols_path = self.models_dir / "pairwise_model_input_columns.joblib"

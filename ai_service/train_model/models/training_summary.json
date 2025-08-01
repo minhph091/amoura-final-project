@@ -1,0 +1,38 @@
+{
+  "models_trained": [
+    "LightGBM",
+    "Logistic Regression",
+    "Random Forest"
+  ],
+  "best_model": "Logistic Regression",
+  "best_roc_auc": 0.8703877753251328,
+  "feature_columns": [
+    "age_diff",
+    "height_diff",
+    "geo_distance_km",
+    "user1_within_user2_loc_pref",
+    "user2_within_user1_loc_pref",
+    "orientation_compatible_user1_to_user2",
+    "orientation_compatible_user2_to_user1",
+    "orientation_compatible_final",
+    "drink_match",
+    "smoke_match",
+    "education_match",
+    "interests_jaccard",
+    "languages_jaccard",
+    "user1_wants_learn_lang",
+    "user2_wants_learn_lang",
+    "language_interest_match",
+    "pets_jaccard",
+    "user_features_cosine_sim",
+    "user_features_mae_diff"
+  ],
+  "total_features": 19,
+  "files_created": [
+    "best_overall_model.joblib",
+    "best_model_summary.json",
+    "pairwise_model_input_columns.joblib",
+    "pairwise_features_scaler.joblib",
+    "numerical_pairwise_cols_to_scale.joblib"
+  ]
+}
