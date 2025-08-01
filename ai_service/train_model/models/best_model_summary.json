@@ -1,0 +1,12 @@
+{
+    "best_model_name": "LightGBM",
+    "best_roc_auc": 0.8591290360742321,
+    "metrics": {
+        "accuracy": 0.49992464204973625,
+        "precision": 0.49992464204973625,
+        "recall": 1.0,
+        "f1": 0.6665996784565916,
+        "roc_auc": 0.8591290360742321
+    },
+    "feature_count": 19
+}

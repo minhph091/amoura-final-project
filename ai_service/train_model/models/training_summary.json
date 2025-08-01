@@ -1,0 +1,14 @@
+{
+    "training_date": "2025-08-01T17:50:30.855834",
+    "best_model": "LightGBM",
+    "best_roc_auc": 0.8591290360742321,
+    "total_samples": 33172,
+    "feature_count": 19,
+    "files_created": [
+        "best_overall_model.joblib",
+        "best_model_summary.json",
+        "pairwise_model_input_columns.joblib",
+        "pairwise_features_scaler.joblib",
+        "numerical_pairwise_cols_to_scale.joblib"
+    ]
+}
