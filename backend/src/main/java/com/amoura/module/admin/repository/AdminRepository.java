@@ -92,9 +92,10 @@ public interface AdminRepository extends JpaRepository<User, Long> {
                    "INNER JOIN roles r ON u.role_id = r.id " +
                    "LEFT JOIN profiles p ON u.id = p.user_id " +
                    "WHERE r.name = 'USER' " +
-                   "ORDER BY u.id DESC",
+                   "ORDER BY u.id DESC " +
+                   "LIMIT :limit",
                    nativeQuery = true)
-    List<Object[]> findAllUsersForManagement(org.springframework.data.domain.Pageable pageable);
+    List<Object[]> findAllUsersForManagement(@Param("limit") int limit);
     
     @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
                    "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
@@ -106,9 +107,10 @@ public interface AdminRepository extends JpaRepository<User, Long> {
                    "INNER JOIN roles r ON u.role_id = r.id " +
                    "LEFT JOIN profiles p ON u.id = p.user_id " +
                    "WHERE r.name = 'USER' AND u.id < :cursor " +
-                   "ORDER BY u.id DESC",
+                   "ORDER BY u.id DESC " +
+                   "LIMIT :limit",
                    nativeQuery = true)
-    List<Object[]> findUsersForManagementWithCursorNext(@Param("cursor") Long cursor, org.springframework.data.domain.Pageable pageable);
+    List<Object[]> findUsersForManagementWithCursorNext(@Param("cursor") Long cursor, @Param("limit") int limit);
     
     @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
                    "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
@@ -120,9 +122,10 @@ public interface AdminRepository extends JpaRepository<User, Long> {
                    "INNER JOIN roles r ON u.role_id = r.id " +
                    "LEFT JOIN profiles p ON u.id = p.user_id " +
                    "WHERE r.name = 'USER' AND u.id > :cursor " +
-                   "ORDER BY u.id ASC",
+                   "ORDER BY u.id DESC " +
+                   "LIMIT :limit",
                    nativeQuery = true)
-    List<Object[]> findUsersForManagementWithCursorPrevious(@Param("cursor") Long cursor, org.springframework.data.domain.Pageable pageable);
+    List<Object[]> findUsersForManagementWithCursorPrevious(@Param("cursor") Long cursor, @Param("limit") int limit);
     
     // User Management Search
     @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
@@ -138,9 +141,10 @@ public interface AdminRepository extends JpaRepository<User, Long> {
                    "(LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
                    "LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
                    "LOWER(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
-                   "ORDER BY u.id DESC",
+                   "ORDER BY u.id DESC " +
+                   "LIMIT :limit",
                    nativeQuery = true)
-    List<Object[]> searchUsersForManagement(@Param("searchTerm") String searchTerm, org.springframework.data.domain.Pageable pageable);
+    List<Object[]> searchUsersForManagement(@Param("searchTerm") String searchTerm, @Param("limit") int limit);
     
     // Count total USER role users for pagination
     @Query(value = "SELECT COUNT(*) FROM users u " +

@@ -11,7 +11,7 @@ import com.amoura.module.user.repository.UserRepository;
 import com.amoura.common.exception.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,17 +77,16 @@ public class AdminServiceImpl implements AdminService {
         
         try {
             List<Object[]> userGrowthData = adminRepository.getUserGrowthData(startDate);
-            Long cumulativeTotal = 0L;
+    
             
             for (Object[] row : userGrowthData) {
                 LocalDate date = (LocalDate) row[0];
                 Long newUsers = ((Number) row[1]).longValue();
-                cumulativeTotal += newUsers;
+
                 
                 chartData.add(AdminDashboardDTO.UserGrowthData.builder()
                         .date(date)
                         .newUsers(newUsers)
-                        .totalUsers(cumulativeTotal)
                         .build());
             }
         } catch (Exception e) {
@@ -117,17 +116,12 @@ public class AdminServiceImpl implements AdminService {
             for (Object[] row : swipeData) {
                 LocalDate date = (LocalDate) row[0];
                 Long totalSwipes = ((Number) row[1]).longValue();
-                Long likes = ((Number) row[2]).longValue();
                 Long matches = matchMap.getOrDefault(date, 0L);
-                
-                // Calculate success rate as matches per likes (not per total swipes)
-                Double successRate = likes > 0 ? (matches.doubleValue() / likes.doubleValue()) * 100.0 : 0.0;
                 
                 chartData.add(AdminDashboardDTO.MatchingSuccessData.builder()
                         .date(date)
                         .totalSwipes(totalSwipes)
                         .totalMatches(matches)
-                        .successRate(Math.round(successRate * 100.0) / 100.0) // Round to 2 decimal places
                         .build());
             }
         } catch (Exception e) {
@@ -148,7 +142,6 @@ public class AdminServiceImpl implements AdminService {
             // Get recent user registrations
             List<Object[]> recentUsers = adminRepository.getRecentUserRegistrations(last24Hours, 5);
             for (Object[] row : recentUsers) {
-                Long userId = ((Number) row[0]).longValue();
                 String username = (String) row[1];
                 String firstName = (String) row[2];
                 LocalDateTime createdAt = (LocalDateTime) row[4];
@@ -157,48 +150,27 @@ public class AdminServiceImpl implements AdminService {
                         .activityType("USER_REGISTRATION")
                         .description(String.format("New user %s (%s) registered", firstName, username))
                         .timestamp(createdAt.format(formatter))
-                        .userId(userId)
-                        .username(username)
                         .build());
             }
             
-            // Get recent matches
-            List<Object[]> recentMatches = adminRepository.getRecentMatches(last24Hours, 5);
-            for (Object[] row : recentMatches) {
-                Long matchId = ((Number) row[0]).longValue();
-                String user1Name = (String) row[1];
-                String user2Name = (String) row[2];
-                LocalDateTime matchedAt = (LocalDateTime) row[3];
-                
+            List<Object[]> recentMatches = adminRepository.getRecentMatches(last24Hours, 1);
+            if (!recentMatches.isEmpty()) {
                 activities.add(AdminDashboardDTO.RecentActivityData.builder()
-                        .activityType("MATCH_CREATED")
-                        .description(String.format("Match created between %s and %s", user1Name, user2Name))
-                        .timestamp(matchedAt.format(formatter))
-                        .userId(matchId)
-                        .username("System")
+                        .activityType("SYSTEM_HEALTH")
+                        .description("Matching system is active - new matches detected in last 24h")
+                        .timestamp(LocalDateTime.now().format(formatter))
+                        .build());
+            } else {
+                activities.add(AdminDashboardDTO.RecentActivityData.builder()
+                        .activityType("SYSTEM_WARNING")
+                        .description("No new matches in last 24h - system may need attention")
+                        .timestamp(LocalDateTime.now().format(formatter))
                         .build());
             }
             
-            // Add system info
-            activities.add(AdminDashboardDTO.RecentActivityData.builder()
-                    .activityType("SYSTEM_INFO")
-                    .description("Dashboard data refreshed")
-                    .timestamp(LocalDateTime.now().format(formatter))
-                    .userId(null)
-                    .username("System")
-                    .build());
-            
-        } catch (Exception e) {
+            } catch (Exception e) {
             log.error("Error building recent activities: {}", e.getMessage());
-            
-            // Fallback activity
-            activities.add(AdminDashboardDTO.RecentActivityData.builder()
-                    .activityType("SYSTEM_INFO")
-                    .description("Dashboard data refreshed")
-                    .timestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                    .userId(null)
-                    .username("System")
-                    .build());
+            // No fallback activity needed - empty list is fine
         }
         
         // Sort by timestamp descending
@@ -227,18 +199,18 @@ public class AdminServiceImpl implements AdminService {
         Boolean hasNext = false;
         Boolean hasPrevious = false;
         
-        PageRequest pageable = PageRequest.of(0, limit + 1); // Fetch one extra to check if there are more
+        int fetchLimit = limit + 1; // Fetch one extra to check if there are more
         
         if (request.getCursor() == null) {
             // First page - get the most recent users
-            users = adminRepository.findAllUsersForManagement(pageable);
+            users = adminRepository.findAllUsersForManagement(fetchLimit);
         } else {
             if ("NEXT".equals(direction)) {
                 // Next page - get users with ID less than cursor
-                users = adminRepository.findUsersForManagementWithCursorNext(request.getCursor(), pageable);
+                users = adminRepository.findUsersForManagementWithCursorNext(request.getCursor(), fetchLimit);
             } else {
                 // Previous page - get users with ID greater than cursor
-                users = adminRepository.findUsersForManagementWithCursorPrevious(request.getCursor(), pageable);
+                users = adminRepository.findUsersForManagementWithCursorPrevious(request.getCursor(), fetchLimit);
             }
         }
         
@@ -253,23 +225,14 @@ public class AdminServiceImpl implements AdminService {
             users = users.subList(0, limit);
         }
         
-        // Set cursors BEFORE reversing data
+        // Set cursors (both queries now return DESC order)
         if (!users.isEmpty()) {
-            if ("PREVIOUS".equals(direction)) {
-                // For PREVIOUS: query returns ASC order, so first item has smallest ID, last item has largest ID
-                previousCursor = ((Number) users.get(0)[0]).longValue();        // Smallest ID (for going further back)
-                nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue(); // Largest ID (for going forward)
-                
-                // Reverse to maintain DESC display order
-                java.util.Collections.reverse(users);
-            } else {
-                // For NEXT: query returns DESC order, so first item has largest ID, last item has smallest ID
-                previousCursor = ((Number) users.get(0)[0]).longValue();        // Largest ID (for going back)
-                nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue(); // Smallest ID (for going forward)
-            }
+            // Both NEXT and PREVIOUS queries return DESC order, so first item has largest ID, last item has smallest ID
+            previousCursor = ((Number) users.get(0)[0]).longValue();        // Largest ID (for going back)
+            nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue(); // Smallest ID (for going forward)
             
-            // Set hasPrevious for non-PREVIOUS directions
-            if (!"PREVIOUS".equals(direction) && request.getCursor() != null) {
+            // Set hasPrevious when there's a cursor (regardless of direction)
+            if (request.getCursor() != null) {
                 hasPrevious = true;
             }
         }
@@ -299,9 +262,8 @@ public class AdminServiceImpl implements AdminService {
         }
         
         int limit = normalizeLimit(request.getLimit());
-        PageRequest pageable = PageRequest.of(0, limit + 1);
         
-        List<Object[]> users = adminRepository.searchUsersForManagement(searchTerm.trim(), pageable);
+        List<Object[]> users = adminRepository.searchUsersForManagement(searchTerm.trim(), limit + 1);
         
         Boolean hasNext = users.size() > limit;
         if (hasNext) {
@@ -339,9 +301,9 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         // Fetch additional data using native query
-        List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, PageRequest.of(0, 1));
+        List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, 1);
         if (userData.isEmpty()) {
-            userData = adminRepository.findAllUsersForManagement(PageRequest.of(0, Integer.MAX_VALUE))
+            userData = adminRepository.findAllUsersForManagement(Integer.MAX_VALUE)
                     .stream()
                     .filter(row -> ((Number) row[0]).longValue() == userId.longValue())
                     .toList();
@@ -359,12 +321,9 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .fullName(user.getFullName())
-                .roleName(user.getRole() != null ? user.getRole().getName() : "USER")
                 .status(user.getStatus())
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
                 .hasProfile(user.getProfile() != null)
                 .photoCount(0)
                 .totalMatches(0L)
@@ -419,12 +378,9 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber((String) row[3])
                 .firstName((String) row[4])
                 .lastName((String) row[5])
-                .fullName(buildFullName((String) row[4], (String) row[5]))
-                .roleName((String) row[6])
                 .status((String) row[7])
                 .lastLogin(convertToLocalDateTime(row[8]))
                 .createdAt(convertToLocalDateTime(row[9]))
-                .updatedAt(convertToLocalDateTime(row[10]))
                 .hasProfile((Boolean) row[11])
                 .photoCount(((Number) row[12]).intValue())
                 .totalMatches(((Number) row[13]).longValue())
@@ -445,16 +401,5 @@ public class AdminServiceImpl implements AdminService {
         return null;
     }
     
-    private String buildFullName(String firstName, String lastName) {
-        if (firstName == null && lastName == null) {
-            return "";
-        }
-        if (firstName == null) {
-            return lastName;
-        }
-        if (lastName == null) {
-            return firstName;
-        }
-        return firstName + " " + lastName;
-    }
+
 } 
