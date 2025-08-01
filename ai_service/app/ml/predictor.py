@@ -22,18 +22,6 @@ from app.ml.preprocessing import (
 )
 from sklearn.preprocessing import MinMaxScaler
 
-# LightGBM Wrapper class for compatibility
-class LightGBMWrapper:
-    def __init__(self, model):
-        self.model = model
-        
-    def predict_proba(self, X):
-        # LightGBM predict returns raw scores, convert to probabilities
-        raw_scores = self.model.predict(X)
-        # Convert to probabilities using sigmoid
-        probs = 1 / (1 + np.exp(-raw_scores))
-        # Return 2D array with [not_match_prob, match_prob]
-        return np.column_stack([1 - probs, probs])
 
 class MatchPredictor(LoggerMixin):
     """
@@ -76,15 +64,18 @@ class MatchPredictor(LoggerMixin):
             loaded_model = joblib.load(model_path)
             self.logger.debug(f"Loaded main model from: {model_path}")
             
-            # Check if it's a LightGBM model and wrap it
-            if hasattr(loaded_model, 'predict') and not hasattr(loaded_model, 'predict_proba'):
-                # This is likely a LightGBM model, wrap it
-                self.model = LightGBMWrapper(loaded_model)
-                self.logger.debug("Wrapped LightGBM model with LightGBMWrapper")
-            else:
-                # This is a sklearn model with predict_proba
+            # Check model type and handle accordingly
+            model_type = type(loaded_model).__name__
+            self.logger.debug(f"Model type: {model_type}")
+            
+            # All sklearn models (LGBMClassifier, LogisticRegression, RandomForestClassifier) have predict_proba
+            if hasattr(loaded_model, 'predict_proba'):
                 self.model = loaded_model
-                self.logger.debug("Loaded sklearn model")
+                self.logger.debug(f"Loaded sklearn model: {model_type}")
+            else:
+                # Fallback for any other model types
+                self.logger.warning(f"Unknown model type: {model_type}, attempting to use as-is")
+                self.model = loaded_model
             
             # Load feature column definitions
             pairwise_cols_path = self.models_dir / "pairwise_model_input_columns.joblib"

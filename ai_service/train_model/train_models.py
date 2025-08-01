@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import json
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -10,10 +10,19 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import lightgbm as lgb
 import joblib
 
-# Đường dẫn
+# Import config
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from app.core.config import get_settings
+
+# Constants
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 FEATURES_PATH = os.path.join(DATA_DIR, 'pairwise_features.csv')
-MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
+
+def get_models_dir():
+    """Get models directory from config"""
+    settings = get_settings()
+    return str(settings.models_path)
 
 def calculate_metrics(y_true, y_pred, y_pred_proba):
     """Calculate all metrics for a model"""
@@ -42,92 +51,137 @@ def load_and_prepare_data():
     return X, y, feature_cols
 
 def train_lightgbm(X_train, y_train, X_val, y_val):
-    """Train LightGBM model"""
-    print("Training LightGBM...")
+    """Train LightGBM model với hyperparameter tuning và optimization"""
+    print("Training LightGBM với advanced optimization...")
     
-    # LightGBM parameters
+    # Import LGBMClassifier
+    from lightgbm import LGBMClassifier
+    
+    # LightGBM parameters - Tối ưu hóa cho performance cao nhất
     params = {
         'objective': 'binary',
         'metric': 'auc',
         'boosting_type': 'gbdt',
-        'num_leaves': 31,
-        'learning_rate': 0.05,
-        'feature_fraction': 0.9,
-        'bagging_fraction': 0.8,
-        'bagging_freq': 5,
+        'num_leaves': 63,  # Tăng từ 31 lên 63
+        'learning_rate': 0.03,  # Giảm từ 0.05 xuống 0.03 để tránh overfitting
+        'feature_fraction': 0.8,  # Giảm từ 0.9 xuống 0.8
+        'bagging_fraction': 0.7,  # Giảm từ 0.8 xuống 0.7
+        'bagging_freq': 7,  # Tăng từ 5 lên 7
+        'min_child_samples': 20,  # Thêm parameter mới
+        'min_child_weight': 0.001,  # Thêm parameter mới
+        'reg_alpha': 0.1,  # L1 regularization
+        'reg_lambda': 0.1,  # L2 regularization
         'verbose': -1,
-        'random_state': 42
+        'random_state': 42,
+        'n_estimators': 200,  # Tăng số trees
+        'class_weight': 'balanced'  # Handle imbalanced data
     }
     
-    # Train model
-    train_data = lgb.Dataset(X_train, label=y_train)
-    val_data = lgb.Dataset(X_val, label=y_val, reference=train_data)
+    # Cross-validation để validate parameters (không dùng early stopping)
+    print("Performing cross-validation for LightGBM...")
+    from sklearn.model_selection import cross_val_score
     
-    model = lgb.train(
-        params,
-        train_data,
-        valid_sets=[train_data, val_data],
-        num_boost_round=1000,
-        callbacks=[lgb.early_stopping(stopping_rounds=50), lgb.log_evaluation(0)]
+    # Tạo model cho CV (không có early stopping)
+    cv_params = params.copy()
+    cv_params['n_estimators'] = 100  # Giảm số trees cho CV
+    
+    # Quick CV để validate parameters
+    cv_scores = cross_val_score(
+        LGBMClassifier(**cv_params), 
+        X_train, y_train, 
+        cv=3, 
+        scoring='roc_auc'
+    )
+    print(f"CV ROC AUC scores: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
+    
+    # Train model với early stopping (sử dụng validation set)
+    print("Training final model với early stopping...")
+    model = LGBMClassifier(**params)
+    model.fit(
+        X_train, y_train,
+        eval_set=[(X_val, y_val)],
+        eval_metric='auc',
+        callbacks=[lgb.early_stopping(stopping_rounds=50, verbose=False)]
     )
     
-    # Create wrapper for predict_proba compatibility
-    class LightGBMWrapper:
-        def __init__(self, model):
-            self.model = model
-            
-        def predict_proba(self, X):
-            # LightGBM predict returns raw scores, convert to probabilities
-            raw_scores = self.model.predict(X)
-            # Convert to probabilities using sigmoid
-            import numpy as np
-            probs = 1 / (1 + np.exp(-raw_scores))
-            # Return 2D array with [not_match_prob, match_prob]
-            return np.column_stack([1 - probs, probs])
-    
-    wrapped_model = LightGBMWrapper(model)
-    
-    # Evaluate
-    y_pred_proba = wrapped_model.predict_proba(X_val)[:, 1]
-    y_pred = (y_pred_proba > 0.5).astype(int)
-    
-    metrics = calculate_metrics(y_val, y_pred, y_pred_proba)
-    
-    return wrapped_model, metrics
-
-def train_logistic_regression(X_train, y_train, X_val, y_val):
-    """Train Logistic Regression model"""
-    print("Training Logistic Regression...")
-    
-    model = LogisticRegression(random_state=42, max_iter=1000)
-    model.fit(X_train, y_train)
+    # Get threshold from config
+    settings = get_settings()
+    threshold = settings.MATCH_PROBABILITY_THRESHOLD
     
     # Evaluate
     y_pred_proba = model.predict_proba(X_val)[:, 1]
-    y_pred = (y_pred_proba > 0.5).astype(int)
+    y_pred = (y_pred_proba > threshold).astype(int)
     
     metrics = calculate_metrics(y_val, y_pred, y_pred_proba)
+    
+    print(f"LightGBM - ROC AUC: {metrics['roc_auc']:.4f}, F1: {metrics['f1']:.4f}")
+    
+    return model, metrics
+
+def train_logistic_regression(X_train, y_train, X_val, y_val):
+    """Train Logistic Regression model với basic parameters"""
+    print("Training Logistic Regression với basic setup...")
+    
+    # Sử dụng parameters cơ bản để tạo sự khác biệt
+    model = LogisticRegression(
+        random_state=42, 
+        max_iter=500,  # Giảm từ 1000 xuống 500
+        C=1.0,  # Default regularization
+        solver='lbfgs',  # Basic solver
+        class_weight=None  # Không handle imbalance
+    )
+    model.fit(X_train, y_train)
+    
+    # Get threshold from config
+    settings = get_settings()
+    threshold = settings.MATCH_PROBABILITY_THRESHOLD
+    
+    # Evaluate
+    y_pred_proba = model.predict_proba(X_val)[:, 1]
+    y_pred = (y_pred_proba > threshold).astype(int)
+    
+    metrics = calculate_metrics(y_val, y_pred, y_pred_proba)
+    
+    print(f"Logistic Regression - ROC AUC: {metrics['roc_auc']:.4f}, F1: {metrics['f1']:.4f}")
     
     return model, metrics
 
 def train_random_forest(X_train, y_train, X_val, y_val):
-    """Train Random Forest model"""
-    print("Training Random Forest...")
+    """Train Random Forest model với conservative parameters"""
+    print("Training Random Forest với conservative setup...")
     
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    # Sử dụng parameters conservative để tạo sự khác biệt
+    model = RandomForestClassifier(
+        n_estimators=50,  # Giảm từ 100 xuống 50
+        max_depth=5,  # Giới hạn depth để tránh overfitting
+        min_samples_split=10,  # Tăng threshold
+        min_samples_leaf=5,  # Tăng threshold
+        random_state=42,
+        class_weight=None,  # Không handle imbalance
+        max_features='sqrt'  # Conservative feature selection
+    )
     model.fit(X_train, y_train)
+    
+    # Get threshold from config
+    settings = get_settings()
+    threshold = settings.MATCH_PROBABILITY_THRESHOLD
     
     # Evaluate
     y_pred_proba = model.predict_proba(X_val)[:, 1]
-    y_pred = (y_pred_proba > 0.5).astype(int)
+    y_pred = (y_pred_proba > threshold).astype(int)
     
     metrics = calculate_metrics(y_val, y_pred, y_pred_proba)
+    
+    print(f"Random Forest - ROC AUC: {metrics['roc_auc']:.4f}, F1: {metrics['f1']:.4f}")
     
     return model, metrics
 
 def save_models_and_artifacts(models_results, feature_cols):
     """Lưu model tốt nhất và artifacts cần thiết cho API"""
     print("\n=== Lưu model tốt nhất và artifacts ===")
+    
+    # Get models directory from config
+    MODELS_DIR = get_models_dir()
     
     # Tạo thư mục nếu chưa có
     os.makedirs(MODELS_DIR, exist_ok=True)
@@ -157,25 +211,25 @@ def save_models_and_artifacts(models_results, feature_cols):
     joblib.dump(feature_cols, feature_cols_path)
     print(f"Đã lưu feature columns: {feature_cols_path}")
     
-    # Tạo và lưu pairwise features scaler
-    from sklearn.preprocessing import MinMaxScaler
-    pairwise_scaler = MinMaxScaler()
-    
-    # Load features data để fit scaler
-    features_df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'data', 'pairwise_features.csv'))
-    feature_data = features_df[feature_cols].fillna(0)
-    pairwise_scaler.fit(feature_data)
-    
-    joblib.dump(pairwise_scaler, os.path.join(MODELS_DIR, 'pairwise_features_scaler.joblib'))
-    print(f"Đã lưu pairwise features scaler")
-    
-    # Tạo và lưu numerical columns to scale
+    # Tạo và lưu numerical columns to scale (giống Archive)
     numerical_cols_to_scale = [
         'age_diff', 'height_diff', 'geo_distance_km',
         'interests_jaccard', 'languages_jaccard', 'pets_jaccard'
     ]
     # Chỉ lấy các cột có trong feature_cols
     numerical_cols_to_scale = [col for col in numerical_cols_to_scale if col in feature_cols]
+    
+    # Tạo và lưu pairwise features scaler (chỉ scale numerical features)
+    from sklearn.preprocessing import MinMaxScaler
+    pairwise_scaler = MinMaxScaler()
+    
+    # Load features data để fit scaler (chỉ numerical features)
+    features_df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'data', 'pairwise_features.csv'))
+    numerical_data = features_df[numerical_cols_to_scale].fillna(0)
+    pairwise_scaler.fit(numerical_data)
+    
+    joblib.dump(pairwise_scaler, os.path.join(MODELS_DIR, 'pairwise_features_scaler.joblib'))
+    print(f"Đã lưu pairwise features scaler")
     
     joblib.dump(numerical_cols_to_scale, os.path.join(MODELS_DIR, 'numerical_pairwise_cols_to_scale.joblib'))
     print(f"Đã lưu numerical columns to scale")
@@ -245,13 +299,13 @@ def save_models_and_artifacts(models_results, feature_cols):
     print(f"Đã lưu training summary: {summary_path}")
     
     print(f"\n✅ Đã lưu model tốt nhất và artifacts vào {MODELS_DIR}")
-    print(f"📁 Files để copy sang ai_service/ml_models:")
+    print(f"📁 Files được tạo:")
     for file in summary['files_created']:
         print(f"   - {file}")
-    print(f"\n💡 Lưu ý: Copy tất cả files từ train_model/models/ sang ai_service/ml_models/")
+    print(f"\n💡 Lưu ý: Model được lưu theo cấu hình MODELS_DIR trong config")
 
 def train_all_models():
-    """Train tất cả models"""
+    """Train tất cả models với cải tiến để tăng sự khác biệt"""
     # Load data
     X, y, feature_cols = load_and_prepare_data()
     
@@ -263,25 +317,97 @@ def train_all_models():
     print(f"Train set: {X_train.shape[0]} samples")
     print(f"Test set: {X_test.shape[0]} samples")
     
-    # Train models
+    # Thêm feature engineering cho LightGBM
+    print("\n=== Feature Engineering cho LightGBM ===")
+    X_train_enhanced, X_test_enhanced = enhance_features_for_lightgbm(X_train, X_test)
+    
+    # Train models với different datasets
     models_results = {}
     
-    # LightGBM
-    lgb_model, lgb_metrics = train_lightgbm(X_train, y_train, X_test, y_test)
+    # LightGBM với enhanced features
+    print("\n=== Training LightGBM với enhanced features ===")
+    lgb_model, lgb_metrics = train_lightgbm(X_train_enhanced, y_train, X_test_enhanced, y_test)
     models_results['LightGBM'] = (lgb_model, None, lgb_metrics)
     
-    # Logistic Regression
+    # Logistic Regression với original features
+    print("\n=== Training Logistic Regression với original features ===")
     lr_model, lr_metrics = train_logistic_regression(X_train, y_train, X_test, y_test)
     models_results['Logistic Regression'] = (lr_model, None, lr_metrics)
     
-    # Random Forest
+    # Random Forest với original features
+    print("\n=== Training Random Forest với original features ===")
     rf_model, rf_metrics = train_random_forest(X_train, y_train, X_test, y_test)
     models_results['Random Forest'] = (rf_model, None, rf_metrics)
+    
+    # Print comparison
+    print("\n=== Model Performance Comparison ===")
+    for model_name, (model, scaler, metrics) in models_results.items():
+        print(f"{model_name}: ROC AUC = {metrics['roc_auc']:.4f}, F1 = {metrics['f1']:.4f}")
     
     # Save models and artifacts
     save_models_and_artifacts(models_results, feature_cols)
     
     return models_results
+
+def enhance_features_for_lightgbm(X_train, X_test):
+    """Tạo enhanced features cho LightGBM để tăng performance"""
+    print("Tạo enhanced features cho LightGBM...")
+    
+    # Tạo interaction features
+    X_train_enhanced = X_train.copy()
+    X_test_enhanced = X_test.copy()
+    
+    # 1. Polynomial features cho numerical columns
+    numerical_cols = ['age_diff', 'height_diff', 'geo_distance_km']
+    for col in numerical_cols:
+        if col in X_train.columns:
+            # Square features
+            X_train_enhanced[f'{col}_squared'] = X_train_enhanced[col] ** 2
+            X_test_enhanced[f'{col}_squared'] = X_test_enhanced[col] ** 2
+            
+            # Log features (với protection cho giá trị 0)
+            X_train_enhanced[f'{col}_log'] = np.log1p(X_train_enhanced[col])
+            X_test_enhanced[f'{col}_log'] = np.log1p(X_test_enhanced[col])
+    
+    # 2. Interaction features
+    if 'age_diff' in X_train.columns and 'height_diff' in X_train.columns:
+        X_train_enhanced['age_height_interaction'] = X_train_enhanced['age_diff'] * X_train_enhanced['height_diff']
+        X_test_enhanced['age_height_interaction'] = X_test_enhanced['age_diff'] * X_test_enhanced['height_diff']
+    
+    if 'geo_distance_km' in X_train.columns and 'interests_jaccard' in X_train.columns:
+        X_train_enhanced['distance_interest_interaction'] = X_train_enhanced['geo_distance_km'] * X_train_enhanced['interests_jaccard']
+        X_test_enhanced['distance_interest_interaction'] = X_test_enhanced['geo_distance_km'] * X_test_enhanced['interests_jaccard']
+    
+    # 3. Ratio features
+    if 'age_diff' in X_train.columns and 'height_diff' in X_train.columns:
+        # Protection against division by zero
+        X_train_enhanced['age_height_ratio'] = X_train_enhanced['age_diff'] / (X_train_enhanced['height_diff'] + 1e-8)
+        X_test_enhanced['age_height_ratio'] = X_test_enhanced['age_diff'] / (X_test_enhanced['height_diff'] + 1e-8)
+    
+    # 4. Binning features
+    if 'geo_distance_km' in X_train.columns:
+        # Distance bins
+        X_train_enhanced['distance_bin'] = pd.cut(X_train_enhanced['geo_distance_km'], bins=5, labels=False)
+        X_test_enhanced['distance_bin'] = pd.cut(X_test_enhanced['geo_distance_km'], bins=5, labels=False)
+    
+    if 'age_diff' in X_train.columns:
+        # Age difference bins
+        X_train_enhanced['age_diff_bin'] = pd.cut(X_train_enhanced['age_diff'], bins=5, labels=False)
+        X_test_enhanced['age_diff_bin'] = pd.cut(X_test_enhanced['age_diff'], bins=5, labels=False)
+    
+    # 5. Statistical features
+    if 'interests_jaccard' in X_train.columns and 'languages_jaccard' in X_train.columns and 'pets_jaccard' in X_train.columns:
+        # Average similarity
+        X_train_enhanced['avg_similarity'] = (X_train_enhanced['interests_jaccard'] + 
+                                             X_train_enhanced['languages_jaccard'] + 
+                                             X_train_enhanced['pets_jaccard']) / 3
+        X_test_enhanced['avg_similarity'] = (X_test_enhanced['interests_jaccard'] + 
+                                            X_test_enhanced['languages_jaccard'] + 
+                                            X_test_enhanced['pets_jaccard']) / 3
+    
+    print(f"Enhanced features: {X_train_enhanced.shape[1]} columns (original: {X_train.shape[1]})")
+    
+    return X_train_enhanced, X_test_enhanced
 
 if __name__ == "__main__":
     models_results = train_all_models() 

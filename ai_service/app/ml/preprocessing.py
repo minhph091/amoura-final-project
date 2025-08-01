@@ -1,6 +1,14 @@
 # app/ml/preprocessing.py
-import ssl
+"""
+Data preprocessing utilities for machine learning pipeline.
 
+This module provides comprehensive data preprocessing functions for the Amoura AI service,
+including text processing, feature engineering, and data transformation utilities.
+It handles user profile data, geographic calculations, and compatibility assessments
+for the matching algorithm.
+"""
+
+import ssl
 import nltk
 import pandas as pd
 import numpy as np
@@ -9,7 +17,7 @@ from datetime import datetime
 import joblib
 import os
 
-from sklearn.preprocessing import MinMaxScaler  # OneHotEncoder sẽ được tải từ file
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
 
 from nltk.corpus import stopwords
@@ -18,11 +26,13 @@ from nltk.tokenize import word_tokenize
 from unidecode import unidecode
 from geopy.distance import geodesic
 
-# --- Constants ---
-MODELS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "ml_models")  # Đường dẫn tương đối
+# Configuration and constants
+from app.core.config import get_settings
+settings = get_settings()
+MODELS_DIR = str(settings.models_path)
 
-# --- NLTK Setup (cần tải dữ liệu một lần khi ứng dụng chạy hoặc trong Dockerfile) ---
-
+# NLTK setup for text processing
+# SSL context configuration for NLTK downloads
 try:
     _create_unverified_https_context = ssl._create_unverified_context
 except AttributeError:
@@ -30,23 +40,35 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 
+# Initialize NLTK components for text processing
 try:
     stop_words_en = set(stopwords.words('english'))
     lemmatizer = WordNetLemmatizer()
-    # Đảm bảo nltk data đã được tải. Nếu không, cần có bước tải riêng.
+    # Download required NLTK data for text processing
     nltk.download('punkt', quiet=True)
     nltk.download('stopwords', quiet=True)
     nltk.download('wordnet', quiet=True)
 except LookupError:
     print("NLTK data not found. Please download them (punkt, stopwords, wordnet).")
-    # Có thể raise lỗi ở đây để dừng ứng dụng nếu cần thiết.
+    # Fallback initialization if NLTK data is unavailable
     stop_words_en = set()
     lemmatizer = None
 
 
-# --- Helper Functions from Notebooks (đã được refactor) ---
-
 def calculate_age(born_str: str) -> int | float:
+    """
+    Calculate age from date of birth string.
+    
+    Args:
+        born_str: Date of birth in 'YYYY-MM-DD' format
+        
+    Returns:
+        Age in years as integer, or NaN if parsing fails
+        
+    Example:
+        >>> calculate_age('1990-01-01')
+        34
+    """
     try:
         born = datetime.strptime(str(born_str), '%Y-%m-%d')
         today = datetime.today()
@@ -57,30 +79,80 @@ def calculate_age(born_str: str) -> int | float:
 
 
 def preprocess_text(text: str | None, use_lemmatization: bool = True) -> str:
+    """
+    Preprocess text data for natural language processing.
+    
+    Performs comprehensive text cleaning including:
+    - Unicode normalization and lowercase conversion
+    - Punctuation and number removal
+    - Stop word removal
+    - Tokenization and lemmatization (optional)
+    
+    Args:
+        text: Input text string to preprocess
+        use_lemmatization: Whether to apply lemmatization to tokens
+        
+    Returns:
+        Preprocessed text string
+        
+    Example:
+        >>> preprocess_text("Hello, World! 123")
+        'hello world'
+    """
     if pd.isnull(text) or not lemmatizer:
         return ""
+    
+    # Normalize text: remove accents, convert to lowercase
     text_normalized = unidecode(str(text).lower())
+    
+    # Remove punctuation and numbers
     text_normalized = re.sub(r'[^\w\s]', '', text_normalized)
     text_normalized = re.sub(r'\d+', '', text_normalized)
+    
+    # Tokenize and filter
     tokens = word_tokenize(text_normalized)
     tokens = [word for word in tokens if word not in stop_words_en and len(word) > 1]
+    
+    # Apply lemmatization if requested
     if use_lemmatization:
         tokens = [lemmatizer.lemmatize(word) for word in tokens]
+    
     return " ".join(tokens)
 
 
 def _apply_top_n_categorical_encoding_single(value: str | None, top_categories: list, prefix: str) -> pd.Series:
-    """Helper cho việc encode top-N cho một giá trị đơn lẻ."""
+    """
+    Apply top-N categorical encoding for a single value.
+    
+    Creates binary features for each top category and an 'other' category.
+    This function is used for encoding categorical variables like body type,
+    orientation, job industry, etc.
+    
+    Args:
+        value: The categorical value to encode
+        top_categories: List of top categories to create features for
+        prefix: Prefix for the generated feature names
+        
+    Returns:
+        Pandas Series with binary encoded features
+        
+    Example:
+        >>> _apply_top_n_categorical_encoding_single('slim', ['slim', 'average'], 'body_type')
+        body_type_slim      1
+        body_type_average   0
+        body_type_other     0
+    """
     encoded_features = {}
     value_normalized = str(value).strip().lower() if pd.notnull(value) else 'unknown'
 
+    # Create binary features for each top category
     for category in top_categories:
         clean_category = unidecode(str(category)).lower().replace(' ', '_').replace('/', '_').replace('(', '').replace(
             ')', '').replace('.', '')
         col_name = f"{prefix}_{clean_category}"
         encoded_features[col_name] = 1 if value_normalized == str(category).strip().lower() else 0
 
-    # Other category
+    # Create 'other' category for values not in top categories
     clean_categories_lower = [str(cat).strip().lower() for cat in top_categories]
     col_name_other = f"{prefix}_other"
     encoded_features[col_name_other] = 1 if value_normalized not in clean_categories_lower else 0
@@ -90,9 +162,30 @@ def _apply_top_n_categorical_encoding_single(value: str | None, top_categories: 
 
 def _apply_multivalue_binary_features_single(value_str: str | None, top_items: list, separator: str,
                                              prefix: str) -> pd.Series:
-    """Helper cho việc tạo multi-value binary features cho một giá trị chuỗi đơn lẻ."""
+    """
+    Create binary features for multi-value string data.
+    
+    Converts a comma-separated string of values into binary features
+    for each top item. Used for encoding interests, languages, pets, etc.
+    
+    Args:
+        value_str: Comma-separated string of values
+        top_items: List of top items to create features for
+        separator: Character used to separate values in the string
+        prefix: Prefix for the generated feature names
+        
+    Returns:
+        Pandas Series with binary encoded features
+        
+    Example:
+        >>> _apply_multivalue_binary_features_single('Hiking-Reading', ['Hiking', 'Music'], '-', 'interests')
+        interests_hiking   1
+        interests_music    0
+        interests_other    1
+    """
     binary_features = {}
     items_in_value = set()
+    
     if pd.notnull(value_str):
         items_in_value = set(
             unidecode(item.strip().lower()) for item in str(value_str).split(separator) if item.strip())
@@ -105,101 +198,203 @@ def _apply_multivalue_binary_features_single(value_str: str | None, top_items: l
 
 
 def haversine_distance(lat1: float | None, lon1: float | None, lat2: float | None, lon2: float | None) -> float:
+    """
+    Calculate haversine distance between two geographic coordinates.
+    
+    Uses the geodesic distance calculation to determine the great-circle
+    distance between two points on Earth's surface.
+    
+    Args:
+        lat1: Latitude of first point
+        lon1: Longitude of first point
+        lat2: Latitude of second point
+        lon2: Longitude of second point
+        
+    Returns:
+        Distance in kilometers, or 10000.0 for invalid coordinates
+        
+    Example:
+        >>> haversine_distance(21.0285, 105.8542, 10.8231, 106.6297)
+        1150.23
+    """
     if pd.isna(lat1) or pd.isna(lon1) or pd.isna(lat2) or pd.isna(lon2):
-        return 10000.0  # Default large distance for missing coords
+        return 10000.0  # Default large distance for missing coordinates
     return geodesic((lat1, lon1), (lat2, lon2)).km
 
 
 def _is_interested(sex_a: str | None, orientation_a: str | None, sex_b: str | None) -> bool:
-    if None in [sex_a, orientation_a, sex_b]: return False  # Xử lý None
+    """
+    Determine if person A is interested in person B based on sexual orientation.
+    
+    Evaluates compatibility based on sexual orientation rules:
+    - Straight: interested in opposite sex
+    - Homosexual: interested in same sex
+    - Bisexual: interested in all sexes
+    - Prefer not to say: compatible with bisexual or prefer not to say
+    
+    Args:
+        sex_a: Sex of person A
+        orientation_a: Sexual orientation of person A
+        sex_b: Sex of person B
+        
+    Returns:
+        True if person A is interested in person B, False otherwise
+    """
+    if None in [sex_a, orientation_a, sex_b]:
+        return False  # Handle missing values
 
     sex_a_lower = sex_a.lower()
     orientation_a_lower = orientation_a.lower()
     sex_b_lower = sex_b.lower()
 
     if orientation_a_lower == 'straight':
+        # Straight orientation: interested in opposite sex
         if (sex_a_lower == 'male' and sex_b_lower == 'female') or \
                 (sex_a_lower == 'female' and sex_b_lower == 'male'):
             return True
+        # Non-binary can be interested in male or female
         if sex_a_lower == 'non-binary' and sex_b_lower in ['male', 'female']:
             return True
         return False
     elif orientation_a_lower == 'homosexual':
+        # Homosexual: interested in same sex
         return sex_a_lower == sex_b_lower
     elif orientation_a_lower == 'bisexual':
+        # Bisexual: interested in all sexes
         return True
     elif orientation_a_lower == 'prefer not to say':
-        # Prefer not to say chỉ thích bisexual hoặc prefer not to say
+        # Prefer not to say: compatible with bisexual or prefer not to say
         return orientation_a_lower in ['bisexual', 'prefer not to say']
     return False
 
 
 def orientation_compatibility(sex1: str | None, orientation1: str | None, sex2: str | None,
                               orientation2: str | None) -> bool:
-    if None in [sex1, orientation1, sex2, orientation2]: return False  # Xử lý None
+    """
+    Check mutual compatibility between two people based on their orientations.
+    
+    Two people are compatible if both are interested in each other
+    according to their respective sexual orientations. Special handling
+    is provided for 'prefer not to say' cases.
+    
+    Args:
+        sex1: Sex of first person
+        orientation1: Sexual orientation of first person
+        sex2: Sex of second person
+        orientation2: Sexual orientation of second person
+        
+    Returns:
+        True if both people are mutually interested, False otherwise
+    """
+    if None in [sex1, orientation1, sex2, orientation2]:
+        return False  # Handle missing values
 
-    # Handle 'prefer not to say'
+    # Special handling for 'prefer not to say' cases
     if any(o.lower() == 'prefer not to say' for o in [sex1, sex2, orientation1, orientation2] if o):
         # Compatible if both are bisexual or prefer not to say orientation
         return (orientation1.lower() in ['bisexual', 'prefer not to say'] and
                 orientation2.lower() in ['bisexual', 'prefer not to say'])
 
+    # Check mutual interest
     user1_likes_user2 = _is_interested(sex1, orientation1, sex2)
     user2_likes_user1 = _is_interested(sex2, orientation2, sex1)
     return user1_likes_user2 and user2_likes_user1
 
 
 def jaccard_similarity(list1_str: str | None, list2_str: str | None, separator: str = '-') -> float:
+    """
+    Calculate Jaccard similarity between two lists represented as strings.
+    
+    Jaccard similarity measures the overlap between two sets as the size
+    of their intersection divided by the size of their union.
+    
+    Args:
+        list1_str: First list as separator-delimited string
+        list2_str: Second list as separator-delimited string
+        separator: Character used to separate items in the strings
+        
+    Returns:
+        Jaccard similarity score between 0.0 and 1.0
+        
+    Example:
+        >>> jaccard_similarity('Hiking-Reading-Music', 'Hiking-Traveling')
+        0.25
+    """
     if pd.isna(list1_str) or pd.isna(list2_str):
         return 0.0
+    
+    # Convert strings to sets of lowercase items
     set1 = set(item.strip().lower() for item in str(list1_str).split(separator) if item.strip())
     set2 = set(item.strip().lower() for item in str(list2_str).split(separator) if item.strip())
+    
+    # Handle empty sets
     if not set1 and not set2:
-        return 0.0  # Hoặc 1.0 tùy định nghĩa
+        return 0.0  # Return 0.0 for empty sets
+    
+    # Calculate Jaccard similarity
     intersection_size = len(set1.intersection(set2))
     union_size = len(set1.union(set2))
     return intersection_size / union_size if union_size != 0 else 0.0
 
 
-# app/ml/preprocessing.py
-# ... (các import và hàm helper khác giữ nguyên) ...
-
-# --- Hàm chính để tạo User Feature Vector ---
 def create_user_feature_vector(user_raw_data: dict) -> pd.Series:
     """
-    Tạo vector đặc trưng cho một người dùng từ dữ liệu thô.
-    user_raw_data: dictionary chứa thông tin người dùng tương tự một dòng profiles_df.
-                   Bao gồm các trường đã được join tên (vd: sex, orientation, job,...)
-                   và các trường multi-value đã được ghép thành chuỗi (interests, languages, pets).
+    Create a feature vector for a single user from raw data.
+    
+    This function transforms raw user profile data into a standardized
+    feature vector that can be used by the machine learning model.
+    The process includes scaling numerical features, encoding categorical
+    variables, and processing text-based features.
+    
+    Args:
+        user_raw_data: Dictionary containing user profile information.
+                      Should include fields like age, height, sex, orientation,
+                      body_type, drink, smoke, interests, languages, pets,
+                      education_level, job_industry, and bio.
+    
+    Returns:
+        Pandas Series containing the user's feature vector
+        
+    Example:
+        >>> user_data = {
+        ...     'age': 25, 'height': 170, 'sex': 'male',
+        ...     'orientation': 'straight', 'interests': 'Hiking-Reading'
+        ... }
+        >>> features = create_user_feature_vector(user_data)
     """
-    user_features_dict = {}  # Sử dụng dict để dễ quản lý rồi chuyển sang Series
+    user_features_dict = {}  # Dictionary to store all features before converting to Series
 
-    # 1. Age and Height
+    # 1. Age and Height Scaling
     age = user_raw_data.get('age', np.nan)
     height = user_raw_data.get('height', np.nan)
 
+    # Load pre-trained scalers for age and height
     scaler_age = joblib.load(os.path.join(MODELS_DIR, "scaler_age.joblib"))
     scaler_height = joblib.load(os.path.join(MODELS_DIR, "scaler_height.joblib"))
 
+    # Fallback values for missing data
     age_median_fallback = 25
     height_median_fallback = 68
 
-    # Tạo DataFrame một dòng, một cột để transform
+    # Create single-row DataFrames for scaling
     age_df_to_transform = pd.DataFrame({'age': [age if pd.notnull(age) else age_median_fallback]})
     height_df_to_transform = pd.DataFrame({'height': [height if pd.notnull(height) else height_median_fallback]})
 
+    # Apply scaling and store results
     user_features_dict['age_scaled'] = scaler_age.transform(age_df_to_transform)[0, 0]
     user_features_dict['height_scaled'] = scaler_height.transform(height_df_to_transform)[0, 0]
 
-    # 2. Categorical Features (OneHotEncoded)
+    # 2. Categorical Features (One-Hot Encoded)
     onehot_encoder_categorical = joblib.load(os.path.join(MODELS_DIR, "onehot_encoder_categorical.joblib"))
-    categorical_cols_onehot = ['sex', 'orientation', 'body_type', 'drink', 'smoke']  # Đây là tên các cột gốc
+    categorical_cols_onehot = ['sex', 'orientation', 'body_type', 'drink', 'smoke']
 
+    # Default values for missing categorical data
     modes = {
         'sex': 'male', 'orientation': 'straight', 'body_type': 'average',
         'drink': 'socially', 'smoke': 'no'
     }
 
+    # Extract categorical values with fallbacks
     user_cat_values_dict = {col: user_raw_data.get(col, modes.get(col)) for col in categorical_cols_onehot}
     # Tạo DataFrame một dòng với các cột đúng tên
     cat_df_to_transform = pd.DataFrame([user_cat_values_dict], columns=categorical_cols_onehot)
@@ -308,11 +503,6 @@ def create_user_feature_vector(user_raw_data: dict) -> pd.Series:
     return pd.Series(final_feature_vector_data, index=user_features_final_columns)
 
 
-# --- Hàm chính để tạo Pairwise Feature Vector ---
-# app/ml/preprocessing.py
-# ... (các import và hàm helper khác giữ nguyên, bao gồm cả MODELS_DIR) ...
-
-# --- Hàm chính để tạo Pairwise Feature Vector ---
 # --- Hàm chính để tạo Pairwise Feature Vector ---
 def create_pairwise_features_vector(
         user1_raw_data: dict, user1_feature_vector: pd.Series,

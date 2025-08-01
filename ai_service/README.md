@@ -4,7 +4,7 @@ A professional FastAPI-based microservice for AI-powered features in the Amoura 
 
 ## 🚀 Features
 
-- **🤖 AI-Powered Matching**: ML-based user compatibility prediction
+- **🤖 AI-Powered Matching**: ML-based user compatibility prediction using **Logistic Regression**
 - **✏️ Smart Message Editing**: AI-assisted message improvement using Google Gemini
 - **🛡️ Content Moderation**: Filter inappropriate content and user uploads
 - **📊 Conversation Analysis**: Sentiment analysis and conversation insights
@@ -69,13 +69,10 @@ ai_service/
 │       ├── match_service.py            # Match service implementation
 │       └── message_service.py          # Message service implementation
 │
-├── ml_models/                          # Trained ML models
-│   ├── best_model_summary.json         # Model performance metrics
-│   ├── best_overall_model.joblib       # Main trained model
-│   └── [other model files...]          # Preprocessors and scalers
-│
-├── test/                               # Test suite
-│   └── __init__.py
+├── train_model/                        # ML training pipeline
+│   ├── data/                           # Training data
+│   ├── models/                         # Trained models and artifacts
+│   └── *.py                            # Training scripts
 │
 ├── env.example                         # Environment variables template
 ├── requirements.txt                    # Python dependencies
@@ -86,7 +83,7 @@ ai_service/
 
 - **Framework**: FastAPI 0.115+
 - **Database**: PostgreSQL with SQLAlchemy ORM
-- **ML**: scikit-learn, LightGBM, NLTK
+- **ML**: scikit-learn, Logistic Regression
 - **AI**: Google Gemini API
 - **Validation**: Pydantic with custom validators
 - **Logging**: Python logging with structured output
@@ -168,14 +165,14 @@ Visit the API documentation:
 GET /api/v1/users/{user_id}/potential-matches?limit=10
 ```
 
-Returns potential matches for a user based on ML predictions.
+Returns potential matches for a user based on **Logistic Regression** predictions.
 
 #### Get Match Probability
 ```http
 GET /api/v1/users/{user1_id}/match-probability/{user2_id}
 ```
 
-Returns match probability between two specific users.
+Returns match probability between two specific users using **Logistic Regression**.
 
 ### Message Endpoints
 
@@ -284,3 +281,32 @@ For support and questions:
 - Create an issue in the repository
 - Check the API documentation at `/docs`
 - Review the logs for debugging information
+
+## 🎯 Model Information
+
+### **Logistic Regression Model:**
+- **ROC AUC**: 0.8704
+- **Accuracy**: 0.8524
+- **Precision**: 0.7724
+- **Recall**: 0.9994
+- **F1 Score**: 0.8713
+
+### **Model Parameters:**
+```json
+{
+  "model_type": "Logistic Regression",
+  "max_iter": 1000,
+  "random_state": 42
+}
+```
+
+### **Features Used:**
+- Demographic features (age, height, gender)
+- Geographic features (distance, location preference)
+- Compatibility features (orientation, interests, languages)
+- Behavioral features (drink/smoke status, education)
+- User feature similarity (cosine similarity, MAE difference)
+
+---
+
+**🎉 API đã sẵn sàng sử dụng với Logistic Regression model!**

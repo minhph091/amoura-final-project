@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.core.logging import LoggerMixin, get_logger
+from app.core.config import get_settings
 from app.db import crud
 from app.ml.predictor import MatchPredictor
 from app.ml.preprocessing import orientation_compatibility
@@ -20,23 +21,29 @@ class MatchService(LoggerMixin):
     """
     Service for AI-powered match predictions.
     
-    This service uses machine learning models to predict potential
-    matches between users based on their profiles and preferences.
+    This service uses machine learning models to predict compatibility between users
+    and returns a list of user IDs that are likely to be good matches.
     """
     
-    def __init__(self, db: Session, predictor=None, match_threshold: float = 0.5):
+    def __init__(self, db: Session, predictor=None, match_threshold: float = None):
         """
         Initialize MatchService.
         
         Args:
             db: Database session
             predictor: MatchPredictor instance
-            match_threshold: Threshold for considering a match valid
+            match_threshold: Threshold for considering a match valid (from config if None)
         """
         self.db = db
         self.predictor = predictor
+        
+        # Get threshold from config if not provided
+        if match_threshold is None:
+            settings = get_settings()
+            match_threshold = settings.MATCH_PROBABILITY_THRESHOLD
+            
         self.match_threshold = match_threshold
-        self.logger.info("MatchService initialized successfully")
+        self.logger.info(f"MatchService initialized with threshold: {self.match_threshold}")
     
     def get_potential_matches(self, current_user_id: int, limit: int = 10) -> List[int]:
         """

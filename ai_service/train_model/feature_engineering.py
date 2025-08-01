@@ -117,11 +117,12 @@ def create_and_save_scalers_encoders(profiles_df):
     scaler_age = StandardScaler()
     scaler_height = StandardScaler()
     
-    age_data = profiles_df['age'].dropna().values.reshape(-1, 1)
-    height_data = profiles_df['height'].dropna().values.reshape(-1, 1)
+    # Sử dụng DataFrame để có feature names
+    age_df = profiles_df[['age']].dropna()
+    height_df = profiles_df[['height']].dropna()
     
-    scaler_age.fit(age_data)
-    scaler_height.fit(height_data)
+    scaler_age.fit(age_df)
+    scaler_height.fit(height_df)
     
     joblib.dump(scaler_age, os.path.join(MODELS_DIR, 'scaler_age.joblib'))
     joblib.dump(scaler_height, os.path.join(MODELS_DIR, 'scaler_height.joblib'))
@@ -183,14 +184,16 @@ def create_and_save_scalers_encoders(profiles_df):
     latitude_scaler = StandardScaler()
     longitude_scaler = StandardScaler()
     
-    # Location preference (thay thế -1 bằng 0)
-    loc_pref_data = profiles_df['location_preference'].replace(-1, 0).dropna().values.reshape(-1, 1)
-    lat_data = profiles_df['latitude'].dropna().values.reshape(-1, 1)
-    lon_data = profiles_df['longitude'].dropna().values.reshape(-1, 1)
+    # Sử dụng DataFrame để có feature names - SỬA: Khớp với API
+    # API sử dụng location_preference_km (0 nếu -1, otherwise giữ nguyên)
+    loc_pref_km = profiles_df['location_preference'].replace(-1, 0)
+    loc_pref_df = pd.DataFrame({'location_preference_km': loc_pref_km}).dropna()
+    lat_df = profiles_df[['latitude']].dropna()
+    lon_df = profiles_df[['longitude']].dropna()
     
-    location_pref_scaler.fit(loc_pref_data)
-    latitude_scaler.fit(lat_data)
-    longitude_scaler.fit(lon_data)
+    location_pref_scaler.fit(loc_pref_df)
+    latitude_scaler.fit(lat_df)
+    longitude_scaler.fit(lon_df)
     
     joblib.dump(location_pref_scaler, os.path.join(MODELS_DIR, 'location_preference_scaler.joblib'))
     joblib.dump(latitude_scaler, os.path.join(MODELS_DIR, 'latitude_scaler.joblib'))
@@ -238,6 +241,158 @@ def create_and_save_scalers_encoders(profiles_df):
     
     print("✅ Đã tạo và lưu tất cả scalers, encoders, vectorizers")
 
+def create_user_feature_vector(user_raw_data: dict) -> pd.Series:
+    """
+    Tạo vector đặc trưng cho một người dùng từ dữ liệu thô.
+    Giống hệt như trong API để đảm bảo tính nhất quán.
+    """
+    user_features_dict = {}
+
+    # 1. Age and Height
+    age = user_raw_data.get('age', np.nan)
+    height = user_raw_data.get('height', np.nan)
+
+    scaler_age = joblib.load(os.path.join(MODELS_DIR, "scaler_age.joblib"))
+    scaler_height = joblib.load(os.path.join(MODELS_DIR, "scaler_height.joblib"))
+
+    age_median_fallback = 25
+    height_median_fallback = 68
+
+    # Tạo DataFrame một dòng, một cột để transform
+    age_df_to_transform = pd.DataFrame({'age': [age if pd.notnull(age) else age_median_fallback]})
+    height_df_to_transform = pd.DataFrame({'height': [height if pd.notnull(height) else height_median_fallback]})
+
+    user_features_dict['age_scaled'] = scaler_age.transform(age_df_to_transform)[0, 0]
+    user_features_dict['height_scaled'] = scaler_height.transform(height_df_to_transform)[0, 0]
+
+    # 2. Categorical Features (OneHotEncoded)
+    onehot_encoder_categorical = joblib.load(os.path.join(MODELS_DIR, "onehot_encoder_categorical.joblib"))
+    categorical_cols_onehot = ['sex', 'orientation', 'body_type', 'drink', 'smoke']
+
+    modes = {
+        'sex': 'male', 'orientation': 'straight', 'body_type': 'average',
+        'drink': 'socially', 'smoke': 'no'
+    }
+
+    user_cat_values_dict = {col: user_raw_data.get(col, modes.get(col)) for col in categorical_cols_onehot}
+    cat_df_to_transform = pd.DataFrame([user_cat_values_dict], columns=categorical_cols_onehot)
+
+    encoded_cat_array = onehot_encoder_categorical.transform(cat_df_to_transform)
+
+    onehot_feature_names = onehot_encoder_categorical.get_feature_names_out(categorical_cols_onehot)
+    for i, col_name in enumerate(onehot_feature_names):
+        user_features_dict[col_name] = encoded_cat_array[0, i]
+
+    # 3. High-Cardinality Categorical (Job, Education)
+    top_n_job_categories = joblib.load(os.path.join(MODELS_DIR, "top_n_job_categories.joblib"))
+    job_series = _apply_top_n_categorical_encoding_single(user_raw_data.get('job'), top_n_job_categories, 'job')
+    user_features_dict.update(job_series.to_dict())
+
+    top_n_edu_categories = joblib.load(os.path.join(MODELS_DIR, "top_n_edu_categories.joblib"))
+    edu_series = _apply_top_n_categorical_encoding_single(user_raw_data.get('education_level'), top_n_edu_categories, 'edu')
+    user_features_dict.update(edu_series.to_dict())
+
+    # 4. Binary Indicators
+    user_features_dict['dropped_out_school'] = int(user_raw_data.get('dropped_out_school', 0) or 0)
+    user_features_dict['interested_in_new_language'] = int(user_raw_data.get('interested_in_new_language', 0) or 0)
+
+    # 5. Multi-value text features (Interests, Languages, Pets)
+    top_interests_items = joblib.load(os.path.join(MODELS_DIR, "top_interests_items.joblib"))
+    interests_series = _apply_multivalue_binary_features_single(user_raw_data.get('interests'), top_interests_items, '-', 'interest')
+    user_features_dict.update(interests_series.to_dict())
+
+    top_languages_items = joblib.load(os.path.join(MODELS_DIR, "top_languages_items.joblib"))
+    languages_series = _apply_multivalue_binary_features_single(user_raw_data.get('languages'), top_languages_items, '-', 'lang')
+    user_features_dict.update(languages_series.to_dict())
+
+    top_pets_items = joblib.load(os.path.join(MODELS_DIR, "top_pets_items.joblib"))
+    pets_series = _apply_multivalue_binary_features_single(user_raw_data.get('pets'), top_pets_items, '-', 'pet')
+    user_features_dict.update(pets_series.to_dict())
+
+    # 6. TF-IDF for Bio
+    tfidf_vectorizer_bio = joblib.load(os.path.join(MODELS_DIR, "tfidf_vectorizer_bio.joblib"))
+    processed_bio = preprocess_text(user_raw_data.get('bio'))
+    bio_tfidf_matrix = tfidf_vectorizer_bio.transform([processed_bio])
+    bio_tfidf_array = bio_tfidf_matrix.toarray()[0]
+
+    if hasattr(tfidf_vectorizer_bio, 'get_feature_names_out'):
+        bio_feature_names = [f"bio_tfidf_{name.replace(' ', '_')}" for name in tfidf_vectorizer_bio.get_feature_names_out()]
+        if len(bio_feature_names) == bio_tfidf_array.shape[0]:
+            for i, col_name in enumerate(bio_feature_names):
+                user_features_dict[col_name] = bio_tfidf_array[i]
+        else:
+            for i in range(bio_tfidf_array.shape[0]):
+                user_features_dict[f"bio_tfidf_{i}"] = bio_tfidf_array[i]
+    else:
+        for i in range(bio_tfidf_array.shape[0]):
+            user_features_dict[f"bio_tfidf_{i}"] = bio_tfidf_array[i]
+
+    # 7. Geographic Features
+    loc_pref_scaler = joblib.load(os.path.join(MODELS_DIR, "location_preference_scaler.joblib"))
+    loc_pref = user_raw_data.get('location_preference', -1)
+    user_features_dict['loc_pref_is_everywhere'] = 1 if loc_pref == -1 else 0
+    loc_pref_km = 0 if loc_pref == -1 else loc_pref
+
+    loc_pref_df_to_transform = pd.DataFrame({'location_preference_km': [loc_pref_km]})
+    user_features_dict['location_preference_km_scaled'] = loc_pref_scaler.transform(loc_pref_df_to_transform)[0, 0]
+
+    lat_scaler = joblib.load(os.path.join(MODELS_DIR, "latitude_scaler.joblib"))
+    lon_scaler = joblib.load(os.path.join(MODELS_DIR, "longitude_scaler.joblib"))
+
+    lat_median_fallback = 21.0
+    lon_median_fallback = 105.8
+
+    latitude = user_raw_data.get('latitude', lat_median_fallback)
+    longitude = user_raw_data.get('longitude', lon_median_fallback)
+    latitude = latitude if pd.notnull(latitude) else lat_median_fallback
+    longitude = longitude if pd.notnull(longitude) else lon_median_fallback
+
+    lat_df_to_transform = pd.DataFrame({'latitude': [latitude]})
+    lon_df_to_transform = pd.DataFrame({'longitude': [longitude]})
+
+    user_features_dict['latitude_scaled'] = lat_scaler.transform(lat_df_to_transform)[0, 0]
+    user_features_dict['longitude_scaled'] = lon_scaler.transform(lon_df_to_transform)[0, 0]
+
+    # Đảm bảo thứ tự cột và đầy đủ các cột như trong user_features_final_columns.joblib
+    user_features_final_columns = joblib.load(os.path.join(MODELS_DIR, "user_features_final_columns.joblib"))
+
+    final_feature_vector_data = {}
+    for col in user_features_final_columns:
+        final_feature_vector_data[col] = user_features_dict.get(col, 0.0)
+
+    return pd.Series(final_feature_vector_data, index=user_features_final_columns)
+
+def _apply_top_n_categorical_encoding_single(value: str | None, top_categories: list, prefix: str) -> pd.Series:
+    """Helper cho việc encode top-N cho một giá trị đơn lẻ."""
+    encoded_features = {}
+    value_normalized = str(value).strip().lower() if pd.notnull(value) else 'unknown'
+
+    for category in top_categories:
+        clean_category = unidecode(str(category)).lower().replace(' ', '_').replace('/', '_').replace('(', '').replace(
+            ')', '').replace('.', '')
+        col_name = f"{prefix}_{clean_category}"
+        encoded_features[col_name] = 1 if value_normalized == str(category).strip().lower() else 0
+
+    clean_categories_lower = [str(cat).strip().lower() for cat in top_categories]
+    col_name_other = f"{prefix}_other"
+    encoded_features[col_name_other] = 1 if value_normalized not in clean_categories_lower else 0
+
+    return pd.Series(encoded_features)
+
+def _apply_multivalue_binary_features_single(value_str: str | None, top_items: list, separator: str, prefix: str) -> pd.Series:
+    """Helper cho việc tạo multi-value binary features cho một giá trị chuỗi đơn lẻ."""
+    binary_features = {}
+    items_in_value = set()
+    if pd.notnull(value_str):
+        items_in_value = set(
+            unidecode(item.strip().lower()) for item in str(value_str).split(separator) if item.strip())
+
+    for item in top_items:
+        clean_item = re.sub(r'\W+', '_', item)
+        new_col_name = f"{prefix}_{clean_item}"
+        binary_features[new_col_name] = 1 if item in items_in_value else 0
+    return pd.Series(binary_features)
+
 def create_user_features(profiles_df):
     """Tạo đặc trưng cho từng user"""
     print("Đang tạo đặc trưng cho users...")
@@ -257,20 +412,20 @@ def create_user_features(profiles_df):
     return profiles_df
 
 def create_pairwise_features(user1_data, user2_data):
-    """Tạo đặc trưng cho cặp user"""
+    """Tạo đặc trưng cho cặp user với thứ tự cố định"""
     features = {}
     
-    # Basic differences
+    # 1. Basic differences
     features['age_diff'] = abs(user1_data.get('age', 0) - user2_data.get('age', 0))
     features['height_diff'] = abs(user1_data.get('height', 0) - user2_data.get('height', 0))
     
-    # Geographical distance
+    # 2. Geographical distance
     features['geo_distance_km'] = haversine_distance(
         user1_data.get('latitude'), user1_data.get('longitude'),
         user2_data.get('latitude'), user2_data.get('longitude')
     )
     
-    # Location preference compatibility
+    # 3. Location preference compatibility
     user1_loc_pref = user1_data.get('location_preference', -1.0)
     user2_loc_pref = user2_data.get('location_preference', -1.0)
     dist = features['geo_distance_km']
@@ -278,7 +433,7 @@ def create_pairwise_features(user1_data, user2_data):
     features['user1_within_user2_loc_pref'] = 1.0 if user2_loc_pref == -1 or (dist is not None and dist <= user2_loc_pref) else 0.0
     features['user2_within_user1_loc_pref'] = 1.0 if user1_loc_pref == -1 or (dist is not None and dist <= user1_loc_pref) else 0.0
     
-    # Orientation compatibility - tạo đúng tên như trong preprocessing.py
+    # 4. Orientation compatibility
     comp_u1_u2 = orientation_compatibility(
         user1_data.get('sex'), user1_data.get('orientation'),
         user2_data.get('sex'), user2_data.get('orientation')
@@ -291,22 +446,26 @@ def create_pairwise_features(user1_data, user2_data):
     features['orientation_compatible_user2_to_user1'] = 1.0 if comp_u2_u1 else 0.0
     features['orientation_compatible_final'] = 1.0 if max(comp_u1_u2, comp_u2_u1) else 0.0
     
-    # Similar habits
+    # 5. Similar habits
     features['drink_match'] = 1.0 if user1_data.get('drink') == user2_data.get('drink') else 0.0
     features['smoke_match'] = 1.0 if user1_data.get('smoke') == user2_data.get('smoke') else 0.0
     features['education_match'] = 1.0 if user1_data.get('education_level') == user2_data.get('education_level') else 0.0
     
-    # Jaccard similarities
+    # 6. Jaccard similarities
     features['interests_jaccard'] = jaccard_similarity(user1_data.get('interests'), user2_data.get('interests'))
     features['languages_jaccard'] = jaccard_similarity(user1_data.get('languages'), user2_data.get('languages'))
-    features['pets_jaccard'] = jaccard_similarity(user1_data.get('pets'), user2_data.get('pets'))
     
-    # Language interest match
+    # 7. Language interest match
     user1_wants_learn = 1.0 if user1_data.get('interested_in_new_language', False) else 0.0
     user2_wants_learn = 1.0 if user2_data.get('interested_in_new_language', False) else 0.0
     features['user1_wants_learn_lang'] = user1_wants_learn
     features['user2_wants_learn_lang'] = user2_wants_learn
     features['language_interest_match'] = 1.0 if user1_wants_learn == 1.0 and user2_wants_learn == 1.0 else 0.0
+    
+    # 8. Pets jaccard (đặt sau language_interest_match để giống model ban đầu)
+    features['pets_jaccard'] = jaccard_similarity(user1_data.get('pets'), user2_data.get('pets'))
+    
+    # Note: user_features_cosine_sim và user_features_mae_diff sẽ được thêm ở extract_features()
     
     return features
 
@@ -342,8 +501,25 @@ def extract_features():
         if not user1_data or not user2_data:
             continue
         
+        # Tạo user feature vectors giống như trong API
+        try:
+            user1_feature_vector = create_user_feature_vector(user1_data)
+            user2_feature_vector = create_user_feature_vector(user2_data)
+        except Exception as e:
+            print(f"Error creating feature vectors for users {user1_id}, {user2_id}: {e}")
+            continue
+        
         # Tạo đặc trưng cặp
         pair_features = create_pairwise_features(user1_data, user2_data)
+        
+        # Thêm user feature similarity (giống như trong API)
+        vec1 = user1_feature_vector.fillna(0.0).values.reshape(1, -1)
+        vec2 = user2_feature_vector.fillna(0.0).values.reshape(1, -1)
+        
+        from sklearn.metrics.pairwise import cosine_similarity
+        pair_features['user_features_cosine_sim'] = cosine_similarity(vec1, vec2)[0, 0]
+        pair_features['user_features_mae_diff'] = np.mean(np.abs(vec1 - vec2))
+        
         pair_features['label'] = label
         pair_features['user_id_1'] = user1_id
         pair_features['user_id_2'] = user2_id

@@ -29,16 +29,16 @@ class Settings(BaseSettings):
     
     # Database configuration
     POSTGRES_SERVER: str = Field(default="localhost", description="PostgreSQL server host")
-    POSTGRES_USER: str = Field(default="youruser", description="PostgreSQL username")
-    POSTGRES_PASSWORD: str = Field(default="yourpassword", description="PostgreSQL password")
-    POSTGRES_DB: str = Field(default="amouradb", description="PostgreSQL database name")
+    POSTGRES_USER: str = Field(default="postgres", description="PostgreSQL username")
+    POSTGRES_PASSWORD: str = Field(default="123456789", description="PostgreSQL password")
+    POSTGRES_DB: str = Field(default="amoura", description="PostgreSQL database name")
     POSTGRES_PORT: str = Field(default="5432", description="PostgreSQL port")
     
     # External API keys
     GEMINI_API_KEY: str = Field(default="", description="Google Gemini API key for message editing")
     
     # ML Model configuration
-    MODELS_DIR: str = Field(default="ml_models", description="Directory containing ML models")
+    MODELS_DIR: str = Field(default="train_model/models", description="Directory containing ML models")
     MATCH_PROBABILITY_THRESHOLD: float = Field(
         default=0.5, 
         ge=0.0, 
