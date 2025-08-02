@@ -215,25 +215,34 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         
-        // Check if there are more items
+        // Check if there are more items  
         if (users.size() > limit) {
-            if ("NEXT".equals(direction) || request.getCursor() == null) {
-                hasNext = true;
-            }
-            if ("PREVIOUS".equals(direction)) {
-                hasPrevious = true;
-            }
+            hasNext = true;
             users = users.subList(0, limit);
         }
         
-        // Set cursors (both queries now return DESC order)
+        // Set cursors for intuitive pagination
         if (!users.isEmpty()) {
-            // Both NEXT and PREVIOUS queries return DESC order, so first item has largest ID, last item has smallest ID
-            previousCursor = ((Number) users.get(0)[0]).longValue();        // Largest ID (for going back)
-            nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue(); // Smallest ID (for going forward)
+            // For chronological order (created_at DESC), first item is newest, last item is oldest
+            Long firstUserId = ((Number) users.get(0)[0]).longValue();
+            Long lastUserId = ((Number) users.get(users.size() - 1)[0]).longValue();
             
-            // Set hasPrevious when there's a cursor (regardless of direction)
-            if (request.getCursor() != null) {
+            if (request.getCursor() == null) {
+                // First page: can only go NEXT (to older users)
+                nextCursor = lastUserId;
+                previousCursor = null;
+                hasPrevious = false;
+            } else {
+                // Subsequent pages: set cursors based on direction
+                if ("NEXT".equals(direction)) {
+                    // Going to older users: next = last item, previous = first item
+                    nextCursor = lastUserId;
+                    previousCursor = firstUserId;
+                } else {
+                    // Going to newer users: next = last item, previous = first item  
+                    nextCursor = lastUserId;
+                    previousCursor = firstUserId;
+                }
                 hasPrevious = true;
             }
         }
@@ -298,23 +307,18 @@ public class AdminServiceImpl implements AdminService {
     public UserManagementDTO getUserById(Long userId) {
         log.info("Fetching user details for ID: {}", userId);
         
+        // Check if user exists first
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
-        // Fetch additional data using native query
-        List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, 1);
-        if (userData.isEmpty()) {
-            userData = adminRepository.findAllUsersForManagement(Integer.MAX_VALUE)
-                    .stream()
-                    .filter(row -> ((Number) row[0]).longValue() == userId.longValue())
-                    .toList();
+        // Fetch rich user data with aggregated information
+        Optional<Object[]> userData = adminRepository.findUserDetailsById(userId);
+        
+        if (userData.isPresent()) {
+            return convertToUserManagementDTO(userData.get());
         }
         
-        if (!userData.isEmpty()) {
-            return convertToUserManagementDTO(userData.get(0));
-        }
-        
-        // Fallback to basic conversion
+        // This should rarely happen since user exists, but fallback for safety
         return UserManagementDTO.builder()
                 .id(user.getId())
                 .username(user.getActualUsername())
@@ -322,7 +326,7 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)  // Convert to uppercase for API
+                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
                 .hasProfile(user.getProfile() != null)
