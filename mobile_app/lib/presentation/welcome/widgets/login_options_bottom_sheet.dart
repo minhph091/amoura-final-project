@@ -20,18 +20,23 @@ class LoginOptionsBottomSheet extends StatelessWidget {
 
     final List<Map<String, dynamic>> loginMethods = [
       {
-        'label': localizations.translate('email_phone_option'),
+        // Đảm bảo chỉ viết hoa chữ cái đầu mỗi từ
+        'label': _capitalizeEachWord(localizations.translate('email_phone_option')),
         'icon': FontAwesomeIcons.solidEnvelope,
         'color': AppColors.primary,
         'route': AppRoutes.login,
       },
       {
-        'label': localizations.translate('otp_verification_option'),
+        'label': _capitalizeEachWord(localizations.translate('otp_verification_option')),
         'icon': FontAwesomeIcons.phoneFlip,
         'color': AppColors.secondary,
         'route': AppRoutes.loginWithEmailOtp,
       },
     ];
+
+    String _capitalizeEachWord(String text) {
+      return text.split(' ').map((w) => w.isNotEmpty ? w[0].toUpperCase() + w.substring(1).toLowerCase() : '').join(' ');
+    }
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
@@ -73,11 +78,12 @@ class LoginOptionsBottomSheet extends StatelessWidget {
               ),
             ),
             Text(
-              localizations.translate('sign_in_with'),
+              _capitalizeEachWord(localizations.translate('sign_in_with')),
               style: textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
                 letterSpacing: 0.25,
+                fontFamily: 'Roboto', // đồng bộ font
               ),
               textAlign: TextAlign.center,
             ),
@@ -184,8 +190,9 @@ class LoginOptionsBottomSheet extends StatelessWidget {
                             color: colorScheme.onSurfaceVariant.withValues(
                               alpha: 0.9,
                             ),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            fontFamily: 'Roboto', // đồng bộ font
                           ),
                           textAlign: TextAlign.center,
                           overflow: TextOverflow.ellipsis,

@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:amoura/data/repositories/user_repository.dart';
 import 'package:get_it/get_it.dart';
@@ -16,6 +17,12 @@ import 'infrastructure/services/likes_service.dart';
 
 Future<void> runMain() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Đảm bảo status bar không bị mờ, luôn rõ ràng
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent, // Không làm mờ, không overlay
+    statusBarIconBrightness: Brightness.dark, // hoặc Brightness.light tùy theme
+    statusBarBrightness: Brightness.light,
+  ));
   await configureDependencies(navigatorKey);
 
   runApp(

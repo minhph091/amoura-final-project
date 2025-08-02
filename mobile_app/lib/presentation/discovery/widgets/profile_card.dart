@@ -200,20 +200,7 @@ class ProfileCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      if (bio.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          bio,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 15,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                      // Ẩn tiểu sử (bio) ở màn hình quẹt
                       // Common interests section
                       FutureBuilder<List<String>>(
                         future: _getCommonInterests(),
