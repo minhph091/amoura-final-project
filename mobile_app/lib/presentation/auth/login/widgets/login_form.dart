@@ -8,6 +8,7 @@ import '../login_viewmodel.dart';
 import '../../../../config/theme/app_colors.dart';
 import '../../../../config/language/app_localizations.dart';
 import '../../../profile/view/profile_viewmodel.dart';
+import '../../../../infrastructure/services/app_startup_service.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -98,6 +99,9 @@ class _LoginFormState extends State<LoginForm>
                       ? null
                       : () => viewModel.onLoginPressed(
                         onSuccess: () async {
+                          // Clear cache cũ trước khi load profile mới
+                          AppStartupService.instance.reset();
+                          
                           await Provider.of<ProfileViewModel>(
                             context,
                             listen: false,

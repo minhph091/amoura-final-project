@@ -202,5 +202,23 @@ class ProfileApi {
       return null;
     }
   }
+
+  // Fetch another user's profile by userId
+  Future<Map<String, dynamic>> getProfileByUserId(int userId) async {
+    try {
+      final response = await _apiClient.get('/profiles/$userId');
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to fetch profile for user $userId: \\${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      debugPrint('Error fetching profile for user $userId: \\${e.response?.statusCode} - \\${e.response?.data}');
+      throw Exception('Error fetching profile for user $userId: \\${e.message}');
+    } catch (e) {
+      debugPrint('Unexpected error in getProfileByUserId: $e');
+      throw Exception('Error fetching profile for user $userId: $e');
+    }
+  }
 }
 

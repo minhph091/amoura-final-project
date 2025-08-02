@@ -104,6 +104,11 @@ class ChatDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // --- TYPING INDICATOR STATE ---
+  bool _isOtherUserTyping = false;
+  Timer? _otherUserTypingTimer;
+  bool get isOtherUserTyping => _isOtherUserTyping;
+
   ChatDetailViewModel() {
     _initViewModel();
   }
@@ -336,8 +341,14 @@ class ChatDetailViewModel extends ChangeNotifier {
     _chatService.typingStream.listen((typingData) {
       final chatRoomId = typingData['chatRoomId']?.toString();
       final userId = typingData['userId']?.toString();
-      final isTyping = typingData['isTyping'] == true;
-
+      // Chuẩn hóa logic nhận typing từ backend
+      bool isTyping = false;
+      if (typingData.containsKey('isTyping')) {
+        isTyping = typingData['isTyping'] == true;
+      } else if (typingData.containsKey('content')) {
+        // Nếu backend gửi content: "true"/"false"
+        isTyping = typingData['content'] == 'true';
+      }
       // Chỉ cập nhật typing status nếu là từ user khác và trong current chat
       if (chatRoomId == _currentChatId &&
           userId != null &&
@@ -390,13 +401,12 @@ class ChatDetailViewModel extends ChangeNotifier {
         });
       }
 
-      // Initialize WebSocket connection với current user ID
+      // Subscribe to chat room với current user ID
       if (_currentUserId.isNotEmpty) {
         debugPrint(
           'ChatDetailViewModel: Setting up WebSocket for user $_currentUserId in chat $chatId',
         );
         try {
-          await _chatService.initializeWebSocket(_currentUserId);
           await _chatService.subscribeToChat(chatId);
           debugPrint(
             'ChatDetailViewModel: WebSocket setup completed successfully',
@@ -937,8 +947,20 @@ class ChatDetailViewModel extends ChangeNotifier {
     }
   }
 
+  /// Cập nhật trạng thái typing của đối phương (và timeout tự động ẩn)
   void updateRecipientTypingStatus(bool isTyping) {
-    _isTyping = isTyping;
+    if (isTyping) {
+      _isOtherUserTyping = true;
+      // Reset timer mỗi lần nhận được typing=true
+      _otherUserTypingTimer?.cancel();
+      _otherUserTypingTimer = Timer(const Duration(seconds: 2), () {
+        _isOtherUserTyping = false;
+        notifyListeners();
+      });
+    } else {
+      _isOtherUserTyping = false;
+      _otherUserTypingTimer?.cancel();
+    }
     notifyListeners();
   }
 
@@ -1132,6 +1154,7 @@ class ChatDetailViewModel extends ChangeNotifier {
     _messagesSubscription?.cancel();
     _newMessageSubscription?.cancel();
     _userStatusSubscription?.cancel();
+    _otherUserTypingTimer?.cancel();
     super.dispose();
   }
 }

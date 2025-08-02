@@ -4,7 +4,16 @@ import '../../config/environment.dart';
 /// Cấu hình WebSocket cho chat và notification
 /// Sử dụng STOMP protocol để giao tiếp với Spring Boot backend
 class WebSocketConfig {
-  static const String endpoint = '/ws'; // Main WebSocket endpoint
+  /// Endpoint tùy thuộc vào environment
+  static String get endpoint {
+    switch (EnvironmentConfig.current) {
+      case Environment.dev:
+        return '/ws'; // Dev không có context-path
+      case Environment.staging:
+      case Environment.prod:
+        return '/api/ws'; // Staging và prod có context-path /api (không có trailing slash)
+    }
+  }
 
   /// URL chính để kết nối WebSocket
   static String get url => wsEndpoint;
@@ -14,17 +23,12 @@ class WebSocketConfig {
     // Tùy thuộc vào environment
     switch (EnvironmentConfig.current) {
       case Environment.dev:
-        return 'ws://10.0.2.2:8080/api/ws';
+        return 'ws://10.0.2.2:8080/ws';
       case Environment.staging:
         return 'ws://150.95.109.13:8080/api/ws';
       case Environment.prod:
         return 'wss://api.amoura.space/api/ws';
     }
-  }
-
-  // Thêm method để lấy base WebSocket URL cho production
-  static String get productionWsUrl {
-    return 'wss://api.amoura.space/api/ws';
   }
 
   // STOMP destinations for subscribing
@@ -47,18 +51,6 @@ class WebSocketConfig {
   static const int reconnectDelay = 5000; // 5 seconds
   static const int maxReconnectAttempts = 10;
 
-  /// URL WebSocket chính để kết nối
-  static String get wsUrl {
-    final baseUrl = EnvironmentConfig.baseUrl.replaceFirst('/api', '');
-    return '$baseUrl$endpoint';
-  }
-
-  /// URL WebSocket thay thế
-  static String get wsUrlAlternative {
-    final baseUrl = EnvironmentConfig.baseUrl.replaceFirst('/api', '');
-    return '$baseUrl$endpoint';
-  }
-
   // WebSocket topics và queues
   static const String topicPrefix = '/topic';
   static const String queuePrefix = '/queue';
@@ -79,7 +71,7 @@ class WebSocketConfig {
   static String get personalNotificationTopic =>
       '$userQueuePrefix/notification';
 
-  /// General user status topic
+  /// General user status topic (không sử dụng nữa, thay bằng chat-specific topics)
   static String get userStatusTopic => '$topicPrefix/user-status';
 
   /// Typing indicator topic
@@ -121,7 +113,7 @@ class WebSocketConfig {
   /// Cấu hình STOMP client
   static Map<String, dynamic> getStompConfig(String jwtToken) {
     return {
-      'brokerURL': wsUrl,
+      'brokerURL': wsEndpoint,
       'connectHeaders': getConnectionHeaders(jwtToken),
       'reconnectDelay': reconnectDelay,
       'heartbeatIncoming': heartbeatIncoming,

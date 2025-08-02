@@ -6,13 +6,17 @@ import '../../app/di/injection.dart';
 import '../shared/widgets/app_gradient_background.dart';
 import 'widgets/action_buttons.dart';
 import 'widgets/filter/filter_dialog.dart';
-import 'widgets/swipe_card.dart';
+import 'widgets/swipeable_card.dart';
+import 'widgets/smooth_transition_wrapper.dart';
 import 'discovery_viewmodel.dart';
 import '../../infrastructure/services/subscription_service.dart';
 import '../../infrastructure/services/rewind_service.dart';
 import '../../core/services/match_service.dart';
 import '../../core/services/profile_service.dart';
 import 'discovery_recommendation_cache.dart';
+import '../../infrastructure/services/app_initialization_service.dart';
+import '../../infrastructure/services/app_startup_service.dart';
+import '../../infrastructure/services/profile_transition_manager.dart';
 
 class DiscoveryView extends StatefulWidget {
   const DiscoveryView({super.key});
@@ -25,6 +29,7 @@ class _DiscoveryViewState extends State<DiscoveryView> {
   late DiscoveryViewModel _viewModel;
   bool _highlightLike = false;
   bool _highlightPass = false;
+  bool _lastSwipeWasLike = false; // Track hướng vuốt cuối cùng
 
   @override
   void initState() {
@@ -34,26 +39,47 @@ class _DiscoveryViewState extends State<DiscoveryView> {
       matchService: getIt<MatchService>(),
       profileService: getIt<ProfileService>(),
     );
+    
     // Load recommendations when screen is created
     _viewModel.loadRecommendations();
-    // Precache images for recommendations if available
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final recs = _viewModel.recommendations;
-      if (recs.isNotEmpty) {
-        await RecommendationCache.instance.ensurePrecacheForProfiles(recs, context, count: 5);
+    
+    // Không cần precache thêm ở đây vì đã được xử lý trong ViewModel
+    // Chỉ đảm bảo context được set cho ViewModel
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _viewModel.setContext(context);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // Clear context khi widget bị dispose
+    _viewModel.setContext(null);
+    super.dispose();
   }
 
   void _setHighlightLike(bool value) {
     setState(() {
       _highlightLike = value;
+      _lastSwipeWasLike = value; // Track hướng vuốt
     });
   }
+  
   void _setHighlightPass(bool value) {
     setState(() {
       _highlightPass = value;
+      _lastSwipeWasLike = !value; // Track hướng vuốt
     });
+  }
+
+  void _onSwiped() {
+    // Gọi like/dislike dựa trên hướng vuốt
+    if (_lastSwipeWasLike) {
+      _viewModel.likeCurrentProfile();
+    } else {
+      _viewModel.dislikeCurrentProfile();
+    }
   }
 
   @override
@@ -134,7 +160,7 @@ class _DiscoveryViewState extends State<DiscoveryView> {
   }
 
   Widget _buildContent(BuildContext context, DiscoveryViewModel vm) {
-    if (vm.isLoading) {
+    if (vm.isLoading || !vm.isPrecacheDone) {
       return const Center(
         child: CircularProgressIndicator(),
       );
@@ -198,11 +224,32 @@ class _DiscoveryViewState extends State<DiscoveryView> {
       );
     }
 
-    return SwipeCardStack(
-      profile: currentProfile,
-      interests: vm.interests,
-      onHighlightLike: _setHighlightLike,
-      onHighlightPass: _setHighlightPass,
+    // Lấy next profile cho peek effect
+    final nextProfileIndex = vm.currentProfileIndex + 1;
+    final nextProfile = nextProfileIndex < vm.recommendations.length 
+        ? vm.recommendations[nextProfileIndex] 
+        : null;
+    final nextDistance = nextProfile != null 
+        ? vm.getDistanceToProfile(nextProfile) 
+        : null;
+
+    // Set next profile cho ProfileTransitionManager
+    ProfileTransitionManager.instance.setNextProfile(nextProfile);
+
+    // Sử dụng SmoothTransitionWrapper để đảm bảo transition mượt mà
+    return RepaintBoundary(
+      child: SmoothTransitionWrapper(
+        key: ValueKey('smooth_transition_${currentProfile.userId}_${currentProfile.photos.map((p) => p.id).join('_')}'),
+        currentProfile: currentProfile,
+        currentInterests: currentProfile.interests,
+        currentDistance: vm.getDistanceToProfile(currentProfile),
+        nextProfile: nextProfile,
+        nextInterests: nextProfile?.interests,
+        nextDistance: nextDistance,
+        onHighlightLike: _setHighlightLike,
+        onHighlightPass: _setHighlightPass,
+        onSwiped: _onSwiped,
+      ),
     );
   }
 }

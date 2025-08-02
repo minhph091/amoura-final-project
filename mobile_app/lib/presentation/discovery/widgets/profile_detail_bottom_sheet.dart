@@ -24,119 +24,87 @@ class ProfileDetailBottomSheet extends StatelessWidget {
     final petList = (profile['pets'] as List?)?.map((e) => e['name']).join(', ') ?? '-';
     final interestList = (profile['interests'] as List?)?.map((e) => e['name']).toList() ?? [];
 
-    return FractionallySizedBox(
-      heightFactor: 0.95,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.10),
-              blurRadius: 18,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle for swipe down to close
-            Center(
-              child: Container(
-                width: 44,
-                height: 5,
-                margin: const EdgeInsets.only(top: 8, bottom: 18),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(8),
-                ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Orientation
+          _sectionTitle(context, 'Orientation'),
+          const SizedBox(height: 8),
+          _infoRowWithIcon(Icons.transgender, orientation),
+
+          const SizedBox(height: 18),
+          // Bio
+          _sectionTitle(context, 'Bio'),
+          const SizedBox(height: 8),
+          Text(bio, style: Theme.of(context).textTheme.bodyMedium),
+
+          const SizedBox(height: 18),
+          // Main Info
+          _sectionTitle(context, 'Main Info'),
+          const SizedBox(height: 8),
+          _infoRowWithIcon(Icons.location_on, distance ?? '-','Distance'),
+          _infoRowWithIcon(Icons.height, height,'Height'),
+          _infoRowWithIcon(Icons.work, job,'Job'),
+          _infoRowWithIcon(Icons.school, education,'Education'),
+          _infoRowWithIcon(Icons.home, city,'City'),
+          _infoRowWithIcon(Icons.language, languageList,'Language'),
+
+          const SizedBox(height: 18),
+          // Lifestyle
+          _sectionTitle(context, 'Lifestyle'),
+          const SizedBox(height: 8),
+          _infoRowWithIcon(Icons.local_bar, drink,'Drink'),
+          _infoRowWithIcon(Icons.smoking_rooms, smoke,'Smoke'),
+          _infoRowWithIcon(Icons.pets, petList,'Pet'),
+
+          const SizedBox(height: 18),
+          // Interests
+          _sectionTitle(context, 'Interests'),
+          const SizedBox(height: 8),
+          interestList.isNotEmpty
+              ? Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: interestList.map((name) => Chip(
+              label: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
+              backgroundColor: Colors.pink[50],
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            )).toList(),
+          )
+              : const Text('-', style: TextStyle(color: Colors.grey)),
+
+          const SizedBox(height: 32),
+          // 3 nút chia sẻ, chặn, báo cáo
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _actionButton(
+                context,
+                icon: Icons.share,
+                label: 'Share',
+                color: Colors.pinkAccent,
+                onPressed: () {},
               ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 0),
-                children: [
-                  // Orientation
-                  _sectionTitle(context, 'Orientation'),
-                  const SizedBox(height: 8),
-                  _infoRowWithIcon(Icons.transgender, orientation),
-
-                  const SizedBox(height: 18),
-                  // Bio
-                  _sectionTitle(context, 'Bio'),
-                  const SizedBox(height: 8),
-                  Text(bio, style: Theme.of(context).textTheme.bodyMedium),
-
-                  const SizedBox(height: 18),
-                  // Main Info
-                  _sectionTitle(context, 'Main Info'),
-                  const SizedBox(height: 8),
-                  _infoRowWithIcon(Icons.location_on, distance ?? '-','Distance'),
-                  _infoRowWithIcon(Icons.height, height,'Height'),
-                  _infoRowWithIcon(Icons.work, job,'Job'),
-                  _infoRowWithIcon(Icons.school, education,'Education'),
-                  _infoRowWithIcon(Icons.home, city,'City'),
-                  _infoRowWithIcon(Icons.language, languageList,'Language'),
-
-                  const SizedBox(height: 18),
-                  // Lifestyle
-                  _sectionTitle(context, 'Lifestyle'),
-                  const SizedBox(height: 8),
-                  _infoRowWithIcon(Icons.local_bar, drink,'Drink'),
-                  _infoRowWithIcon(Icons.smoking_rooms, smoke,'Smoke'),
-                  _infoRowWithIcon(Icons.pets, petList,'Pet'),
-
-                  const SizedBox(height: 18),
-                  // Interests
-                  _sectionTitle(context, 'Interests'),
-                  const SizedBox(height: 8),
-                  interestList.isNotEmpty
-                      ? Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: interestList.map((name) => Chip(
-                      label: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
-                      backgroundColor: Colors.pink[50],
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    )).toList(),
-                  )
-                      : const Text('-', style: TextStyle(color: Colors.grey)),
-
-                  const SizedBox(height: 32),
-                  // 3 nút chia sẻ, chặn, báo cáo
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _actionButton(
-                        context,
-                        icon: Icons.share,
-                        label: 'Share',
-                        color: Colors.pinkAccent,
-                        onPressed: () {},
-                      ),
-                      _actionButton(
-                        context,
-                        icon: Icons.block,
-                        label: 'Block',
-                        color: Colors.deepPurple,
-                        onPressed: () {},
-                      ),
-                      _actionButton(
-                        context,
-                        icon: Icons.report,
-                        label: 'Report',
-                        color: Colors.redAccent,
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                ],
+              _actionButton(
+                context,
+                icon: Icons.block,
+                label: 'Block',
+                color: Colors.deepPurple,
+                onPressed: () {},
               ),
-            ),
-          ],
-        ),
+              _actionButton(
+                context,
+                icon: Icons.report,
+                label: 'Report',
+                color: Colors.redAccent,
+                onPressed: () {},
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+        ],
       ),
     );
   }

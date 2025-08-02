@@ -167,36 +167,64 @@ class NotificationGroup extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[900],
+          backgroundColor: Theme.of(context).dialogBackgroundColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
           ),
-          title: Text(
-            AppLocalizations.of(context).translate('delete_notification'),
-            style: const TextStyle(color: Colors.white),
+          title: Column(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40),
+              const SizedBox(height: 12),
+              Text(
+                AppLocalizations.of(context).translate('delete_notification'),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          content: Text(
-            AppLocalizations.of(
-              context,
-            ).translate('delete_notification_message'),
-            style: const TextStyle(color: Colors.white70),
+          content: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              AppLocalizations.of(
+                context,
+              ).translate('delete_notification_message'),
+              style: const TextStyle(fontSize: 16, color: Colors.black87),
+              textAlign: TextAlign.center,
+            ),
           ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                AppLocalizations.of(context).translate('cancel'),
-                style: TextStyle(color: Colors.grey[400]),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey[700],
+                  side: BorderSide(color: Colors.grey.shade300),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+                child: Text(AppLocalizations.of(context).translate('cancel')),
               ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onNotificationDismiss(notification);
-              },
-              child: Text(
-                AppLocalizations.of(context).translate('delete'),
-                style: const TextStyle(color: Colors.red),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  onNotificationDismiss(notification);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: Text(AppLocalizations.of(context).translate('delete')),
               ),
             ),
           ],
@@ -208,41 +236,112 @@ class NotificationGroup extends StatelessWidget {
   void _showDeleteAllConfirmation(BuildContext context) {
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.25),
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
+        final pink = const Color(0xFFFF6B9D);
+        final orange = const Color(0xFFFF8E9E);
+        return Dialog(
+          backgroundColor: Colors.white.withOpacity(0.98),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(28),
           ),
-          title: Text(
-            AppLocalizations.of(context).translate('delete_all_notifications'),
-            style: const TextStyle(color: Colors.white),
-          ),
-          content: Text(
-            AppLocalizations.of(context)
-                .translate('delete_all_notifications_message')
-                .replaceAll('{count}', notifications.length.toString()),
-            style: const TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                AppLocalizations.of(context).translate('cancel'),
-                style: TextStyle(color: Colors.grey[400]),
-              ),
+          elevation: 8,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(colors: [pink, orange]),
+                    boxShadow: [
+                      BoxShadow(
+                        color: pink.withOpacity(0.12),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Icon(Icons.warning_amber_rounded, color: Colors.white, size: 36),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  AppLocalizations.of(context).translate('delete_all_notifications'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  AppLocalizations.of(context)
+                      .translate('delete_all_notifications_message')
+                      .replaceAll('{count}', notifications.length.toString()),
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: pink,
+                          side: BorderSide(color: pink, width: 1.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                        child: Text(AppLocalizations.of(context).translate('cancel')),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onDeleteAll?.call();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                          backgroundColor: Colors.transparent, // Không có màu nền mặc định
+                          shadowColor: Colors.transparent, // Không shadow
+                          side: BorderSide.none, // Không viền
+                        ),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [pink, orange]),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Container(
+                            alignment: Alignment.center,
+                            constraints: const BoxConstraints(minHeight: 16),
+                            child: Text(AppLocalizations.of(context).translate('delete_all')),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onDeleteAll?.call();
-              },
-              child: Text(
-                AppLocalizations.of(context).translate('delete_all'),
-                style: const TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
+          ),
         );
       },
     );

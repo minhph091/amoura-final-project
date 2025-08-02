@@ -15,6 +15,7 @@ import '../../../app/di/injection.dart';
 import '../../../domain/usecases/chat/get_chat_room_usecase.dart';
 import '../../shared/widgets/app_gradient_background.dart';
 import '../../../core/utils/url_transformer.dart';
+import 'package:collection/collection.dart'; // Added for firstWhereOrNull
 
 class ChatDetailView extends StatefulWidget {
   final String chatId;
@@ -175,18 +176,40 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     }
   }
 
-  // Getter để lấy thông tin recipient từ chat room
+  // Getter để lấy thông tin recipient (participant - đối phương) từ chat room
   String get recipientName {
-    if (_chatRoom != null) {
-      return _chatRoom!.participantName ?? widget.recipientName;
+    if (_chatRoom != null && _viewModel.currentUserId.isNotEmpty) {
+      // Nếu currentUserId là user1, lấy user2Name, ngược lại lấy user1Name
+      if (_chatRoom!.user1Id == _viewModel.currentUserId) {
+        return _chatRoom!.user2Name ?? widget.recipientName;
+      } else {
+        return _chatRoom!.user1Name ?? widget.recipientName;
+      }
     }
     return widget.recipientName;
   }
 
+  // Getter lấy avatar đối phương: ưu tiên từ _chatRoom, nếu không có thì lấy từ message đầu tiên của đối phương
   String? get recipientAvatar {
-    if (_chatRoom != null) {
-      return _chatRoom!.participantAvatar;
+    if (_chatRoom != null && _viewModel.currentUserId.isNotEmpty) {
+      final currentId = _viewModel.currentUserId.toString();
+      final user1Id = _chatRoom!.user1Id?.toString();
+      final user2Id = _chatRoom!.user2Id?.toString();
+      // Nếu current user là user1, lấy avatar user2 (đối phương)
+      if (user1Id == currentId && _chatRoom!.user2Avatar?.isNotEmpty == true) {
+        return _chatRoom!.user2Avatar;
+      }
+      // Nếu current user là user2, lấy avatar user1 (đối phương)
+      if (user2Id == currentId && _chatRoom!.user1Avatar?.isNotEmpty == true) {
+        return _chatRoom!.user1Avatar;
+      }
     }
+    // Nếu không có avatar từ _chatRoom, lấy avatar từ message đầu tiên của đối phương
+    final otherMsg = _viewModel.messages.firstWhereOrNull(
+      (msg) => msg.senderId != _viewModel.currentUserId && (msg.senderAvatar?.isNotEmpty ?? false),
+    );
+    if (otherMsg != null) return otherMsg.senderAvatar;
+    // Fallback cuối cùng
     return widget.recipientAvatar;
   }
 
@@ -511,30 +534,25 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                                   radius: 18,
                                   backgroundColor: Colors.grey.shade300,
                                   child:
-                                      _chatRoom?.participantAvatar != null &&
-                                              _chatRoom!
-                                                  .participantAvatar!
-                                                  .isNotEmpty
-                                          ? ClipOval(
-                                            child: Image.network(
-                                              UrlTransformer.transformAvatarUrl(
-                                                _chatRoom!.participantAvatar!,
-                                              ),
-                                              width: 36,
-                                              height: 36,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          )
-                                          : Text(
-                                            recipientName.isNotEmpty
-                                                ? recipientName[0].toUpperCase()
-                                                : "?",
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
+                                    (recipientAvatar != null && recipientAvatar!.isNotEmpty)
+                                      ? ClipOval(
+                                          child: Image.network(
+                                            UrlTransformer.transformAvatarUrl(recipientAvatar!),
+                                            width: 36,
+                                            height: 36,
+                                            fit: BoxFit.cover,
                                           ),
+                                        )
+                                      : Text(
+                                          recipientName.isNotEmpty
+                                              ? recipientName[0].toUpperCase()
+                                              : "?",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
                                 ),
                                 if (isOnline)
                                   Positioned(
@@ -762,87 +780,25 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                               ),
                             ),
 
-                          // Message input
-                          if (viewModel.pendingMedia != null) ...[
+                          // MessageInput
+                          if (viewModel.isOtherUserTyping)
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
+                              padding: const EdgeInsets.only(left: 16, bottom: 4, top: 2),
                               child: Row(
                                 children: [
-                                  if (viewModel.pendingMediaType == 'image')
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Image.file(
-                                        File(viewModel.pendingMedia!.path),
-                                        width: 80,
-                                        height: 80,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  if (viewModel.pendingMediaType == 'video')
-                                    Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          child: Image.asset(
-                                            'assets/images/video_placeholder.png', // Thay bằng thumbnail nếu có
-                                            width: 80,
-                                            height: 80,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                        const Icon(
-                                          Icons.play_circle_fill,
-                                          color: Colors.white,
-                                          size: 36,
-                                        ),
-                                      ],
-                                    ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        ElevatedButton.icon(
-                                          onPressed:
-                                              () => viewModel.sendPendingMedia(
-                                                widget.chatId,
-                                              ),
-                                          icon: const Icon(Icons.send),
-                                          label: const Text('Send'),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                Theme.of(
-                                                  context,
-                                                ).colorScheme.primary,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.close,
-                                            color: Colors.red,
-                                          ),
-                                          onPressed:
-                                              viewModel.clearPendingMedia,
-                                          tooltip: 'Remove',
-                                        ),
-                                      ],
+                                  _buildTypingIndicator(),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'The other person is typing...',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Theme.of(context).colorScheme.secondary,
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
                           MessageInput(
                             focusNode: _messageFocusNode,
                             onSendMessage: (message) {
@@ -947,6 +903,19 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
         final message = viewModel.messages[index];
 
+        // Xác định tin nhắn gửi gần nhất của mình (isMe)
+        bool isLatestSentMessage = false;
+        if (message.senderId == viewModel.currentUserId) {
+          // Tìm index đầu tiên (reverse=true, index 0 là mới nhất)
+          for (int i = 0; i < viewModel.messages.length; i++) {
+            final m = viewModel.messages[i];
+            if (m.senderId == viewModel.currentUserId) {
+              if (i == index) isLatestSentMessage = true;
+              break;
+            }
+          }
+        }
+
         // Convert domain Message to UI MessageItem
         return MessageItem(
           message: message.content,
@@ -978,6 +947,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           recalled: message.recalled,
           isRead: message.isRead,
           readAt: message.readAt,
+          isLatestSentMessage: isLatestSentMessage, // truyền biến mới
         );
       },
     );

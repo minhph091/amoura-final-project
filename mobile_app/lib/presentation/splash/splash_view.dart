@@ -9,6 +9,8 @@ import '../../core/constants/asset_path.dart';
 import '../../core/services/auth_service.dart';
 import '../../app/routes/app_routes.dart';
 import '../profile/view/profile_viewmodel.dart';
+import '../../infrastructure/services/app_initialization_service.dart';
+import '../../infrastructure/services/app_startup_service.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -62,6 +64,12 @@ class _SplashViewState extends State<SplashView>
         // loadProfile will throw an exception if the token is invalid or expired
         await profileViewModel.loadProfile();
         isAuthenticated = profileViewModel.profile != null;
+        
+        // Nếu authenticated, chuẩn bị dữ liệu cho app
+        if (isAuthenticated) {
+          print('Splash Screen: User authenticated, preparing app data...');
+          await AppStartupService.instance.initializeApp(context);
+        }
       }
     } catch (e) {
       // If loading profile fails (e.g., 401 Unauthorized), the token is invalid.

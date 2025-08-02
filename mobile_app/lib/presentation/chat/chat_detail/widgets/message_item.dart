@@ -26,6 +26,7 @@ class MessageItem extends StatefulWidget {
   final bool recalled;
   final bool isRead;
   final DateTime? readAt;
+  final bool isLatestSentMessage; // thêm biến này
 
   const MessageItem({
     super.key,
@@ -48,6 +49,7 @@ class MessageItem extends StatefulWidget {
     this.recalled = false,
     this.isRead = false,
     this.readAt,
+    this.isLatestSentMessage = false, // default false
   });
 
   @override
@@ -783,43 +785,7 @@ class _MessageItemState extends State<MessageItem> {
                     letterSpacing: 0.5,
                   ),
                 ),
-                if (widget.isMe) ...[
-                  const SizedBox(width: 6.0),
-                  // Enhanced read status display
-                  if (widget.isRead && widget.readAt != null) ...[
-                    // Double check marks for read status (blue to indicate read)
-                    Icon(
-                      Icons.done_all_rounded,
-                      size: 12.0,
-                      color:
-                          Colors.blue.shade400, // Blue color to indicate read
-                    ),
-                  ] else if (widget.status == MessageStatus.delivered ||
-                      widget.status == MessageStatus.sent) ...[
-                    // Single or double check marks for delivered/sent
-                    Icon(
-                      widget.status == MessageStatus.delivered
-                          ? Icons.done_all_rounded
-                          : Icons.done_rounded,
-                      size: 12.0,
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                  ] else ...[
-                    // Default status indicator
-                    Icon(
-                      widget.status == MessageStatus.sending
-                          ? Icons.access_time_rounded
-                          : widget.status == MessageStatus.failed
-                          ? Icons.error_outline_rounded
-                          : Icons.done_rounded,
-                      size: 12.0,
-                      color:
-                          widget.status == MessageStatus.failed
-                              ? Colors.red.shade300
-                              : Colors.white.withValues(alpha: 0.7),
-                    ),
-                  ],
-                ],
+                // ĐÃ XOÁ TOÀN BỘ ICON CHECKMARK Ở ĐÂY
               ],
             ),
           ),
@@ -829,6 +795,10 @@ class _MessageItemState extends State<MessageItem> {
   }
 
   Widget _buildStatusIndicator() {
+    // Chỉ hiển thị icon nếu là tin nhắn gửi gần nhất của mình
+    if (!(widget.isMe && widget.isLatestSentMessage)) {
+      return const SizedBox.shrink();
+    }
     Widget statusIcon;
 
     switch (widget.status) {

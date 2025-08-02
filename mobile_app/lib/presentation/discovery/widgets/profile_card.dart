@@ -13,7 +13,9 @@ import 'profile_detail_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import '../../profile/view/profile_viewmodel.dart';
 import '../../../config/language/app_localizations.dart';
+import 'profile_detail_page.dart'; // Added import for ProfileDetailPage
 
+// Đổi từ StatelessWidget sang StatefulWidget
 class ProfileCard extends StatelessWidget {
   final UserRecommendationModel profile;
   final List<InterestModel> interests;
@@ -54,7 +56,6 @@ class ProfileCard extends StatelessWidget {
 
       return commonInterests;
     } catch (e) {
-      debugPrint('Error getting common interests: $e');
       return [];
     }
   }
@@ -86,18 +87,20 @@ class ProfileCard extends StatelessWidget {
     // Controller for resetting image index
     final ImageCarouselController imageController = ImageCarouselController();
 
+    // Tạo unique key stable nhưng unique cho mỗi profile
+    final uniqueKey = 'profile_${profile.userId}_${profile.photos.map((p) => p.id).join('_')}';
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: Stack(
         children: [
           // Main image carousel with story progress bar
           ImageCarousel(
-            key: ValueKey(profile.userId),
+            key: ValueKey('${uniqueKey}_carousel'),
             photos: displayPhotos,
             showStoryProgress: true,
             controller: imageController,
-            uniqueKey:
-                'profile_${profile.userId}', // Add unique key to prevent flickering
+            uniqueKey: uniqueKey,
           ),
           // Overlay user info at the bottom with backdrop blur
           Positioned(
@@ -120,8 +123,8 @@ class ProfileCard extends StatelessWidget {
                     ),
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withValues(alpha: 0.1),
-                        Colors.black.withValues(alpha: 0.7),
+                        Colors.black.withOpacity(0.1),
+                        Colors.black.withOpacity(0.7),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -146,7 +149,7 @@ class ProfileCard extends StatelessWidget {
                                 color: Colors.white,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.black.withValues(alpha: 0.8),
+                                    color: Colors.black.withOpacity(0.8),
                                     blurRadius: 4,
                                   ),
                                 ],
@@ -160,50 +163,17 @@ class ProfileCard extends StatelessWidget {
                               color: Colors.white,
                               size: 28,
                             ),
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) {
-                                  final profileViewModel =
-                                      Provider.of<ProfileViewModel?>(
-                                        context,
-                                        listen: false,
-                                      );
-                                  final profileData = profileViewModel?.profile;
-                                  return ProfileDetailBottomSheet(
-                                    profile:
-                                        profileData ??
-                                        {
-                                          'bio': profile.bio ?? '',
-                                          'height':
-                                              profile.height != null
-                                                  ? profile.height.toString()
-                                                  : '-',
-                                          'sex': profile.sex ?? '',
-                                          'location':
-                                              profile.location != null
-                                                  ? {'city': profile.location}
-                                                  : null,
-                                          'interests':
-                                              interests
-                                                  .map((e) => {'name': e.name})
-                                                  .toList(),
-                                          'pets':
-                                              profile.pets
-                                                  .map((e) => {'name': e.name})
-                                                  .toList(),
-                                          'orientation': null,
-                                          'jobIndustry': null,
-                                          'educationLevel': null,
-                                          'languages': [],
-                                          'drinkStatus': null,
-                                          'smokeStatus': null,
-                                        },
+                            onPressed: () async {
+                              // Sử dụng Navigator.push thay vì showModalBottomSheet để tránh widget tree issues
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfileDetailPage(
+                                    profile: profile,
+                                    interests: interests,
                                     distance: distance,
-                                  );
-                                },
+                                  ),
+                                ),
                               );
                             },
                             tooltip: 'Xem thông tin chi tiết',
@@ -237,7 +207,7 @@ class ProfileCard extends StatelessWidget {
                           style: Theme.of(
                             context,
                           ).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                             fontSize: 15,
                           ),
                           maxLines: 2,
@@ -278,11 +248,11 @@ class ProfileCard extends StatelessWidget {
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
                                               colors: [
-                                                Colors.red.withValues(
-                                                  alpha: 0.8,
+                                                Colors.red.withOpacity(
+                                                  0.8,
                                                 ),
-                                                Colors.pink.withValues(
-                                                  alpha: 0.8,
+                                                Colors.pink.withOpacity(
+                                                  0.8,
                                                 ),
                                               ],
                                               begin: Alignment.topLeft,
@@ -292,15 +262,15 @@ class ProfileCard extends StatelessWidget {
                                               20,
                                             ),
                                             border: Border.all(
-                                              color: Colors.red.withValues(
-                                                alpha: 0.6,
+                                              color: Colors.red.withOpacity(
+                                                0.6,
                                               ),
                                               width: 1,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.red.withValues(
-                                                  alpha: 0.3,
+                                                color: Colors.red.withOpacity(
+                                                  0.3,
                                                 ),
                                                 blurRadius: 4,
                                                 offset: const Offset(0, 2),

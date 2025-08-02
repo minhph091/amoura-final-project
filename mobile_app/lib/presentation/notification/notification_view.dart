@@ -327,7 +327,12 @@ class _NotificationViewState extends State<NotificationView>
                     Navigator.pushNamed(
                       context,
                       AppRoutes.chatConversation,
-                      arguments: notification.userId,
+                      arguments: {
+                        'chatId': notification.userId ?? notification.id,
+                        'recipientName': notification.title, // hoặc notification.body nếu phù hợp
+                        'recipientAvatar': notification.avatar,
+                        'isOnline': false,
+                      },
                     );
                   },
                 ),
@@ -357,7 +362,12 @@ class _NotificationViewState extends State<NotificationView>
         Navigator.pushNamed(
           context,
           AppRoutes.chatConversation,
-          arguments: notification.userId,
+          arguments: {
+            'chatId': notification.userId ?? notification.id,
+            'recipientName': notification.title, // hoặc notification.body nếu phù hợp
+            'recipientAvatar': notification.avatar,
+            'isOnline': false,
+          },
         );
         break;
       case NotificationType.system:

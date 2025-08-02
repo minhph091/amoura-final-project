@@ -232,8 +232,8 @@ class _ChatListViewState extends State<ChatListView> {
       AppRoutes.chatConversation,
       arguments: {
         'chatId': chatRoomId,
-        'recipientName': chat.name,
-        'recipientAvatar': chat.avatar,
+        'recipientName': chat.name, // Đúng tên đối phương
+        'recipientAvatar': chat.avatar, // Đúng avatar đối phương
         'isOnline': chat.isOnline,
       },
     );

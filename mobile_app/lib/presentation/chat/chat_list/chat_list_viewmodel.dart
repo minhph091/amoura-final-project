@@ -232,7 +232,19 @@ class ChatListViewModel extends ChangeNotifier {
 
       // Subscribe vào tất cả chat rooms sau khi đã có danh sách
       if (_chatList.isNotEmpty) {
-        _subscribeToAllChatRoomsUserStatus();
+        // Sửa: chỉ subscribe khi WebSocket đã kết nối
+        if (_chatService.isConnected) {
+          _subscribeToAllChatRoomsUserStatus();
+        } else {
+          debugPrint('ChatListViewModel: WebSocket chưa kết nối, sẽ lắng nghe trạng thái kết nối để subscribe sau.');
+          // Lắng nghe trạng thái kết nối WebSocket
+          _chatService.connectionStream.listen((connected) {
+            if (connected) {
+              debugPrint('ChatListViewModel: WebSocket đã kết nối, tiến hành subscribe chat rooms!');
+              _subscribeToAllChatRoomsUserStatus();
+            }
+          });
+        }
       }
 
       notifyListeners();
@@ -487,11 +499,9 @@ class ChatListViewModel extends ChangeNotifier {
       // Initialize WebSocket connection for realtime updates
       if (_currentUserId.isNotEmpty && _currentUserId != 'unknown') {
         await _chatService.initializeWebSocket(_currentUserId);
-
         // Initialize UserStatusService để track online/offline status
         await _userStatusService.initialize();
         debugPrint('ChatListViewModel: Initialized UserStatusService');
-
         // Subscribe vào user status cho tất cả chat rooms
         _subscribeToAllChatRoomsUserStatus();
       }

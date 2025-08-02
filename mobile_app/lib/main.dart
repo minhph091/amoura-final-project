@@ -31,7 +31,7 @@ Future<void> runMain() async {
         ChangeNotifierProvider(create: (_) => RewindService()),
         ChangeNotifierProvider(create: (_) => LikesService()),
       ],
-      child: AmouraApp(navigatorKey: navigatorKey),
+      child: AmouraApp(navigatorKey: navigatorKey), 
     ),
   );
 }

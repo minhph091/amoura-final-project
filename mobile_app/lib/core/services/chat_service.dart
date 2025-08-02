@@ -47,6 +47,9 @@ class ChatService {
   
   // WebSocket connection status
   bool get isConnected => _socketClient.isConnected;
+
+  // Thêm getter public cho connectionStream
+  Stream<bool> get connectionStream => _socketClient.connectionStream;
   
   /// Lấy danh sách conversations từ backend
   /// Sử dụng cache để cải thiện performance
@@ -473,10 +476,7 @@ class ChatService {
       debugPrint('Initializing WebSocket connection for user: $userId');
       _currentUserId = userId;
       
-      // Kết nối WebSocket
-      await _socketClient.connect(userId);
-      
-      // Subscribe vào các streams từ SocketClient
+      // Subscribe vào các streams từ SocketClient (không cần connect lại)
       _setupWebSocketListeners();
       
       debugPrint('WebSocket initialized successfully');
@@ -522,6 +522,7 @@ class ChatService {
   void _handleNewMessage(Map<String, dynamic> messageData) {
     try {
       debugPrint('ChatService: Processing WebSocket message - Type: ${messageData['type']}');
+      debugPrint('ChatService: Full message data: $messageData');
       
       // Enhanced filtering for WebSocket message types
       final messageType = messageData['type']?.toString().toUpperCase() ?? '';
@@ -532,14 +533,15 @@ class ChatService {
       // Xử lý các loại message khác nhau
       switch (messageType) {
         case 'MESSAGE':
-          // Tin nhắn thường - additional validation
-          if (senderId.trim().isEmpty || senderName.trim().isEmpty) {
-            debugPrint('ChatService: Skipping MESSAGE with empty sender info');
+          // Tin nhắn thường - less restrictive validation
+          if (senderId.trim().isEmpty) {
+            debugPrint('ChatService: Skipping MESSAGE with empty senderId');
             return;
           }
           final message = Message.fromJson(messageData);
           if (message.type != MessageType.system) {
             _addMessageToCache(message);
+            debugPrint('ChatService: Added MESSAGE to cache - ID: ${message.id}, Sender: $senderName');
           } else {
             debugPrint('ChatService: Filtered out system message from MESSAGE type');
           }
@@ -560,34 +562,37 @@ class ChatService {
           _handleMessageRecalled(messageData);
           return; // Early return vì không phải tin nhắn mới
         default:
-          // Enhanced fallback processing with strict validation
+          // Enhanced fallback processing with less strict validation
           debugPrint('ChatService: Processing unknown/default message type: $messageType');
           
-          // Additional validation for unknown message types
+          // Less restrictive validation for unknown message types
           if (messageType == 'READ_RECEIPT' || 
               content.toLowerCase() == 'read' ||
               content.toLowerCase() == 'true' ||
-              content.toLowerCase() == 'false' ||
-              senderName.trim().isEmpty ||
-              senderId.trim().isEmpty) {
-            debugPrint('ChatService: Skipping invalid/system message - Type: $messageType, Content: "$content", Sender: "$senderName"');
+              content.toLowerCase() == 'false') {
+            debugPrint('ChatService: Skipping system message - Type: $messageType, Content: "$content"');
             return;
           }
           
-          // Check if message data contains recalled flag from regular message updates
-          final message = Message.fromJson(messageData);
-          if (message.type == MessageType.system) {
-            debugPrint('ChatService: Filtered out system message from unknown type');
-            return;
+          // Try to process as regular message
+          try {
+            final message = Message.fromJson(messageData);
+            if (message.type == MessageType.system) {
+              debugPrint('ChatService: Filtered out system message from unknown type');
+              return;
+            }
+            
+            if (message.recalled) {
+              debugPrint('ChatService: Received recalled message update for messageId: ${message.id}');
+              _addMessageToCache(message); // This will update the existing message with recalled flag
+            } else {
+              _addMessageToCache(message);
+              debugPrint('ChatService: Added unknown type message to cache - ID: ${message.id}, Type: $messageType');
+            }
+          } catch (parseError) {
+            debugPrint('ChatService: Failed to parse message as Message object: $parseError');
+            debugPrint('ChatService: Raw message data: $messageData');
           }
-          
-          if (message.recalled) {
-            debugPrint('ChatService: Received recalled message update for messageId: ${message.id}');
-            _addMessageToCache(message); // This will update the existing message with recalled flag
-          } else {
-            _addMessageToCache(message);
-          }
-          debugPrint('ChatService: Processed message type: $messageType');
       }
     } catch (e) {
       debugPrint('ChatService: Error handling WebSocket message: $e');

@@ -67,6 +67,18 @@ class ProfileService {
       rethrow;
     }
   }
+
+  // Fetch another user's profile by userId
+  Future<Map<String, dynamic>> getProfileByUserId(int userId) async {
+    try {
+      final profileApi = GetIt.I<ProfileApi>();
+      final profileData = await profileApi.getProfileByUserId(userId);
+      return profileData;
+    } catch (e) {
+      debugPrint('Error in ProfileService.getProfileByUserId: $e');
+      rethrow;
+    }
+  }
 }
 
 // Helper: Fix localhost/127.0.0.1 url for Android emulator
