@@ -307,18 +307,23 @@ public class AdminServiceImpl implements AdminService {
     public UserManagementDTO getUserById(Long userId) {
         log.info("Fetching user details for ID: {}", userId);
         
-        // Check if user exists first
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
-        // Fetch rich user data with aggregated information
-        Optional<Object[]> userData = adminRepository.findUserDetailsById(userId);
-        
-        if (userData.isPresent()) {
-            return convertToUserManagementDTO(userData.get());
+        // Fetch additional data using native query
+        List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, 1);
+        if (userData.isEmpty()) {
+            userData = adminRepository.findAllUsersForManagement(Integer.MAX_VALUE)
+                    .stream()
+                    .filter(row -> ((Number) row[0]).longValue() == userId.longValue())
+                    .toList();
         }
         
-        // This should rarely happen since user exists, but fallback for safety
+        if (!userData.isEmpty()) {
+            return convertToUserManagementDTO(userData.get(0));
+        }
+        
+        // Fallback to basic conversion
         return UserManagementDTO.builder()
                 .id(user.getId())
                 .username(user.getActualUsername())
@@ -326,7 +331,7 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)
+                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)  // Convert to uppercase for API
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
                 .hasProfile(user.getProfile() != null)

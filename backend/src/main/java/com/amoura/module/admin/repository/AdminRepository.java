@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface AdminRepository extends JpaRepository<User, Long> {
@@ -149,20 +148,6 @@ public interface AdminRepository extends JpaRepository<User, Long> {
                    nativeQuery = true)
     List<Object[]> searchUsersForManagement(@Param("searchTerm") String searchTerm, @Param("limit") int limit);
     
-    // Get single user details by ID for admin management
-    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
-                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
-                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
-                   "COALESCE((SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id), 0) as photo_count, " +
-                   "COALESCE((SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id), 0) as total_matches, " +
-                   "COALESCE((SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id), 0) as total_messages " +
-                   "FROM users u " +
-                   "INNER JOIN roles r ON u.role_id = r.id " +
-                   "LEFT JOIN profiles p ON u.id = p.user_id " +
-                   "WHERE r.name = 'USER' AND u.id = :userId",
-                   nativeQuery = true)
-    Optional<Object[]> findUserDetailsById(@Param("userId") Long userId);
-
     // Count total USER role users for pagination
     @Query(value = "SELECT COUNT(*) FROM users u " +
                    "INNER JOIN roles r ON u.role_id = r.id " +
