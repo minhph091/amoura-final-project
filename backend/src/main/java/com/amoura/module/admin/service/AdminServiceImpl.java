@@ -3,6 +3,7 @@ package com.amoura.module.admin.service;
 import com.amoura.module.admin.dto.AdminDashboardDTO;
 import com.amoura.module.admin.dto.CursorPaginationRequest;
 import com.amoura.module.admin.dto.CursorPaginationResponse;
+import com.amoura.module.admin.dto.StatusUpdateResponse;
 import com.amoura.module.admin.dto.UserManagementDTO;
 import com.amoura.module.admin.dto.UserStatusUpdateRequest;
 import com.amoura.module.admin.repository.AdminRepository;
@@ -333,14 +334,15 @@ public class AdminServiceImpl implements AdminService {
     
     @Override
     @Transactional
-    public UserManagementDTO updateUserStatus(Long userId, UserStatusUpdateRequest request) {
+    public StatusUpdateResponse updateUserStatus(Long userId, UserStatusUpdateRequest request) {
         log.info("Updating user status for ID: {} to status: {}", userId, request.getStatus());
         
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         String oldStatus = user.getStatus();
-        // Convert uppercase status to lowercase for database compatibility
+        String previousStatusUpper = oldStatus != null ? oldStatus.toUpperCase() : null;
+        
         String databaseStatus = request.getStatus().toLowerCase();
         user.setStatus(databaseStatus);
         userRepository.save(user);
@@ -348,7 +350,14 @@ public class AdminServiceImpl implements AdminService {
         log.info("User {} status updated from {} to {} for reason: {}", 
                 userId, oldStatus, request.getStatus(), request.getReason());
         
-        return getUserById(userId);
+        return StatusUpdateResponse.builder()
+                .success(true)
+                .userId(userId)
+                .newStatus(request.getStatus())
+                .previousStatus(previousStatusUpper)
+                .message("User status updated successfully")
+                .reason(request.getReason())
+                .build();
     }
     
 

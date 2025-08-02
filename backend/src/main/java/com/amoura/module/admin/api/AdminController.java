@@ -3,6 +3,7 @@ package com.amoura.module.admin.api;
 import com.amoura.module.admin.dto.AdminDashboardDTO;
 import com.amoura.module.admin.dto.CursorPaginationRequest;
 import com.amoura.module.admin.dto.CursorPaginationResponse;
+import com.amoura.module.admin.dto.StatusUpdateResponse;
 import com.amoura.module.admin.dto.UserManagementDTO;
 import com.amoura.module.admin.dto.UserStatusUpdateRequest;
 import com.amoura.module.admin.service.AdminService;
@@ -141,17 +142,17 @@ public class AdminController {
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "403", description = "Access denied - admin role required")
     })
-    public ResponseEntity<UserManagementDTO> updateUserStatus(
+    public ResponseEntity<StatusUpdateResponse> updateUserStatus(
             @Parameter(description = "User ID") @PathVariable Long userId,
             @Valid @RequestBody UserStatusUpdateRequest request) {
         
         log.info("Admin user status update requested for ID: {} to status: {}", userId, request.getStatus());
         
-        UserManagementDTO updatedUser = adminService.updateUserStatus(userId, request);
+        StatusUpdateResponse response = adminService.updateUserStatus(userId, request);
         
-        log.info("User status updated successfully for ID: {}, new status: {}", userId, updatedUser.getStatus());
+        log.info("User status updated successfully for ID: {}, new status: {}", userId, response.getNewStatus());
         
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(response);
     }
     
 
