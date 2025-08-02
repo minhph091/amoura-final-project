@@ -1,6 +1,7 @@
 // lib/data/models/profile/photo_model.dart
 
 import '../../../config/environment.dart';
+import '../../../core/utils/url_transformer.dart';
 
 // Model ảnh người dùng (Photo)
 class PhotoModel {
@@ -18,8 +19,8 @@ class PhotoModel {
     required this.createdAt,
   });
 
-  /// Get the full URL for the photo
-  String get url {
+  /// Get the raw URL from server (without transformation)
+  String get rawUrl {
     if (path.startsWith('http')) return path;
     String base = EnvironmentConfig.baseUrl;
     // Xóa /api ở cuối nhưng không làm mất dấu /
@@ -35,8 +36,23 @@ class PhotoModel {
       }
     }
     final url = base + fixedPath;
-    assert(url.startsWith('http'), 'PhotoModel.url: URL không hợp lệ: $url (base: $base, fixedPath: $fixedPath)');
+    assert(url.startsWith('http'), 'PhotoModel.rawUrl: URL không hợp lệ: $url (base: $base, fixedPath: $fixedPath)');
     return url;
+  }
+
+  /// Get the transformed URL for display (localhost -> 10.0.2.2)
+  String get displayUrl {
+    return UrlTransformer.transform(rawUrl);
+  }
+
+  /// Get the URL for caching purposes (same as displayUrl)
+  String get cacheUrl {
+    return displayUrl;
+  }
+
+  /// Legacy getter (returns displayUrl for backward compatibility)
+  String get url {
+    return displayUrl;
   }
 
   factory PhotoModel.fromJson(Map<String, dynamic> json) {

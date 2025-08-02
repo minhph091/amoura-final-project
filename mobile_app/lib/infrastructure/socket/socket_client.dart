@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
@@ -77,36 +78,59 @@ class SocketClient {
         throw Exception('No access token available for WebSocket connection');
       }
 
-      // SỬA ĐOẠN NÀY: Hardcode URL cho production
-      String wsUrl;
-      if (EnvironmentConfig.current == Environment.prod) {
-        wsUrl = 'wss://api.amoura.space/api/ws';
-      } else if (EnvironmentConfig.current == Environment.staging) {
-        wsUrl = 'ws://150.95.109.13:8080/api/ws';
-      } else {
-        wsUrl = 'ws://10.0.2.2:8080/api/ws';
+      // Debug connection trước khi kết nối STOMP
+      await testWebSocketConnection();
+
+      // Sử dụng WebSocketConfig để lấy URL chuẩn
+      String wsUrl = WebSocketConfig.wsEndpoint;
+      
+      debugPrint('WebSocket: wsUrl truyền vào StompClient = $wsUrl');
+      debugPrint('WebSocket: Final URL before connect: $wsUrl');
+      debugPrint('WebSocket: URL protocol check - starts with wss://: ${wsUrl.startsWith('wss://')}');
+      debugPrint('WebSocket: URL protocol check - starts with ws://: ${wsUrl.startsWith('ws://')}');
+      debugPrint('WebSocket: URL validation - contains /api/ws: ${wsUrl.contains('/api/ws')}');
+      debugPrint('WebSocket: URL validation - ends with /: ${wsUrl.endsWith('/')}');
+      debugPrint('WebSocket: Environment: ${EnvironmentConfig.current}');
+      
+      // Validate URL format before passing to StompClient
+      if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) {
+        throw Exception('Invalid WebSocket URL format: $wsUrl');
       }
 
-      debugPrint('WebSocket: wsUrl truyền vào StompClient = ' + wsUrl);
-      debugPrint('WebSocket: Final URL before connect: ' + wsUrl);
+      // Đảm bảo URL không có trailing slash cho StompClient
+      if (wsUrl.endsWith('/')) {
+        wsUrl = wsUrl.substring(0, wsUrl.length - 1);
+        debugPrint('WebSocket: Removed trailing slash, new URL: $wsUrl');
+      }
+
+      debugPrint('WebSocket: Final URL for StompClient: $wsUrl');
+      debugPrint('WebSocket: URL length: ${wsUrl.length}');
+      debugPrint('WebSocket: URL contains port 0: ${wsUrl.contains(':0')}');
+      debugPrint('WebSocket: URL contains fragment #: ${wsUrl.contains('#')}');
 
       _stompClient = StompClient(
         config: StompConfig(
           url: wsUrl,
-          useSockJS: false, // Đảm bảo không dùng SockJS
+          useSockJS: false, // Raw WebSocket cho mobile 
           onConnect: _onConnect,
-          onDisconnect: _onDisconnect,
+          onDisconnect: _onDisconnect,    
           beforeConnect: () async {
             debugPrint('WebSocket: Preparing to connect...');
+            debugPrint('WebSocket: About to connect to: $wsUrl');
           },
           onWebSocketError: (dynamic error) {
             debugPrint('WebSocket Error: $error');
             debugPrint('WebSocket Error Details: $error');
+            debugPrint('WebSocket: Error occurred while connecting to: $wsUrl');
+            debugPrint('WebSocket: Original URL was: $wsUrl');
+            debugPrint('WebSocket: Error type: ${error.runtimeType}');
             _connectionController.add(false);
             _isConnected = false;
           },
           onStompError: (StompFrame frame) {
             debugPrint('STOMP Error: ${frame.body}');
+            debugPrint('STOMP Error Headers: ${frame.headers}');
+            debugPrint('STOMP Error Command: ${frame.command}');
             _connectionController.add(false);
             _isConnected = false;
           },
@@ -115,15 +139,12 @@ class SocketClient {
               debugPrint('WebSocket Debug: $message');
             }
           },
-          // Thêm JWT token vào headers cho authentication
           stompConnectHeaders: {
             'Authorization': 'Bearer $accessToken',
           },
-          // Cấu hình heartbeat để maintain connection
-          heartbeatIncoming: const Duration(seconds: 20),
-          heartbeatOutgoing: const Duration(seconds: 20),
-          // Disable automatic reconnection to prevent multiple connections
-          reconnectDelay: Duration.zero,
+          heartbeatIncoming: const Duration(seconds: 10),
+          heartbeatOutgoing: const Duration(seconds: 10),
+          reconnectDelay: const Duration(seconds: 5),
         ),
       );
 
@@ -238,24 +259,29 @@ class SocketClient {
             debugPrint(
               'WebSocket: Received message in chat $chatRoomId - Type: ${message['type']}, Content: ${message['content']}',
             );
+            debugPrint('WebSocket: Full message data: $message');
 
             // Xử lý các loại message khác nhau
             switch (message['type']) {
               case 'MESSAGE':
                 // Tin nhắn thường - chỉ gửi vào stream chung
                 _messageController.add(message);
+                debugPrint('WebSocket: Added MESSAGE to stream - Sender: ${message['senderName']}');
                 break;
               case 'TYPING':
                 // Typing indicator
                 _typingController.add(message);
+                debugPrint('WebSocket: Added TYPING to stream');
                 break;
               case 'READ_RECEIPT':
                 // Read receipt
                 _messageController.add(message);
+                debugPrint('WebSocket: Added READ_RECEIPT to stream');
                 break;
               case 'MESSAGE_RECALLED':
                 // Message recalled
                 _messageController.add(message);
+                debugPrint('WebSocket: Added MESSAGE_RECALLED to stream');
                 break;
               default:
                 // Các loại message khác - chỉ gửi vào stream, không gọi onMessage để tránh duplicate
@@ -264,9 +290,12 @@ class SocketClient {
                   'WebSocket: Unknown message type: ${message['type']}, added to stream',
                 );
             }
+          } else {
+            debugPrint('WebSocket: Received empty message body in chat $chatRoomId');
           }
         } catch (e) {
           debugPrint('WebSocket: Error parsing chat message - $e');
+          debugPrint('WebSocket: Raw frame body: ${frame.body}');
         }
       },
     );
@@ -422,6 +451,45 @@ class SocketClient {
     }
   }
 
+  /// Test connection để debug URL và kết nối
+  Future<void> testWebSocketConnection() async {
+    try {
+      final accessToken = await _authService.getAccessToken();
+      if (accessToken == null) {
+        debugPrint('WebSocket Test: No access token available');
+        return;
+      }
+
+      String testUrl = WebSocketConfig.wsEndpoint;
+      // Không modify URL gốc
+      String simpleTestUrl = testUrl;
+      
+      debugPrint('=== WebSocket Connection Test ===');
+      debugPrint('Test URL: $testUrl');
+      debugPrint('Environment: ${EnvironmentConfig.current}');
+      debugPrint('Access Token available: ${accessToken.isNotEmpty}');
+      debugPrint('================================');
+
+      // Simple WebSocket test without STOMP cho production
+      if (EnvironmentConfig.current == Environment.prod) {
+        // Không thêm port 443 vì có thể gây xung đột
+        debugPrint('Testing simple WebSocket connection to: $simpleTestUrl');
+        
+        try {
+          final testWs = await WebSocket.connect(simpleTestUrl, headers: {
+            'Authorization': 'Bearer $accessToken',
+          });
+          debugPrint('Simple WebSocket connection successful!');
+          await testWs.close();
+        } catch (e) {
+          debugPrint('Simple WebSocket connection failed: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('WebSocket Test Error: $e');
+    }
+  }
+
   /// Cleanup tất cả resources
   void dispose() {
     disconnect();
@@ -460,63 +528,5 @@ class SocketClient {
     debugPrint(
       'WebSocket: Sent message to chat $chatRoomId - Type: $messageType',
     );
-  }
-  /// Test connection để debug URL malformation
-  Future<void> testConnection() async {
-    try {
-      final accessToken = await _authService.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('No access token available');
-      }
-
-      String wsUrl;
-      switch (EnvironmentConfig.current) {
-        case Environment.dev:
-          wsUrl = 'ws://10.0.2.2:8080/api/ws';
-          break;
-        case Environment.staging:
-          wsUrl = 'ws://150.95.109.13:8080/api/ws';
-          break;
-        case Environment.prod:
-          wsUrl = 'wss://api.amoura.space/api/ws';
-          break;
-      }
-
-      debugPrint('=== WebSocket URL Test ===');
-      debugPrint('Environment: ${EnvironmentConfig.current}');
-      debugPrint('WebSocket URL: $wsUrl');
-      debugPrint('URL length: ${wsUrl.length}');
-      debugPrint('URL contains ws://: ${wsUrl.contains('ws://')}');
-      debugPrint('URL contains wss://: ${wsUrl.contains('wss://')}');
-      debugPrint('URL contains :0: ${wsUrl.contains(':0')}');
-      debugPrint('URL contains #: ${wsUrl.contains('#')}');
-      debugPrint('========================');
-
-      // Test with a simple WebSocket connection first
-      final testClient = StompClient(
-        config: StompConfig(
-          url: wsUrl,
-          onConnect: (frame) {
-            debugPrint('Test connection successful!');
-          },
-          onWebSocketError: (error) {
-            debugPrint('Test connection failed: $error');
-          },
-          stompConnectHeaders: {
-            'Authorization': 'Bearer $accessToken',
-          },
-          reconnectDelay: Duration.zero,
-        ),
-      );
-
-      testClient.activate();
-      
-      // Wait a bit then disconnect
-      await Future.delayed(const Duration(seconds: 5));
-      testClient.deactivate();
-      
-    } catch (e) {
-      debugPrint('Test connection error: $e');
-    }
   }
 }

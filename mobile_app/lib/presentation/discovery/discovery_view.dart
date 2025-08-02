@@ -7,6 +7,7 @@ import '../shared/widgets/app_gradient_background.dart';
 import 'widgets/action_buttons.dart';
 import 'widgets/filter/filter_dialog.dart';
 import 'widgets/swipeable_card.dart';
+import 'widgets/smooth_transition_wrapper.dart';
 import 'discovery_viewmodel.dart';
 import '../../infrastructure/services/subscription_service.dart';
 import '../../infrastructure/services/rewind_service.dart';
@@ -14,8 +15,8 @@ import '../../core/services/match_service.dart';
 import '../../core/services/profile_service.dart';
 import 'discovery_recommendation_cache.dart';
 import '../../infrastructure/services/app_initialization_service.dart';
-import '../../infrastructure/services/image_precache_service.dart';
 import '../../infrastructure/services/app_startup_service.dart';
+import '../../infrastructure/services/profile_transition_manager.dart';
 
 class DiscoveryView extends StatefulWidget {
   const DiscoveryView({super.key});
@@ -42,20 +43,20 @@ class _DiscoveryViewState extends State<DiscoveryView> {
     // Load recommendations when screen is created
     _viewModel.loadRecommendations();
     
-    // Chỉ precache thêm nếu dữ liệu chưa được chuẩn bị từ AppStartupService
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!AppStartupService.instance.isReady) {
-        final recs = _viewModel.recommendations;
-        if (recs.isNotEmpty && mounted) {
-          try {
-            // Sử dụng logic precache thông minh mới
-            await ImagePrecacheService.instance.precacheForDiscovery(recs, context);
-          } catch (e) {
-          }
-        }
-      } else {
+    // Không cần precache thêm ở đây vì đã được xử lý trong ViewModel
+    // Chỉ đảm bảo context được set cho ViewModel
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _viewModel.setContext(context);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // Clear context khi widget bị dispose
+    _viewModel.setContext(null);
+    super.dispose();
   }
 
   void _setHighlightLike(bool value) {
@@ -232,10 +233,13 @@ class _DiscoveryViewState extends State<DiscoveryView> {
         ? vm.getDistanceToProfile(nextProfile) 
         : null;
 
-    // Sử dụng SwipeableCardStack mới (Tinder-like)
+    // Set next profile cho ProfileTransitionManager
+    ProfileTransitionManager.instance.setNextProfile(nextProfile);
+
+    // Sử dụng SmoothTransitionWrapper để đảm bảo transition mượt mà
     return RepaintBoundary(
-      child: SwipeableCardStack(
-        key: ValueKey('profile_${currentProfile.userId}'),
+      child: SmoothTransitionWrapper(
+        key: ValueKey('smooth_transition_${currentProfile.userId}_${currentProfile.photos.map((p) => p.id).join('_')}'),
         currentProfile: currentProfile,
         currentInterests: currentProfile.interests,
         currentDistance: vm.getDistanceToProfile(currentProfile),

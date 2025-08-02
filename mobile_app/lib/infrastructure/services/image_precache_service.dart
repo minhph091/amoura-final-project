@@ -31,7 +31,8 @@ class ImagePrecacheService {
     final profileUrls = <String>[];
     for (final photo in profile.photos) {
       await _precacheSingleImage(photo, context);
-      profileUrls.add(UrlTransformer.transform(photo.url));
+      // Sử dụng cacheUrl thay vì transform để đảm bảo consistency
+      profileUrls.add(photo.cacheUrl);
     }
     
     // Track URLs cho profile này
@@ -41,139 +42,116 @@ class ImagePrecacheService {
     _cleanupExcessProfiles();
   }
 
-  /// Precache một ảnh cụ thể
+  /// Precache một ảnh đơn lẻ
   Future<void> _precacheSingleImage(PhotoModel photo, BuildContext context) async {
+    // Sử dụng cacheUrl thay vì transform để đảm bảo consistency
+    final imageUrl = photo.cacheUrl;
+    
+    if (_precachedUrls.contains(imageUrl)) return;
+    
     try {
-      final transformedUrl = UrlTransformer.transform(photo.url);
-      
-      // Kiểm tra xem ảnh đã được precache chưa
-      if (_precachedUrls.contains(transformedUrl)) {
-        return;
-      }
-      
-      final provider = CachedNetworkImageProvider(transformedUrl);
+      final provider = CachedNetworkImageProvider(imageUrl);
       await precacheImage(provider, context);
-      
-      _precachedUrls.add(transformedUrl);
+      _precachedUrls.add(imageUrl);
     } catch (e) {
-      // print('ImagePrecacheService: Lỗi khi precache ảnh ${photo.id}: $e');
+      // Log error nhưng không throw để không ảnh hưởng đến UX
+      debugPrint('ImagePrecacheService: Lỗi khi precache ảnh $imageUrl: $e');
     }
   }
 
-  /// Precache ảnh cho nhiều profiles với logic thông minh
-  Future<void> precacheMultipleProfiles(List<UserRecommendationModel> profiles, BuildContext context, {int count = 5}) async {
-    if (_isPrecaching) {
-      return;
-    }
-
-    if (profiles.isEmpty) {
-      return;
-    }
-
+  /// Precache nhiều profile cùng lúc
+  Future<void> precacheMultipleProfiles(
+    List<UserRecommendationModel> profiles, 
+    BuildContext context, 
+    {int count = 5}
+  ) async {
+    if (_isPrecaching) return;
+    
     _isPrecaching = true;
-
+    final profilesToCache = profiles.take(count).toList();
+    
     try {
-      final int profilesToPrecache = profiles.length > count ? count : profiles.length;
-      
-      for (int i = 0; i < profilesToPrecache; i++) {
-        final profile = profiles[i];
-        // Kiểm tra xem profile này đã được precache chưa
-        if (!isProfilePrecached(profile)) {
-          await precacheProfileImages(profile, context);
-          // Thêm delay nhỏ để không block UI
-          await Future.delayed(const Duration(milliseconds: 50));
-        }
+      for (final profile in profilesToCache) {
+        await precacheProfileImages(profile, context);
       }
-      
-    } catch (e) {
-      // print('ImagePrecacheService: Lỗi khi precache multiple profiles: $e');
     } finally {
       _isPrecaching = false;
     }
   }
 
-  /// Precache thông minh cho discovery - precache nhiều profile hơn
-  Future<void> precacheForDiscovery(List<UserRecommendationModel> profiles, BuildContext context) async {
+  /// Precache cho discovery view
+  Future<void> precacheForDiscovery(
+    List<UserRecommendationModel> profiles, 
+    BuildContext context
+  ) async {
     if (profiles.isEmpty) return;
     
-    // Precache 10 profile đầu tiên thay vì 3
-    final int initialPrecacheCount = profiles.length > 10 ? 10 : profiles.length;
-    await precacheMultipleProfiles(profiles, context, count: initialPrecacheCount);
+    // Precache 4 profile đầu tiên cho trải nghiệm mượt mà
+    final initialProfiles = profiles.take(4).toList();
+    await precacheMultipleProfiles(initialProfiles, context, count: initialProfiles.length);
   }
 
-  /// Precache thêm khi user đã vuốt qua một số profile
-  Future<void> precacheNextBatch(List<UserRecommendationModel> profiles, int currentIndex, BuildContext context) async {
-    if (profiles.isEmpty || currentIndex >= profiles.length) return;
+  /// Precache batch tiếp theo
+  Future<void> precacheNextBatch(
+    List<UserRecommendationModel> profiles, 
+    int currentIndex, 
+    BuildContext context
+  ) async {
+    if (currentIndex >= profiles.length - 2) return;
     
-    // Tính toán vị trí bắt đầu precache batch tiếp theo
-    final startIndex = currentIndex + 1;
-    final endIndex = (startIndex + precacheBatchSize) < profiles.length 
-        ? startIndex + precacheBatchSize 
-        : profiles.length;
-    
-    if (startIndex >= endIndex) return;
-    
-    final nextProfiles = profiles.sublist(startIndex, endIndex);
-    
-    await precacheMultipleProfiles(nextProfiles, context, count: nextProfiles.length);
+    final nextProfiles = profiles.skip(currentIndex + 2).take(3).toList();
+    if (nextProfiles.isNotEmpty) {
+      await precacheMultipleProfiles(nextProfiles, context, count: nextProfiles.length);
+    }
   }
 
-  /// Kiểm tra xem một profile đã được precache chưa
-  bool isProfilePrecached(UserRecommendationModel profile) {
-    if (profile.photos.isEmpty) return true;
-    for (final photo in profile.photos) {
-      if (!isUrlPrecached(photo.url)) {
-        return false;
+  /// Remove profile from cache
+  void removeProfileFromCache(int userId) {
+    final urls = _profileImageUrls.remove(userId);
+    if (urls != null) {
+      for (final url in urls) {
+        _precachedUrls.remove(url);
+        // Clear cache trực tiếp
+        CachedNetworkImage.evictFromCache(url);
       }
     }
-    return true;
   }
 
-  /// Kiểm tra xem một URL đã được precache chưa
-  bool isUrlPrecached(String url) {
-    final transformedUrl = UrlTransformer.transform(url);
-    return _precachedUrls.contains(transformedUrl);
+  /// Clear all cache
+  void clearCache() {
+    _precachedUrls.clear();
+    _profileImageUrls.clear();
+    // Force clear image cache
+    imageCache.clear();
+    imageCache.clearLiveImages();
   }
 
-  /// Cleanup profiles đã cache quá nhiều
+  /// Check if profile is precached
+  bool isProfilePrecached(UserRecommendationModel profile) {
+    return _profileImageUrls.containsKey(profile.userId);
+  }
+
+  /// Cleanup excess profiles để tránh memory leak
   void _cleanupExcessProfiles() {
     if (_profileImageUrls.length <= maxPrecachedProfiles) return;
     
-    // Xóa profile cũ nhất
-    final oldestProfileId = _profileImageUrls.keys.first;
-    final urlsToRemove = _profileImageUrls[oldestProfileId] ?? [];
+    final sortedProfiles = _profileImageUrls.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
     
-    for (final url in urlsToRemove) {
-      _precachedUrls.remove(url);
+    final profilesToRemove = sortedProfiles.take(_profileImageUrls.length - maxPrecachedProfiles);
+    
+    for (final entry in profilesToRemove) {
+      removeProfileFromCache(entry.key);
     }
-    
-    _profileImageUrls.remove(oldestProfileId);
   }
 
-  /// Xóa cache cho profile đã vuốt qua
-  void removeProfileFromCache(int profileId) {
-    final urlsToRemove = _profileImageUrls[profileId] ?? [];
-    
-    for (final url in urlsToRemove) {
-      _precachedUrls.remove(url);
-    }
-    
-    _profileImageUrls.remove(profileId);
-  }
-
-  /// Xóa tất cả cache
-  void clearPrecachedUrls() {
-    _precachedUrls.clear();
-    _profileImageUrls.clear();
-  }
-
-  /// Lấy thông tin cache status
-  Map<String, dynamic> getCacheStatus() {
+  /// Get cache statistics
+  Map<String, dynamic> getCacheStats() {
     return {
-      'precachedUrlsCount': _precachedUrls.length,
-      'precachedProfilesCount': _profileImageUrls.length,
+      'precachedUrls': _precachedUrls.length,
+      'precachedProfiles': _profileImageUrls.length,
       'isPrecaching': _isPrecaching,
-      'precachedProfileIds': _profileImageUrls.keys.toList(),
     };
   }
 } 
+

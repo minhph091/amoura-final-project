@@ -132,7 +132,7 @@ class AppInitializationService {
     _isInitializing = false;
     _currentUserId = null;
     RecommendationCache.instance.clear();
-    ImagePrecacheService.instance.clearPrecachedUrls();
+    ImagePrecacheService.instance.clearCache();
     
     // Disconnect WebSocket khi logout
     try {
@@ -141,5 +141,28 @@ class AppInitializationService {
     } catch (e) {
     }
     
+  }
+
+  /// Get initialization status
+  Map<String, dynamic> getStatus() {
+    return {
+      'isInitialized': _isInitialized,
+      'isInitializing': _isInitializing,
+      'currentUserId': _currentUserId,
+      'cacheStatus': ImagePrecacheService.instance.getCacheStats(),
+    };
+  }
+
+  /// Check if app is ready for use
+  bool get isReady => _isInitialized && !_isInitializing;
+
+  /// Debug method to check initialization status
+  void debugStatus() {
+    final cacheStatus = ImagePrecacheService.instance.getCacheStats();
+    print('AppInitializationService Status:');
+    print('  - isInitialized: $_isInitialized');
+    print('  - isInitializing: $_isInitializing');
+    print('  - currentUserId: $_currentUserId');
+    print('  - cacheStatus: $cacheStatus');
   }
 }

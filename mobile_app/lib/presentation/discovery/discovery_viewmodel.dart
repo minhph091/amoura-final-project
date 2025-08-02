@@ -77,7 +77,7 @@ class DiscoveryViewModel extends ChangeNotifier {
   String? get currentUserAvatarUrl => _currentUserAvatarUrl;
 
   /// Set context for showing dialogs
-  void setContext(BuildContext context) {
+  void setContext(BuildContext? context) {
     _context = context;
   }
 
@@ -136,12 +136,19 @@ class DiscoveryViewModel extends ChangeNotifier {
       if (forceRefresh) {
         RecommendationCache.instance.clear();
         AppStartupService.instance.reset();
+        // Clear image cache khi force refresh
+        ImagePrecacheService.instance.clearCache();
       }
       if (AppStartupService.instance.isReady && !forceRefresh) {
         final cached = RecommendationCache.instance.recommendations;
         _recommendations = cached != null ? _filterOutCurrentUser(cached) : [];
-        _isPrecacheDone = true;
+        _currentProfileIndex = 0;
         _isLoading = false;
+        notifyListeners();
+        
+        // Vẫn cần precache ngay cả khi dùng cache
+        await _precacheInitialImages();
+        _isPrecacheDone = true;
         notifyListeners();
         return;
       }
@@ -354,7 +361,6 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Convert UserRecommendationModel to LikedUserModel for rewind service
   /// This helper method ensures compatibility with the rewind service
   LikedUserModel _convertToLikedUserModel(UserRecommendationModel profile) {
-    // Đã xóa hoàn toàn mọi dòng gọi UrlTransformer.debugUrl
     return LikedUserModel(
       id: profile.userId.toString(),
       firstName: profile.firstName,
@@ -364,15 +370,15 @@ class DiscoveryViewModel extends ChangeNotifier {
       location: profile.location ?? 'Unknown',
       coverImageUrl:
           profile.photos.isNotEmpty
-              ? UrlTransformer.transform(profile.photos.first.url)
+              ? profile.photos.first.displayUrl
               : '',
       avatarUrl:
           profile.photos.isNotEmpty
-              ? UrlTransformer.transform(profile.photos.first.url)
+              ? profile.photos.first.displayUrl
               : '',
       bio: profile.bio ?? '',
       photoUrls:
-          profile.photos.map((p) => UrlTransformer.transform(p.url)).toList(),
+          profile.photos.map((p) => p.displayUrl).toList(),
       isVip: false,
     );
   }
@@ -415,12 +421,10 @@ class DiscoveryViewModel extends ChangeNotifier {
     final profile = _recommendations[profileIndex];
     if (profile.photos.isNotEmpty) {
       for (final photo in profile.photos) {
-        final transformedUrl = UrlTransformer.transform(photo.url);
-
-        final provider = CachedNetworkImageProvider(transformedUrl);
+        // Sử dụng cacheUrl thay vì transform để đảm bảo consistency
+        final provider = CachedNetworkImageProvider(photo.cacheUrl);
         precacheImage(provider, _context!);
       }
-      // debugPrint('[Discovery] Đã precache ảnh cho profile index $profileIndex (userId: ${profile.userId})');
     }
   }
 }

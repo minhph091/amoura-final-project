@@ -13,6 +13,7 @@ import 'profile_detail_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import '../../profile/view/profile_viewmodel.dart';
 import '../../../config/language/app_localizations.dart';
+import 'profile_detail_page.dart'; // Added import for ProfileDetailPage
 
 // Đổi từ StatelessWidget sang StatefulWidget
 class ProfileCard extends StatelessWidget {
@@ -86,17 +87,20 @@ class ProfileCard extends StatelessWidget {
     // Controller for resetting image index
     final ImageCarouselController imageController = ImageCarouselController();
 
+    // Tạo unique key stable nhưng unique cho mỗi profile
+    final uniqueKey = 'profile_${profile.userId}_${profile.photos.map((p) => p.id).join('_')}';
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: Stack(
         children: [
           // Main image carousel with story progress bar
           ImageCarousel(
-            key: ValueKey('profile_${profile.userId}_${profile.photos.map((p) => p.url).join()}'),
+            key: ValueKey('${uniqueKey}_carousel'),
             photos: displayPhotos,
             showStoryProgress: true,
             controller: imageController,
-            uniqueKey: 'profile_${profile.userId}_${profile.photos.map((p) => p.url).join()}',
+            uniqueKey: uniqueKey,
           ),
           // Overlay user info at the bottom with backdrop blur
           Positioned(
@@ -160,45 +164,16 @@ class ProfileCard extends StatelessWidget {
                               size: 28,
                             ),
                             onPressed: () async {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) {
-                                  return FutureBuilder<Map<String, dynamic>>(
-                                    future: getIt<ProfileService>().getProfileByUserId(profile.userId),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState == ConnectionState.waiting) {
-                                        return const Center(child: CircularProgressIndicator());
-                                      }
-                                      final profileData = snapshot.data;
-                                      if (profileData == null) {
-                                        // Fallback: dùng dữ liệu cũ nếu lỗi
-                                        return ProfileDetailBottomSheet(
-                                          profile: {
-                                            'bio': profile.bio ?? '-',
-                                            'height': profile.height != null ? profile.height.toString() : '-',
-                                            'sex': profile.sex ?? '-',
-                                            'location': profile.location != null ? {'city': profile.location} : null,
-                                            'interests': interests.map((e) => {'name': e.name}).toList(),
-                                            'pets': profile.pets.map((e) => {'name': e.name}).toList(),
-                                            'orientation': null,
-                                            'jobIndustry': null,
-                                            'educationLevel': null,
-                                            'languages': [],
-                                            'drinkStatus': null,
-                                            'smokeStatus': null,
-                                          },
-                                          distance: distance,
-                                        );
-                                      }
-                                      return ProfileDetailBottomSheet(
-                                        profile: profileData,
-                                        distance: distance,
-                                      );
-                                    },
-                                  );
-                                },
+                              // Sử dụng Navigator.push thay vì showModalBottomSheet để tránh widget tree issues
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfileDetailPage(
+                                    profile: profile,
+                                    interests: interests,
+                                    distance: distance,
+                                  ),
+                                ),
                               );
                             },
                             tooltip: 'Xem thông tin chi tiết',

@@ -62,7 +62,7 @@ class AppStartupService {
     _isInitialized = false;
     _isInitializing = false;
     AppInitializationService.instance.reset();
-    ImagePrecacheService.instance.clearPrecachedUrls();
+    ImagePrecacheService.instance.clearCache();
     print('AppStartupService: Đã reset trạng thái');
   }
 
@@ -71,38 +71,37 @@ class AppStartupService {
 
   /// Get thông tin trạng thái khởi tạo
   Map<String, dynamic> get initializationStatus {
+    final cacheStats = ImagePrecacheService.instance.getCacheStats();
     return {
       'appStartupInitialized': _isInitialized,
       'appStartupInitializing': _isInitializing,
       'appDataInitialized': AppInitializationService.instance.isInitialized,
       'appDataInitializing': AppInitializationService.instance.isInitializing,
-      'precachedImagesCount': ImagePrecacheService.instance.precachedCount,
-      'precachedProfilesCount': ImagePrecacheService.instance.precachedProfilesCount,
-      'isPrecaching': ImagePrecacheService.instance.isPrecaching,
-      'cacheStatus': ImagePrecacheService.instance.getCacheStatus(),
+      'cacheStatus': cacheStats,
     };
   }
 
   /// Kiểm tra performance của app
   Map<String, dynamic> getPerformanceMetrics() {
+    final cacheStats = ImagePrecacheService.instance.getCacheStats();
     return {
       'initializationTime': DateTime.now().millisecondsSinceEpoch,
       'cacheEfficiency': {
-        'precachedImages': ImagePrecacheService.instance.precachedCount,
-        'precachedProfiles': ImagePrecacheService.instance.precachedProfilesCount,
+        'precachedImages': cacheStats['precachedUrls'] ?? 0,
+        'precachedProfiles': cacheStats['precachedProfiles'] ?? 0,
         'cacheHitRate': _calculateCacheHitRate(),
       },
       'memoryUsage': {
         'maxPrecachedProfiles': ImagePrecacheService.maxPrecachedProfiles,
-        'currentPrecachedProfiles': ImagePrecacheService.instance.precachedProfilesCount,
+        'currentPrecachedProfiles': cacheStats['precachedProfiles'] ?? 0,
       },
     };
   }
 
   /// Tính toán cache hit rate (tỷ lệ cache hit)
   double _calculateCacheHitRate() {
-    final cacheStatus = ImagePrecacheService.instance.getCacheStatus();
-    final precachedProfiles = cacheStatus['precachedProfilesCount'] as int;
+    final cacheStats = ImagePrecacheService.instance.getCacheStats();
+    final precachedProfiles = cacheStats['precachedProfiles'] as int? ?? 0;
     final totalProfiles = RecommendationCache.instance.recommendations?.length ?? 0;
     
     if (totalProfiles == 0) return 0.0;

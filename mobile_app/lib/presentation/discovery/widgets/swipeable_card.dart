@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/models/profile/interest_model.dart';
 import '../../../data/models/match/user_recommendation_model.dart';
+import '../../../infrastructure/services/cache_cleanup_service.dart';
+import '../../../infrastructure/services/profile_transition_manager.dart';
 import 'profile_card.dart';
+import 'profile_card_wrapper.dart';
 
 class SwipeableCardStack extends StatefulWidget {
   final UserRecommendationModel currentProfile;
@@ -62,11 +66,34 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
   @override
   void didUpdateWidget(covariant SwipeableCardStack oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Reset position khi đổi profile
-    if (widget.currentProfile.userId != oldWidget.currentProfile.userId ||
-        widget.currentProfile.photos.map((p) => p.url).join() != oldWidget.currentProfile.photos.map((p) => p.url).join()) {
+    
+    // Detect profile change
+    final isNewProfile = widget.currentProfile.userId != oldWidget.currentProfile.userId;
+    
+    if (isNewProfile) {
+      print('[SWIPE_DEBUG] Profile changed from ${oldWidget.currentProfile.userId} to ${widget.currentProfile.userId}');
+      
+      // Kết thúc transition cho profile cũ
+      ProfileTransitionManager.instance.endTransition(widget.currentProfile);
+      
+      // Reset position và animation
       _resetPosition();
+      
+      // Reset animation controller
+      _animController.reset();
+      
+      // Force rebuild để đảm bảo UI được clear hoàn toàn
+      if (mounted) {
+        setState(() {});
+      }
     }
+  }
+
+  void _clearProfileCache(UserRecommendationModel oldProfile) {
+    print('[SWIPE_DEBUG] Clearing cache for ${oldProfile.photos.length} photos of user ${oldProfile.userId}');
+    
+    // Sử dụng CacheCleanupService để clear cache triệt để
+    CacheCleanupService.instance.clearProfileCache(oldProfile);
   }
 
   @override
@@ -86,6 +113,10 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
 
   void _onDragStart(DragStartDetails details) {
     if (_isAnimating) return;
+    
+    // Bắt đầu transition ngay khi bắt đầu vuốt
+    ProfileTransitionManager.instance.startTransition(widget.currentProfile);
+    
     _highlightLike = false;
     _highlightPass = false;
     widget.onHighlightLike?.call(false);
@@ -120,6 +151,12 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
       _animController.forward().then((_) {
         _isAnimating = false;
         _resetPosition();
+        
+        // Kết thúc transition khi vuốt xong
+        if (widget.nextProfile != null) {
+          ProfileTransitionManager.instance.endTransition(widget.nextProfile!);
+        }
+        
         widget.onSwiped?.call();
       });
     } else {
@@ -147,8 +184,11 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
     final nextCardScale = 0.9 + (0.1 * peekProgress);
     final nextCardOpacity = 0.3 + (0.7 * peekProgress);
     final nextCardOffset = 10.0 * peekProgress;
-    final currentKey = 'profile_card_${widget.currentProfile.userId}_${widget.currentProfile.photos.map((p) => p.url).join()}';
-    final nextKey = widget.nextProfile != null ? 'profile_card_${widget.nextProfile!.userId}_${widget.nextProfile!.photos.map((p) => p.url).join()}' : null;
+    
+    // Tạo unique key cho current profile
+    final currentKey = 'profile_${widget.currentProfile.userId}_${widget.currentProfile.photos.map((p) => p.id).join('_')}';
+    final nextKey = widget.nextProfile != null ? 'profile_${widget.nextProfile!.userId}_${widget.nextProfile!.photos.map((p) => p.id).join('_')}' : null;
+    
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -161,7 +201,7 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
                 scale: nextCardScale,
                 child: Transform.translate(
                   offset: Offset(0, nextCardOffset),
-                  child: ProfileCard(
+                  child: ProfileCardWrapper(
                     key: ValueKey(nextKey),
                     profile: widget.nextProfile!,
                     interests: widget.nextInterests!,
@@ -171,13 +211,9 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
               ),
             ),
           ),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          switchInCurve: Curves.easeInOut,
-          switchOutCurve: Curves.easeInOut,
-          transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+        // Current card (animate vuốt) - Bọc trong GestureDetector
+        Positioned.fill(
           child: GestureDetector(
-            key: ValueKey(currentKey),
             onPanStart: _onDragStart,
             onPanUpdate: _onDragUpdate,
             onPanEnd: _onDragEnd,
@@ -188,7 +224,7 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
                   offset: Offset(_offsetX, _offsetY),
                   child: Transform.rotate(
                     angle: angle,
-                    child: ProfileCard(
+                    child: ProfileCardWrapper(
                       key: ValueKey(currentKey),
                       profile: widget.currentProfile,
                       interests: widget.currentInterests,
