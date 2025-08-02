@@ -321,7 +321,7 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .status(user.getStatus())
+                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)  // Convert to uppercase for API
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
                 .hasProfile(user.getProfile() != null)
@@ -340,7 +340,9 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         String oldStatus = user.getStatus();
-        user.setStatus(request.getStatus());
+        // Convert uppercase status to lowercase for database compatibility
+        String databaseStatus = request.getStatus().toLowerCase();
+        user.setStatus(databaseStatus);
         userRepository.save(user);
         
         log.info("User {} status updated from {} to {} for reason: {}", 
@@ -371,6 +373,10 @@ public class AdminServiceImpl implements AdminService {
     }
     
     private UserManagementDTO convertToUserManagementDTO(Object[] row) {
+        // Convert status from lowercase (database) to uppercase (API response)
+        String databaseStatus = (String) row[7];
+        String apiStatus = databaseStatus != null ? databaseStatus.toUpperCase() : null;
+        
         return UserManagementDTO.builder()
                 .id(((Number) row[0]).longValue())
                 .username((String) row[1])
@@ -378,7 +384,7 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber((String) row[3])
                 .firstName((String) row[4])
                 .lastName((String) row[5])
-                .status((String) row[7])
+                .status(apiStatus)
                 .lastLogin(convertToLocalDateTime(row[8]))
                 .createdAt(convertToLocalDateTime(row[9]))
                 .hasProfile((Boolean) row[11])

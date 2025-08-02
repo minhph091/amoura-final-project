@@ -215,7 +215,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Kiểm tra trạng thái tài khoản
-        if (!user.getStatus().equalsIgnoreCase("ACTIVE")) {
+        if (!user.getStatus().equalsIgnoreCase("active")) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Account is not active", "ACCOUNT_NOT_ACTIVE");
         }
 
@@ -302,7 +302,7 @@ public class AuthServiceImpl implements AuthService {
                 .lastName(user.getLastName())
                 .fullName(user.getFullName())
                 .roleName(user.getRole().getName())
-                .status(user.getStatus())
+                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)  // Convert to uppercase for API
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

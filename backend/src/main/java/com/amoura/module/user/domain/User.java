@@ -114,7 +114,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !status.equals("SUSPEND");
+        return !status.equals("suspend");
     }
 
     @Override
@@ -124,7 +124,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return status.equals("ACTIVE");
+        return status.equals("active");
     }
 
     public String getFullName() {
