@@ -780,25 +780,117 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                               ),
                             ),
 
-                          // MessageInput
+                          // Typing indicator với tên người typing
                           if (viewModel.isOtherUserTyping)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 16, bottom: 4, top: 2),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.outline.withAlpha(100),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withAlpha(20),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   _buildTypingIndicator(),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'The other person is typing...',
+                                    '${viewModel.typingUserName ?? 'Someone'} đang nhập tin nhắn...',
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Theme.of(context).colorScheme.secondary,
+                                      color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
                                       fontStyle: FontStyle.italic,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+
+                          // Pending media preview
+                          if (viewModel.pendingMedia != null) ...[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  if (viewModel.pendingMediaType == 'image')
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.file(
+                                        File(viewModel.pendingMedia!.path),
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  if (viewModel.pendingMediaType == 'video')
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.asset(
+                                            'assets/images/video_placeholder.png',
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.play_circle_fill,
+                                          color: Colors.white,
+                                          size: 36,
+                                        ),
+                                      ],
+                                    ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: () => viewModel.sendPendingMedia(
+                                            widget.chatId,
+                                          ),
+                                          icon: const Icon(Icons.send),
+                                          label: const Text('Send'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Theme.of(context).colorScheme.primary,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 8,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.close,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: viewModel.clearPendingMedia,
+                                          tooltip: 'Remove',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           MessageInput(
                             focusNode: _messageFocusNode,
                             onSendMessage: (message) {
@@ -985,26 +1077,34 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
   Widget _buildTypingIndicator() {
     return SizedBox(
-      width: 35,
+      width: 40,
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(
           3,
           (index) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 1),
-                height: 8,
-                width: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                height: 6,
+                width: 6,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary.withAlpha(153),
+                  color: Theme.of(context).colorScheme.primary.withAlpha(180),
                   shape: BoxShape.circle,
                 ),
               )
               .animate(onPlay: (controller) => controller.repeat(reverse: true))
               .scaleY(
-                begin: 0.5,
+                begin: 0.3,
                 end: 1.0,
-                duration: const Duration(milliseconds: 600),
-                delay: Duration(milliseconds: (index * 150)),
-                curve: Curves.easeInOut,
+                duration: const Duration(milliseconds: 800),
+                delay: Duration(milliseconds: (index * 200)),
+                curve: Curves.elasticOut,
+              )
+              .then()
+              .scaleY(
+                begin: 1.0,
+                end: 0.3,
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.elasticIn,
               ),
         ),
       ),

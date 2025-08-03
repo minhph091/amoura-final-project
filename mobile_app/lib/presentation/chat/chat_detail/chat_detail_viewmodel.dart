@@ -85,10 +85,12 @@ class ChatDetailViewModel extends ChangeNotifier {
   String? get pendingMediaType => _pendingMediaType;
 
   String? _recipientId;
+  String? _recipientName; // Thêm recipient name
   bool _isRecipientOnline = false;
   DateTime? _recipientLastSeen;
 
   String? get recipientId => _recipientId;
+  String? get recipientName => _recipientName; // Getter cho recipient name
   bool get isRecipientOnline => _isRecipientOnline;
   DateTime? get recipientLastSeen => _recipientLastSeen;
 
@@ -104,10 +106,14 @@ class ChatDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool get hasPendingMedia => _pendingMedia != null;
+
   // --- TYPING INDICATOR STATE ---
   bool _isOtherUserTyping = false;
+  String? _typingUserName; // Thêm tên người đang typing
   Timer? _otherUserTypingTimer;
   bool get isOtherUserTyping => _isOtherUserTyping;
+  String? get typingUserName => _typingUserName; // Getter cho tên người typing
 
   ChatDetailViewModel() {
     _initViewModel();
@@ -339,24 +345,34 @@ class ChatDetailViewModel extends ChangeNotifier {
   void _setupTypingListener() {
     // Subscribe vào typing stream từ ChatService
     _chatService.typingStream.listen((typingData) {
+      debugPrint('ChatDetailViewModel: Received typing data: $typingData');
+      
       final chatRoomId = typingData['chatRoomId']?.toString();
-      final userId = typingData['userId']?.toString();
+      final senderId = typingData['senderId']?.toString();
+      final messageType = typingData['type']?.toString();
+      
       // Chuẩn hóa logic nhận typing từ backend
       bool isTyping = false;
-      if (typingData.containsKey('isTyping')) {
-        isTyping = typingData['isTyping'] == true;
+      if (typingData.containsKey('typing')) {
+        isTyping = typingData['typing'] == true;
       } else if (typingData.containsKey('content')) {
         // Nếu backend gửi content: "true"/"false"
         isTyping = typingData['content'] == 'true';
       }
+      
+      debugPrint('ChatDetailViewModel: Processing typing - ChatRoomId: $chatRoomId, SenderId: $senderId, IsTyping: $isTyping, Type: $messageType');
+      
       // Chỉ cập nhật typing status nếu là từ user khác và trong current chat
       if (chatRoomId == _currentChatId &&
-          userId != null &&
-          userId != _currentUserId) {
+          senderId != null &&
+          senderId != _currentUserId &&
+          messageType == 'TYPING') {
         updateRecipientTypingStatus(isTyping);
         debugPrint(
-          'ChatDetailViewModel: User $userId is ${isTyping ? "typing" : "not typing"} in chat $chatRoomId',
+          'ChatDetailViewModel: User $senderId is ${isTyping ? "typing" : "not typing"} in chat $chatRoomId',
         );
+      } else {
+        debugPrint('ChatDetailViewModel: Skipping typing update - ChatRoomId: $chatRoomId vs $_currentChatId, SenderId: $senderId vs $_currentUserId, Type: $messageType');
       }
     });
   }
@@ -376,13 +392,16 @@ class ChatDetailViewModel extends ChangeNotifier {
         await _getCurrentUserInfo();
       }
 
-      // Lấy chat room để xác định recipientId
+      // Lấy chat room để xác định recipientId và recipientName
       final chatRoom = await _getChatRoomUseCase.execute(chatId);
       if (chatRoom.user1Id == _currentUserId) {
         _recipientId = chatRoom.user2Id;
+        _recipientName = chatRoom.user2Name;
       } else {
         _recipientId = chatRoom.user1Id;
+        _recipientName = chatRoom.user1Name;
       }
+      debugPrint('ChatDetailViewModel: Recipient info - ID: $_recipientId, Name: $_recipientName');
       // Lấy trạng thái online ban đầu
       if (_recipientId != null && _recipientId!.isNotEmpty) {
         _isRecipientOnline = await _userStatusService.getUserOnlineStatus(
@@ -401,12 +420,13 @@ class ChatDetailViewModel extends ChangeNotifier {
         });
       }
 
-      // Subscribe to chat room với current user ID
+      // Initialize WebSocket connection với current user ID
       if (_currentUserId.isNotEmpty) {
         debugPrint(
           'ChatDetailViewModel: Setting up WebSocket for user $_currentUserId in chat $chatId',
         );
         try {
+          await _chatService.initializeWebSocket(_currentUserId);
           await _chatService.subscribeToChat(chatId);
           debugPrint(
             'ChatDetailViewModel: WebSocket setup completed successfully',
@@ -951,14 +971,18 @@ class ChatDetailViewModel extends ChangeNotifier {
   void updateRecipientTypingStatus(bool isTyping) {
     if (isTyping) {
       _isOtherUserTyping = true;
+      _typingUserName = _recipientName; // Sử dụng recipient name
+      debugPrint('ChatDetailViewModel: User $_typingUserName is typing');
       // Reset timer mỗi lần nhận được typing=true
       _otherUserTypingTimer?.cancel();
       _otherUserTypingTimer = Timer(const Duration(seconds: 2), () {
         _isOtherUserTyping = false;
+        _typingUserName = null;
         notifyListeners();
       });
     } else {
       _isOtherUserTyping = false;
+      _typingUserName = null;
       _otherUserTypingTimer?.cancel();
     }
     notifyListeners();
@@ -1151,10 +1175,10 @@ class ChatDetailViewModel extends ChangeNotifier {
     _typingTimer?.cancel();
     _markAsReadTimer?.cancel(); // Cancel mark as read timer
     _refreshTimer?.cancel(); // Cancel refresh timer
+    _otherUserTypingTimer?.cancel(); // Cancel other user typing timer
     _messagesSubscription?.cancel();
     _newMessageSubscription?.cancel();
     _userStatusSubscription?.cancel();
-    _otherUserTypingTimer?.cancel();
     super.dispose();
   }
 }
