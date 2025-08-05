@@ -43,8 +43,7 @@ class _DiscoveryViewState extends State<DiscoveryView> {
     // Load recommendations when screen is created
     _viewModel.loadRecommendations();
     
-    // Không cần precache thêm ở đây vì đã được xử lý trong ViewModel
-    // Chỉ đảm bảo context được set cho ViewModel
+    // Set context cho ViewModel
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _viewModel.setContext(context);
@@ -60,17 +59,21 @@ class _DiscoveryViewState extends State<DiscoveryView> {
   }
 
   void _setHighlightLike(bool value) {
-    setState(() {
-      _highlightLike = value;
-      _lastSwipeWasLike = value; // Track hướng vuốt
-    });
+    if (_highlightLike != value) {
+      setState(() {
+        _highlightLike = value;
+        _lastSwipeWasLike = value;
+      });
+    }
   }
   
   void _setHighlightPass(bool value) {
-    setState(() {
-      _highlightPass = value;
-      _lastSwipeWasLike = !value; // Track hướng vuốt
-    });
+    if (_highlightPass != value) {
+      setState(() {
+        _highlightPass = value;
+        _lastSwipeWasLike = !value;
+      });
+    }
   }
 
   void _onSwiped() {
@@ -236,7 +239,7 @@ class _DiscoveryViewState extends State<DiscoveryView> {
     // Set next profile cho ProfileTransitionManager
     ProfileTransitionManager.instance.setNextProfile(nextProfile);
 
-    // Sử dụng SmoothTransitionWrapper để đảm bảo transition mượt mà
+    // Sử dụng RepaintBoundary để tối ưu performance
     return RepaintBoundary(
       child: SmoothTransitionWrapper(
         key: ValueKey('smooth_transition_${currentProfile.userId}_${currentProfile.photos.map((p) => p.id).join('_')}'),

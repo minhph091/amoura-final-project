@@ -9,26 +9,32 @@ class CacheCleanupService {
   static final CacheCleanupService instance = CacheCleanupService._internal();
   CacheCleanupService._internal();
 
+  final Set<String> _clearedUrls = <String>{};
+  final Set<int> _clearedProfiles = <int>{};
+
   /// Clear cache của một profile cụ thể
   void clearProfileCache(UserRecommendationModel profile) {
-    print('[CACHE_CLEANUP] Clearing cache for profile ${profile.userId}');
+    // Tránh clear cache của cùng một profile nhiều lần
+    if (_clearedProfiles.contains(profile.userId)) {
+      return;
+    }
+    
+    _clearedProfiles.add(profile.userId);
     
     // Clear cache của từng ảnh
     for (final photo in profile.photos) {
-      if (photo.displayUrl.isNotEmpty) {
-        print('[CACHE_CLEANUP] Evicting: ${photo.displayUrl}');
+      if (photo.displayUrl.isNotEmpty && !_clearedUrls.contains(photo.displayUrl)) {
         CachedNetworkImage.evictFromCache(photo.displayUrl);
+        _clearedUrls.add(photo.displayUrl);
       }
     }
     
-    // Force clear toàn bộ image cache
-    _clearAllImageCache();
+    // Cleanup nếu quá nhiều URL đã được clear
+    _cleanupClearedUrls();
   }
 
-  /// Clear toàn bộ image cache
+  /// Clear toàn bộ image cache một cách thông minh
   void _clearAllImageCache() {
-    print('[CACHE_CLEANUP] Clearing all image cache');
-    
     // Clear Flutter image cache
     imageCache.clear();
     imageCache.clearLiveImages();
@@ -36,15 +42,25 @@ class CacheCleanupService {
     // Clear PaintingBinding image cache
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
-    
-    // Clear memory cache
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
   }
 
   /// Clear toàn bộ cache
   void clearAllCache() {
-    print('[CACHE_CLEANUP] Clearing all cache');
     _clearAllImageCache();
+    _clearedUrls.clear();
+    _clearedProfiles.clear();
+  }
+
+  /// Cleanup cleared URLs để tránh memory leak
+  void _cleanupClearedUrls() {
+    if (_clearedUrls.length > 1000) {
+      _clearedUrls.clear();
+    }
+  }
+
+  /// Reset cleared tracking
+  void resetClearedTracking() {
+    _clearedUrls.clear();
+    _clearedProfiles.clear();
   }
 } 

@@ -43,17 +43,19 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
   bool _highlightLike = false;
   bool _highlightPass = false;
   bool _isAnimating = false;
+  bool _isDragging = false;
 
   static const double swipeThreshold = 100;
   static const double maxAngle = 15;
   static const double peekThreshold = 20;
+  static const double maxVerticalOffset = 30; // Giới hạn vuốt dọc
 
   @override
   void initState() {
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 250),
+      duration: const Duration(milliseconds: 200), // Giảm thời gian animation
     );
     _anim = Tween<double>(begin: 0, end: 0).animate(_animController)
       ..addListener(() {
@@ -71,8 +73,6 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
     final isNewProfile = widget.currentProfile.userId != oldWidget.currentProfile.userId;
     
     if (isNewProfile) {
-      print('[SWIPE_DEBUG] Profile changed from ${oldWidget.currentProfile.userId} to ${widget.currentProfile.userId}');
-      
       // Kết thúc transition cho profile cũ
       ProfileTransitionManager.instance.endTransition(widget.currentProfile);
       
@@ -89,13 +89,6 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
     }
   }
 
-  void _clearProfileCache(UserRecommendationModel oldProfile) {
-    print('[SWIPE_DEBUG] Clearing cache for ${oldProfile.photos.length} photos of user ${oldProfile.userId}');
-    
-    // Sử dụng CacheCleanupService để clear cache triệt để
-    CacheCleanupService.instance.clearProfileCache(oldProfile);
-  }
-
   @override
   void dispose() {
     _animController.dispose();
@@ -107,12 +100,15 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
     _offsetY = 0;
     _highlightLike = false;
     _highlightPass = false;
+    _isDragging = false;
     widget.onHighlightLike?.call(false);
     widget.onHighlightPass?.call(false);
   }
 
   void _onDragStart(DragStartDetails details) {
     if (_isAnimating) return;
+    
+    _isDragging = true;
     
     // Bắt đầu transition ngay khi bắt đầu vuốt
     ProfileTransitionManager.instance.startTransition(widget.currentProfile);
@@ -124,30 +120,43 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
   }
 
   void _onDragUpdate(DragUpdateDetails details) {
-    if (_isAnimating) return;
+    if (_isAnimating || !_isDragging) return;
+    
     setState(() {
+      // Chỉ cho phép vuốt ngang (trái/phải)
       _offsetX += details.delta.dx;
+      
+      // Vuốt dọc chỉ di chuyển trong phạm vi giới hạn và không trigger swipe
       _offsetY += details.delta.dy;
-      _offsetY = _offsetY.clamp(-50, 50);
+      _offsetY = _offsetY.clamp(-maxVerticalOffset, maxVerticalOffset);
+      
+      // Chỉ highlight khi vuốt ngang đủ xa
       _highlightLike = _offsetX > peekThreshold;
       _highlightPass = _offsetX < -peekThreshold;
     });
+    
     widget.onHighlightLike?.call(_highlightLike);
     widget.onHighlightPass?.call(_highlightPass);
   }
 
   void _onDragEnd(DragEndDetails details) {
-    if (_isAnimating) return;
+    if (_isAnimating || !_isDragging) return;
+    
+    _isDragging = false;
+    
     final velocity = details.velocity.pixelsPerSecond.dx;
     final shouldSwipe = _offsetX.abs() > swipeThreshold || velocity.abs() > 500;
+    
     if (shouldSwipe) {
       _isAnimating = true;
       final direction = _offsetX > 0 || velocity > 0 ? 1 : -1;
       final targetPosition = direction * 600.0;
+      
       _anim = Tween<double>(
         begin: _offsetX,
         end: targetPosition,
       ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+      
       _animController.forward().then((_) {
         _isAnimating = false;
         _resetPosition();
@@ -160,11 +169,13 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
         widget.onSwiped?.call();
       });
     } else {
+      // Reset về vị trí ban đầu
       _isAnimating = true;
       _anim = Tween<double>(
         begin: _offsetX,
         end: 0.0,
       ).animate(CurvedAnimation(parent: _animController, curve: Curves.elasticOut));
+      
       _animController.forward().then((_) {
         setState(() {
           _highlightLike = false;
@@ -192,6 +203,7 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
     return Stack(
       clipBehavior: Clip.none,
       children: [
+        // Next card (background)
         if (widget.nextProfile != null && widget.nextInterests != null)
           Positioned.fill(
             child: AnimatedOpacity(
@@ -211,7 +223,7 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
               ),
             ),
           ),
-        // Current card (animate vuốt) - Bọc trong GestureDetector
+        // Current card (swipeable)
         Positioned.fill(
           child: GestureDetector(
             onPanStart: _onDragStart,
@@ -236,6 +248,7 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
             ),
           ),
         ),
+        // Like highlight
         if (_highlightLike)
           Positioned(
             top: 50,
@@ -253,6 +266,7 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
               ),
             ),
           ),
+        // Pass highlight
         if (_highlightPass)
           Positioned(
             top: 50,

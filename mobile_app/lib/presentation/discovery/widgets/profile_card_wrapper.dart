@@ -38,8 +38,6 @@ class _ProfileCardWrapperState extends State<ProfileCardWrapper> {
     final isNewProfile = newProfileKey != _lastProfileKey;
     
     if (isNewProfile) {
-      print('[PROFILE_WRAPPER] New profile detected: $_lastProfileKey -> $newProfileKey');
-      
       // Clear cache của profile cũ
       CacheCleanupService.instance.clearProfileCache(oldWidget.profile);
       

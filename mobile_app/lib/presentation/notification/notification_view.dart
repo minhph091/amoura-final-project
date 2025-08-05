@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../config/language/app_localizations.dart';
 import '../shared/widgets/app_gradient_background.dart';
 import 'notification_viewmodel.dart';
 import 'widgets/notification_group.dart';
+import 'widgets/user_profile_info_sheet.dart';
 import '../../app/routes/app_routes.dart';
+import '../../core/services/match_service.dart';
+import '../../data/models/match/swipe_response_model.dart';
+import '../../app/di/injection.dart';
 
 class NotificationView extends StatefulWidget {
   const NotificationView({super.key});
 
   @override
-  State<NotificationView> createState() => _NotificationViewState();
+  State<NotificationView> createState() {
+    try {
+      return _NotificationViewState();
+    } catch (e) {
+      debugPrint('NotificationView: Error creating state: $e');
+      return _NotificationViewState();
+    }
+  }
 }
 
 class _NotificationViewState extends State<NotificationView>
@@ -17,24 +29,41 @@ class _NotificationViewState extends State<NotificationView>
   final NotificationViewModel _viewModel = NotificationViewModel();
   late TabController _tabController;
 
+  _NotificationViewState() {
+    try {
+      // Constructor logic if needed
+    } catch (e) {
+      debugPrint('_NotificationViewState: Error in constructor: $e');
+    }
+  }
+
   @override
   void initState() {
+    try {
     super.initState();
     _viewModel.loadNotifications();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       _viewModel.setCurrentTabIndex(_tabController.index);
     });
+    } catch (e) {
+      debugPrint('NotificationView: Error in initState: $e');
+    }
   }
 
   @override
   void dispose() {
+    try {
     _tabController.dispose();
     super.dispose();
+    } catch (e) {
+      debugPrint('NotificationView: Error in dispose: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    try {
     final localizations = AppLocalizations.of(context);
 
     return AppGradientBackground(
@@ -187,14 +216,29 @@ class _NotificationViewState extends State<NotificationView>
         ),
       ),
     );
+    } catch (e) {
+      debugPrint('NotificationView: Error building widget: $e');
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Notifications'),
+        ),
+        body: const Center(
+          child: Text(
+            'Error loading notifications',
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildGroupedNotificationList(
-    List<NotificationModel> notifications,
+    List<UINotificationModel> notifications,
     String emptyTitle,
     String emptySubtitle,
     NotificationType type,
   ) {
+    try {
     if (notifications.isEmpty) {
       return _buildEmptyState(emptyTitle, emptySubtitle);
     }
@@ -226,14 +270,19 @@ class _NotificationViewState extends State<NotificationView>
         },
       ),
     );
+    } catch (e) {
+      debugPrint('NotificationView: Error building grouped notification list: $e');
+      return _buildEmptyState('Error', 'Failed to load notifications');
+    }
   }
 
-  Map<String, List<NotificationModel>> _groupNotificationsByDate(
-    List<NotificationModel> notifications,
+  Map<String, List<UINotificationModel>> _groupNotificationsByDate(
+    List<UINotificationModel> notifications,
     BuildContext context,
   ) {
+    try {
     final localizations = AppLocalizations.of(context);
-    final Map<String, List<NotificationModel>> grouped = {};
+      final Map<String, List<UINotificationModel>> grouped = {};
     final now = DateTime.now();
 
     for (final notification in notifications) {
@@ -264,9 +313,14 @@ class _NotificationViewState extends State<NotificationView>
     });
 
     return grouped;
+    } catch (e) {
+      debugPrint('NotificationView: Error grouping notifications by date: $e');
+      return {};
+    }
   }
 
   Widget _buildEmptyState(String title, String subtitle) {
+    try {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -298,17 +352,27 @@ class _NotificationViewState extends State<NotificationView>
         ],
       ),
     );
+    } catch (e) {
+      debugPrint('NotificationView: Error building empty state: $e');
+      return const Center(
+        child: Text(
+          'Error loading notifications',
+          style: TextStyle(color: Colors.red),
+        ),
+      );
+    }
   }
 
   void _handleNotificationTap(
     BuildContext context,
-    NotificationModel notification,
+    UINotificationModel notification,
   ) {
+    try {
     final localizations = AppLocalizations.of(context);
     _viewModel.markAsRead(notification.id);
     if (notification.type == NotificationType.match ||
         notification.type == NotificationType.like) {
-      // Show dialog với 2 lựa chọn
+        // Show dialog với 2 lựa chọn: Like Back và View Info
       showModalBottomSheet(
         context: context,
         shape: const RoundedRectangleBorder(
@@ -320,20 +384,11 @@ class _NotificationViewState extends State<NotificationView>
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.chat),
-                  title: Text(localizations.translate('chat')),
-                  onTap: () {
+                    leading: const Icon(Icons.favorite, color: Colors.red),
+                    title: Text('Like Back'),
+                    onTap: () async {
                     Navigator.pop(context);
-                    Navigator.pushNamed(
-                      context,
-                      AppRoutes.chatConversation,
-                      arguments: {
-                        'chatId': notification.userId ?? notification.id,
-                        'recipientName': notification.title, // hoặc notification.body nếu phù hợp
-                        'recipientAvatar': notification.avatar,
-                        'isOnline': false,
-                      },
-                    );
+                      await _handleLikeBack(context, notification);
                   },
                 ),
                 ListTile(
@@ -341,11 +396,7 @@ class _NotificationViewState extends State<NotificationView>
                   title: Text(localizations.translate('view_info')),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(
-                      context,
-                      '/profile/view',
-                      arguments: notification.userId,
-                    );
+                      _showUserProfileInfo(context, notification);
                   },
                 ),
                 const SizedBox(height: 10),
@@ -364,7 +415,7 @@ class _NotificationViewState extends State<NotificationView>
           AppRoutes.chatConversation,
           arguments: {
             'chatId': notification.userId ?? notification.id,
-            'recipientName': notification.title, // hoặc notification.body nếu phù hợp
+              'recipientName': notification.title,
             'recipientAvatar': notification.avatar,
             'isOnline': false,
           },
@@ -377,10 +428,122 @@ class _NotificationViewState extends State<NotificationView>
         break;
       default:
         break;
+      }
+    } catch (e) {
+      debugPrint('NotificationView: Error handling notification tap: $e');
     }
   }
 
+  // Xử lý Like Back
+  Future<void> _handleLikeBack(BuildContext context, UINotificationModel notification) async {
+    try {
+      final localizations = AppLocalizations.of(context);
+      
+      // Gọi API like user
+      final matchService = getIt<MatchService>();
+      final userId = int.tryParse(notification.userId ?? '');
+      
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid user ID')),
+        );
+        return;
+      }
+
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        final response = await matchService.likeUser(userId);
+        Navigator.pop(context); // Hide loading
+
+        if (response.isMatch) {
+          // Có match! Hiện dialog chat now/later
+          _showMatchDialog(context, notification, response);
+        } else {
+          // Chưa match, hiện thông báo đã like
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('You liked ${notification.title}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        Navigator.pop(context); // Hide loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to like user: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('NotificationView: Error in _handleLikeBack: $e');
+    }
+  }
+
+  // Hiện dialog khi có match
+  void _showMatchDialog(BuildContext context, UINotificationModel notification, SwipeResponseModel response) {
+    final localizations = AppLocalizations.of(context);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('🎉 It\'s a Match!'),
+        content: Text('You and ${notification.title} liked each other!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Navigate to chat
+              Navigator.pushNamed(
+                context,
+                AppRoutes.chatConversation,
+                arguments: {
+                  'chatId': response.chatRoomId?.toString() ?? notification.userId ?? notification.id,
+                  'recipientName': notification.title,
+                  'recipientAvatar': notification.avatar,
+                  'isOnline': false,
+                },
+              );
+            },
+            child: const Text('Chat Now'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('You can chat later!')),
+              );
+            },
+            child: const Text('Later'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Hiện thông tin profile user
+  void _showUserProfileInfo(BuildContext context, UINotificationModel notification) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => UserProfileInfoSheet(
+        userId: notification.userId ?? '',
+        userName: notification.title,
+        userAvatar: notification.avatar,
+      ),
+    );
+  }
+
   void _showNotificationOptions(BuildContext context, NotificationType type) {
+    try {
     final localizations = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
@@ -434,12 +597,16 @@ class _NotificationViewState extends State<NotificationView>
         );
       },
     );
+    } catch (e) {
+      debugPrint('NotificationView: Error showing notification options: $e');
+    }
   }
 
   void _showClearConfirmationDialog(
     BuildContext context,
     NotificationType type,
   ) {
+    try {
     showDialog(
       context: context,
       builder:
@@ -484,5 +651,8 @@ class _NotificationViewState extends State<NotificationView>
             ],
           ),
     );
+    } catch (e) {
+      debugPrint('NotificationView: Error showing clear confirmation dialog: $e');
+    }
   }
 }

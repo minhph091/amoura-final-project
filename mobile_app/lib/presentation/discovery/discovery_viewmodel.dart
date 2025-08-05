@@ -107,7 +107,7 @@ class DiscoveryViewModel extends ChangeNotifier {
         }
       }
     } catch (e) {
-      // debugPrint('[Discovery] Lỗi khi load profile: $e');
+      // Silent error handling
     }
   }
 
@@ -131,14 +131,16 @@ class DiscoveryViewModel extends ChangeNotifier {
     _isPrecacheDone = false;
     _error = null;
     notifyListeners();
+    
     try {
       await loadCurrentUserProfile();
+      
       if (forceRefresh) {
         RecommendationCache.instance.clear();
         AppStartupService.instance.reset();
-        // Clear image cache khi force refresh
         ImagePrecacheService.instance.clearCache();
       }
+      
       if (AppStartupService.instance.isReady && !forceRefresh) {
         final cached = RecommendationCache.instance.recommendations;
         _recommendations = cached != null ? _filterOutCurrentUser(cached) : [];
@@ -146,12 +148,13 @@ class DiscoveryViewModel extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
         
-        // Vẫn cần precache ngay cả khi dùng cache
+        // Precache ngay cả khi dùng cache
         await _precacheInitialImages();
         _isPrecacheDone = true;
         notifyListeners();
         return;
       }
+      
       final recommendations = await _matchService.getRecommendations();
       _recommendations = _filterOutCurrentUser(recommendations);
       _currentProfileIndex = 0;
@@ -159,13 +162,12 @@ class DiscoveryViewModel extends ChangeNotifier {
       notifyListeners();
       RecommendationCache.instance.setRecommendations(_recommendations);
       
-      // Sử dụng logic precache thông minh mới
+      // Precache thông minh
       await _precacheInitialImages();
       _isPrecacheDone = true;
       _isLoading = false;
       notifyListeners();
     } catch (e, stack) {
-      // debugPrint('[Discovery][ERROR] $e\n$stack');
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
@@ -185,12 +187,6 @@ class DiscoveryViewModel extends ChangeNotifier {
             .where((profile) => profile.userId != _currentUserId)
             .toList();
 
-    if (filtered.length != recommendations.length) {
-      // debugPrint(
-      //   'Filtered out current user profile (ID: $_currentUserId) from recommendations',
-      // );
-    }
-
     return filtered;
   }
 
@@ -205,8 +201,6 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_currentProfileIndex >= _recommendations.length) return;
 
     final currentProfile = _recommendations[_currentProfileIndex];
-
-    // debugPrint('[DiscoveryViewModel] likeCurrentProfile: index=$_currentProfileIndex, userId= [32m${currentProfile.userId} [0m, total=${_recommendations.length}');
 
     try {
       // Call the service layer to like the user
@@ -230,8 +224,6 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_currentProfileIndex >= _recommendations.length) return;
 
     final currentProfile = _recommendations[_currentProfileIndex];
-
-    // debugPrint('[DiscoveryViewModel] dislikeCurrentProfile: index=$_currentProfileIndex, userId= [31m${currentProfile.userId} [0m, total=${_recommendations.length}');
 
     try {
       // Call the service layer to dislike the user
@@ -270,23 +262,28 @@ class DiscoveryViewModel extends ChangeNotifier {
   /// Move to the next profile in the stack
   void _moveToNextProfile() {
     if (_currentProfileIndex < _recommendations.length) {
-      // Xóa cache cho profile đã vuốt qua để tiết kiệm bộ nhớ
+      // Clear cache cho profile đã vuốt qua
       if (_currentProfileIndex < _recommendations.length) {
         final swipedProfile = _recommendations[_currentProfileIndex];
         ImagePrecacheService.instance.removeProfileFromCache(swipedProfile.userId);
       }
+      
       _currentProfileIndex++;
-      // Nếu còn 2 profile phía sau thì load thêm batch mới
-      if (_recommendations.length - _currentProfileIndex <= 2) {
+      
+      // Load thêm batch mới nếu cần
+      if (_recommendations.length - _currentProfileIndex <= 3) {
         _loadMoreProfilesIfNeeded();
       }
+      
       notifyListeners();
+      
+      // Precache cho profile tiếp theo
       _precacheNextImageOnSwipe();
       _precacheNextBatchIfNeeded();
     }
   }
 
-  /// Tự động load thêm 5 profile mới nếu còn ít hơn 5 profile phía sau
+  /// Tự động load thêm profile mới nếu cần
   Future<void> _loadMoreProfilesIfNeeded() async {
     try {
       final newProfiles = await _matchService.getRecommendations();
@@ -294,17 +291,20 @@ class DiscoveryViewModel extends ChangeNotifier {
         final filtered = _filterOutCurrentUser(newProfiles);
         final existingIds = _recommendations.map((e) => e.userId).toSet();
         final uniqueNew = filtered.where((e) => !existingIds.contains(e.userId)).toList();
+        
         if (uniqueNew.isNotEmpty) {
           _recommendations.addAll(uniqueNew);
           RecommendationCache.instance.setRecommendations(_recommendations);
+          
           if (_context != null) {
             await ImagePrecacheService.instance.precacheMultipleProfiles(uniqueNew, _context!, count: uniqueNew.length);
           }
+          
           notifyListeners();
         }
       }
     } catch (e) {
-      // Chỉ log ra terminal nếu cần
+      // Silent error handling
     }
   }
 
@@ -325,12 +325,8 @@ class DiscoveryViewModel extends ChangeNotifier {
           final chatId = response.chatRoomId?.toString();
 
           if (chatId == null || chatId.isEmpty) {
-            // debugPrint('Error: No chatRoomId found in match response');
-            // debugPrint('Response data: ${response.toJson()}');
             return;
           }
-
-          // debugPrint('Navigating to chat with chatRoomId: $chatId');
 
           Navigator.pushNamed(
             _context!,
@@ -389,8 +385,9 @@ class DiscoveryViewModel extends ChangeNotifier {
   Future<void> _precacheInitialImages() async {
     if (_context == null || _recommendations.isEmpty) return;
     
-    // Sử dụng logic precache thông minh mới
-    await ImagePrecacheService.instance.precacheForDiscovery(_recommendations, _context!);
+    // Precache thông minh cho 5 profile đầu tiên
+    final profilesToPrecache = _recommendations.take(5).toList();
+    await ImagePrecacheService.instance.precacheMultipleProfiles(profilesToPrecache, _context!, count: 5);
   }
 
   /// Pre-caches images for the profile that will be shown after the next one.
@@ -408,8 +405,8 @@ class DiscoveryViewModel extends ChangeNotifier {
   void _precacheNextBatchIfNeeded() {
     if (_context == null || _recommendations.isEmpty) return;
     
-    // Nếu user đã vuốt qua 3 profile và còn ít hơn 5 profile được precache, thì precache thêm
-    if (_currentProfileIndex >= 3 && _currentProfileIndex < _recommendations.length - 5) {
+    // Nếu user đã vuốt qua 2 profile và còn ít hơn 3 profile được precache, thì precache thêm
+    if (_currentProfileIndex >= 2 && _currentProfileIndex < _recommendations.length - 3) {
       ImagePrecacheService.instance.precacheNextBatch(_recommendations, _currentProfileIndex, _context!);
     }
   }

@@ -15,4 +15,5 @@ class AppRoutes {
   static const String discovery = '/discovery';
   static const String profileSetupComplete = '/profileSetupComplete';
   static const String chatConversation = '/chat/conversation';
+  static const String profileView = '/profile/view';
 }

@@ -42,6 +42,7 @@ import '../../domain/usecases/chat/check_user_online_usecase.dart';
 import '../../domain/usecases/chat/get_chat_room_usecase.dart';
 import '../../infrastructure/services/subscription_service.dart';
 import '../../infrastructure/services/rewind_service.dart';
+import '../../infrastructure/services/likes_service.dart';
 import 'package:flutter/material.dart';
 import '../../data/remote/user_api.dart';
 import '../../data/repositories/user_repository.dart';
@@ -107,6 +108,7 @@ Future<void> configureDependencies(
   getIt.registerLazySingleton<UserStatusService>(() => UserStatusService());
   getIt.registerLazySingleton<SubscriptionService>(() => SubscriptionService());
   getIt.registerLazySingleton<RewindService>(() => RewindService());
+  getIt.registerLazySingleton<LikesService>(() => LikesService());
 
   // Use Cases
   getIt.registerLazySingleton<RefreshTokenUseCase>(

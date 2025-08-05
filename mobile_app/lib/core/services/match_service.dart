@@ -7,13 +7,21 @@ import '../../data/models/match/user_recommendation_model.dart';
 import '../../data/models/match/swipe_request_model.dart';
 import '../../data/models/match/swipe_response_model.dart';
 import '../../data/models/match/match_model.dart';
+import '../../data/models/match/received_like_model.dart';
 
 class MatchService {
-  final MatchRepository _matchRepository;
+  late final MatchRepository _matchRepository;
 
-  MatchService({MatchRepository? matchRepository})
-      : _matchRepository = matchRepository ??
-            MatchRepository(MatchApi(GetIt.I<ApiClient>()));
+  MatchService({MatchRepository? matchRepository}) {
+    try {
+      _matchRepository = matchRepository ??
+          MatchRepository(MatchApi(GetIt.I<ApiClient>()));
+    } catch (e) {
+      debugPrint('MatchService: Error in constructor: $e');
+      // Fallback to default repository
+      _matchRepository = MatchRepository(MatchApi(GetIt.I<ApiClient>()));
+    }
+  }
 
   /// Lấy danh sách người dùng được đề xuất
   Future<List<UserRecommendationModel>> getRecommendations() async {
@@ -69,6 +77,19 @@ class MatchService {
       return await _matchRepository.swipeUser(request);
     } catch (e) {
       debugPrint('Error in MatchService.dislikeUser: $e');
+      rethrow;
+    }
+  }
+
+  /// Lấy danh sách những người đã thích mình
+  Future<List<ReceivedLikeModel>> getReceivedLikes() async {
+    try {
+      debugPrint('MatchService: Fetching received likes from API...');
+      final result = await _matchRepository.getReceivedLikes();
+      debugPrint('MatchService: Successfully fetched ${result.length} received likes');
+      return result;
+    } catch (e) {
+      debugPrint('Error in MatchService.getReceivedLikes: $e');
       rethrow;
     }
   }

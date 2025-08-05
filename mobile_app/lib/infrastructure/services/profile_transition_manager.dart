@@ -12,11 +12,10 @@ class ProfileTransitionManager {
   UserRecommendationModel? _currentProfile;
   UserRecommendationModel? _nextProfile;
   bool _isTransitioning = false;
+  final Set<int> _processedProfiles = <int>{};
 
   /// Bắt đầu transition - clear cache profile hiện tại
   void startTransition(UserRecommendationModel currentProfile) {
-    print('[TRANSITION] Starting transition for profile ${currentProfile.userId}');
-    
     _currentProfile = currentProfile;
     _isTransitioning = true;
     
@@ -26,11 +25,10 @@ class ProfileTransitionManager {
 
   /// Kết thúc transition - clear cache profile cũ
   void endTransition(UserRecommendationModel newProfile) {
-    print('[TRANSITION] Ending transition to profile ${newProfile.userId}');
-    
     if (_currentProfile != null && _currentProfile!.userId != newProfile.userId) {
       // Clear cache profile cũ
       CacheCleanupService.instance.clearProfileCache(_currentProfile!);
+      _processedProfiles.add(_currentProfile!.userId);
     }
     
     _currentProfile = newProfile;
@@ -45,8 +43,8 @@ class ProfileTransitionManager {
 
   /// Clear toàn bộ cache khi cần thiết
   void clearAllCache() {
-    print('[TRANSITION] Clearing all cache');
     CacheCleanupService.instance.clearAllCache();
+    _processedProfiles.clear();
   }
 
   /// Reset state
@@ -54,6 +52,19 @@ class ProfileTransitionManager {
     _currentProfile = null;
     _nextProfile = null;
     _isTransitioning = false;
+    _processedProfiles.clear();
+  }
+
+  /// Kiểm tra xem profile đã được xử lý chưa
+  bool isProfileProcessed(int userId) {
+    return _processedProfiles.contains(userId);
+  }
+
+  /// Clear processed profile để tránh memory leak
+  void clearProcessedProfiles() {
+    if (_processedProfiles.length > 100) {
+      _processedProfiles.clear();
+    }
   }
 
   bool get isTransitioning => _isTransitioning;

@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../profile/interest_model.dart';
 import '../profile/photo_model.dart';
-import '../profile/profile_model.dart';
 
-class UserRecommendationModel {
+class ReceivedLikeModel {
   final int userId;
   final String username;
   final String firstName;
@@ -19,8 +18,9 @@ class UserRecommendationModel {
   final List<InterestModel> interests;
   final List<PetModel> pets;
   final List<PhotoModel> photos;
+  final DateTime likedAt;
 
-  UserRecommendationModel({
+  ReceivedLikeModel({
     required this.userId,
     required this.username,
     required this.firstName,
@@ -36,9 +36,10 @@ class UserRecommendationModel {
     required this.interests,
     required this.pets,
     required this.photos,
+    required this.likedAt,
   });
 
-  factory UserRecommendationModel.fromJson(Map<String, dynamic> json) {
+  factory ReceivedLikeModel.fromJson(Map<String, dynamic> json) {
     try {
       // Handle latitude/longitude - convert 0.0 to null
       final rawLat = json['latitude'];
@@ -55,7 +56,7 @@ class UserRecommendationModel {
         longitude = rawLon.toDouble();
       }
       
-      return UserRecommendationModel(
+      return ReceivedLikeModel(
         userId: json['userId'] as int,
         username: json['username'] as String,
         firstName: json['firstName'] as String,
@@ -79,9 +80,10 @@ class UserRecommendationModel {
         photos: (json['photos'] as List<dynamic>?)
             ?.map((e) => PhotoModel.fromJson(e as Map<String, dynamic>))
             .toList() ?? [],
+        likedAt: DateTime.parse(json['likedAt'] as String),
       );
     } catch (e) {
-      debugPrint('UserRecommendationModel: Error parsing from JSON: $e');
+      debugPrint('ReceivedLikeModel: Error parsing from JSON: $e');
       rethrow;
     }
   }
@@ -104,26 +106,10 @@ class UserRecommendationModel {
         'interests': interests.map((e) => e.toJson()).toList(),
         'pets': pets.map((e) => e.toJson()).toList(),
         'photos': photos.map((e) => e.toJson()).toList(),
+        'likedAt': likedAt.toIso8601String(),
       };
     } catch (e) {
-      debugPrint('UserRecommendationModel: Error converting to JSON: $e');
-      rethrow;
-    }
-  }
-
-  /// Convert to ProfileModel for UI compatibility
-  ProfileModel toProfileModel() {
-    try {
-      return ProfileModel(
-        userId: userId,
-        dateOfBirth: dateOfBirth,
-        height: height,
-        sex: sex,
-        bio: bio,
-        locationPreference: null, // Not available in recommendation
-      );
-    } catch (e) {
-      debugPrint('UserRecommendationModel: Error converting to ProfileModel: $e');
+      debugPrint('ReceivedLikeModel: Error converting to JSON: $e');
       rethrow;
     }
   }
@@ -133,8 +119,18 @@ class UserRecommendationModel {
     try {
       return '$firstName $lastName';
     } catch (e) {
-      debugPrint('UserRecommendationModel: Error getting full name: $e');
+      debugPrint('ReceivedLikeModel: Error getting full name: $e');
       return 'Unknown User';
+    }
+  }
+
+  /// Get primary photo URL
+  String? get primaryPhotoUrl {
+    try {
+      return photos.isNotEmpty ? photos.first.url : null;
+    } catch (e) {
+      debugPrint('ReceivedLikeModel: Error getting primary photo URL: $e');
+      return null;
     }
   }
 }

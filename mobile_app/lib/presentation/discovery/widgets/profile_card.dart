@@ -15,8 +15,8 @@ import '../../profile/view/profile_viewmodel.dart';
 import '../../../config/language/app_localizations.dart';
 import 'profile_detail_page.dart'; // Added import for ProfileDetailPage
 
-// Đổi từ StatelessWidget sang StatefulWidget
-class ProfileCard extends StatelessWidget {
+// Đổi từ StatelessWidget sang StatefulWidget để tối ưu performance
+class ProfileCard extends StatefulWidget {
   final UserRecommendationModel profile;
   final List<InterestModel> interests;
   final String? distance;
@@ -28,8 +28,38 @@ class ProfileCard extends StatelessWidget {
     this.distance,
   });
 
+  @override
+  State<ProfileCard> createState() => _ProfileCardState();
+}
+
+class _ProfileCardState extends State<ProfileCard> {
+  List<String>? _commonInterests;
+  bool _isLoadingInterests = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCommonInterests();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProfileCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Chỉ load lại common interests nếu profile thay đổi
+    if (oldWidget.profile.userId != widget.profile.userId) {
+      _loadCommonInterests();
+    }
+  }
+
   /// Tìm common interests giữa current user và recommendation user
-  Future<List<String>> _getCommonInterests() async {
+  Future<void> _loadCommonInterests() async {
+    if (_isLoadingInterests) return;
+    
+    setState(() {
+      _isLoadingInterests = true;
+    });
+
     try {
       final profileService = getIt<ProfileService>();
       final currentUserProfile = await profileService.getProfile();
@@ -45,7 +75,7 @@ class ProfileCard extends StatelessWidget {
 
       // Extract recommendation user interests
       final recommendationInterests =
-          profile.interests.map((i) => i.name.toLowerCase()).toList();
+          widget.profile.interests.map((i) => i.name.toLowerCase()).toList();
 
       // Find common interests (max 3)
       final commonInterests =
@@ -54,33 +84,43 @@ class ProfileCard extends StatelessWidget {
               .take(3)
               .toList();
 
-      return commonInterests;
+      if (mounted) {
+        setState(() {
+          _commonInterests = commonInterests;
+          _isLoadingInterests = false;
+        });
+      }
     } catch (e) {
-      return [];
+      if (mounted) {
+        setState(() {
+          _commonInterests = [];
+          _isLoadingInterests = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final ageText =
-        profile.age != null
-            ? ', ${profile.age}'
-            : (profile.dateOfBirth != null
-                ? ', ${DateUtil.calculateAge(profile.dateOfBirth!)}'
+        widget.profile.age != null
+            ? ', ${widget.profile.age}'
+            : (widget.profile.dateOfBirth != null
+                ? ', ${DateUtil.calculateAge(widget.profile.dateOfBirth!)}'
                 : '');
-    final displayLocation = distance ?? profile.location ?? 'Unknown';
+    final displayLocation = widget.distance ?? widget.profile.location ?? 'Unknown';
     final bio =
-        profile.bio?.isNotEmpty == true
-            ? profile.bio!
+        widget.profile.bio?.isNotEmpty == true
+            ? widget.profile.bio!
             : 'Always ready for an adventure!';
-    final name = profile.fullName;
+    final name = widget.profile.fullName;
 
     // --- Filter and sort photos: cover first, then up to 4 highlights by uploadedAt ---
     final coverList =
-        profile.photos.where((p) => p.type == 'profile_cover').toList();
+        widget.profile.photos.where((p) => p.type == 'profile_cover').toList();
     final cover = coverList.isNotEmpty ? coverList.first : null;
     final highlights =
-        profile.photos.where((p) => p.type == 'highlight').toList()
+        widget.profile.photos.where((p) => p.type == 'highlight').toList()
           ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final displayPhotos = [if (cover != null) cover, ...highlights.take(4)];
 
@@ -88,7 +128,7 @@ class ProfileCard extends StatelessWidget {
     final ImageCarouselController imageController = ImageCarouselController();
 
     // Tạo unique key stable nhưng unique cho mỗi profile
-    final uniqueKey = 'profile_${profile.userId}_${profile.photos.map((p) => p.id).join('_')}';
+    final uniqueKey = 'profile_${widget.profile.userId}_${widget.profile.photos.map((p) => p.id).join('_')}';
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -169,9 +209,9 @@ class ProfileCard extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ProfileDetailPage(
-                                    profile: profile,
-                                    interests: interests,
-                                    distance: distance,
+                                    profile: widget.profile,
+                                    interests: widget.interests,
+                                    distance: widget.distance,
                                   ),
                                 ),
                               );
@@ -214,95 +254,77 @@ class ProfileCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      // Common interests section
-                      FutureBuilder<List<String>>(
-                        future: _getCommonInterests(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 12),
-                                Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  ).translate('common_interests'),
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodySmall?.copyWith(
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.w500,
+                      // Common interests section - sử dụng cached data
+                      if (_commonInterests != null && _commonInterests!.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 12),
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              ).translate('common_interests'),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: _commonInterests!.map((interest) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
                                   ),
-                                ),
-                                const SizedBox(height: 6),
-                                Wrap(
-                                  spacing: 6,
-                                  runSpacing: 4,
-                                  children:
-                                      snapshot.data!.map((interest) {
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.red.withOpacity(
-                                                  0.8,
-                                                ),
-                                                Colors.pink.withOpacity(
-                                                  0.8,
-                                                ),
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.red.withOpacity(
-                                                0.6,
-                                              ),
-                                              width: 1,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.red.withOpacity(
-                                                  0.3,
-                                                ),
-                                                blurRadius: 4,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Text(
-                                            interest,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodySmall?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 12,
-                                              shadows: [
-                                                const Shadow(
-                                                  color: Colors.black,
-                                                  blurRadius: 2,
-                                                  offset: Offset(0, 1),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                ),
-                              ],
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.red.withOpacity(0.8),
+                                        Colors.pink.withOpacity(0.8),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Colors.red.withOpacity(0.6),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red.withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    interest,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                      shadows: [
+                                        const Shadow(
+                                          color: Colors.black,
+                                          blurRadius: 2,
+                                          offset: Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
                       // Add padding at the bottom to push content up
                       const SizedBox(height: 90),
                     ],

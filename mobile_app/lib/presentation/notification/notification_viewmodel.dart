@@ -1,11 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/services/notification_service.dart';
+import '../../infrastructure/services/likes_service.dart';
+import '../../data/models/notification/notification_model.dart' as api;
 import '../../app/di/injection.dart';
 import 'dart:async';
 
-enum NotificationType { match, message, like, system }
-
-class NotificationModel {
+// UI NotificationModel để tránh conflict với API NotificationModel
+class UINotificationModel {
   final String id;
   final String title;
   final String body;
@@ -16,7 +18,7 @@ class NotificationModel {
   final String? avatar;
   final String? url;
 
-  NotificationModel({
+  UINotificationModel({
     required this.id,
     required this.title,
     required this.body,
@@ -28,67 +30,147 @@ class NotificationModel {
     this.url,
   });
 
-  NotificationModel copyWith({bool? isRead}) {
-    return NotificationModel(
-      id: id,
-      title: title,
-      body: body,
-      time: time,
-      type: type,
-      isRead: isRead ?? this.isRead,
-      userId: userId,
-      avatar: avatar,
-      url: url,
-    );
+  UINotificationModel copyWith({bool? isRead}) {
+    try {
+      return UINotificationModel(
+        id: id,
+        title: title,
+        body: body,
+        time: time,
+        type: type,
+        isRead: isRead ?? this.isRead,
+        userId: userId,
+        avatar: avatar,
+        url: url,
+      );
+    } catch (e) {
+      debugPrint('UINotificationModel: Error in copyWith: $e');
+      rethrow;
+    }
   }
 }
 
+// UI NotificationType enum
+enum NotificationType { match, message, like, system }
+
 class NotificationViewModel extends ChangeNotifier {
   final NotificationService _service = getIt<NotificationService>();
-  List<NotificationModel> _notifications = [];
+  final LikesService _likesService = getIt<LikesService>();
+  List<UINotificationModel> _notifications = [];
   bool _isLoading = true;
   String? _error;
   int _currentTabIndex = 0;
   late final StreamSubscription _notificationStream;
   late final StreamSubscription _newNotificationStream;
-  final bool _initialized = false;
+  bool _initialized = false;
 
-  List<NotificationModel> get notifications => _notifications;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  int get unreadCount => _notifications.where((n) => !n.isRead).length;
-  int get currentTabIndex => _currentTabIndex;
+  NotificationViewModel() {
+    try {
+      // Constructor logic if needed
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error in constructor: $e');
+    }
+  }
+
+  List<UINotificationModel> get notifications {
+    try {
+      return _notifications;
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting notifications: $e');
+      return [];
+    }
+  }
+  
+  bool get isLoading {
+    try {
+      return _isLoading;
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting isLoading: $e');
+      return true;
+    }
+  }
+  
+  String? get error {
+    try {
+      return _error;
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting error: $e');
+      return 'Unknown error';
+    }
+  }
+  
+  int get unreadCount {
+    try {
+      return _notifications.where((n) => !n.isRead).length;
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting unread count: $e');
+      return 0;
+    }
+  }
+  
+  int get currentTabIndex {
+    try {
+      return _currentTabIndex;
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting current tab index: $e');
+      return 0;
+    }
+  }
 
   void setCurrentTabIndex(int index) {
-    _currentTabIndex = index;
-    notifyListeners();
+    try {
+      _currentTabIndex = index;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error setting current tab index: $e');
+    }
   }
 
-  List<NotificationModel> getLikeNotifications() {
-    // Trả về cả like và match
-    return _notifications
-        .where(
-          (n) =>
-              n.type == NotificationType.like ||
-              n.type == NotificationType.match,
-        )
-        .toList();
+  List<UINotificationModel> getLikeNotifications() {
+    try {
+      // Trả về cả like và match
+      return _notifications
+          .where(
+            (n) =>
+                n.type == NotificationType.like ||
+                n.type == NotificationType.match,
+          )
+          .toList();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting like notifications: $e');
+      return [];
+    }
   }
 
-  List<NotificationModel> getMessageNotifications() {
-    return _notifications
-        .where((n) => n.type == NotificationType.message)
-        .toList();
+  List<UINotificationModel> getMessageNotifications() {
+    try {
+      return _notifications
+          .where((n) => n.type == NotificationType.message)
+          .toList();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting message notifications: $e');
+      return [];
+    }
   }
 
-  List<NotificationModel> getSystemNotifications() {
-    return _notifications
-        .where((n) => n.type == NotificationType.system)
-        .toList();
+  List<UINotificationModel> getSystemNotifications() {
+    try {
+      return _notifications
+          .where((n) => n.type == NotificationType.system)
+          .toList();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting system notifications: $e');
+      return [];
+    }
   }
 
   int getUnreadCountByType(NotificationType type) {
-    return _notifications.where((n) => n.type == type && !n.isRead).length;
+    try {
+      return _notifications.where((n) => n.type == type && !n.isRead).length;
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting unread count by type: $e');
+      return 0;
+    }
   }
 
   Future<void> loadNotifications() async {
@@ -96,172 +178,230 @@ class NotificationViewModel extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    // Add mock data for demo purposes
-    _addMockNotifications();
-    _isLoading = false;
-    notifyListeners();
+    try {
+      debugPrint('NotificationViewModel: Loading notifications from API...');
+      
+      // Initialize notification service với user ID (cần lấy từ auth service)
+      // TODO: Lấy user ID từ auth service hoặc từ JWT token
+      // Có thể decode JWT token để lấy user ID hoặc thêm method getUserId() vào AuthService
+      final userId = "current_user_id"; // Tạm thời hardcode
+      await _service.initialize(userId);
+      
+      // Load notifications từ API thật (sẽ trả về empty nếu chưa initialize)
+      await _service.refreshNotifications();
+      
+      // Load liked users từ API thật
+      await _likesService.fetchLikedUsers();
+      
+      // Tạo notifications từ liked users
+      _createNotificationsFromLikedUsers();
+      
+      // Setup streams nếu chưa setup
+      if (!_initialized) {
+        _setupStreams();
+        _initialized = true;
+      }
+      
+      debugPrint('NotificationViewModel: Successfully loaded notifications');
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error loading notifications: $e');
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  void _addMockNotifications() {
-    final now = DateTime.now();
-    _notifications = [
-      // Likes & Matches
-      NotificationModel(
-        id: 'mock_like_1',
-        title: 'new_like',
-        body: 'like_body',
-        time: now.subtract(const Duration(hours: 2)),
-        type: NotificationType.like,
-        isRead: false,
-        avatar:
-            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
-      ),
-      NotificationModel(
-        id: 'mock_match_1',
-        title: 'new_match',
-        body: 'match_body_sarah',
-        time: now.subtract(const Duration(hours: 5)),
-        type: NotificationType.match,
-        isRead: false,
-        avatar:
-            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
-      ),
-      NotificationModel(
-        id: 'mock_like_2',
-        title: 'new_like',
-        body: 'like_body',
-        time: now.subtract(const Duration(days: 1, hours: 3)),
-        type: NotificationType.like,
-        isRead: true,
-        avatar:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
-      ),
-      NotificationModel(
-        id: 'mock_match_2',
-        title: 'new_match',
-        body: 'match_body_emma',
-        time: now.subtract(const Duration(days: 2)),
-        type: NotificationType.match,
-        isRead: true,
-        avatar:
-            'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
-      ),
-      // Messages
-      NotificationModel(
-        id: 'mock_message_1',
-        title: 'new_message',
-        body: 'message_body_sarah',
-        time: now.subtract(const Duration(minutes: 30)),
-        type: NotificationType.message,
-        isRead: false,
-        avatar:
-            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
-      ),
-      NotificationModel(
-        id: 'mock_message_2',
-        title: 'new_message',
-        body: 'message_body_emma',
-        time: now.subtract(const Duration(hours: 6)),
-        type: NotificationType.message,
-        isRead: false,
-        avatar:
-            'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
-      ),
-      NotificationModel(
-        id: 'mock_message_3',
-        title: 'new_message',
-        body: 'message_body_michael',
-        time: now.subtract(const Duration(days: 1, hours: 2)),
-        type: NotificationType.message,
-        isRead: true,
-        avatar:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=634&q=80',
-      ),
-      // System notifications
-      NotificationModel(
-        id: 'mock_system_1',
-        title: 'welcome',
-        body: 'welcome_body',
-        time: now.subtract(const Duration(hours: 4)),
-        type: NotificationType.system,
-        isRead: false,
-      ),
-      NotificationModel(
-        id: 'mock_system_2',
-        title: 'app_update_available',
-        body: 'app_update_body',
-        time: now.subtract(const Duration(days: 1)),
-        type: NotificationType.system,
-        isRead: false,
-      ),
-      NotificationModel(
-        id: 'mock_system_3',
-        title: 'safety_reminder',
-        body: 'safety_reminder_body',
-        time: now.subtract(const Duration(days: 3)),
-        type: NotificationType.system,
-        isRead: true,
-      ),
-      NotificationModel(
-        id: 'mock_system_4',
-        title: 'profile_views_boost',
-        body: 'profile_views_boost_body',
-        time: now.subtract(const Duration(days: 5)),
-        type: NotificationType.system,
-        isRead: true,
-      ),
-    ];
+  Future<void> refreshLikes() async {
+    try {
+      await _likesService.fetchLikedUsers();
+      _createNotificationsFromLikedUsers();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error refreshing likes: $e');
+    }
+  }
+
+  void _setupStreams() {
+    try {
+      _notificationStream = _service.notificationsStream.listen((notifications) {
+        // Convert API notifications to UI notifications
+        _notifications = notifications.map((apiNotification) {
+          return UINotificationModel(
+            id: apiNotification.id,
+            title: apiNotification.title ?? '',
+            body: apiNotification.content ?? '',
+            time: apiNotification.timestamp ?? apiNotification.createdAt ?? DateTime.now(),
+            type: _mapNotificationType(apiNotification.type),
+            isRead: apiNotification.isRead,
+            userId: apiNotification.relatedEntityId?.toString(),
+            avatar: apiNotification.avatar,
+            url: apiNotification.url,
+          );
+        }).toList();
+        
+        // Add liked users notifications
+        _createNotificationsFromLikedUsers();
+        
+        notifyListeners();
+      });
+
+      _newNotificationStream = _service.newNotificationStream.listen((apiNotification) {
+        final notification = UINotificationModel(
+          id: apiNotification.id,
+          title: apiNotification.title ?? '',
+          body: apiNotification.content ?? '',
+          time: apiNotification.timestamp ?? apiNotification.createdAt ?? DateTime.now(),
+          type: _mapNotificationType(apiNotification.type),
+          isRead: apiNotification.isRead,
+          userId: apiNotification.relatedEntityId?.toString(),
+          avatar: apiNotification.avatar,
+          url: apiNotification.url,
+        );
+        
+        _notifications.insert(0, notification);
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error setting up streams: $e');
+    }
+  }
+
+  NotificationType _mapNotificationType(api.NotificationType apiType) {
+    try {
+      switch (apiType) {
+        case api.NotificationType.match:
+          return NotificationType.match;
+        case api.NotificationType.message:
+          return NotificationType.message;
+        case api.NotificationType.like:
+          return NotificationType.like;
+        case api.NotificationType.system:
+        case api.NotificationType.marketing:
+        default:
+          return NotificationType.system;
+      }
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error mapping notification type: $e');
+      return NotificationType.system; // Default fallback
+    }
+  }
+
+  void _createNotificationsFromLikedUsers() {
+    try {
+      // Tạo notifications từ liked users
+      final likedUsers = _likesService.likedUsers;
+      final now = DateTime.now();
+      
+      // Xóa các like notifications cũ (để tránh duplicate)
+      _notifications.removeWhere((n) => n.type == NotificationType.like);
+      
+      // Thêm notifications mới từ liked users
+      for (final likedUser in likedUsers) {
+        final likedAt = likedUser.profileDetails?['likedAt'];
+        final notificationTime = likedAt != null 
+            ? DateTime.tryParse(likedAt) ?? now
+            : now;
+        
+        final notification = UINotificationModel(
+          id: 'like_${likedUser.id}',
+          title: 'new_like',
+          body: '${likedUser.fullName} liked your profile',
+          time: notificationTime,
+          type: NotificationType.like,
+          isRead: false,
+          userId: likedUser.id,
+          avatar: likedUser.avatarUrl,
+        );
+        
+        _notifications.add(notification);
+      }
+      
+      // Sort by time (newest first)
+      _notifications.sort((a, b) => b.time.compareTo(a.time));
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error creating notifications from liked users: $e');
+    }
   }
 
   void markAsRead(String notificationId) {
-    _service.markAsRead(notificationId);
-    // UI sẽ tự động cập nhật qua stream
+    try {
+      _service.markAsRead(notificationId);
+      // UI sẽ tự động cập nhật qua stream
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error marking notification as read: $e');
+    }
   }
 
   void markAllAsRead() {
-    _service.markAllAsRead();
-    // UI sẽ tự động cập nhật qua stream
+    try {
+      _service.markAllAsRead();
+      // UI sẽ tự động cập nhật qua stream
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error marking all notifications as read: $e');
+    }
   }
 
   void markAllAsReadByType(NotificationType type) {
-    // Lọc các id chưa đọc theo type rồi gọi markAsRead cho từng cái
-    final ids =
-        _notifications
-            .where((n) => n.type == type && !n.isRead)
-            .map((n) => n.id)
-            .toList();
-    for (final id in ids) {
-      _service.markAsRead(id);
+    try {
+      // Lọc các id chưa đọc theo type rồi gọi markAsRead cho từng cái
+      final ids =
+          _notifications
+              .where((n) => n.type == type && !n.isRead)
+              .map((n) => n.id)
+              .toList();
+      for (final id in ids) {
+        _service.markAsRead(id);
+      }
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error marking all notifications as read by type: $e');
     }
   }
 
   void dismissNotification(String notificationId) {
-    _notifications.removeWhere((n) => n.id == notificationId);
-    notifyListeners();
+    try {
+      _notifications.removeWhere((n) => n.id == notificationId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error dismissing notification: $e');
+    }
   }
 
   void clearAllByType(NotificationType type) {
-    _notifications.removeWhere((n) => n.type == type);
-    notifyListeners();
+    try {
+      _notifications.removeWhere((n) => n.type == type);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error clearing notifications by type: $e');
+    }
   }
 
-  void markAllAsReadInGroup(List<NotificationModel> groupNotifications) {
-    for (final notification in groupNotifications) {
-      if (!notification.isRead) {
-        final index = _notifications.indexWhere((n) => n.id == notification.id);
-        if (index != -1) {
-          _notifications[index] = notification.copyWith(isRead: true);
+  void markAllAsReadInGroup(List<UINotificationModel> groupNotifications) {
+    try {
+      for (final notification in groupNotifications) {
+        if (!notification.isRead) {
+          final index = _notifications.indexWhere((n) => n.id == notification.id);
+          if (index != -1) {
+            _notifications[index] = notification.copyWith(isRead: true);
+          }
         }
       }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error marking all as read in group: $e');
     }
-    notifyListeners();
   }
 
-  void deleteAllInGroup(List<NotificationModel> groupNotifications) {
-    for (final notification in groupNotifications) {
-      _notifications.removeWhere((n) => n.id == notification.id);
+  void deleteAllInGroup(List<UINotificationModel> groupNotifications) {
+    try {
+      for (final notification in groupNotifications) {
+        _notifications.removeWhere((n) => n.id == notification.id);
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error deleting all in group: $e');
     }
-    notifyListeners();
   }
 
   @override
@@ -270,6 +410,8 @@ class NotificationViewModel extends ChangeNotifier {
       _notificationStream.cancel();
       _newNotificationStream.cancel();
     }
+    // Dispose notification service
+    _service.dispose();
     super.dispose();
   }
 }

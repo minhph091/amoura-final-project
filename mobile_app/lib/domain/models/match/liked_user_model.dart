@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class LikedUserModel {
   final String id;
   final String firstName;
@@ -27,6 +29,13 @@ class LikedUserModel {
     this.profileDetails,
   });
 
-  String get fullName => '$firstName $lastName';
+  String get fullName {
+    try {
+      return '$firstName $lastName';
+    } catch (e) {
+      debugPrint('LikedUserModel: Error getting full name: $e');
+      return 'Unknown User';
+    }
+  }
 }
 

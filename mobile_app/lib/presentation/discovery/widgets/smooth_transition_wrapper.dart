@@ -51,8 +51,6 @@ class _SmoothTransitionWrapperState extends State<SmoothTransitionWrapper> {
     final isNewProfile = newProfileKey != _lastProfileKey;
     
     if (isNewProfile) {
-      print('[SMOOTH_TRANSITION] New profile detected: $_lastProfileKey -> $newProfileKey');
-      
       // Bắt đầu transition
       _isTransitioning = true;
       
@@ -68,7 +66,7 @@ class _SmoothTransitionWrapperState extends State<SmoothTransitionWrapper> {
       }
       
       // Kết thúc transition sau một khoảng thời gian ngắn
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: 50), () {
         if (mounted) {
           setState(() {
             _isTransitioning = false;
