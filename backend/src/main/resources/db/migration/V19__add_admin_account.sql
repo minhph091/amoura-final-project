@@ -4,7 +4,7 @@ INSERT INTO users (
 ) VALUES (
   'admin',
   '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO',
-  'admin@amoura.space',
+  'admin@gmail.com',
   '0123456789',
   'Admin',
   'Super',
@@ -19,7 +19,7 @@ INSERT INTO users (
 ) VALUES (
   'moderator',
   '$2a$10$cbFwxATqL9vPnocjhrr/Ge9cP1sjHmob4eInthJaKUf2Byoa1R8YO',
-  'moderator@amoura.space',
+  'moderator@gmail.com',
   '0987654321',
   'Moderator',
   'Super',
