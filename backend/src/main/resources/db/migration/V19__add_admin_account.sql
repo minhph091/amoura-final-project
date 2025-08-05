@@ -13,6 +13,8 @@ INSERT INTO users (
   NOW()
 );
 
+
+
 -- Tạo tài khoản moderator mới với hash đã xác thực (mật khẩu: Amoura123@)
 INSERT INTO users (
   username, password_hash, email, phone_number, first_name, last_name, role_id, status, created_at
