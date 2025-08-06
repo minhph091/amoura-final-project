@@ -6,6 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.AccountStatusException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -13,11 +17,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,6 +87,60 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
 
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UsernameNotFoundException ex) {
+        // Kiểm tra nếu là lỗi tài khoản không active
+        if (ex.getMessage().contains("Account is not active")) {
+            ErrorResponse errorResponse = ErrorResponse.builder()
+                    .errorCode("ACCOUNT_INACTIVE")
+                    .message("Your account is not active. Please contact support.")
+                    .status(HttpStatus.FORBIDDEN.value())
+                    .timestamp(LocalDateTime.now())
+                    .build();
+            
+            log.warn("Account not active: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+        }
+        
+        // Các trường hợp khác của UsernameNotFoundException
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .errorCode("USER_NOT_FOUND")
+                .message("User not found")
+                .status(HttpStatus.NOT_FOUND.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        log.warn("User not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    @ExceptionHandler({DisabledException.class, LockedException.class, AccountStatusException.class})
+    public ResponseEntity<ErrorResponse> handleAccountStatusException(AccountStatusException ex) {
+        String errorCode;
+        String message;
+        
+        if (ex instanceof DisabledException) {
+            errorCode = "ACCOUNT_DISABLED";
+            message = "Your account has been disabled. Please contact support.";
+        } else if (ex instanceof LockedException) {
+            errorCode = "ACCOUNT_LOCKED";
+            message = "Your account has been locked. Please contact support.";
+        } else {
+            errorCode = "ACCOUNT_STATUS_ERROR";
+            message = "Your account status prevents login. Please contact support.";
+        }
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .errorCode(errorCode)
+                .message(message)
+                .status(HttpStatus.FORBIDDEN.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        log.warn("Account status error: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 

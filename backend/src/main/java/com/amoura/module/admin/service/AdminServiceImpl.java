@@ -354,6 +354,25 @@ public class AdminServiceImpl implements AdminService {
         
         String databaseStatus = request.getStatus().toLowerCase();
         user.setStatus(databaseStatus);
+        
+        // Xử lý suspension với thời hạn
+        if ("suspend".equalsIgnoreCase(request.getStatus())) {
+            if (request.getSuspensionDays() == null || request.getSuspensionDays() < 1) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Suspension days is required and must be at least 1", "INVALID_SUSPENSION_DAYS");
+            }
+            
+            LocalDateTime suspensionUntil = LocalDateTime.now().plusDays(request.getSuspensionDays());
+            user.setSuspensionUntil(suspensionUntil);
+            user.setSuspensionReason(request.getReason());
+            
+            log.info("User {} suspended until {} for reason: {}", 
+                    userId, suspensionUntil, request.getReason());
+        } else {
+            // Clear suspension fields if not suspending
+            user.setSuspensionUntil(null);
+            user.setSuspensionReason(null);
+        }
+        
         userRepository.save(user);
         
         log.info("User {} status updated from {} to {} for reason: {}", 

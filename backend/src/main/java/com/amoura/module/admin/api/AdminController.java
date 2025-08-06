@@ -133,7 +133,7 @@ public class AdminController {
     @PutMapping("/users/{userId}/status")
     @Operation(
         summary = "Update user status",
-        description = "Update user account status (ACTIVE, INACTIVE, SUSPEND)"
+        description = "Update user account status (ACTIVE, INACTIVE, SUSPEND). For SUSPEND status, suspensionDays is required."
     )
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
