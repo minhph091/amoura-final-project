@@ -8,6 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
@@ -127,7 +128,7 @@ public class GlobalExceptionHandler {
             message = "Your account has been disabled. Please contact support.";
         } else if (ex instanceof LockedException) {
             errorCode = "ACCOUNT_LOCKED";
-            message = "Your account has been locked. Please contact support.";
+            message = extractSuspensionMessage(ex.getMessage());
         } else {
             errorCode = "ACCOUNT_STATUS_ERROR";
             message = "Your account status prevents login. Please contact support.";
@@ -142,6 +143,58 @@ public class GlobalExceptionHandler {
 
         log.warn("Account status error: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    @ExceptionHandler(InternalAuthenticationServiceException.class)
+    public ResponseEntity<ErrorResponse> handleInternalAuthenticationServiceException(InternalAuthenticationServiceException ex) {
+        // Kiểm tra nếu root cause là suspension-related
+        if (ex.getCause() instanceof LockedException && ex.getMessage().contains("Account is suspended")) {
+            ErrorResponse errorResponse = ErrorResponse.builder()
+                    .errorCode("ACCOUNT_LOCKED")
+                    .message(extractSuspensionMessage(ex.getMessage()))
+                    .status(HttpStatus.FORBIDDEN.value())
+                    .timestamp(LocalDateTime.now())
+                    .build();
+            
+            log.warn("Account suspended: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+        }
+        
+        // Kiểm tra nếu root cause là account disabled
+        if (ex.getCause() instanceof DisabledException) {
+            ErrorResponse errorResponse = ErrorResponse.builder()
+                    .errorCode("ACCOUNT_DISABLED")
+                    .message("Your account has been disabled. Please contact support.")
+                    .status(HttpStatus.FORBIDDEN.value())
+                    .timestamp(LocalDateTime.now())
+                    .build();
+            
+            log.warn("Account disabled: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+        }
+        
+        // Các trường hợp khác của InternalAuthenticationServiceException
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .errorCode("AUTHENTICATION_ERROR")
+                .message("Authentication service error. Please try again.")
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        log.error("Internal authentication service error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    private String extractSuspensionMessage(String originalMessage) {
+        // Extract clean suspension message
+        if (originalMessage.contains("Account is suspended until")) {
+            // Remove the email part at the end
+            int emailIndex = originalMessage.lastIndexOf(": ");
+            if (emailIndex > 0) {
+                return originalMessage.substring(0, emailIndex);
+            }
+        }
+        return "Your account has been suspended. Please contact support.";
     }
 
     @ExceptionHandler(Exception.class)
