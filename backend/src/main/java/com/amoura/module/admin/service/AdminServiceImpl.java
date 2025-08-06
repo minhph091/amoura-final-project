@@ -3,14 +3,17 @@ package com.amoura.module.admin.service;
 import com.amoura.module.admin.dto.AdminDashboardDTO;
 import com.amoura.module.admin.dto.CursorPaginationRequest;
 import com.amoura.module.admin.dto.CursorPaginationResponse;
+import com.amoura.module.admin.dto.StatusUpdateResponse;
 import com.amoura.module.admin.dto.UserManagementDTO;
 import com.amoura.module.admin.dto.UserStatusUpdateRequest;
 import com.amoura.module.admin.repository.AdminRepository;
 import com.amoura.module.user.domain.User;
 import com.amoura.module.user.repository.UserRepository;
+import com.amoura.common.exception.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,17 +78,16 @@ public class AdminServiceImpl implements AdminService {
         
         try {
             List<Object[]> userGrowthData = adminRepository.getUserGrowthData(startDate);
-            Long cumulativeTotal = 0L;
+    
             
             for (Object[] row : userGrowthData) {
                 LocalDate date = (LocalDate) row[0];
                 Long newUsers = ((Number) row[1]).longValue();
-                cumulativeTotal += newUsers;
+
                 
                 chartData.add(AdminDashboardDTO.UserGrowthData.builder()
                         .date(date)
                         .newUsers(newUsers)
-                        .totalUsers(cumulativeTotal)
                         .build());
             }
         } catch (Exception e) {
@@ -115,17 +117,12 @@ public class AdminServiceImpl implements AdminService {
             for (Object[] row : swipeData) {
                 LocalDate date = (LocalDate) row[0];
                 Long totalSwipes = ((Number) row[1]).longValue();
-                Long likes = ((Number) row[2]).longValue();
                 Long matches = matchMap.getOrDefault(date, 0L);
-                
-                // Calculate success rate as matches per likes (not per total swipes)
-                Double successRate = likes > 0 ? (matches.doubleValue() / likes.doubleValue()) * 100.0 : 0.0;
                 
                 chartData.add(AdminDashboardDTO.MatchingSuccessData.builder()
                         .date(date)
                         .totalSwipes(totalSwipes)
                         .totalMatches(matches)
-                        .successRate(Math.round(successRate * 100.0) / 100.0) // Round to 2 decimal places
                         .build());
             }
         } catch (Exception e) {
@@ -146,7 +143,6 @@ public class AdminServiceImpl implements AdminService {
             // Get recent user registrations
             List<Object[]> recentUsers = adminRepository.getRecentUserRegistrations(last24Hours, 5);
             for (Object[] row : recentUsers) {
-                Long userId = ((Number) row[0]).longValue();
                 String username = (String) row[1];
                 String firstName = (String) row[2];
                 LocalDateTime createdAt = (LocalDateTime) row[4];
@@ -155,48 +151,27 @@ public class AdminServiceImpl implements AdminService {
                         .activityType("USER_REGISTRATION")
                         .description(String.format("New user %s (%s) registered", firstName, username))
                         .timestamp(createdAt.format(formatter))
-                        .userId(userId)
-                        .username(username)
                         .build());
             }
             
-            // Get recent matches
-            List<Object[]> recentMatches = adminRepository.getRecentMatches(last24Hours, 5);
-            for (Object[] row : recentMatches) {
-                Long matchId = ((Number) row[0]).longValue();
-                String user1Name = (String) row[1];
-                String user2Name = (String) row[2];
-                LocalDateTime matchedAt = (LocalDateTime) row[3];
-                
+            List<Object[]> recentMatches = adminRepository.getRecentMatches(last24Hours, 1);
+            if (!recentMatches.isEmpty()) {
                 activities.add(AdminDashboardDTO.RecentActivityData.builder()
-                        .activityType("MATCH_CREATED")
-                        .description(String.format("Match created between %s and %s", user1Name, user2Name))
-                        .timestamp(matchedAt.format(formatter))
-                        .userId(matchId)
-                        .username("System")
+                        .activityType("SYSTEM_HEALTH")
+                        .description("Matching system is active - new matches detected in last 24h")
+                        .timestamp(LocalDateTime.now().format(formatter))
+                        .build());
+            } else {
+                activities.add(AdminDashboardDTO.RecentActivityData.builder()
+                        .activityType("SYSTEM_WARNING")
+                        .description("No new matches in last 24h - system may need attention")
+                        .timestamp(LocalDateTime.now().format(formatter))
                         .build());
             }
             
-            // Add system info
-            activities.add(AdminDashboardDTO.RecentActivityData.builder()
-                    .activityType("SYSTEM_INFO")
-                    .description("Dashboard data refreshed")
-                    .timestamp(LocalDateTime.now().format(formatter))
-                    .userId(null)
-                    .username("System")
-                    .build());
-            
-        } catch (Exception e) {
+            } catch (Exception e) {
             log.error("Error building recent activities: {}", e.getMessage());
-            
-            // Fallback activity
-            activities.add(AdminDashboardDTO.RecentActivityData.builder()
-                    .activityType("SYSTEM_INFO")
-                    .description("Dashboard data refreshed")
-                    .timestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                    .userId(null)
-                    .username("System")
-                    .build());
+            // No fallback activity needed - empty list is fine
         }
         
         // Sort by timestamp descending
@@ -216,7 +191,7 @@ public class AdminServiceImpl implements AdminService {
         String direction = normalizeDirection(request.getDirection());
         
         if (!isValidDirection(direction)) {
-            throw new RuntimeException("Invalid direction parameter: " + direction);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid direction parameter: " + direction, "INVALID_DIRECTION");
         }
         
         List<Object[]> users;
@@ -225,36 +200,51 @@ public class AdminServiceImpl implements AdminService {
         Boolean hasNext = false;
         Boolean hasPrevious = false;
         
-        PageRequest pageable = PageRequest.of(0, limit + 1); // Fetch one extra to check if there are more
+        int fetchLimit = limit + 1; // Fetch one extra to check if there are more
         
         if (request.getCursor() == null) {
             // First page - get the most recent users
-            users = adminRepository.findAllUsersForManagement(pageable);
+            users = adminRepository.findAllUsersForManagement(fetchLimit);
         } else {
             if ("NEXT".equals(direction)) {
                 // Next page - get users with ID less than cursor
-                users = adminRepository.findUsersForManagementWithCursorNext(request.getCursor(), pageable);
+                users = adminRepository.findUsersForManagementWithCursorNext(request.getCursor(), fetchLimit);
             } else {
                 // Previous page - get users with ID greater than cursor
-                users = adminRepository.findUsersForManagementWithCursorPrevious(request.getCursor(), pageable);
+                users = adminRepository.findUsersForManagementWithCursorPrevious(request.getCursor(), fetchLimit);
             }
         }
         
-        // Check if there are more items
+        // Check if there are more items  
         if (users.size() > limit) {
-            hasNext = "NEXT".equals(direction) || request.getCursor() == null;
-            hasPrevious = "PREVIOUS".equals(direction);
+            hasNext = true;
             users = users.subList(0, limit);
         }
         
-        // Set cursors
+        // Set cursors for intuitive pagination
         if (!users.isEmpty()) {
-            if ("PREVIOUS".equals(direction)) {
-                // For previous direction, reverse the order to maintain correct sorting
-                java.util.Collections.reverse(users);
+            // For chronological order (created_at DESC), first item is newest, last item is oldest
+            Long firstUserId = ((Number) users.get(0)[0]).longValue();
+            Long lastUserId = ((Number) users.get(users.size() - 1)[0]).longValue();
+            
+            if (request.getCursor() == null) {
+                // First page: can only go NEXT (to older users)
+                nextCursor = lastUserId;
+                previousCursor = null;
+                hasPrevious = false;
+            } else {
+                // Subsequent pages: set cursors based on direction
+                if ("NEXT".equals(direction)) {
+                    // Going to older users: next = last item, previous = first item
+                    nextCursor = lastUserId;
+                    previousCursor = firstUserId;
+                } else {
+                    // Going to newer users: next = last item, previous = first item  
+                    nextCursor = lastUserId;
+                    previousCursor = firstUserId;
+                }
+                hasPrevious = true;
             }
-            nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue();
-            previousCursor = ((Number) users.get(0)[0]).longValue();
         }
         
         // Convert to DTOs
@@ -282,9 +272,8 @@ public class AdminServiceImpl implements AdminService {
         }
         
         int limit = normalizeLimit(request.getLimit());
-        PageRequest pageable = PageRequest.of(0, limit + 1);
         
-        List<Object[]> users = adminRepository.searchUsersForManagement(searchTerm.trim(), pageable);
+        List<Object[]> users = adminRepository.searchUsersForManagement(searchTerm.trim(), limit + 1);
         
         Boolean hasNext = users.size() > limit;
         if (hasNext) {
@@ -319,12 +308,12 @@ public class AdminServiceImpl implements AdminService {
         log.info("Fetching user details for ID: {}", userId);
         
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         // Fetch additional data using native query
-        List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, PageRequest.of(0, 1));
+        List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, 1);
         if (userData.isEmpty()) {
-            userData = adminRepository.findAllUsersForManagement(PageRequest.of(0, Integer.MAX_VALUE))
+            userData = adminRepository.findAllUsersForManagement(Integer.MAX_VALUE)
                     .stream()
                     .filter(row -> ((Number) row[0]).longValue() == userId.longValue())
                     .toList();
@@ -342,12 +331,9 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .fullName(user.getFullName())
-                .roleName(user.getRole() != null ? user.getRole().getName() : "USER")
-                .status(user.getStatus())
+                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)  // Convert to uppercase for API
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
                 .hasProfile(user.getProfile() != null)
                 .photoCount(0)
                 .totalMatches(0L)
@@ -357,35 +343,52 @@ public class AdminServiceImpl implements AdminService {
     
     @Override
     @Transactional
-    public UserManagementDTO updateUserStatus(Long userId, UserStatusUpdateRequest request) {
+    public StatusUpdateResponse updateUserStatus(Long userId, UserStatusUpdateRequest request) {
         log.info("Updating user status for ID: {} to status: {}", userId, request.getStatus());
         
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
         
         String oldStatus = user.getStatus();
-        user.setStatus(request.getStatus());
+        String previousStatusUpper = oldStatus != null ? oldStatus.toUpperCase() : null;
+        
+        String databaseStatus = request.getStatus().toLowerCase();
+        user.setStatus(databaseStatus);
+        
+        // Xử lý suspension với thời hạn
+        if ("suspend".equalsIgnoreCase(request.getStatus())) {
+            if (request.getSuspensionDays() == null || request.getSuspensionDays() < 1) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Suspension days is required and must be at least 1", "INVALID_SUSPENSION_DAYS");
+            }
+            
+            LocalDateTime suspensionUntil = LocalDateTime.now().plusDays(request.getSuspensionDays());
+            user.setSuspensionUntil(suspensionUntil);
+            user.setSuspensionReason(request.getReason());
+            
+            log.info("User {} suspended until {} for reason: {}", 
+                    userId, suspensionUntil, request.getReason());
+        } else {
+            // Clear suspension fields if not suspending
+            user.setSuspensionUntil(null);
+            user.setSuspensionReason(null);
+        }
+        
         userRepository.save(user);
         
         log.info("User {} status updated from {} to {} for reason: {}", 
                 userId, oldStatus, request.getStatus(), request.getReason());
         
-        return getUserById(userId);
+        return StatusUpdateResponse.builder()
+                .success(true)
+                .userId(userId)
+                .newStatus(request.getStatus())
+                .previousStatus(previousStatusUpper)
+                .message("User status updated successfully")
+                .reason(request.getReason())
+                .build();
     }
     
-    @Override
-    @Transactional
-    public void deleteUser(Long userId) {
-        log.info("Soft deleting user with ID: {}", userId);
-        
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-        
-        user.setStatus("INACTIVE");
-        userRepository.save(user);
-        
-        log.info("User {} has been soft deleted (status set to INACTIVE)", userId);
-    }
+
     
     // Helper methods
     private int normalizeLimit(Integer limit) {
@@ -407,6 +410,10 @@ public class AdminServiceImpl implements AdminService {
     }
     
     private UserManagementDTO convertToUserManagementDTO(Object[] row) {
+        // Convert status from lowercase (database) to uppercase (API response)
+        String databaseStatus = (String) row[7];
+        String apiStatus = databaseStatus != null ? databaseStatus.toUpperCase() : null;
+        
         return UserManagementDTO.builder()
                 .id(((Number) row[0]).longValue())
                 .username((String) row[1])
@@ -414,16 +421,28 @@ public class AdminServiceImpl implements AdminService {
                 .phoneNumber((String) row[3])
                 .firstName((String) row[4])
                 .lastName((String) row[5])
-                .fullName(((String) row[4]) + " " + ((String) row[5]))
-                .roleName((String) row[6])
-                .status((String) row[7])
-                .lastLogin((LocalDateTime) row[8])
-                .createdAt((LocalDateTime) row[9])
-                .updatedAt((LocalDateTime) row[10])
+                .status(apiStatus)
+                .lastLogin(convertToLocalDateTime(row[8]))
+                .createdAt(convertToLocalDateTime(row[9]))
                 .hasProfile((Boolean) row[11])
                 .photoCount(((Number) row[12]).intValue())
                 .totalMatches(((Number) row[13]).longValue())
                 .totalMessages(((Number) row[14]).longValue())
                 .build();
     }
+    
+    private LocalDateTime convertToLocalDateTime(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof java.sql.Timestamp) {
+            return ((java.sql.Timestamp) obj).toLocalDateTime();
+        }
+        if (obj instanceof LocalDateTime) {
+            return (LocalDateTime) obj;
+        }
+        return null;
+    }
+    
+
 } 

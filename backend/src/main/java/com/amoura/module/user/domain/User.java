@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -58,6 +57,12 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String status; // active, inactive, suspend
 
+    @Column(name = "suspension_until")
+    private LocalDateTime suspensionUntil;
+
+    @Column(name = "suspension_reason")
+    private String suspensionReason;
+
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
@@ -75,14 +80,17 @@ public class User implements UserDetails {
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private Set<UserInterest> interests = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private Set<UserLanguage> languages = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private Set<UserPet> pets = new HashSet<>();
 
     @JsonIgnore
@@ -114,7 +122,14 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !status.equals("SUSPEND");
+        if ("suspend".equals(status)) {
+            // Kiểm tra xem suspension đã hết hạn chưa
+            if (suspensionUntil != null && LocalDateTime.now().isAfter(suspensionUntil)) {
+                return true; // Suspension đã hết hạn
+            }
+            return false; // Vẫn trong thời gian suspension
+        }
+        return true;
     }
 
     @Override
@@ -124,7 +139,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return status.equals("ACTIVE");
+        return status.equals("active");
     }
 
     public String getFullName() {
@@ -137,6 +152,18 @@ public class User implements UserDetails {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isSuspended() {
+        return "suspend".equals(status) && 
+               suspensionUntil != null && 
+               LocalDateTime.now().isBefore(suspensionUntil);
+    }
+
+    public boolean isSuspensionExpired() {
+        return "suspend".equals(status) && 
+               suspensionUntil != null && 
+               LocalDateTime.now().isAfter(suspensionUntil);
     }
 
     @Column(name = "refresh_token")

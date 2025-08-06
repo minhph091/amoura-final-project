@@ -3,6 +3,7 @@ package com.amoura.module.admin.service;
 import com.amoura.module.admin.dto.AdminDashboardDTO;
 import com.amoura.module.admin.dto.CursorPaginationRequest;
 import com.amoura.module.admin.dto.CursorPaginationResponse;
+import com.amoura.module.admin.dto.StatusUpdateResponse;
 import com.amoura.module.admin.dto.UserManagementDTO;
 import com.amoura.module.admin.dto.UserStatusUpdateRequest;
 
@@ -31,10 +32,7 @@ public interface AdminService {
     /**
      * Update user status (ACTIVE, INACTIVE, SUSPEND)
      */
-    UserManagementDTO updateUserStatus(Long userId, UserStatusUpdateRequest request);
+    StatusUpdateResponse updateUserStatus(Long userId, UserStatusUpdateRequest request);
     
-    /**
-     * Delete user account (soft delete by setting status to INACTIVE)
-     */
-    void deleteUser(Long userId);
+
 } 
