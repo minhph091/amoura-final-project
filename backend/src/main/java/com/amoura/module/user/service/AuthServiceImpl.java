@@ -9,17 +9,15 @@ import com.amoura.module.user.dto.LoginRequest;
 import com.amoura.module.user.dto.UserDTO;
 import com.amoura.module.user.repository.LoginHistoryRepository;
 import com.amoura.module.user.repository.UserRepository;
-import com.amoura.infrastructure.security.SecurityConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -132,6 +130,10 @@ public class AuthServiceImpl implements AuthService {
         } catch (BadCredentialsException e) {
             log.error("Invalid credentials for email: {}", email);
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials", "INVALID_CREDENTIALS");
+        } catch (InternalAuthenticationServiceException e) {
+            // Rethrow account status related exceptions để GlobalExceptionHandler xử lý
+            log.warn("Account status issue for email {}: {}", email, e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Authentication error for email {}: {}", email, e.getMessage(), e);
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication failed", "AUTHENTICATION_FAILED");
@@ -163,6 +165,10 @@ public class AuthServiceImpl implements AuthService {
         } catch (BadCredentialsException e) {
             log.error("Invalid credentials for phone: {}", phoneNumber);
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials", "INVALID_CREDENTIALS");
+        } catch (InternalAuthenticationServiceException e) {
+            // Rethrow account status related exceptions để GlobalExceptionHandler xử lý
+            log.warn("Account status issue for phone {}: {}", phoneNumber, e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Authentication error for phone {}: {}", phoneNumber, e.getMessage(), e);
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication failed", "AUTHENTICATION_FAILED");
