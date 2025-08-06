@@ -8,6 +8,7 @@ class AmouraApplicationTests {
 
 	@Test
 	void contextLoads() {
+		System.out.println("\n Anh yêu em My");
 	}
 
 }

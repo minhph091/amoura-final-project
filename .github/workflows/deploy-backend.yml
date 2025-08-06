@@ -1,0 +1,53 @@
+name: Deploy Spring Boot Backend
+
+on:
+  push:
+    branches: [production]
+    paths: ['backend/**']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Build
+      working-directory: ./backend
+      run: |
+        chmod +x ./mvnw 
+        ./mvnw clean package -DskipTests
+
+    - name: Stop Service
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          sudo systemctl stop amoura
+        
+    - name: Copy JAR file
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "./backend/target/amoura-0.0.1-SNAPSHOT.jar"
+        target: "${{ secrets.DEPLOY_PATH }}/"
+        overwrite: true
+
+    - name: Start Service
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd ${{ secrets.DEPLOY_PATH }}
+          mv amoura-0.0.1-SNAPSHOT.jar amoura.jar
+          sudo systemctl start amoura 

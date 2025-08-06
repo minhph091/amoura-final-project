@@ -1,0 +1,156 @@
+package com.amoura.module.admin.repository;
+
+import com.amoura.module.user.domain.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface AdminRepository extends JpaRepository<User, Long> {
+    
+    // User Statistics
+    @Query(value = "SELECT COUNT(*) FROM users", nativeQuery = true)
+    Long countTotalUsers();
+    
+    @Query(value = "SELECT COUNT(*) FROM users WHERE DATE(created_at) = :date", nativeQuery = true)
+    Long countUsersByDate(@Param("date") LocalDate date);
+    
+    @Query(value = "SELECT COUNT(*) FROM users WHERE last_login >= :startTime", nativeQuery = true)
+    Long countActiveUsersSince(@Param("startTime") LocalDateTime startTime);
+    
+    @Query(value = "SELECT DATE(created_at) as date, COUNT(*) as count FROM users " +
+                   "WHERE created_at >= :startDate " +
+                   "GROUP BY DATE(created_at) ORDER BY DATE(created_at)", nativeQuery = true)
+    List<Object[]> getUserGrowthData(@Param("startDate") LocalDateTime startDate);
+    
+    // Match Statistics
+    @Query(value = "SELECT COUNT(*) FROM matches", nativeQuery = true)
+    Long countTotalMatches();
+    
+    @Query(value = "SELECT COUNT(*) FROM matches WHERE DATE(matched_at) = :date", nativeQuery = true)
+    Long countMatchesByDate(@Param("date") LocalDate date);
+    
+    @Query(value = "SELECT DATE(matched_at) as date, COUNT(*) as matches FROM matches " +
+                   "WHERE matched_at >= :startDate " +
+                   "GROUP BY DATE(matched_at) ORDER BY DATE(matched_at)", nativeQuery = true)
+    List<Object[]> getMatchesData(@Param("startDate") LocalDateTime startDate);
+    
+    // Message Statistics
+    @Query(value = "SELECT COUNT(*) FROM messages", nativeQuery = true)
+    Long countTotalMessages();
+    
+    @Query(value = "SELECT COUNT(*) FROM messages WHERE DATE(created_at) = :date", nativeQuery = true)
+    Long countMessagesByDate(@Param("date") LocalDate date);
+    
+    // Swipe Statistics
+    @Query(value = "SELECT DATE(created_at) as date, COUNT(*) as totalSwipes, " +
+                   "SUM(CASE WHEN is_like = true THEN 1 ELSE 0 END) as likes FROM swipes " +
+                   "WHERE created_at >= :startDate " +
+                   "GROUP BY DATE(created_at) ORDER BY DATE(created_at)", nativeQuery = true)
+    List<Object[]> getSwipeStatistics(@Param("startDate") LocalDateTime startDate);
+    
+    // Recent User Activities
+    @Query(value = "SELECT u.id, u.username, u.first_name, u.last_name, u.created_at " +
+                   "FROM users u " +
+                   "WHERE u.created_at >= :since " +
+                   "ORDER BY u.created_at DESC " +
+                   "LIMIT :limit", nativeQuery = true)
+    List<Object[]> getRecentUserRegistrations(@Param("since") LocalDateTime since, @Param("limit") int limit);
+    
+    // Recent Match Activities
+    @Query(value = "SELECT m.id, u1.username as user1_name, u2.username as user2_name, m.matched_at " +
+                   "FROM matches m " +
+                   "JOIN users u1 ON m.user1_id = u1.id " +
+                   "JOIN users u2 ON m.user2_id = u2.id " +
+                   "WHERE m.matched_at >= :since " +
+                   "ORDER BY m.matched_at DESC " +
+                   "LIMIT :limit", nativeQuery = true)
+    List<Object[]> getRecentMatches(@Param("since") LocalDateTime since, @Param("limit") int limit);
+    
+    // System Health Check
+    @Query(value = "SELECT " +
+                   "(SELECT COUNT(*) FROM users WHERE status = 'ACTIVE') as active_users, " +
+                   "(SELECT COUNT(*) FROM users WHERE status = 'SUSPENDED') as suspended_users, " +
+                   "(SELECT COUNT(*) FROM users WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') as new_users_week, " +
+                   "(SELECT COUNT(*) FROM matches WHERE matched_at >= CURRENT_DATE - INTERVAL '7 days') as new_matches_week",
+                   nativeQuery = true)
+    List<Object[]> getSystemHealthMetrics();
+    
+    // User Management with Cursor Pagination - First page: newest users first
+    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
+                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
+                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
+                   "COALESCE((SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id), 0) as photo_count, " +
+                   "COALESCE((SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id), 0) as total_matches, " +
+                   "COALESCE((SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id), 0) as total_messages " +
+                   "FROM users u " +
+                   "INNER JOIN roles r ON u.role_id = r.id " +
+                   "LEFT JOIN profiles p ON u.id = p.user_id " +
+                   "WHERE r.name = 'USER' " +
+                   "ORDER BY u.created_at DESC, u.id DESC " +
+                   "LIMIT :limit",
+                   nativeQuery = true)
+    List<Object[]> findAllUsersForManagement(@Param("limit") int limit);
+    
+    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
+                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
+                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
+                   "COALESCE((SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id), 0) as photo_count, " +
+                   "COALESCE((SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id), 0) as total_matches, " +
+                   "COALESCE((SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id), 0) as total_messages " +
+                   "FROM users u " +
+                   "INNER JOIN roles r ON u.role_id = r.id " +
+                   "LEFT JOIN profiles p ON u.id = p.user_id " +
+                   "WHERE r.name = 'USER' AND (u.created_at < (SELECT created_at FROM users WHERE id = :cursor) " +
+                   "OR (u.created_at = (SELECT created_at FROM users WHERE id = :cursor) AND u.id < :cursor)) " +
+                   "ORDER BY u.created_at DESC, u.id DESC " +
+                   "LIMIT :limit",
+                   nativeQuery = true)
+    List<Object[]> findUsersForManagementWithCursorNext(@Param("cursor") Long cursor, @Param("limit") int limit);
+    
+    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
+                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
+                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
+                   "COALESCE((SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id), 0) as photo_count, " +
+                   "COALESCE((SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id), 0) as total_matches, " +
+                   "COALESCE((SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id), 0) as total_messages " +
+                   "FROM users u " +
+                   "INNER JOIN roles r ON u.role_id = r.id " +
+                   "LEFT JOIN profiles p ON u.id = p.user_id " +
+                   "WHERE r.name = 'USER' AND (u.created_at > (SELECT created_at FROM users WHERE id = :cursor) " +
+                   "OR (u.created_at = (SELECT created_at FROM users WHERE id = :cursor) AND u.id > :cursor)) " +
+                   "ORDER BY u.created_at DESC, u.id DESC " +
+                   "LIMIT :limit",
+                   nativeQuery = true)
+    List<Object[]> findUsersForManagementWithCursorPrevious(@Param("cursor") Long cursor, @Param("limit") int limit);
+    
+    // User Management Search - consistent with pagination order
+    @Query(value = "SELECT u.id, u.username, u.email, u.phone_number, u.first_name, u.last_name, " +
+                   "r.name as role_name, u.status, u.last_login, u.created_at, u.updated_at, " +
+                   "(CASE WHEN p.user_id IS NOT NULL THEN true ELSE false END) as has_profile, " +
+                   "COALESCE((SELECT COUNT(*) FROM photos ph WHERE ph.user_id = u.id), 0) as photo_count, " +
+                   "COALESCE((SELECT COUNT(*) FROM matches m WHERE m.user1_id = u.id OR m.user2_id = u.id), 0) as total_matches, " +
+                   "COALESCE((SELECT COUNT(*) FROM messages msg WHERE msg.sender_id = u.id), 0) as total_messages " +
+                   "FROM users u " +
+                   "INNER JOIN roles r ON u.role_id = r.id " +
+                   "LEFT JOIN profiles p ON u.id = p.user_id " +
+                   "WHERE r.name = 'USER' AND " +
+                   "(LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+                   "LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+                   "LOWER(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+                   "ORDER BY u.created_at DESC, u.id DESC " +
+                   "LIMIT :limit",
+                   nativeQuery = true)
+    List<Object[]> searchUsersForManagement(@Param("searchTerm") String searchTerm, @Param("limit") int limit);
+    
+    // Count total USER role users for pagination
+    @Query(value = "SELECT COUNT(*) FROM users u " +
+                   "INNER JOIN roles r ON u.role_id = r.id " +
+                   "WHERE r.name = 'USER'", nativeQuery = true)
+    Long countUserRoleUsers();
+} 
