@@ -1,5 +1,6 @@
 package com.amoura.module.matching.api;
 
+import com.amoura.module.matching.dto.ReceivedLikeDTO;
 import com.amoura.module.matching.dto.SwipeRequest;
 import com.amoura.module.matching.dto.SwipeResponse;
 import com.amoura.module.matching.dto.UserRecommendationDTO;
@@ -41,6 +42,15 @@ public class MatchingController {
             @Valid @RequestBody SwipeRequest request) {
         SwipeResponse response = matchingService.swipeUser(getUserEmail(userDetails), request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/received")
+    @Operation(summary = "Get all users who have liked the current user but not yet responded to")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<List<ReceivedLikeDTO>> getReceivedLikes(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        List<ReceivedLikeDTO> receivedLikes = matchingService.getReceivedLikes(getUserEmail(userDetails));
+        return ResponseEntity.ok(receivedLikes);
     }
 
     private String getUserEmail(UserDetails userDetails) {

@@ -1,0 +1,448 @@
+package com.amoura.module.admin.service;
+
+import com.amoura.module.admin.dto.AdminDashboardDTO;
+import com.amoura.module.admin.dto.CursorPaginationRequest;
+import com.amoura.module.admin.dto.CursorPaginationResponse;
+import com.amoura.module.admin.dto.StatusUpdateResponse;
+import com.amoura.module.admin.dto.UserManagementDTO;
+import com.amoura.module.admin.dto.UserStatusUpdateRequest;
+import com.amoura.module.admin.repository.AdminRepository;
+import com.amoura.module.user.domain.User;
+import com.amoura.module.user.repository.UserRepository;
+import com.amoura.common.exception.ApiException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AdminServiceImpl implements AdminService {
+
+    private final AdminRepository adminRepository;
+    private final UserRepository userRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public AdminDashboardDTO getDashboardOverview() {
+        log.info("Fetching admin dashboard overview");
+
+        // Get current statistics
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime last30Days = LocalDateTime.now().minusDays(30);
+
+        // Basic counts
+        Long totalUsers = adminRepository.countTotalUsers();
+        Long totalMatches = adminRepository.countTotalMatches();
+        Long totalMessages = adminRepository.countTotalMessages();
+        Long todayUsers = adminRepository.countUsersByDate(today);
+        Long todayMatches = adminRepository.countMatchesByDate(today);
+        Long todayMessages = adminRepository.countMessagesByDate(today);
+        Long activeUsersToday = adminRepository.countActiveUsersSince(startOfDay);
+
+        // User growth chart data (last 30 days)
+        List<AdminDashboardDTO.UserGrowthData> userGrowthChart = buildUserGrowthChart(last30Days);
+
+        // Matching success rate chart data (last 30 days)
+        List<AdminDashboardDTO.MatchingSuccessData> matchingSuccessChart = buildMatchingSuccessChart(last30Days);
+
+        // Recent activities (simplified for now)
+        List<AdminDashboardDTO.RecentActivityData> recentActivities = buildRecentActivities();
+
+        return AdminDashboardDTO.builder()
+                .totalUsers(totalUsers)
+                .totalMatches(totalMatches)
+                .totalMessages(totalMessages)
+                .todayUsers(todayUsers)
+                .todayMatches(todayMatches)
+                .todayMessages(todayMessages)
+                .activeUsersToday(activeUsersToday)
+                .userGrowthChart(userGrowthChart)
+                .matchingSuccessChart(matchingSuccessChart)
+                .recentActivities(recentActivities)
+                .build();
+    }
+
+    private List<AdminDashboardDTO.UserGrowthData> buildUserGrowthChart(LocalDateTime startDate) {
+        List<AdminDashboardDTO.UserGrowthData> chartData = new ArrayList<>();
+        
+        try {
+            List<Object[]> userGrowthData = adminRepository.getUserGrowthData(startDate);
+    
+            
+            for (Object[] row : userGrowthData) {
+                LocalDate date = (LocalDate) row[0];
+                Long newUsers = ((Number) row[1]).longValue();
+
+                
+                chartData.add(AdminDashboardDTO.UserGrowthData.builder()
+                        .date(date)
+                        .newUsers(newUsers)
+                        .build());
+            }
+        } catch (Exception e) {
+            log.error("Error building user growth chart: {}", e.getMessage());
+        }
+        
+        return chartData;
+    }
+
+    private List<AdminDashboardDTO.MatchingSuccessData> buildMatchingSuccessChart(LocalDateTime startDate) {
+        List<AdminDashboardDTO.MatchingSuccessData> chartData = new ArrayList<>();
+        
+        try {
+            // Get swipe statistics
+            List<Object[]> swipeData = adminRepository.getSwipeStatistics(startDate);
+            List<Object[]> matchData = adminRepository.getMatchesData(startDate);
+            
+            // Create a map for easier lookup of match data by date
+            var matchMap = new java.util.HashMap<LocalDate, Long>();
+            for (Object[] row : matchData) {
+                LocalDate date = (LocalDate) row[0];
+                Long matches = ((Number) row[1]).longValue();
+                matchMap.put(date, matches);
+            }
+            
+            // Build chart data combining swipe and match information
+            for (Object[] row : swipeData) {
+                LocalDate date = (LocalDate) row[0];
+                Long totalSwipes = ((Number) row[1]).longValue();
+                Long matches = matchMap.getOrDefault(date, 0L);
+                
+                chartData.add(AdminDashboardDTO.MatchingSuccessData.builder()
+                        .date(date)
+                        .totalSwipes(totalSwipes)
+                        .totalMatches(matches)
+                        .build());
+            }
+        } catch (Exception e) {
+            log.error("Error building matching success chart: {}", e.getMessage());
+            // Return empty list if there's an error
+        }
+        
+        return chartData;
+    }
+
+    private List<AdminDashboardDTO.RecentActivityData> buildRecentActivities() {
+        List<AdminDashboardDTO.RecentActivityData> activities = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        try {
+            LocalDateTime last24Hours = LocalDateTime.now().minusDays(1);
+            
+            // Get recent user registrations
+            List<Object[]> recentUsers = adminRepository.getRecentUserRegistrations(last24Hours, 5);
+            for (Object[] row : recentUsers) {
+                String username = (String) row[1];
+                String firstName = (String) row[2];
+                LocalDateTime createdAt = (LocalDateTime) row[4];
+                
+                activities.add(AdminDashboardDTO.RecentActivityData.builder()
+                        .activityType("USER_REGISTRATION")
+                        .description(String.format("New user %s (%s) registered", firstName, username))
+                        .timestamp(createdAt.format(formatter))
+                        .build());
+            }
+            
+            List<Object[]> recentMatches = adminRepository.getRecentMatches(last24Hours, 1);
+            if (!recentMatches.isEmpty()) {
+                activities.add(AdminDashboardDTO.RecentActivityData.builder()
+                        .activityType("SYSTEM_HEALTH")
+                        .description("Matching system is active - new matches detected in last 24h")
+                        .timestamp(LocalDateTime.now().format(formatter))
+                        .build());
+            } else {
+                activities.add(AdminDashboardDTO.RecentActivityData.builder()
+                        .activityType("SYSTEM_WARNING")
+                        .description("No new matches in last 24h - system may need attention")
+                        .timestamp(LocalDateTime.now().format(formatter))
+                        .build());
+            }
+            
+            } catch (Exception e) {
+            log.error("Error building recent activities: {}", e.getMessage());
+            // No fallback activity needed - empty list is fine
+        }
+        
+        // Sort by timestamp descending
+        activities.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
+        
+        return activities;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPaginationResponse<UserManagementDTO> getUsersWithCursor(CursorPaginationRequest request) {
+        log.info("Fetching users with cursor pagination - cursor: {}, limit: {}, direction: {}", 
+                request.getCursor(), request.getLimit(), request.getDirection());
+        
+        // Validate and normalize parameters
+        int limit = normalizeLimit(request.getLimit());
+        String direction = normalizeDirection(request.getDirection());
+        
+        if (!isValidDirection(direction)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid direction parameter: " + direction, "INVALID_DIRECTION");
+        }
+        
+        List<Object[]> users;
+        Long nextCursor = null;
+        Long previousCursor = null;
+        Boolean hasNext = false;
+        Boolean hasPrevious = false;
+        
+        int fetchLimit = limit + 1; // Fetch one extra to check if there are more
+        
+        if (request.getCursor() == null) {
+            // First page - get the most recent users
+            users = adminRepository.findAllUsersForManagement(fetchLimit);
+        } else {
+            if ("NEXT".equals(direction)) {
+                // Next page - get users with ID less than cursor
+                users = adminRepository.findUsersForManagementWithCursorNext(request.getCursor(), fetchLimit);
+            } else {
+                // Previous page - get users with ID greater than cursor
+                users = adminRepository.findUsersForManagementWithCursorPrevious(request.getCursor(), fetchLimit);
+            }
+        }
+        
+        // Check if there are more items  
+        if (users.size() > limit) {
+            hasNext = true;
+            users = users.subList(0, limit);
+        }
+        
+        // Set cursors for intuitive pagination
+        if (!users.isEmpty()) {
+            // For chronological order (created_at DESC), first item is newest, last item is oldest
+            Long firstUserId = ((Number) users.get(0)[0]).longValue();
+            Long lastUserId = ((Number) users.get(users.size() - 1)[0]).longValue();
+            
+            if (request.getCursor() == null) {
+                // First page: can only go NEXT (to older users)
+                nextCursor = lastUserId;
+                previousCursor = null;
+                hasPrevious = false;
+            } else {
+                // Subsequent pages: set cursors based on direction
+                if ("NEXT".equals(direction)) {
+                    // Going to older users: next = last item, previous = first item
+                    nextCursor = lastUserId;
+                    previousCursor = firstUserId;
+                } else {
+                    // Going to newer users: next = last item, previous = first item  
+                    nextCursor = lastUserId;
+                    previousCursor = firstUserId;
+                }
+                hasPrevious = true;
+            }
+        }
+        
+        // Convert to DTOs
+        List<UserManagementDTO> userDTOs = users.stream()
+                .map(this::convertToUserManagementDTO)
+                .toList();
+        
+        return CursorPaginationResponse.<UserManagementDTO>builder()
+                .data(userDTOs)
+                .nextCursor(nextCursor)
+                .previousCursor(previousCursor)
+                .hasNext(hasNext)
+                .hasPrevious(hasPrevious)
+                .count(userDTOs.size())
+                .build();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPaginationResponse<UserManagementDTO> searchUsers(String searchTerm, CursorPaginationRequest request) {
+        log.info("Searching users with term: {} and cursor pagination", searchTerm);
+        
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getUsersWithCursor(request);
+        }
+        
+        int limit = normalizeLimit(request.getLimit());
+        
+        List<Object[]> users = adminRepository.searchUsersForManagement(searchTerm.trim(), limit + 1);
+        
+        Boolean hasNext = users.size() > limit;
+        if (hasNext) {
+            users = users.subList(0, limit);
+        }
+        
+        Long nextCursor = null;
+        Long previousCursor = null;
+        
+        if (!users.isEmpty()) {
+            nextCursor = ((Number) users.get(users.size() - 1)[0]).longValue();
+            previousCursor = ((Number) users.get(0)[0]).longValue();
+        }
+        
+        List<UserManagementDTO> userDTOs = users.stream()
+                .map(this::convertToUserManagementDTO)
+                .toList();
+        
+        return CursorPaginationResponse.<UserManagementDTO>builder()
+                .data(userDTOs)
+                .nextCursor(nextCursor)
+                .previousCursor(previousCursor)
+                .hasNext(hasNext)
+                .hasPrevious(false) // Search doesn't support previous navigation
+                .count(userDTOs.size())
+                .build();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public UserManagementDTO getUserById(Long userId) {
+        log.info("Fetching user details for ID: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
+        
+        // Fetch additional data using native query
+        List<Object[]> userData = adminRepository.findUsersForManagementWithCursorNext(userId + 1, 1);
+        if (userData.isEmpty()) {
+            userData = adminRepository.findAllUsersForManagement(Integer.MAX_VALUE)
+                    .stream()
+                    .filter(row -> ((Number) row[0]).longValue() == userId.longValue())
+                    .toList();
+        }
+        
+        if (!userData.isEmpty()) {
+            return convertToUserManagementDTO(userData.get(0));
+        }
+        
+        // Fallback to basic conversion
+        return UserManagementDTO.builder()
+                .id(user.getId())
+                .username(user.getActualUsername())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)  // Convert to uppercase for API
+                .lastLogin(user.getLastLogin())
+                .createdAt(user.getCreatedAt())
+                .hasProfile(user.getProfile() != null)
+                .photoCount(0)
+                .totalMatches(0L)
+                .totalMessages(0L)
+                .build();
+    }
+    
+    @Override
+    @Transactional
+    public StatusUpdateResponse updateUserStatus(Long userId, UserStatusUpdateRequest request) {
+        log.info("Updating user status for ID: {} to status: {}", userId, request.getStatus());
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId, "USER_NOT_FOUND"));
+        
+        String oldStatus = user.getStatus();
+        String previousStatusUpper = oldStatus != null ? oldStatus.toUpperCase() : null;
+        
+        String databaseStatus = request.getStatus().toLowerCase();
+        user.setStatus(databaseStatus);
+        
+        // Xử lý suspension với thời hạn
+        if ("suspend".equalsIgnoreCase(request.getStatus())) {
+            if (request.getSuspensionDays() == null || request.getSuspensionDays() < 1) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Suspension days is required and must be at least 1", "INVALID_SUSPENSION_DAYS");
+            }
+            
+            LocalDateTime suspensionUntil = LocalDateTime.now().plusDays(request.getSuspensionDays());
+            user.setSuspensionUntil(suspensionUntil);
+            user.setSuspensionReason(request.getReason());
+            
+            log.info("User {} suspended until {} for reason: {}", 
+                    userId, suspensionUntil, request.getReason());
+        } else {
+            // Clear suspension fields if not suspending
+            user.setSuspensionUntil(null);
+            user.setSuspensionReason(null);
+        }
+        
+        userRepository.save(user);
+        
+        log.info("User {} status updated from {} to {} for reason: {}", 
+                userId, oldStatus, request.getStatus(), request.getReason());
+        
+        return StatusUpdateResponse.builder()
+                .success(true)
+                .userId(userId)
+                .newStatus(request.getStatus())
+                .previousStatus(previousStatusUpper)
+                .message("User status updated successfully")
+                .reason(request.getReason())
+                .build();
+    }
+    
+
+    
+    // Helper methods
+    private int normalizeLimit(Integer limit) {
+        if (limit == null || limit < 1) {
+            return 20; // Default limit
+        }
+        return Math.min(limit, 100); // Max limit of 100
+    }
+    
+    private String normalizeDirection(String direction) {
+        if (direction == null) {
+            return "NEXT";
+        }
+        return direction.toUpperCase();
+    }
+    
+    private boolean isValidDirection(String direction) {
+        return "NEXT".equals(direction) || "PREVIOUS".equals(direction);
+    }
+    
+    private UserManagementDTO convertToUserManagementDTO(Object[] row) {
+        // Convert status from lowercase (database) to uppercase (API response)
+        String databaseStatus = (String) row[7];
+        String apiStatus = databaseStatus != null ? databaseStatus.toUpperCase() : null;
+        
+        return UserManagementDTO.builder()
+                .id(((Number) row[0]).longValue())
+                .username((String) row[1])
+                .email((String) row[2])
+                .phoneNumber((String) row[3])
+                .firstName((String) row[4])
+                .lastName((String) row[5])
+                .status(apiStatus)
+                .lastLogin(convertToLocalDateTime(row[8]))
+                .createdAt(convertToLocalDateTime(row[9]))
+                .hasProfile((Boolean) row[11])
+                .photoCount(((Number) row[12]).intValue())
+                .totalMatches(((Number) row[13]).longValue())
+                .totalMessages(((Number) row[14]).longValue())
+                .build();
+    }
+    
+    private LocalDateTime convertToLocalDateTime(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof java.sql.Timestamp) {
+            return ((java.sql.Timestamp) obj).toLocalDateTime();
+        }
+        if (obj instanceof LocalDateTime) {
+            return (LocalDateTime) obj;
+        }
+        return null;
+    }
+    
+
+} 
