@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { UserX, UserCheck, MoreHorizontal } from "lucide-react";
+import { useLanguage } from "@/src/contexts/LanguageContext";
 
 interface Moderator {
   id: string;
@@ -28,6 +29,7 @@ import ModeratorPasswordDialog from "./ModeratorPasswordDialog";
 
 
 export default function ModeratorManagement() {
+  const { t } = useLanguage();
   const [moderators, setModerators] = useState<Moderator[]>([]);
   const [filteredModerators, setFilteredModerators] = useState<Moderator[]>([]);
   const [search, setSearch] = useState("");
@@ -98,11 +100,27 @@ export default function ModeratorManagement() {
   return (
     <div className="p-4">
       <ModeratorPasswordDialog open={pwDialogOpen} onOpenChange={setPwDialogOpen} moderatorEmail={selectedEmail} />
+      
+      {/* Alert about moderator feature status */}
+      <Card className="mb-4 border-orange-200 bg-orange-50">
+        <CardContent>
+          <div className="flex items-center gap-3 p-4">
+            <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+            <div>
+              <h4 className="font-medium text-orange-800">{t.moderatorManagement}</h4>
+              <p className="text-sm text-orange-700">
+                {t.featureComingSoon}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent>
           <div className="flex items-center justify-between mb-4 mt-4">
             <Input
-              placeholder="Search moderators..."
+              placeholder={t.searchModerators}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="max-w-xs"
@@ -113,18 +131,18 @@ export default function ModeratorManagement() {
               <thead>
                 <tr className="border-b bg-muted/40">
                   <th className="text-left py-4 px-4 font-bold text-base">Moderator</th>
-                  <th className="text-left py-4 px-4 font-bold text-base">Role</th>
-                  <th className="text-left py-4 px-4 font-bold text-base">Status</th>
+                  <th className="text-left py-4 px-4 font-bold text-base">{t.role}</th>
+                  <th className="text-left py-4 px-4 font-bold text-base">{t.status}</th>
                   <th className="text-left py-4 px-4 font-bold text-base hidden md:table-cell">Join Date</th>
-                  <th className="text-left py-4 px-4 font-bold text-base hidden lg:table-cell">Reports Handled</th>
-                  <th className="text-right py-4 px-4 font-bold text-base">Actions</th>
+                  <th className="text-left py-4 px-4 font-bold text-base hidden lg:table-cell">{t.reportsHandled}</th>
+                  <th className="text-right py-4 px-4 font-bold text-base">{t.actions}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-muted-foreground">
-                      Loading moderators...
+                      {t.loadingText}
                     </td>
                   </tr>
                 ) : filteredModerators.length > 0 ? (
@@ -173,7 +191,7 @@ export default function ModeratorManagement() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Details</DropdownMenuItem>
+                              <DropdownMenuItem>{t.details}</DropdownMenuItem>
                               <DropdownMenuItem>Edit Permissions</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => { setSelectedEmail(moderator.email); setPwDialogOpen(true); }}>Reset Password</DropdownMenuItem>
                               {moderator.status === "active" ? (
@@ -194,7 +212,7 @@ export default function ModeratorManagement() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-muted-foreground">
-                      No moderators found.
+                      {t.noModeratorsFound}
                     </td>
                   </tr>
                 )}

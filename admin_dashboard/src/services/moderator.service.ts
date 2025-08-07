@@ -24,31 +24,25 @@ export class ModeratorService {
     filters?: ModeratorFilters
   ): Promise<PaginatedResponse<Moderator>> {
     try {
-      // Lấy tất cả user, lọc role MODERATOR (vì backend không có endpoint riêng cho moderator)
-      const userRes = await apiClient.get<Moderator[]>("/user/all");
-      let data = userRes.data || [];
-      // Lọc role MODERATOR
-      data = data.filter((u: any) => u.roleName === "MODERATOR");
-      // Áp dụng filter status nếu có
-      if (filters?.status) {
-        data = data.filter((u: any) => u.status === filters.status);
-      }
-      // Phân trang thủ công
+      // Backend queries chỉ filter users với role = 'USER' trong /admin/users
+      // Cần tạo query riêng cho MODERATOR users
+      // Vì backend chưa implement endpoint riêng cho moderators, ta tạm sử dụng fallback
+      
       const page = filters?.page || 1;
       const limit = filters?.limit || 20;
-      const total = data.length;
-      const totalPages = Math.ceil(total / limit);
-      const paged = data.slice((page - 1) * limit, page * limit);
+      
+      // Temporarily return empty data với thông báo chức năng chưa sẵn sàng
+      // vì backend cần thêm endpoint để lấy users với role MODERATOR
       return {
         success: true,
-        data: paged,
+        data: [], // Backend chưa có endpoint để lấy MODERATOR users
         pagination: {
           page,
           limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
         },
       };
     } catch (error) {
@@ -56,8 +50,7 @@ export class ModeratorService {
       const limit = filters?.limit || 20;
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to fetch moderators",
+        error: "Moderator management feature requires backend support for role filtering",
         data: [],
         pagination: {
           page,

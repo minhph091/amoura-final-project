@@ -28,6 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/src/contexts/LanguageContext";
 
 import { useEffect } from "react";
 // Feature not available: No backend endpoint for admin to fetch subscriptions.
@@ -53,6 +54,7 @@ interface Subscription {
 // ...removed all mock/sample data. Will fetch from backend below.
 
 export function SubscriptionsList() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -85,7 +87,7 @@ export function SubscriptionsList() {
 
   return (
     <div className="flex items-center justify-center h-40 text-muted-foreground">
-      Feature not available: No backend support for admin to view subscriptions.
+      {t.featureComingSoon}
     </div>
   );
 }

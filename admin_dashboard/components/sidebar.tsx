@@ -79,7 +79,7 @@ export function Sidebar() {
     },
     {
       href: "/add-account",
-      title: "Add Account",
+      title: t.addAccount,
       icon: <Users className="h-5 w-5" />,
       visible: isAdmin,
     },

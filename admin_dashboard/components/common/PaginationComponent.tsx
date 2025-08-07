@@ -21,7 +21,7 @@ export function PaginationComponent({
     const maxPages = 5;
 
     let startPage = Math.max(1, page - Math.floor(maxPages / 2));
-    let endPage = Math.min(totalPages, startPage + maxPages - 1);
+    const endPage = Math.min(totalPages, startPage + maxPages - 1);
 
     if (endPage - startPage + 1 < maxPages) {
       startPage = Math.max(1, endPage - maxPages + 1);

@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "@/src/contexts/LanguageContext";
 import Footer from "@/components/footer";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,17 +23,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <LanguageProvider>
-            {children}
-            <Footer />
-          </LanguageProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <LanguageProvider>
+              {children}
+              <Footer />
+            </LanguageProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

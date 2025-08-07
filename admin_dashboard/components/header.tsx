@@ -56,8 +56,25 @@ export function Header() {
     router.push("/login");
   };
 
-  if (loading) return null;
-  if (!user) return null;
+  if (loading) {
+    return (
+      <div className="fixed top-0 right-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 ease-in-out w-full lg:w-auto lg:left-64">
+        <div className="flex h-16 items-center px-6 justify-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return (
+      <div className="fixed top-0 right-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 ease-in-out w-full lg:w-auto lg:left-64">
+        <div className="flex h-16 items-center px-6 justify-center">
+          <p className="text-sm text-muted-foreground">Authentication required</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <HeaderSearchContext.Provider value={{ search, setSearch }}>

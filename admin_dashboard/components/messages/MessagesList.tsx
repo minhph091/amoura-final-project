@@ -30,11 +30,55 @@ interface Message {
   flagReason?: string
 }
 
-
 export function MessagesList() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // No backend support for fetching messages as admin. Set proper error state.
+    setLoading(false);
+    setError("Message monitoring feature is not available yet");
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="h-80 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4 mx-auto"></div>
+              <p>Loading messages...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="h-80 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-yellow-600 mb-4">
+                <AlertTriangle className="h-12 w-12 mx-auto mb-2" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Feature Coming Soon</h3>
+              <p className="text-muted-foreground">{error}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-center h-40 text-muted-foreground">
-      Feature not available: No backend support for admin to view messages.
+      <div className="text-center">
+        <AlertTriangle className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+        <p>Feature not available: No backend support for admin to view messages.</p>
+      </div>
     </div>
   );
 }

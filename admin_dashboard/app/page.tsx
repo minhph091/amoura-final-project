@@ -10,13 +10,19 @@ export default function AdminRootPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const user = authService.getCurrentUser();
-      const role = user?.roleName;
-      if (role === "ADMIN") {
-        router.replace("/dashboard");
-      } else if (role === "MODERATOR") {
-        router.replace("/dashboard/users"); // hoặc /dashboard/reports tuỳ bạn muốn
+      if (user) {
+        const role = user.roleName;
+        if (role === "ADMIN") {
+          router.replace("/dashboard");
+        } else if (role === "MODERATOR") {
+          router.replace("/dashboard/users");
+        } else {
+          router.replace("/login");
+        }
+      } else {
+        // Nếu chưa login thì chuyển về login
+        router.replace("/login");
       }
-      // Nếu chưa login hoặc role khác thì giữ nguyên trang home
     }
   }, [router]);
 

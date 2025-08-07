@@ -1,46 +1,68 @@
 
 "use client";
 
-import { DashboardStats } from "@/components/dashboard/DashboardStats";
-import { UserGrowthChart } from "@/components/dashboard/UserGrowthChart";
-import { MatchesChart } from "@/components/dashboard/MatchesChart";
-import { RevenueChart } from "@/components/dashboard/RevenueChart";
-import { RecentReportsWidget } from "@/components/dashboard/RecentReportsWidget";
-import RecentUsers from "@/components/dashboard/RecentUsers";
+import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import AddAccountForm from "@/components/admin/AddAccountForm";
 import RoleLabel from "@/components/common/RoleLabel";
-
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import { useLanguage } from "@/src/contexts/LanguageContext";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/src/services/auth.service";
 
 export default function DashboardPage() {
+  const { t } = useLanguage();
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const user = authService.getCurrentUser();
-    if (!user) {
-      // Nếu chưa đăng nhập, chuyển về trang login
+    try {
+      const user = authService.getCurrentUser();
+      if (!user) {
+        // Nếu chưa đăng nhập, chuyển về trang login
+        router.replace("/login");
+        setLoading(true);
+        return;
+      }
+      const roleName = user.roleName || null;
+      setRole(roleName);
+      if (roleName === "MODERATOR") {
+        router.replace("/");
+      }
+      setError(null);
+    } catch (err) {
+      setError("Authentication error occurred");
       router.replace("/login");
-      setLoading(true);
-      return;
+    } finally {
+      setLoading(false);
     }
-    const roleName = user.roleName || null;
-    setRole(roleName);
-    if (roleName === "MODERATOR") {
-      router.replace("/");
-    }
-    setLoading(false);
   }, [router]);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">{t.loadingText}</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">{t.errorTitle}</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => router.replace("/login")}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Go to Login
+          </button>
+        </div>
       </div>
     );
   }
@@ -56,22 +78,28 @@ export default function DashboardPage() {
 
   // Mặc định: ADMIN
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-row items-baseline gap-2 mb-2">
-        <h1 className="font-heading text-4xl font-bold text-gradient-primary tracking-tight mb-6">
-          Dashboard Overview
-        </h1>
-        {role && <span className="ml-2"><RoleLabel role={role} /></span>}
+    <ErrorBoundary>
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-row items-center gap-3 mb-6">
+          <h1 className="font-heading text-4xl font-bold text-gradient-primary tracking-tight">
+            {t.dashboardOverview}
+          </h1>
+          {role && (
+            <div className="flex items-center">
+              <RoleLabel role={role} />
+            </div>
+          )}
+        </div>
+
+        {/* Use the new comprehensive dashboard component */}
+        <ErrorBoundary fallback={
+          <div className="text-red-500 p-4 rounded bg-red-50">
+            {t.dashboardComponentFailed}
+          </div>
+        }>
+          <DashboardOverview />
+        </ErrorBoundary>
       </div>
-      {/* AddAccountForm removed from dashboard. Now a separate page for admins. */}
-      <DashboardStats />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <UserGrowthChart />
-        <MatchesChart />
-      </div>
-      <div className="mt-6">
-        <RecentUsers />
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 }

@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { toast } from "@/hooks/use-toast"
+import { useLanguage } from "@/src/contexts/LanguageContext"
 
 export function SettingsNotifications() {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSave = () => {
@@ -17,8 +19,8 @@ export function SettingsNotifications() {
     setTimeout(() => {
       setIsLoading(false)
       toast({
-        title: "Notification settings updated",
-        description: "Your notification preferences have been updated successfully.",
+        title: t.settingsUpdatedTitle,
+        description: t.notificationSettingsUpdated,
       })
     }, 1000)
   }
@@ -26,35 +28,35 @@ export function SettingsNotifications() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Notification Settings</CardTitle>
-        <CardDescription>Configure which notifications you receive and how they are delivered</CardDescription>
+        <CardTitle>{t.notificationSettingsTitle}</CardTitle>
+        <CardDescription>{t.notificationSettingsDescription}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Email Notifications</h3>
+          <h3 className="text-lg font-medium">{t.emailNotifications}</h3>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="new-users">New User Registrations</Label>
-                <p className="text-sm text-muted-foreground">Receive an email when new users register</p>
+                <Label htmlFor="new-users">{t.newUserRegistrations}</Label>
+                <p className="text-sm text-muted-foreground">{t.receiveEmailNewUsers}</p>
               </div>
               <Switch id="new-users" defaultChecked />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="reports">User Reports</Label>
-                <p className="text-sm text-muted-foreground">Receive an email when a user submits a report</p>
+                <Label htmlFor="reports">{t.userReports}</Label>
+                <p className="text-sm text-muted-foreground">{t.receiveEmailUserReports}</p>
               </div>
               <Switch id="reports" defaultChecked />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="premium">Premium Subscriptions</Label>
+                <Label htmlFor="premium">{t.premiumSubscriptions}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Receive an email when a user purchases a premium subscription
+                  {t.receiveEmailPremiumSubscriptions}
                 </p>
               </div>
               <Switch id="premium" defaultChecked />
@@ -62,9 +64,9 @@ export function SettingsNotifications() {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="system-alerts">System Alerts</Label>
+                <Label htmlFor="system-alerts">{t.systemAlerts}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Receive an email for important system alerts and warnings
+                  {t.receiveEmailSystemAlerts}
                 </p>
               </div>
               <Switch id="system-alerts" defaultChecked />
@@ -73,37 +75,37 @@ export function SettingsNotifications() {
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Dashboard Notifications</h3>
+          <h3 className="text-lg font-medium">{t.dashboardNotifications}</h3>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="dashboard-new-users">New User Registrations</Label>
-                <p className="text-sm text-muted-foreground">Show notifications for new user registrations</p>
+                <Label htmlFor="dashboard-new-users">{t.newUserRegistrations}</Label>
+                <p className="text-sm text-muted-foreground">{t.showNotificationsNewUsers}</p>
               </div>
               <Switch id="dashboard-new-users" defaultChecked />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="dashboard-reports">User Reports</Label>
-                <p className="text-sm text-muted-foreground">Show notifications for new user reports</p>
+                <Label htmlFor="dashboard-reports">{t.userReports}</Label>
+                <p className="text-sm text-muted-foreground">{t.showNotificationsUserReports}</p>
               </div>
               <Switch id="dashboard-reports" defaultChecked />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="dashboard-premium">Premium Subscriptions</Label>
-                <p className="text-sm text-muted-foreground">Show notifications for new premium subscriptions</p>
+                <Label htmlFor="dashboard-premium">{t.premiumSubscriptions}</Label>
+                <p className="text-sm text-muted-foreground">{t.showNotificationsPremiumSubscriptions}</p>
               </div>
               <Switch id="dashboard-premium" defaultChecked />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="dashboard-system">System Alerts</Label>
-                <p className="text-sm text-muted-foreground">Show notifications for system alerts and warnings</p>
+                <Label htmlFor="dashboard-system">{t.systemAlerts}</Label>
+                <p className="text-sm text-muted-foreground">{t.showNotificationsSystemAlerts}</p>
               </div>
               <Switch id="dashboard-system" defaultChecked />
             </div>
@@ -111,29 +113,29 @@ export function SettingsNotifications() {
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Notification Digest</h3>
+          <h3 className="text-lg font-medium">{t.notificationDigest}</h3>
 
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="daily-digest">Daily Digest</Label>
-              <p className="text-sm text-muted-foreground">Receive a daily summary of all notifications</p>
+              <Label htmlFor="daily-digest">{t.dailyDigest}</Label>
+              <p className="text-sm text-muted-foreground">{t.receiveDailySummary}</p>
             </div>
             <Switch id="daily-digest" />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="weekly-digest">Weekly Digest</Label>
-              <p className="text-sm text-muted-foreground">Receive a weekly summary of all notifications</p>
+              <Label htmlFor="weekly-digest">{t.weeklyDigest}</Label>
+              <p className="text-sm text-muted-foreground">{t.receiveWeeklySummary}</p>
             </div>
             <Switch id="weekly-digest" defaultChecked />
           </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline">Reset to Defaults</Button>
-        <Button onClick={handleSave} disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Changes"}
+        <Button variant="cancel">{t.resetToDefaults}</Button>
+        <Button variant="save" onClick={handleSave} disabled={isLoading}>
+          {isLoading ? t.saving : t.saveChanges}
         </Button>
       </CardFooter>
     </Card>

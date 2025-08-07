@@ -14,7 +14,10 @@ export class ApiClient {
 
   private getStoredToken(): string | null {
     if (typeof window === "undefined") return null;
-    return localStorage.getItem("auth_token");
+    // Try different token storage keys
+    return localStorage.getItem("access_token") || 
+           localStorage.getItem("auth_token") || 
+           localStorage.getItem("token");
   }
 
   setToken(token: string) {
@@ -43,7 +46,10 @@ export class ApiClient {
       ...options.headers,
     } as Record<string, string>;
 
-    if (this.token) {
+    // Ensure fresh token for each request
+    const currentToken = this.getStoredToken();
+    if (currentToken) {
+      this.token = currentToken;
       headers.Authorization = `Bearer ${this.token}`;
     }
 
@@ -51,12 +57,15 @@ export class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        // Remove credentials for proxy compatibility
+        // credentials: 'include',
       });
 
       let data: any = null;
       const contentType = response.headers.get("content-type");
       const isJson = contentType && contentType.includes("application/json");
       const isNoContent = response.status === 204;
+      
       if (!isNoContent && isJson) {
         try {
           data = await response.json();
@@ -69,13 +78,30 @@ export class ApiClient {
       }
 
       if (!response.ok) {
+        // Handle 404 errors more gracefully
+        if (response.status === 404) {
+          return {
+            success: false,
+            error: `Resource not found: ${endpoint}`,
+          };
+        }
+        
+        // Handle 403 errors with more specific messages
+        if (response.status === 403) {
+          return {
+            success: false,
+            error: data?.message || "Access forbidden. Please check your permissions.",
+          };
+        }
+        
         return {
           success: false,
           error: (data && data.message) || `HTTP Error: ${response.status}`,
         };
       }
 
-      // Nếu response trả về accessToken và user (login), bọc lại thành data
+      // Backend trả về trực tiếp DTO object, không wrap trong data field
+      // Trừ login response có accessToken và user
       if (data && data.accessToken && data.user) {
         return {
           success: true,
@@ -85,10 +111,18 @@ export class ApiClient {
 
       return {
         success: true,
-        data: data && (data.data || data),
+        data: data, // Backend trả về trực tiếp AdminDashboardDTO, không cần .data
         message: data && data.message,
       };
     } catch (error) {
+      // Network errors or connection issues
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        return {
+          success: false,
+          error: "Network connection failed. Please check your internet connection.",
+        };
+      }
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : "Network error",

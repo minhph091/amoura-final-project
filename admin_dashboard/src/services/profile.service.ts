@@ -76,7 +76,7 @@ export class ProfileService {
   // Get profile by user ID
   async getProfile(userId: string): Promise<ApiResponse<Profile>> {
     try {
-      return await apiClient.get<Profile>(API_ENDPOINTS.PROFILES.GET(userId));
+      return await apiClient.get<Profile>(API_ENDPOINTS.PROFILE.BY_ID(userId));
     } catch (error) {
       return {
         success: false,
@@ -120,7 +120,7 @@ export class ProfileService {
   async getProfileOptions(): Promise<ApiResponse<ProfileOptions>> {
     try {
       return await apiClient.get<ProfileOptions>(
-        API_ENDPOINTS.PROFILES.OPTIONS
+        API_ENDPOINTS.PROFILE.OPTIONS
       );
     } catch (error) {
       return {

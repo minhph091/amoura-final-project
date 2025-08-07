@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTheme } from "next-themes"
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { useLanguage } from "@/src/contexts/LanguageContext"
 
 export function SettingsAppearance() {
   const { theme, setTheme } = useTheme()
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSave = () => {
@@ -21,8 +23,8 @@ export function SettingsAppearance() {
     setTimeout(() => {
       setIsLoading(false)
       toast({
-        title: "Appearance settings updated",
-        description: "Your appearance settings have been updated successfully.",
+        title: t.settingsUpdatedTitle,
+        description: t.appearanceSettingsUpdated,
       })
     }, 1000)
   }
@@ -30,12 +32,12 @@ export function SettingsAppearance() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Appearance Settings</CardTitle>
-        <CardDescription>Customize the look and feel of your admin dashboard</CardDescription>
+        <CardTitle>{t.appearanceSettingsTitle}</CardTitle>
+        <CardDescription>{t.customizeLookAndFeel}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Theme</h3>
+          <h3 className="text-lg font-medium">{t.theme}</h3>
 
           <RadioGroup defaultValue={theme || "light"} onValueChange={setTheme} className="grid grid-cols-3 gap-4">
             <div>
@@ -45,7 +47,7 @@ export function SettingsAppearance() {
                 className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary"
               >
                 <div className="mb-2 h-24 w-full rounded-md bg-[#fff] shadow-sm"></div>
-                <span className="text-center">Light</span>
+                <span className="text-center">{t.light}</span>
               </Label>
             </div>
 
@@ -56,7 +58,7 @@ export function SettingsAppearance() {
                 className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary"
               >
                 <div className="mb-2 h-24 w-full rounded-md bg-[#1e1e1e] shadow-sm"></div>
-                <span className="text-center">Dark</span>
+                <span className="text-center">{t.dark}</span>
               </Label>
             </div>
 
@@ -67,65 +69,65 @@ export function SettingsAppearance() {
                 className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary"
               >
                 <div className="mb-2 h-24 w-full rounded-md bg-gradient-to-r from-[#fff] to-[#1e1e1e] shadow-sm"></div>
-                <span className="text-center">System</span>
+                <span className="text-center">{t.system}</span>
               </Label>
             </div>
           </RadioGroup>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="font-size">Font Size</Label>
+          <Label htmlFor="font-size">{t.fontSize}</Label>
           <Select defaultValue="medium">
             <SelectTrigger id="font-size">
-              <SelectValue placeholder="Select font size" />
+              <SelectValue placeholder={t.selectFontSize} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="small">Small</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="large">Large</SelectItem>
+              <SelectItem value="small">{t.small}</SelectItem>
+              <SelectItem value="medium">{t.medium}</SelectItem>
+              <SelectItem value="large">{t.large}</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-sm text-muted-foreground">Adjust the font size throughout the admin interface</p>
+          <p className="text-sm text-muted-foreground">{t.adjustFontSize}</p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="density">Interface Density</Label>
+          <Label htmlFor="density">{t.interfaceDensity}</Label>
           <Select defaultValue="comfortable">
             <SelectTrigger id="density">
-              <SelectValue placeholder="Select interface density" />
+              <SelectValue placeholder={t.selectInterfaceDensity} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="compact">Compact</SelectItem>
-              <SelectItem value="comfortable">Comfortable</SelectItem>
-              <SelectItem value="spacious">Spacious</SelectItem>
+              <SelectItem value="compact">{t.compact}</SelectItem>
+              <SelectItem value="comfortable">{t.comfortable}</SelectItem>
+              <SelectItem value="spacious">{t.spacious}</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-sm text-muted-foreground">Adjust the spacing and density of UI elements</p>
+          <p className="text-sm text-muted-foreground">{t.adjustSpacingDensity}</p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="animations">Animations</Label>
+          <Label htmlFor="animations">{t.animations}</Label>
           <Select defaultValue="enabled">
             <SelectTrigger id="animations">
-              <SelectValue placeholder="Select animation preference" />
+              <SelectValue placeholder={t.selectAnimationPreference} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="enabled">Enabled</SelectItem>
-              <SelectItem value="reduced">Reduced</SelectItem>
-              <SelectItem value="disabled">Disabled</SelectItem>
+              <SelectItem value="enabled">{t.enabledAnimations}</SelectItem>
+              <SelectItem value="reduced">{t.reduced}</SelectItem>
+              <SelectItem value="disabled">{t.disabled}</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-sm text-muted-foreground">Control the level of animations throughout the interface</p>
+          <p className="text-sm text-muted-foreground">{t.controlAnimations}</p>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline">Reset to Defaults</Button>
+        <Button variant="cancel">{t.resetToDefaults}</Button>
         <div className="space-x-2">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/settings/appearance">Advanced Theme Customization</Link>
+          <Button variant="info" asChild>
+            <Link href="/dashboard/settings/appearance">{t.advancedThemeCustomization}</Link>
           </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Changes"}
+          <Button variant="save" onClick={handleSave} disabled={isLoading}>
+            {isLoading ? t.saving : t.saveChanges}
           </Button>
         </div>
       </CardFooter>

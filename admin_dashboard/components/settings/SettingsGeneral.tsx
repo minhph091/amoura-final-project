@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -21,110 +21,126 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { useLanguage } from "@/src/contexts/LanguageContext";
 
 export function SettingsGeneral() {
+  const { t, language, setLanguage } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(language);
+
+  // Sync with current language from context
+  useEffect(() => {
+    setSelectedLanguage(language);
+  }, [language]);
 
   const handleSave = () => {
     setIsLoading(true);
 
-    // Feature not available: No backend endpoint for admin to manage general settings.
+    // Apply language change if different from current
+    if (selectedLanguage !== language) {
+      setLanguage(selectedLanguage as "en" | "vi");
+      toast({
+        title: t.settingsUpdatedTitle,
+        description: `Language changed to ${selectedLanguage === "en" ? "English" : "Tiếng Việt"}`,
+      });
+    } else {
+      toast({
+        title: t.settingsUpdatedTitle,
+        description: t.settingsUpdatedDescription,
+      });
+    }
+
     setTimeout(() => {
       setIsLoading(false);
-      toast({
-        title: "Settings updated",
-        description: "Your general settings have been updated successfully.",
-      });
     }, 1000);
+  };
+
+  const handleLanguageChange = (value: string) => {
+    setSelectedLanguage(value);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>General Settings</CardTitle>
+        <CardTitle>{t.generalSettingsTab}</CardTitle>
         <CardDescription>
-          Manage your system-wide settings and preferences
+          {t.manageSystemSettings}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="system-name">System Name</Label>
-          <Input id="system-name" defaultValue="Amoura Admin Dashboard" />
+          <Label htmlFor="system-name">{t.systemNameField}</Label>
+          <Input id="system-name" defaultValue={t.amouraAdminDashboardTitle} />
           <p className="text-sm text-muted-foreground">
-            This name will be displayed throughout the admin interface
+            {t.thisNameDisplayed}
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="contact-email">Support Email</Label>
+          <Label htmlFor="contact-email">{t.supportEmailField}</Label>
           <Input
             id="contact-email"
             type="email"
-            defaultValue="support@amoura.space"
+            defaultValue={t.supportEmailDefault}
           />
           <p className="text-sm text-muted-foreground">
-            This email will be used for system notifications and user support
-            requests
+            {t.emailUsedForSystemNotifications}
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="timezone">Default Timezone</Label>
+          <Label htmlFor="timezone">{t.defaultTimezoneField}</Label>
           <Select defaultValue="utc">
             <SelectTrigger id="timezone">
-              <SelectValue placeholder="Select timezone" />
+              <SelectValue placeholder={t.selectTimezone} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="utc">
-                UTC (Coordinated Universal Time)
+                {t.utcCoordinatedUniversalTime}
               </SelectItem>
-              <SelectItem value="est">EST (Eastern Standard Time)</SelectItem>
-              <SelectItem value="cst">CST (Central Standard Time)</SelectItem>
-              <SelectItem value="mst">MST (Mountain Standard Time)</SelectItem>
-              <SelectItem value="pst">PST (Pacific Standard Time)</SelectItem>
+              <SelectItem value="est">{t.estTime}</SelectItem>
+              <SelectItem value="cst">{t.cstTime}</SelectItem>
+              <SelectItem value="mst">{t.mstTime}</SelectItem>
+              <SelectItem value="pst">{t.pstTime}</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-sm text-muted-foreground">
-            System-wide default timezone for displaying dates and times
+            {t.systemWideDefaultTimezone}
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="language">Default Language</Label>
-          <Select defaultValue="en">
+          <Label htmlFor="language">{t.defaultLanguageField}</Label>
+          <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
             <SelectTrigger id="language">
-              <SelectValue placeholder="Select language" />
+              <SelectValue placeholder={t.selectLanguage} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="es">Spanish</SelectItem>
-              <SelectItem value="fr">French</SelectItem>
-              <SelectItem value="de">German</SelectItem>
-              <SelectItem value="zh">Chinese</SelectItem>
+              <SelectItem value="en">{t.englishLanguage}</SelectItem>
+              <SelectItem value="vi">Tiếng Việt</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-sm text-muted-foreground">
-            System-wide default language
+            {t.systemWideDefaultLanguage}
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="maintenance-message">Maintenance Message</Label>
+          <Label htmlFor="maintenance-message">{t.maintenanceMessageField}</Label>
           <Textarea
             id="maintenance-message"
-            placeholder="Enter a message to display during maintenance mode"
-            defaultValue="We're currently performing scheduled maintenance. Please check back soon."
+            placeholder={t.maintenanceMessagePlaceholder}
+            defaultValue={t.currentlyPerformingMaintenance}
           />
           <p className="text-sm text-muted-foreground">
-            This message will be displayed to users when maintenance mode is
-            enabled
+            {t.messageDisplayedMaintenanceMode}
           </p>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline">Reset</Button>
-        <Button onClick={handleSave} disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Changes"}
+        <Button variant="cancel">{t.reset}</Button>
+        <Button variant="save" onClick={handleSave} disabled={isLoading}>
+          {isLoading ? t.savingText : t.saveChangesButton}
         </Button>
       </CardFooter>
     </Card>

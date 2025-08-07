@@ -2,6 +2,7 @@
 "use client"
 import { reportService } from "@/src/services/report.service";
 import { userService } from "@/src/services/user.service";
+import { useLanguage } from "@/src/contexts/LanguageContext";
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -46,6 +47,7 @@ interface Report {
 
 
 export function ReportManagement() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
@@ -181,7 +183,7 @@ export function ReportManagement() {
     if (reports.length === 0) {
       return (
         <div className="flex items-center justify-center h-40 bg-muted/10 rounded-lg">
-          <p className="text-muted-foreground">No data</p>
+          <p className="text-muted-foreground">{t.noDataAvailable}</p>
         </div>
       );
     }
@@ -193,12 +195,12 @@ export function ReportManagement() {
             {/* ...existing code for table head and body... */}
             <thead>
               <tr className="border-b bg-muted/40">
-                <th className="text-left py-4 px-4 font-bold text-base">Report ID</th>
-                <th className="text-left py-4 px-4 font-bold text-base">Reported User</th>
-                <th className="text-left py-4 px-4 font-bold text-base">Type</th>
-                <th className="text-left py-4 px-4 font-bold text-base">Status</th>
-                <th className="text-left py-4 px-4 font-bold text-base hidden md:table-cell">Date</th>
-                <th className="text-right py-4 px-4 font-bold text-base">Actions</th>
+                <th className="text-left py-4 px-4 font-bold text-base">{t.reportId}</th>
+                <th className="text-left py-4 px-4 font-bold text-base">{t.reportedUser}</th>
+                <th className="text-left py-4 px-4 font-bold text-base">{t.type}</th>
+                <th className="text-left py-4 px-4 font-bold text-base">{t.status}</th>
+                <th className="text-left py-4 px-4 font-bold text-base hidden md:table-cell">{t.date}</th>
+                <th className="text-right py-4 px-4 font-bold text-base">{t.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -248,23 +250,21 @@ export function ReportManagement() {
                   </td>
                   <td className="py-3 px-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleViewReport(report)}>
+                      <Button variant="view" size="icon" onClick={() => handleViewReport(report)}>
                         <Eye className="h-4 w-4" />
                       </Button>
                       {report.status === "pending" && (
                         <>
                           <Button
-                            variant="ghost"
+                            variant="success"
                             size="icon"
-                            className="text-green-500"
                             onClick={() => handleResolveReport(report)}
                           >
                             <CheckCircle className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="cancel"
                             size="icon"
-                            className="text-gray-500"
                             onClick={() => handleDismissReport(report)}
                           >
                             <XCircle className="h-4 w-4" />
@@ -278,17 +278,17 @@ export function ReportManagement() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewReport(report)}>View Details</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewReport(report)}>{t.viewDetails}</DropdownMenuItem>
                           {report.status === "pending" && (
                             <>
                               <DropdownMenuItem onClick={() => handleResolveReport(report)}>
-                                Mark as Resolved
+                                {t.markAsResolved}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleDismissReport(report)}>
-                                Dismiss Report
+                                {t.dismissReport}
                               </DropdownMenuItem>
                               <DropdownMenuItem className="text-destructive" onClick={() => handleSuspendUser(report)}>
-                                Suspend User
+                                {t.suspendUser}
                               </DropdownMenuItem>
                             </>
                           )}
@@ -307,6 +307,21 @@ export function ReportManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Alert about reports feature */}
+      <Card className="border-orange-200 bg-orange-50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+            <div>
+              <h4 className="font-medium text-orange-800">{t.reportManagement}</h4>
+              <p className="text-sm text-orange-700">
+                {t.featureComingSoon}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -314,7 +329,7 @@ export function ReportManagement() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search reports..."
+                placeholder={t.searchReports}
                 className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -325,17 +340,17 @@ export function ReportManagement() {
                 <SelectTrigger className="w-[180px]">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
-                    <SelectValue placeholder="Filter by status" />
+                    <SelectValue placeholder={t.filterByStatus} />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Reports</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="resolved">Resolved</SelectItem>
-                  <SelectItem value="dismissed">Dismissed</SelectItem>
+                  <SelectItem value="all">{t.allReports}</SelectItem>
+                  <SelectItem value="pending">{t.pending}</SelectItem>
+                  <SelectItem value="resolved">{t.resolved}</SelectItem>
+                  <SelectItem value="dismissed">{t.dismissed}</SelectItem>
                 </SelectContent>
               </Select>
-              <Button>Export</Button>
+              <Button>{t.export}</Button>
             </div>
           </div>
 
@@ -354,26 +369,26 @@ export function ReportManagement() {
           >
             <TabsList className="bg-muted/20 p-1">
               <TabsTrigger value="all" className="data-[state=active]:bg-background">
-                All Reports
+                {t.allReports}
                 <Badge className="ml-2 bg-primary">{filteredReports.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="pending" className="data-[state=active]:bg-background">
-                Pending
+                {t.pending}
                 <Badge className="ml-2 border-amber-500 text-amber-500 bg-transparent">{pendingReports.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="resolved" className="data-[state=active]:bg-background">
-                Resolved
+                {t.resolved}
                 <Badge className="ml-2 bg-green-500">{resolvedReports.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="dismissed" className="data-[state=active]:bg-background">
-                Dismissed
+                {t.dismissed}
                 <Badge className="ml-2 bg-secondary">{dismissedReports.length}</Badge>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="m-0 space-y-4">
               {loading ? (
-                <div className="py-10 text-center text-muted-foreground">Loading...</div>
+                <div className="py-10 text-center text-muted-foreground">{t.loadingText}</div>
               ) : (
                 renderReportsList(filteredReports)
               )}
@@ -381,7 +396,7 @@ export function ReportManagement() {
 
             <TabsContent value="pending" className="m-0 space-y-4">
               {loading ? (
-                <div className="py-10 text-center text-muted-foreground">Loading...</div>
+                <div className="py-10 text-center text-muted-foreground">{t.loadingText}</div>
               ) : (
                 renderReportsList(pendingReports)
               )}
@@ -389,7 +404,7 @@ export function ReportManagement() {
 
             <TabsContent value="resolved" className="m-0 space-y-4">
               {loading ? (
-                <div className="py-10 text-center text-muted-foreground">Loading...</div>
+                <div className="py-10 text-center text-muted-foreground">{t.loadingText}</div>
               ) : (
                 renderReportsList(resolvedReports)
               )}
@@ -397,7 +412,7 @@ export function ReportManagement() {
 
             <TabsContent value="dismissed" className="m-0 space-y-4">
               {loading ? (
-                <div className="py-10 text-center text-muted-foreground">Loading...</div>
+                <div className="py-10 text-center text-muted-foreground">{t.loadingText}</div>
               ) : (
                 renderReportsList(dismissedReports)
               )}
@@ -410,8 +425,8 @@ export function ReportManagement() {
       <Dialog open={reportDetailsOpen} onOpenChange={setReportDetailsOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Report Details</DialogTitle>
-            <DialogDescription>Detailed information about the selected report.</DialogDescription>
+            <DialogTitle>{t.reportDetails}</DialogTitle>
+            <DialogDescription>{t.reportDetailsDescription}</DialogDescription>
           </DialogHeader>
 
           {selectedReport && (
@@ -419,22 +434,22 @@ export function ReportManagement() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium">Report Information</h3>
+                    <h3 className="text-sm font-medium">{t.reportInformation}</h3>
                     <div className="mt-2 space-y-2 border rounded-lg p-4 bg-muted/10">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Report ID:</span>
+                        <span className="text-sm text-muted-foreground">{t.reportId}:</span>
                         <span className="text-sm font-medium">{selectedReport.id}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Type:</span>
+                        <span className="text-sm text-muted-foreground">{t.type}:</span>
                         <span className="text-sm font-medium">{selectedReport.type}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Date:</span>
+                        <span className="text-sm text-muted-foreground">{t.date}:</span>
                         <span className="text-sm font-medium">{selectedReport.date}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Status:</span>
+                        <span className="text-sm text-muted-foreground">{t.status}:</span>
                         <Badge
                           variant={
                             selectedReport.status === "pending"
@@ -456,7 +471,7 @@ export function ReportManagement() {
                       </div>
                       {selectedReport.assignedTo && (
                         <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Assigned To:</span>
+                          <span className="text-sm text-muted-foreground">{t.assignedTo}:</span>
                           <span className="text-sm font-medium">{selectedReport.assignedTo}</span>
                         </div>
                       )}
@@ -464,7 +479,7 @@ export function ReportManagement() {
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium">Reporter</h3>
+                    <h3 className="text-sm font-medium">{t.reporter}</h3>
                     <div className="mt-2 flex items-center gap-3 border rounded-lg p-4 bg-muted/10">
                       <Avatar>
                         <AvatarImage
@@ -483,7 +498,7 @@ export function ReportManagement() {
 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium">Reported User</h3>
+                    <h3 className="text-sm font-medium">{t.reportedUser}</h3>
                     <div className="mt-2 flex items-center gap-3 border rounded-lg p-4 bg-muted/10">
                       <Avatar>
                         <AvatarImage
@@ -498,13 +513,11 @@ export function ReportManagement() {
                       </div>
                     </div>
                   </div>
-
-
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium">Description</h3>
+                <h3 className="text-sm font-medium">{t.description}</h3>
                 <p className="mt-2 text-sm border rounded-md p-4 bg-muted/10">{selectedReport.description}</p>
               </div>
 
@@ -518,10 +531,10 @@ export function ReportManagement() {
                     }}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Mark as Resolved
+                    {t.markAsResolved}
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="cancel"
                     className="flex-1"
                     onClick={() => {
                       setReportDetailsOpen(false)
@@ -529,10 +542,10 @@ export function ReportManagement() {
                     }}
                   >
                     <XCircle className="h-4 w-4 mr-2" />
-                    Dismiss Report
+                    {t.dismissReport}
                   </Button>
                   <Button
-                    variant="destructive"
+                    variant="suspend"
                     className="flex-1"
                     onClick={() => {
                       setReportDetailsOpen(false)
@@ -540,7 +553,7 @@ export function ReportManagement() {
                     }}
                   >
                     <UserX className="h-4 w-4 mr-2" />
-                    Suspend User
+                    {t.suspendUser}
                   </Button>
                 </div>
               )}
@@ -549,7 +562,7 @@ export function ReportManagement() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setReportDetailsOpen(false)}>
-              Close
+              {t.close}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -559,9 +572,9 @@ export function ReportManagement() {
       <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Suspend User</DialogTitle>
+            <DialogTitle>{t.suspendUserTitle}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to suspend this user? They will not be able to access the platform until restored.
+              {t.suspendUserDescription}
             </DialogDescription>
           </DialogHeader>
 
@@ -584,36 +597,36 @@ export function ReportManagement() {
           <div className="space-y-4">
             <div>
               <label htmlFor="reason" className="text-sm font-medium">
-                Suspension Reason
+                {t.suspensionReason}
               </label>
               <Select defaultValue={selectedReport?.type.toLowerCase().replace(/\s+/g, "-") || "inappropriate"}>
                 <SelectTrigger id="reason">
-                  <SelectValue placeholder="Select a reason" />
+                  <SelectValue placeholder={t.selectAReason} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="inappropriate">Inappropriate Content</SelectItem>
-                  <SelectItem value="harassment">Harassment</SelectItem>
-                  <SelectItem value="fake-profile">Fake Profile</SelectItem>
-                  <SelectItem value="underage">Underage User</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="inappropriate">{t.inappropriateContent}</SelectItem>
+                  <SelectItem value="harassment">{t.harassment}</SelectItem>
+                  <SelectItem value="fake-profile">{t.fakeProfile}</SelectItem>
+                  <SelectItem value="underage">{t.underageUser}</SelectItem>
+                  <SelectItem value="other">{t.other}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <label htmlFor="duration" className="text-sm font-medium">
-                Suspension Duration
+                {t.suspensionDuration}
               </label>
               <Select defaultValue="7">
                 <SelectTrigger id="duration">
-                  <SelectValue placeholder="Select duration" />
+                  <SelectValue placeholder={t.selectDuration} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 Day</SelectItem>
-                  <SelectItem value="3">3 Days</SelectItem>
-                  <SelectItem value="7">7 Days</SelectItem>
-                  <SelectItem value="30">30 Days</SelectItem>
-                  <SelectItem value="permanent">Permanent</SelectItem>
+                  <SelectItem value="1">{t.oneDay}</SelectItem>
+                  <SelectItem value="3">{t.threeDays}</SelectItem>
+                  <SelectItem value="7">{t.sevenDays}</SelectItem>
+                  <SelectItem value="30">{t.thirtyDays}</SelectItem>
+                  <SelectItem value="permanent">{t.permanent}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -621,10 +634,10 @@ export function ReportManagement() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setSuspendDialogOpen(false)}>
-              Cancel
+              {t.cancel}
             </Button>
             <Button variant="destructive" onClick={confirmSuspend}>
-              Suspend User
+              {t.suspendUser}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -634,9 +647,9 @@ export function ReportManagement() {
       <Dialog open={resolveDialogOpen} onOpenChange={setResolveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Resolve Report</DialogTitle>
+            <DialogTitle>{t.resolveReportTitle}</DialogTitle>
             <DialogDescription>
-              Mark this report as resolved. This will close the report and notify the reporter.
+              {t.resolveReportDescription}
             </DialogDescription>
           </DialogHeader>
 
@@ -652,12 +665,12 @@ export function ReportManagement() {
                 </Avatar>
                 <div>
                   <p className="font-medium">{selectedReport.reported.name}</p>
-                  <p className="text-sm text-muted-foreground">Report ID: {selectedReport.id}</p>
+                  <p className="text-sm text-muted-foreground">{t.reportId}: {selectedReport.id}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">Report Type:</p>
+                <p className="text-sm font-medium">{t.reportType}:</p>
                 <p className="text-sm text-muted-foreground">{selectedReport.type}</p>
               </div>
             </div>
@@ -666,24 +679,24 @@ export function ReportManagement() {
           <div className="space-y-4">
             <div>
               <label htmlFor="resolution" className="text-sm font-medium">
-                Resolution Notes (Optional)
+                {t.resolutionNotes}
               </label>
-              <Input id="resolution" placeholder="Enter resolution details" />
+              <Input id="resolution" placeholder={t.enterResolutionDetails} />
             </div>
 
             <div className="flex items-center space-x-2">
               <input type="checkbox" id="notify" className="rounded" />
               <label htmlFor="notify" className="text-sm">
-                Notify reporter about resolution
+                {t.notifyReporter}
               </label>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setResolveDialogOpen(false)}>
-              Cancel
+              {t.cancel}
             </Button>
-            <Button onClick={confirmResolve}>Resolve Report</Button>
+            <Button onClick={confirmResolve}>{t.resolveReport}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -692,8 +705,8 @@ export function ReportManagement() {
       <Dialog open={dismissDialogOpen} onOpenChange={setDismissDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Dismiss Report</DialogTitle>
-            <DialogDescription>Dismiss this report as invalid or not requiring action.</DialogDescription>
+            <DialogTitle>{t.dismissReportTitle}</DialogTitle>
+            <DialogDescription>{t.dismissReportDescription}</DialogDescription>
           </DialogHeader>
 
           {selectedReport && (
@@ -708,12 +721,12 @@ export function ReportManagement() {
                 </Avatar>
                 <div>
                   <p className="font-medium">{selectedReport.reported.name}</p>
-                  <p className="text-sm text-muted-foreground">Report ID: {selectedReport.id}</p>
+                  <p className="text-sm text-muted-foreground">{t.reportId}: {selectedReport.id}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">Report Type:</p>
+                <p className="text-sm font-medium">{t.reportType}:</p>
                 <p className="text-sm text-muted-foreground">{selectedReport.type}</p>
               </div>
             </div>
@@ -722,36 +735,36 @@ export function ReportManagement() {
           <div className="space-y-4">
             <div>
               <label htmlFor="dismissReason" className="text-sm font-medium">
-                Reason for Dismissal
+                {t.reasonForDismissal}
               </label>
               <Select defaultValue="no-violation">
                 <SelectTrigger id="dismissReason">
-                  <SelectValue placeholder="Select a reason" />
+                  <SelectValue placeholder={t.selectAReason} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="no-violation">No Violation Found</SelectItem>
-                  <SelectItem value="insufficient">Insufficient Evidence</SelectItem>
-                  <SelectItem value="duplicate">Duplicate Report</SelectItem>
-                  <SelectItem value="misunderstanding">Misunderstanding</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="no-violation">{t.noViolationFound}</SelectItem>
+                  <SelectItem value="insufficient">{t.insufficientEvidence}</SelectItem>
+                  <SelectItem value="duplicate">{t.duplicateReport}</SelectItem>
+                  <SelectItem value="misunderstanding">{t.misunderstanding}</SelectItem>
+                  <SelectItem value="other">{t.other}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <label htmlFor="dismissNotes" className="text-sm font-medium">
-                Additional Notes (Optional)
+                {t.additionalNotes}
               </label>
-              <Input id="dismissNotes" placeholder="Enter additional details" />
+              <Input id="dismissNotes" placeholder={t.enterAdditionalDetails} />
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDismissDialogOpen(false)}>
-              Cancel
+              {t.cancel}
             </Button>
             <Button variant="secondary" onClick={confirmDismiss}>
-              Dismiss Report
+              {t.dismissReport}
             </Button>
           </DialogFooter>
         </DialogContent>

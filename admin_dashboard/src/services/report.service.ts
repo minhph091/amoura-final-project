@@ -31,15 +31,19 @@ export class ReportService {
       if (filters?.status) params.status = filters.status;
       if (filters?.page) params.page = filters.page;
       if (filters?.limit) params.limit = filters.limit;
+      
+      // Backend chưa implement /admin/reports endpoint
       const response = await apiClient.get<Report[]>(
         API_ENDPOINTS.ADMIN.REPORTS,
         params
       );
+      
       const page = filters?.page || 1;
       const limit = filters?.limit || 20;
-      const total = response.data ? response.data.length : 0;
-      const totalPages = Math.ceil(total / limit);
+      
       if (response.success && response.data) {
+        const total = response.data.length;
+        const totalPages = Math.ceil(total / limit);
         return {
           success: true,
           data: response.data,
@@ -53,9 +57,11 @@ export class ReportService {
           },
         };
       }
+      
+      // Backend trả về 404 - feature chưa implement
       return {
         success: false,
-        error: response.error || "Failed to fetch reports",
+        error: "Report management feature not available yet",
         data: [],
         pagination: {
           page,
@@ -71,8 +77,7 @@ export class ReportService {
       const limit = filters?.limit || 20;
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to fetch reports",
+        error: "Report management feature not available yet",
         data: [],
         pagination: {
           page,

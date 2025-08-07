@@ -47,6 +47,35 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+// Forgot password types
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface VerifyOtpRequest {
+  sessionToken: string;
+  otpCode: string;
+}
+
+export interface ResetPasswordRequest {
+  sessionToken: string;
+  newPassword: string;
+}
+
+export interface ForgotPasswordResponse {
+  sessionToken: string;
+  message: string;
+}
+
+export interface VerifyOtpResponse {
+  status: string;
+  message: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
 export interface UpdateProfileRequest {
   firstName?: string;
   lastName?: string;

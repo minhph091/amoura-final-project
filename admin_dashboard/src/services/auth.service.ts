@@ -4,6 +4,12 @@ import type {
   LoginRequest,
   LoginResponse,
   ChangePasswordRequest,
+  ForgotPasswordRequest,
+  VerifyOtpRequest,
+  ResetPasswordRequest,
+  ForgotPasswordResponse,
+  VerifyOtpResponse,
+  ResetPasswordResponse,
 } from "../types/auth.types";
 import type { ApiResponse } from "../types/common.types";
 
@@ -53,13 +59,9 @@ export class AuthService {
 
       // Nếu login thất bại, xóa sạch token, refresh_token, user_data
       this.clearAllAuthData();
-      if (response.error) {
-        console.error("Login failed:", response.error);
-      }
       return response;
     } catch (error) {
       this.clearAllAuthData();
-      console.error("Login exception:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Login failed",
@@ -110,7 +112,7 @@ export class AuthService {
       try {
         await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, refreshToken);
       } catch (error) {
-        console.warn("Logout API call failed:", error);
+        // Silent fail on logout API error
       }
     }
     this.clearAllAuthData();
@@ -120,6 +122,23 @@ export class AuthService {
     request: ChangePasswordRequest
   ): Promise<ApiResponse<void>> {
     return apiClient.post<void>(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, request);
+  }
+
+  // Forgot password methods
+  async requestPasswordReset(request: ForgotPasswordRequest): Promise<ApiResponse<ForgotPasswordResponse>> {
+    return apiClient.post<ForgotPasswordResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET_REQUEST, request);
+  }
+
+  async verifyPasswordResetOtp(request: VerifyOtpRequest): Promise<ApiResponse<VerifyOtpResponse>> {
+    return apiClient.post<VerifyOtpResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET_VERIFY_OTP, request);
+  }
+
+  async resetPassword(request: ResetPasswordRequest): Promise<ApiResponse<ResetPasswordResponse>> {
+    return apiClient.post<ResetPasswordResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET, request);
+  }
+
+  async resendPasswordResetOtp(sessionToken: string): Promise<ApiResponse<any>> {
+    return apiClient.post<any>(API_ENDPOINTS.AUTH.PASSWORD_RESET_RESEND_OTP, { sessionToken });
   }
 
   getCurrentUser() {

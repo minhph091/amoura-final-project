@@ -26,7 +26,20 @@ export const API_ENDPOINTS = {
   },
   ADMIN: {
     DASHBOARD: "/admin/dashboard",
+    USERS: "/admin/users",
+    USER_BY_ID: (id: string) => `/admin/users/${id}`,
+    USER_SEARCH: "/admin/users/search",
+    UPDATE_USER_STATUS: (id: string) => `/admin/users/${id}/status`,
     MODERATORS: "/admin/moderators",
+    REPORTS: "/admin/reports",
+    STATS: "/admin/stats",
+    SUBSCRIPTIONS: "/admin/subscriptions",
+  },
+  MODERATION: {
+    USERS: "/moderation/users",
+    USER_BY_ID: (id: string) => `/moderation/users/${id}`,
+    USER_SEARCH: "/moderation/users/search",
+    UPDATE_USER_STATUS: (id: string) => `/moderation/users/${id}/status`,
   },
   PROFILE: {
     ME: "/profiles/me",
@@ -55,6 +68,7 @@ export const API_ENDPOINTS = {
     UPLOAD_IMAGE: "/chat/upload-image",
     MESSAGE_RECALL: (id: string) => `/chat/messages/${id}/recall`,
     MESSAGE_DELETE_FOR_ME: (id: string) => `/chat/messages/${id}/delete-for-me`,
+    DELETE_MESSAGE: (id: string) => `/chat/messages/${id}/delete`,
     DELETE_IMAGE: "/chat/delete-image",
   },
   NOTIFICATIONS: {

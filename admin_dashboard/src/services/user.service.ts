@@ -1,28 +1,40 @@
 import { apiClient } from "./api.service";
 import { API_ENDPOINTS } from "../constants/api.constants";
+import { adminService } from "./admin.service";
 import type { ApiResponse } from "../types/common.types";
 import type { User } from "../types/user.types";
+import type { UserManagementData, CursorPaginationResponse, UserStatusUpdateRequest } from "./admin.service";
 
 export class UserService {
-  async getUsers(filters?: any): Promise<ApiResponse<User[]>> {
-    try {
-      // Sử dụng endpoint thật từ backend: /users (GET all users)
-      let endpoint = "/user/all";
-      let params = "";
-      if (filters) {
-        const query = Object.entries(filters)
-          .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-          .join("&");
-        if (query) params = `?${query}`;
-      }
-      return await apiClient.get<User[]>(`${endpoint}${params}`);
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch users",
-      };
-    }
+  // Admin endpoints - lấy danh sách users cho admin
+  async getUsers(params?: {
+    cursor?: number;
+    limit?: number;
+    direction?: "NEXT" | "PREVIOUS";
+  }): Promise<ApiResponse<CursorPaginationResponse<UserManagementData>>> {
+    return await adminService.getUsers(params);
   }
+
+  async searchUsers(searchTerm: string, params?: {
+    cursor?: number;
+    limit?: number;
+    direction?: "NEXT" | "PREVIOUS";
+  }): Promise<ApiResponse<CursorPaginationResponse<UserManagementData>>> {
+    return await adminService.searchUsers(searchTerm, params);
+  }
+
+  async getUserById(userId: string): Promise<ApiResponse<UserManagementData>> {
+    return await adminService.getUserById(userId);
+  }
+
+  async updateUserStatus(
+    userId: string,
+    request: UserStatusUpdateRequest
+  ): Promise<ApiResponse<any>> {
+    return await adminService.updateUserStatus(userId, request);
+  }
+
+  // Current user endpoints
   async getCurrentUser(): Promise<ApiResponse<User>> {
     try {
       return await apiClient.get<User>(API_ENDPOINTS.USER.GET);
@@ -45,10 +57,15 @@ export class UserService {
     }
   }
 
+  // Legacy method - deprecated
   async suspendUser(id: string): Promise<ApiResponse<any>> {
     try {
-      // Assuming the backend endpoint is PATCH /users/:id/suspend
-      return await apiClient.patch(`/users/${id}/suspend`);
+      // Use new admin service instead
+      return await this.updateUserStatus(id, {
+        status: "SUSPEND",
+        reason: "Suspended by admin",
+        suspensionDays: 7
+      });
     } catch (error) {
       return {
         success: false,

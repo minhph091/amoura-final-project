@@ -17,13 +17,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/src/contexts/LanguageContext";
+import { statsService } from "@/src/services/stats.service";
+import { formatTimeAgo, getStatusColor as getStatusColorUtil, extractUserFromActivity } from "@/src/utils/dashboard.utils";
 
 import { useEffect, useState } from "react";
 
-import { statsService } from "@/src/services/stats.service";
-
 
 export default function RecentUsers() {
+  const { t } = useLanguage();
   const [visibleUsers, setVisibleUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,13 +36,31 @@ export default function RecentUsers() {
       setError(null);
       try {
         const response = await statsService.getDashboard();
-        // Lấy các hoạt động đăng ký user gần đây
-        const activities = response.recentActivities || [];
-        // Lọc các hoạt động đăng ký user
-        const recentUserActivities = activities.filter((a: any) => a.activityType === "USER_REGISTRATION");
-        setVisibleUsers(recentUserActivities.slice(0, 10));
+        // Lấy các hoạt động gần đây và chuyển đổi thành định dạng hiển thị
+        const activities = response?.recentActivities || [];
+        
+        // Convert activities to user-friendly display format
+        const userActivities = activities
+          .map((activity: any, index: number) => {
+            const userInfo = extractUserFromActivity(activity.description, activity.activityType);
+            return {
+              id: index,
+              userName: userInfo.name,
+              userEmail: userInfo.email,
+              userPhotoUrl: null,
+              userStatus: userInfo.status,
+              timestamp: activity.timestamp,
+              location: "Vietnam", // Default location since backend doesn't provide
+              activityType: activity.activityType,
+              description: activity.description
+            };
+          })
+          .slice(0, 10);
+
+        setVisibleUsers(userActivities);
       } catch (err: any) {
-        setError(err.message || "Unknown error");
+        setVisibleUsers([]);
+        setError("Failed to load activities");
       } finally {
         setLoading(false);
       }
@@ -48,119 +68,102 @@ export default function RecentUsers() {
     fetchRecentUsers();
   }, []);
 
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Users</CardTitle>
-          <CardDescription>Latest user registrations</CardDescription>
-        </CardHeader>
-        <CardContent className="h-40 flex items-center justify-center">
-          Loading users...
-        </CardContent>
-      </Card>
-    );
-  }
+  if (loading) return <Card><CardContent>{t.loadingText}</CardContent></Card>;
+  if (error) return <Card><CardContent className="text-red-500">Error: {error}</CardContent></Card>;
 
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Users</CardTitle>
-        </CardHeader>
-        <CardContent className="h-40 flex items-center justify-center text-red-500">
-          Error: {error}
-        </CardContent>
-      </Card>
-    );
-  }
+  const getStatusColor = (status: string) => {
+    return getStatusColorUtil(status);
+  };
+
+  const formatDate = (dateString: string) => {
+    return formatTimeAgo(dateString);
+  };
+
+  const formatLocation = (location: string) => {
+    if (!location) return t.unknown;
+    const parts = location.split(", ");
+    return parts.length > 1 ? `${parts[0]}, ${parts[parts.length - 1]}` : location;
+  };
 
   return (
-    <Card className="card-hover">
-      <CardHeader>
-        <CardTitle>Recent Users</CardTitle>
-        <CardDescription>Latest user registrations</CardDescription>
+    <Card className="col-span-3">
+      <CardHeader className="pb-6">
+        <CardTitle className="text-xl font-semibold">{t.recentActivities}</CardTitle>
+        <CardDescription>
+          {t.latestSystemActivities}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="text-left py-4 px-4 font-bold text-base">
-                  User
-                </th>
-                <th className="text-left py-4 px-4 font-bold text-base">
-                  Status
-                </th>
-                <th className="text-left py-4 px-4 font-bold text-base hidden md:table-cell">
-                  Join Date
-                </th>
-                <th className="text-left py-4 px-4 font-bold text-base hidden lg:table-cell">
-                  Location
-                </th>
-                <th className="text-right py-4 px-4 font-bold text-base">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleUsers.length > 0 ? (
-                visibleUsers.map((activity) => (
-                  <tr key={activity.userId + activity.timestamp} className="border-b animate-fade-in">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage
-                            src={"/placeholder.svg"}
-                            alt={activity.username || "User"}
-                          />
-                          <AvatarFallback>
-                            {activity.username ? activity.username[0] : "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">
-                            {activity.username || "Unknown"}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            User ID: {activity.userId ?? "-"}
-                          </div>
-                        </div>
+      <CardContent className="space-y-0">
+        <div className="rounded-md border">
+          <div className="grid grid-cols-5 gap-4 p-4 font-medium text-muted-foreground bg-muted/50 border-b text-sm">
+            <div>{t.userActivity}</div>
+            <div>{t.status}</div>
+            <div>{t.date}</div>
+            <div>{t.location}</div>
+            <div>{t.actions}</div>
+          </div>
+          <div className="divide-y divide-border">
+            {visibleUsers.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                {t.noDataAvailable}
+              </div>
+            ) : (
+              visibleUsers.map((activity: any, index: number) => (
+                <div key={index} className="grid grid-cols-5 gap-4 p-4 items-center hover:bg-muted/25 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={activity?.userPhotoUrl || "/placeholder-user.jpg"}
+                        alt={activity?.userName || "User"}
+                      />
+                      <AvatarFallback className="text-xs">
+                        {activity?.userName
+                          ? activity.userName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+                          : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium text-sm">
+                        {activity?.userName || t.unknownUser}
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge className="bg-green-500 text-white">New</Badge>
-                    </td>
-                    <td className="py-3 px-4 hidden md:table-cell">
-                      {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : "-"}
-                    </td>
-                    <td className="py-3 px-4 hidden lg:table-cell">-</td>
-                    <td className="py-3 px-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button className="btn-ghost btn-icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="py-10 text-center text-muted-foreground"
-                  >
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                      <div className="text-xs text-muted-foreground">
+                        {activity?.userEmail || t.unknownEmail}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <Badge
+                      variant="outline"
+                      className={`text-xs font-medium ${getStatusColor(activity?.userStatus || "active")}`}
+                    >
+                      {activity?.userStatus || t.active}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatDate(activity?.timestamp || '')}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatLocation(activity?.location || t.unknown)}
+                  </div>
+                  <div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>{t.viewDetails}</DropdownMenuItem>
+                        <DropdownMenuItem>{t.sendMessage}</DropdownMenuItem>
+                        <DropdownMenuItem>{t.viewProfile}</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

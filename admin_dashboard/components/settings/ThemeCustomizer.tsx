@@ -229,7 +229,7 @@ export function ThemeCustomizer() {
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button
-          variant="outline"
+          variant="cancel"
           onClick={() => {
             setPrimaryColor("#e11d48")
             document.documentElement.style.fontSize = "16px"
