@@ -1,22 +1,11 @@
 // lib/presentation/discovery/discovery_view.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../app/di/injection.dart';
+import '../../config/language/app_localizations.dart';
 import '../shared/widgets/app_gradient_background.dart';
-import 'widgets/action_buttons.dart';
-import 'widgets/filter/filter_dialog.dart';
-import 'widgets/swipeable_card.dart';
-import 'widgets/smooth_transition_wrapper.dart';
 import 'discovery_viewmodel.dart';
-import '../../infrastructure/services/subscription_service.dart';
-import '../../infrastructure/services/rewind_service.dart';
-import '../../core/services/match_service.dart';
-import '../../core/services/profile_service.dart';
-import 'discovery_recommendation_cache.dart';
-import '../../infrastructure/services/app_initialization_service.dart';
-import '../../infrastructure/services/app_startup_service.dart';
-import '../../infrastructure/services/profile_transition_manager.dart';
+import 'widgets/simple_swipeable_card.dart';
+import 'widgets/discovery_header.dart';
 
 class DiscoveryView extends StatefulWidget {
   const DiscoveryView({super.key});
@@ -25,233 +14,288 @@ class DiscoveryView extends StatefulWidget {
   State<DiscoveryView> createState() => _DiscoveryViewState();
 }
 
-class _DiscoveryViewState extends State<DiscoveryView> {
+class _DiscoveryViewState extends State<DiscoveryView> with TickerProviderStateMixin {
   late DiscoveryViewModel _viewModel;
-  bool _highlightLike = false;
-  bool _highlightPass = false;
-  bool _lastSwipeWasLike = false; // Track hướng vuốt cuối cùng
+  late AnimationController _buttonAnimationController;
+  bool _isLikeHighlighted = false;
+  bool _isPassHighlighted = false;
+  double _currentSwipeOffset = 0.0; // Track swipe progress
 
   @override
   void initState() {
     super.initState();
-    _viewModel = DiscoveryViewModel(
-      rewindService: getIt<RewindService>(),
-      matchService: getIt<MatchService>(),
-      profileService: getIt<ProfileService>(),
+    _viewModel = DiscoveryViewModel();
+    _buttonAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
     );
     
-    // Load recommendations when screen is created
-    _viewModel.loadRecommendations();
-    
-    // Set context cho ViewModel
+    // Initialize discovery data
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _viewModel.setContext(context);
-      }
+      _viewModel.initialize();
     });
   }
 
   @override
   void dispose() {
-    // Clear context khi widget bị dispose
-    _viewModel.setContext(null);
+    _buttonAnimationController.dispose();
+    _viewModel.dispose();
     super.dispose();
-  }
-
-  void _setHighlightLike(bool value) {
-    if (_highlightLike != value) {
-      setState(() {
-        _highlightLike = value;
-        _lastSwipeWasLike = value;
-      });
-    }
-  }
-  
-  void _setHighlightPass(bool value) {
-    if (_highlightPass != value) {
-      setState(() {
-        _highlightPass = value;
-        _lastSwipeWasLike = !value;
-      });
-    }
-  }
-
-  void _onSwiped() {
-    // Gọi like/dislike dựa trên hướng vuốt
-    if (_lastSwipeWasLike) {
-      _viewModel.likeCurrentProfile();
-    } else {
-      _viewModel.dislikeCurrentProfile();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: _viewModel),
-        ChangeNotifierProvider.value(value: getIt<SubscriptionService>()),
-        ChangeNotifierProvider.value(value: getIt<RewindService>()),
-      ],
-      child: Consumer<DiscoveryViewModel>(
-        builder: (context, vm, _) {
-          // Set context for ViewModel to show dialogs
-          vm.setContext(context);
-
-          return AppGradientBackground(
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              body: SafeArea(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 18),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Amoura',
-                            style: GoogleFonts.pacifico(
-                              fontSize: 28,
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AppGradientBackground(
+        child: ChangeNotifierProvider<DiscoveryViewModel>.value(
+          value: _viewModel,
+          child: Consumer<DiscoveryViewModel>(
+            builder: (context, viewModel, child) {
+              return Column(
+                children: [
+                  // Header with logo and filters
+                  const DiscoveryHeader(),
+                  
+                  // Main content area - full size profile cards
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // Full size cards area
+                        _buildCardsArea(viewModel),
+                        
+                        // Beautiful action buttons - đè lên profile như ảnh mẫu
+                        Positioned(
+                          bottom: 20, // Giảm về 20 để buttons đè lên profile
+                          left: 0,
+                          right: 0,
+                          child: _buildBeautifulActionButtons(viewModel),
+                        ),
+                        
+                        // Loading overlay
+                        if (viewModel.isLoading && !viewModel.hasProfiles)
+                          Container(
+                            color: Colors.black.withOpacity(0.3),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
                             ),
                           ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.filter_alt_outlined,
-                              size: 28,
-                              color: theme.colorScheme.primary,
-                            ),
-                            tooltip: 'Filter',
-                            onPressed: () => showFilterDialog(context),
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: _buildContent(context, vm),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 20.0),
-                              child: ActionButtonsRow(
-                                highlightLike: _highlightLike,
-                                highlightPass: _highlightPass,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, DiscoveryViewModel vm) {
-    if (vm.isLoading || !vm.isPrecacheDone) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (vm.error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Error: ${vm.error}',
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => vm.loadRecommendations(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (vm.recommendations.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('No profiles available'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => vm.loadRecommendations(),
-              child: const Text('Load Recommendations'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final currentProfile = vm.currentProfile;
-    if (currentProfile == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('No more profiles'),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 18),
-                textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  Widget _buildCardsArea(DiscoveryViewModel viewModel) {
+    if (!viewModel.hasProfiles) {
+      if (viewModel.isLoading) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      } else {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.favorite_outline,
+                size: 64,
+                color: Colors.grey,
               ),
-              onPressed: () => vm.loadRecommendations(forceRefresh: true),
-              child: const Text('Reload Data'),
-            ),
-          ],
-        ),
-      );
+              const SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context).translate('no_more_profiles'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => viewModel.refresh(),
+                child: Text(AppLocalizations.of(context).translate('refresh')),
+              ),
+            ],
+          ),
+        );
+      }
     }
 
-    // Lấy next profile cho peek effect
-    final nextProfileIndex = vm.currentProfileIndex + 1;
-    final nextProfile = nextProfileIndex < vm.recommendations.length 
-        ? vm.recommendations[nextProfileIndex] 
-        : null;
-    final nextDistance = nextProfile != null 
-        ? vm.getDistanceToProfile(nextProfile) 
-        : null;
+    // Full size profile card - kéo xuống chiếm 1/2 buttons
+    return MediaQuery.removePadding(
+      context: context,
+      removeLeft: true,
+      removeRight: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 45), // Giảm từ 90 xuống 45 để chiếm 1/2 buttons
+        child: SimpleSwipeableCard(
+          currentProfile: viewModel.currentProfile!,
+          currentInterests: viewModel.getCurrentInterests(),
+          currentDistance: viewModel.getCurrentDistance(),
+          nextProfile: viewModel.nextProfile,
+          nextInterests: viewModel.getNextInterests(),
+          nextDistance: viewModel.getNextDistance(),
+          onSwiped: viewModel.onSwipeComplete,
+          onSwipeDirection: _onSwipeDirection, // Add callback for button highlighting
+          onSwipeProgress: _onSwipeProgress, // Track swipe progress
+          onSwipeReset: _onSwipeReset, // Reset when swipe is cancelled
+        ),
+      ),
+    );
+  }
+  
+  void _onSwipeDirection(bool isLike) {
+    // Chỉ set highlight, không tự động reset
+    if (mounted) {
+      setState(() {
+        if (isLike) {
+          _isLikeHighlighted = true;
+          _isPassHighlighted = false;
+        } else {
+          _isLikeHighlighted = false;
+          _isPassHighlighted = true;
+        }
+      });
+    }
+  }
+  
+  void _onSwipeProgress(double offset) {
+    // Update swipe progress for smooth highlighting
+    if (mounted) {
+      setState(() {
+        _currentSwipeOffset = offset;
+        if (offset.abs() > 50) { // Threshold để bắt đầu highlight
+          if (offset > 0) {
+            _isLikeHighlighted = true;
+            _isPassHighlighted = false;
+          } else {
+            _isLikeHighlighted = false;
+            _isPassHighlighted = true;
+          }
+        } else {
+          _isLikeHighlighted = false;
+          _isPassHighlighted = false;
+        }
+      });
+    }
+  }
+  
+  void _onSwipeReset() {
+    // Reset highlights when swipe is cancelled
+    if (mounted) {
+      setState(() {
+        _isLikeHighlighted = false;
+        _isPassHighlighted = false;
+        _currentSwipeOffset = 0.0;
+      });
+    }
+  }
+  
+  Widget _buildBeautifulActionButtons(DiscoveryViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20), // Giảm padding để card full width hơn
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Rewind button
+          _buildAnimatedActionButton(
+            onTap: () {
+              _viewModel.rewindToPreviousProfile();
+            },
+            icon: Icons.refresh,
+            backgroundColor: Colors.yellow[600]!,
+            size: 50,
+          ),
+          
+          // Pass/Dislike button
+          _buildAnimatedActionButton(
+            onTap: () => viewModel.passCurrentProfile(),
+            icon: Icons.close,
+            backgroundColor: Colors.red[500]!,
+            size: 60,
+            isHighlighted: _isPassHighlighted, // Add highlighting
+          ),
+          
+          // Like button
+          _buildAnimatedActionButton(
+            onTap: () => viewModel.likeCurrentProfile(),
+            icon: Icons.favorite,
+            backgroundColor: Colors.pink[500]!,
+            size: 60,
+            isHighlighted: _isLikeHighlighted, // Add highlighting
+          ),
+          
+          // Star/Super like button
+          _buildAnimatedActionButton(
+            onTap: () {
+              // TODO: Implement super like logic
+              print('Super like tapped');
+            },
+            icon: Icons.star,
+            backgroundColor: Colors.blue[500]!,
+            size: 50,
+          ),
+        ],
+      ),
+    );
+  }
 
-    // Set next profile cho ProfileTransitionManager
-    ProfileTransitionManager.instance.setNextProfile(nextProfile);
-
-    // Sử dụng RepaintBoundary để tối ưu performance
-    return RepaintBoundary(
-      child: SmoothTransitionWrapper(
-        key: ValueKey('smooth_transition_${currentProfile.userId}_${currentProfile.photos.map((p) => p.id).join('_')}'),
-        currentProfile: currentProfile,
-        currentInterests: currentProfile.interests,
-        currentDistance: vm.getDistanceToProfile(currentProfile),
-        nextProfile: nextProfile,
-        nextInterests: nextProfile?.interests,
-        nextDistance: nextDistance,
-        onHighlightLike: _setHighlightLike,
-        onHighlightPass: _setHighlightPass,
-        onSwiped: _onSwiped,
+  Widget _buildAnimatedActionButton({
+    required VoidCallback onTap,
+    required IconData icon,
+    required Color backgroundColor,
+    required double size,
+    bool isHighlighted = false, // Add highlighting parameter
+  }) {
+    final highlightedSize = size * 1.7; // Scale 1.7 khi highlighted
+    final currentSize = isHighlighted ? highlightedSize : size;
+    
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      child: GestureDetector(
+        onTapDown: (_) {
+          // Scale down effect on press
+        },
+        onTapUp: (_) {
+          onTap();
+        },
+        onTapCancel: () {
+          // Reset scale if tap is cancelled
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: currentSize,
+          height: currentSize,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: backgroundColor.withOpacity(0.4),
+                blurRadius: isHighlighted ? 20 : 12, // Blur lớn hơn khi highlighted
+                offset: const Offset(0, 4),
+                spreadRadius: isHighlighted ? 4 : 0, // Spread khi highlighted
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: currentSize * 0.4, // Sử dụng currentSize để icon cũng scale theo
+          ),
+        ),
       ),
     );
   }

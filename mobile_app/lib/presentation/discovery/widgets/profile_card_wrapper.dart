@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/match/user_recommendation_model.dart';
 import '../../../data/models/profile/interest_model.dart';
-import '../../../infrastructure/services/cache_cleanup_service.dart';
 import 'profile_card.dart';
 
 class ProfileCardWrapper extends StatefulWidget {

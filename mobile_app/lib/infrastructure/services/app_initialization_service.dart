@@ -5,7 +5,7 @@ import '../../core/services/profile_service.dart';
 import '../../core/services/match_service.dart';
 import '../../core/services/chat_service.dart';
 import '../../infrastructure/socket/socket_client.dart';
-import '../../presentation/discovery/discovery_recommendation_cache.dart';
+import 'profile_buffer_service.dart';
 import '../../data/models/match/user_recommendation_model.dart';
 import 'image_precache_service.dart';
 
@@ -31,6 +31,7 @@ class AppInitializationService {
     }
 
     _isInitializing = true;
+    print('AppInitializationService: Bắt đầu khởi tạo app data...');
 
     try {
       // 1. Load current user profile để lấy user ID và location
@@ -41,14 +42,16 @@ class AppInitializationService {
         await _initializeWebSocketConnection();
       }
       
-      // 3. Load recommendations và precache ảnh
+      // 3. Khởi tạo ProfileBufferService
       // Kiểm tra xem context còn valid không
       if (context.mounted) {
-        await _loadAndPrecacheRecommendations(context);
+        await ProfileBufferService.instance.initialize();
       }
       
       _isInitialized = true;
+      print('AppInitializationService: Khởi tạo hoàn tất');
     } catch (e) {
+      print('AppInitializationService: Lỗi khởi tạo - $e');
       // Không throw error để không block việc vào app
     } finally {
       _isInitializing = false;
@@ -64,38 +67,12 @@ class AppInitializationService {
       // Extract current user ID
       if (profileData['userId'] != null) {
         _currentUserId = profileData['userId'] as int;
-        RecommendationCache.instance.setCurrentUserId(_currentUserId);
+        ProfileBufferService.instance.setCurrentUserId(_currentUserId);
+        print('AppInitializationService: Set current user ID = $_currentUserId');
       }
     } catch (e) {
+      print('AppInitializationService: Lỗi load current user - $e');
       // Không throw error để không block việc vào app
-    }
-  }
-
-  /// Load recommendations và precache ảnh cho các profile đầu tiên
-  Future<void> _loadAndPrecacheRecommendations(BuildContext context) async {
-    try {
-      final matchService = GetIt.I<MatchService>();
-      final recommendations = await matchService.getRecommendations();
-      
-      // Filter out current user và cache recommendations
-      final filteredRecommendations = _filterOutCurrentUser(recommendations);
-      RecommendationCache.instance.setRecommendations(filteredRecommendations);
-      
-      // Precache ảnh cho 10 profile đầu tiên thay vì 3 để đảm bảo smooth experience
-      if (filteredRecommendations.isNotEmpty) {
-        await _precacheInitialProfiles(filteredRecommendations, context);
-      }
-    } catch (e) {
-      // Không throw error để không block việc vào app
-    }
-  }
-
-  /// Precache ảnh cho các profile đầu tiên với logic thông minh
-  Future<void> _precacheInitialProfiles(List<UserRecommendationModel> profiles, BuildContext context) async {
-    try {
-      // Sử dụng logic precache thông minh mới
-      await ImagePrecacheService.instance.precacheForDiscovery(profiles, context);
-    } catch (e) {
     }
   }
 
@@ -111,6 +88,7 @@ class AppInitializationService {
       await socketClient.connect(_currentUserId.toString());
       
     } catch (e) {
+      print('AppInitializationService: Lỗi WebSocket - $e');
       // Không throw error để không block việc vào app
     }
   }
@@ -131,7 +109,7 @@ class AppInitializationService {
     _isInitialized = false;
     _isInitializing = false;
     _currentUserId = null;
-    RecommendationCache.instance.clear();
+    ProfileBufferService.instance.clear();
     ImagePrecacheService.instance.clearCache();
     
     // Disconnect WebSocket khi logout
@@ -139,30 +117,9 @@ class AppInitializationService {
       final socketClient = GetIt.I<SocketClient>();
       socketClient.disconnect();
     } catch (e) {
+      print('AppInitializationService: Lỗi disconnect WebSocket - $e');
     }
     
-  }
-
-  /// Get initialization status
-  Map<String, dynamic> getStatus() {
-    return {
-      'isInitialized': _isInitialized,
-      'isInitializing': _isInitializing,
-      'currentUserId': _currentUserId,
-      'cacheStatus': ImagePrecacheService.instance.getCacheStats(),
-    };
-  }
-
-  /// Check if app is ready for use
-  bool get isReady => _isInitialized && !_isInitializing;
-
-  /// Debug method to check initialization status
-  void debugStatus() {
-    final cacheStatus = ImagePrecacheService.instance.getCacheStats();
-    print('AppInitializationService Status:');
-    print('  - isInitialized: $_isInitialized');
-    print('  - isInitializing: $_isInitializing');
-    print('  - currentUserId: $_currentUserId');
-    print('  - cacheStatus: $cacheStatus');
+    print('AppInitializationService: Reset hoàn tất');
   }
 }

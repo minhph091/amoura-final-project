@@ -33,7 +33,7 @@ class MainNavigatorView extends StatelessWidget {
               ],
             ),
             bottomNavigationBar: Container(
-              margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+              margin: const EdgeInsets.fromLTRB(0, 0, 0, 30), // Bỏ margin trái/phải để discovery full width
               height: 90,
               child: AnimatedGradientBackground(
                 child: Row(

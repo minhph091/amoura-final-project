@@ -4,7 +4,7 @@ import 'package:get_it/get_it.dart';
 import '../../core/services/auth_service.dart';
 import 'app_initialization_service.dart';
 import 'image_precache_service.dart';
-import '../../presentation/discovery/discovery_recommendation_cache.dart';
+import 'profile_buffer_service.dart';
 
 /// Service để quản lý việc khởi tạo app một cách tổng thể
 /// Đảm bảo tất cả dữ liệu cần thiết được chuẩn bị trước khi user vào main navigator
@@ -102,7 +102,7 @@ class AppStartupService {
   double _calculateCacheHitRate() {
     final cacheStats = ImagePrecacheService.instance.getCacheStats();
     final precachedProfiles = cacheStats['precachedProfiles'] as int? ?? 0;
-    final totalProfiles = RecommendationCache.instance.recommendations?.length ?? 0;
+    final totalProfiles = ProfileBufferService.instance.profiles.length;
     
     if (totalProfiles == 0) return 0.0;
     return (precachedProfiles / totalProfiles).clamp(0.0, 1.0);

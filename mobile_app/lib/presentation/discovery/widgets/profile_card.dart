@@ -13,7 +13,7 @@ import 'profile_detail_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import '../../profile/view/profile_viewmodel.dart';
 import '../../../config/language/app_localizations.dart';
-import 'profile_detail_page.dart'; // Added import for ProfileDetailPage
+import 'profile_detail_page.dart';
 
 // Đổi từ StatelessWidget sang StatefulWidget để tối ưu performance
 class ProfileCard extends StatefulWidget {
@@ -142,7 +142,7 @@ class _ProfileCardState extends State<ProfileCard> {
             controller: imageController,
             uniqueKey: uniqueKey,
           ),
-          // Overlay user info at the bottom with backdrop blur
+          // Overlay user info - thêm lại blur nhẹ để tránh loading khi click ảnh
           Positioned(
             left: 0,
             right: 0,
@@ -153,7 +153,7 @@ class _ProfileCardState extends State<ProfileCard> {
                 bottomRight: Radius.circular(20),
               ),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3), // Blur nhẹ hơn để tránh loading
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                   decoration: BoxDecoration(
@@ -172,9 +172,9 @@ class _ProfileCardState extends State<ProfileCard> {
                     ),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -325,8 +325,8 @@ class _ProfileCardState extends State<ProfileCard> {
                             ),
                           ],
                         ),
-                      // Add padding at the bottom to push content up
-                      const SizedBox(height: 90),
+                      // Giảm padding bottom để thông tin ở thấp hơn như ảnh mẫu
+                      const SizedBox(height: 60), // Giảm từ 90 xuống 60
                     ],
                   ),
                 ),

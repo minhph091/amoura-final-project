@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/models/profile/interest_model.dart';
 import '../../../data/models/match/user_recommendation_model.dart';
-import '../../../infrastructure/services/cache_cleanup_service.dart';
-import '../../../infrastructure/services/profile_transition_manager.dart';
 import 'profile_card.dart';
 import 'profile_card_wrapper.dart';
 
@@ -73,9 +71,6 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
     final isNewProfile = widget.currentProfile.userId != oldWidget.currentProfile.userId;
     
     if (isNewProfile) {
-      // Kết thúc transition cho profile cũ
-      ProfileTransitionManager.instance.endTransition(widget.currentProfile);
-      
       // Reset position và animation
       _resetPosition();
       
@@ -110,8 +105,8 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
     
     _isDragging = true;
     
-    // Bắt đầu transition ngay khi bắt đầu vuốt
-    ProfileTransitionManager.instance.startTransition(widget.currentProfile);
+    // KHÔNG bắt đầu transition ngay khi bắt đầu vuốt
+    // Logic đơn giản hóa
     
     _highlightLike = false;
     _highlightPass = false;
@@ -161,15 +156,11 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
         _isAnimating = false;
         _resetPosition();
         
-        // Kết thúc transition khi vuốt xong
-        if (widget.nextProfile != null) {
-          ProfileTransitionManager.instance.endTransition(widget.nextProfile!);
-        }
-        
+        // Xóa logic cache phức tạp
         widget.onSwiped?.call();
       });
     } else {
-      // Reset về vị trí ban đầu
+      // Reset về vị trí ban đầu nếu không vuốt đủ xa
       _isAnimating = true;
       _anim = Tween<double>(
         begin: _offsetX,
@@ -178,6 +169,8 @@ class _SwipeableCardStackState extends State<SwipeableCardStack> with SingleTick
       
       _animController.forward().then((_) {
         setState(() {
+          _offsetX = 0;
+          _offsetY = 0; // Reset cả offsetY để đảm bảo profile về vị trí ban đầu
           _highlightLike = false;
           _highlightPass = false;
           _isAnimating = false;
