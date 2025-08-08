@@ -81,7 +81,17 @@ public class AdminServiceImpl implements AdminService {
     
             
             for (Object[] row : userGrowthData) {
-                LocalDate date = (LocalDate) row[0];
+                // Convert java.sql.Date to LocalDate properly
+                LocalDate date;
+                if (row[0] instanceof java.sql.Date) {
+                    date = ((java.sql.Date) row[0]).toLocalDate();
+                } else if (row[0] instanceof LocalDate) {
+                    date = (LocalDate) row[0];
+                } else {
+                    log.warn("Unexpected date type in user growth data: {}", row[0].getClass());
+                    continue;
+                }
+                
                 Long newUsers = ((Number) row[1]).longValue();
 
                 
@@ -108,14 +118,34 @@ public class AdminServiceImpl implements AdminService {
             // Create a map for easier lookup of match data by date
             var matchMap = new java.util.HashMap<LocalDate, Long>();
             for (Object[] row : matchData) {
-                LocalDate date = (LocalDate) row[0];
+                // Convert java.sql.Date to LocalDate properly
+                LocalDate date;
+                if (row[0] instanceof java.sql.Date) {
+                    date = ((java.sql.Date) row[0]).toLocalDate();
+                } else if (row[0] instanceof LocalDate) {
+                    date = (LocalDate) row[0];
+                } else {
+                    log.warn("Unexpected date type in match data: {}", row[0].getClass());
+                    continue;
+                }
+                
                 Long matches = ((Number) row[1]).longValue();
                 matchMap.put(date, matches);
             }
             
             // Build chart data combining swipe and match information
             for (Object[] row : swipeData) {
-                LocalDate date = (LocalDate) row[0];
+                // Convert java.sql.Date to LocalDate properly
+                LocalDate date;
+                if (row[0] instanceof java.sql.Date) {
+                    date = ((java.sql.Date) row[0]).toLocalDate();
+                } else if (row[0] instanceof LocalDate) {
+                    date = (LocalDate) row[0];
+                } else {
+                    log.warn("Unexpected date type in swipe data: {}", row[0].getClass());
+                    continue;
+                }
+                
                 Long totalSwipes = ((Number) row[1]).longValue();
                 Long matches = matchMap.getOrDefault(date, 0L);
                 
