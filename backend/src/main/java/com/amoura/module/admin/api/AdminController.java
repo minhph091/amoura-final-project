@@ -49,6 +49,7 @@ public class AdminController {
     }
     
     @GetMapping("/users")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Get users with cursor pagination",
         description = "Returns a paginated list of users for admin management with cursor-based pagination"
