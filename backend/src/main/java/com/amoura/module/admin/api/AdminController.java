@@ -26,12 +26,12 @@ import jakarta.validation.Valid;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Admin", description = "Admin management operations")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
 
     @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Get admin dashboard overview", 
         description = "Returns system statistics including total users, matches, messages, user growth chart data, and matching success rates"
@@ -49,6 +49,7 @@ public class AdminController {
     }
     
     @GetMapping("/users")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Get users with cursor pagination",
         description = "Returns a paginated list of users for admin management with cursor-based pagination"
@@ -81,6 +82,7 @@ public class AdminController {
     }
     
     @GetMapping("/users/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Search users by term",
         description = "Search users by username, email, or full name with pagination"
@@ -108,6 +110,7 @@ public class AdminController {
     }
     
     @GetMapping("/users/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Get user details by ID",
         description = "Get detailed information about a specific user for admin management"
@@ -131,6 +134,7 @@ public class AdminController {
     }
     
     @PutMapping("/users/{userId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Update user status",
         description = "Update user account status (ACTIVE, INACTIVE, SUSPEND). For SUSPEND status, suspensionDays is required."

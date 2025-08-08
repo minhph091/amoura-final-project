@@ -50,8 +50,8 @@ public class SecurityConfig {
                         // WebSocket endpoints
                         .requestMatchers("/ws/**", "/websocket/**").permitAll()
 
-                        // Admin
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // Admin - Allow both ADMIN and MODERATOR roles
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MODERATOR")
 
                         // Admin and Moderator
                         .requestMatchers("/moderation/**").hasAnyRole("ADMIN", "MODERATOR")
