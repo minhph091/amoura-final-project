@@ -33,12 +33,6 @@ public class UserManagementDTO {
     @Schema(description = "Last name", example = "Doe")
     private String lastName;
     
-    @Schema(description = "Full name", example = "John Doe")
-    private String fullName;
-    
-    @Schema(description = "User role name", example = "USER")
-    private String roleName;
-    
     @Schema(description = "Account status", example = "ACTIVE", allowableValues = {"ACTIVE", "INACTIVE", "SUSPEND"})
     private String status;
     
@@ -47,9 +41,6 @@ public class UserManagementDTO {
     
     @Schema(description = "Account creation timestamp")
     private LocalDateTime createdAt;
-    
-    @Schema(description = "Last update timestamp")
-    private LocalDateTime updatedAt;
     
     @Schema(description = "Profile completion status")
     private Boolean hasProfile;

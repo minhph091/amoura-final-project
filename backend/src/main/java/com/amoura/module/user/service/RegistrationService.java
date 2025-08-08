@@ -225,7 +225,7 @@ public class RegistrationService {
                 .lastName(savedUser.getLastName())
                 .fullName(savedUser.getFullName())
                 .roleName(savedUser.getRole().getName())
-                .status(savedUser.getStatus())
+                .status(savedUser.getStatus() != null ? savedUser.getStatus().toUpperCase() : null)  // Convert to uppercase for API
                 .createdAt(savedUser.getCreatedAt())
                 .updatedAt(savedUser.getUpdatedAt())
                 .build();

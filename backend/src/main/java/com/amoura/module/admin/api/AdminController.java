@@ -3,6 +3,7 @@ package com.amoura.module.admin.api;
 import com.amoura.module.admin.dto.AdminDashboardDTO;
 import com.amoura.module.admin.dto.CursorPaginationRequest;
 import com.amoura.module.admin.dto.CursorPaginationResponse;
+import com.amoura.module.admin.dto.StatusUpdateResponse;
 import com.amoura.module.admin.dto.UserManagementDTO;
 import com.amoura.module.admin.dto.UserStatusUpdateRequest;
 import com.amoura.module.admin.service.AdminService;
@@ -25,12 +26,12 @@ import jakarta.validation.Valid;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Admin", description = "Admin management operations")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
 
     @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Get admin dashboard overview", 
         description = "Returns system statistics including total users, matches, messages, user growth chart data, and matching success rates"
@@ -48,6 +49,7 @@ public class AdminController {
     }
     
     @GetMapping("/users")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Get users with cursor pagination",
         description = "Returns a paginated list of users for admin management with cursor-based pagination"
@@ -80,6 +82,7 @@ public class AdminController {
     }
     
     @GetMapping("/users/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Search users by term",
         description = "Search users by username, email, or full name with pagination"
@@ -107,6 +110,7 @@ public class AdminController {
     }
     
     @GetMapping("/users/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Get user details by ID",
         description = "Get detailed information about a specific user for admin management"
@@ -130,9 +134,10 @@ public class AdminController {
     }
     
     @PutMapping("/users/{userId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Update user status",
-        description = "Update user account status (ACTIVE, INACTIVE, SUSPEND)"
+        description = "Update user account status (ACTIVE, INACTIVE, SUSPEND). For SUSPEND status, suspensionDays is required."
     )
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
@@ -141,39 +146,18 @@ public class AdminController {
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "403", description = "Access denied - admin role required")
     })
-    public ResponseEntity<UserManagementDTO> updateUserStatus(
+    public ResponseEntity<StatusUpdateResponse> updateUserStatus(
             @Parameter(description = "User ID") @PathVariable Long userId,
             @Valid @RequestBody UserStatusUpdateRequest request) {
         
         log.info("Admin user status update requested for ID: {} to status: {}", userId, request.getStatus());
         
-        UserManagementDTO updatedUser = adminService.updateUserStatus(userId, request);
+        StatusUpdateResponse response = adminService.updateUserStatus(userId, request);
         
-        log.info("User status updated successfully for ID: {}, new status: {}", userId, updatedUser.getStatus());
+        log.info("User status updated successfully for ID: {}, new status: {}", userId, response.getNewStatus());
         
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(response);
     }
     
-    @DeleteMapping("/users/{userId}")
-    @Operation(
-        summary = "Delete user account",
-        description = "Soft delete user account by setting status to INACTIVE"
-    )
-    @SecurityRequirement(name = "bearerAuth")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "User not found"),
-        @ApiResponse(responseCode = "403", description = "Access denied - admin role required")
-    })
-    public ResponseEntity<Void> deleteUser(
-            @Parameter(description = "User ID") @PathVariable Long userId) {
-        
-        log.info("Admin user deletion requested for ID: {}", userId);
-        
-        adminService.deleteUser(userId);
-        
-        log.info("User soft deleted successfully for ID: {}", userId);
-        
-        return ResponseEntity.noContent().build();
-    }
+
 } 

@@ -163,7 +163,7 @@ public class UserServiceImpl implements UserService {
                 .lastName(user.getLastName())
                 .fullName(user.getFullName())
                 .roleName(user.getRole().getName())
-                .status(user.getStatus())  // Chuyển enum sang String
+                .status(user.getStatus() != null ? user.getStatus().toUpperCase() : null)  // Convert to uppercase for API
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

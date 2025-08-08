@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Min;
 
 @Data
 @Builder
@@ -23,4 +24,8 @@ public class UserStatusUpdateRequest {
     
     @Schema(description = "Reason for status change", example = "Violated community guidelines")
     private String reason;
+    
+    @Min(value = 1, message = "Suspension days must be at least 1")
+    @Schema(description = "Number of days for suspension (only for SUSPEND status)", example = "7")
+    private Integer suspensionDays;
 }

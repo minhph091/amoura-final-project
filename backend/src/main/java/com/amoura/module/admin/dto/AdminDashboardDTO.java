@@ -39,7 +39,6 @@ public class AdminDashboardDTO {
     public static class UserGrowthData {
         private LocalDate date;
         private Long newUsers;
-        private Long totalUsers;
     }
     
     @Data
@@ -50,7 +49,6 @@ public class AdminDashboardDTO {
         private LocalDate date;
         private Long totalSwipes;
         private Long totalMatches;
-        private Double successRate; // percentage
     }
     
     @Data
@@ -58,10 +56,8 @@ public class AdminDashboardDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RecentActivityData {
-        private String activityType; // USER_REGISTRATION, MATCH_CREATED, MESSAGE_SENT
+        private String activityType; // USER_REGISTRATION, SYSTEM_HEALTH, SYSTEM_WARNING
         private String description;
         private String timestamp;
-        private Long userId;
-        private String username;
     }
 } 
