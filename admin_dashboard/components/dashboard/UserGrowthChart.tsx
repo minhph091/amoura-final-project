@@ -49,11 +49,13 @@ export function UserGrowthChart() {
             .map((item: any) => ({
               date: item.date,
               newUsers: item.newUsers || 0,
-            }));
+            }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         }
         
         setData(chartData);
       } catch (err: any) {
+        console.error("Error fetching user growth data:", err);
         setData([]);
         setError("Backend service unavailable");
       } finally {
@@ -90,6 +92,20 @@ export function UserGrowthChart() {
     );
   }
 
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.userGrowth}</CardTitle>
+          <CardDescription>{t.newUsersPerDay}</CardDescription>
+        </CardHeader>
+        <CardContent className="h-80 flex items-center justify-center text-muted-foreground">
+          No data available for the last 30 days
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="card-hover">
       <CardHeader>
@@ -110,7 +126,13 @@ export function UserGrowthChart() {
             }}
           >
             <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-            <XAxis dataKey="date" />
+            <XAxis 
+              dataKey="date" 
+              tickFormatter={(value) => {
+                const date = new Date(value);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              }}
+            />
             <YAxis />
             <Tooltip
               contentStyle={{
@@ -121,6 +143,15 @@ export function UserGrowthChart() {
               }}
               itemStyle={{ color: "var(--foreground)" }}
               labelStyle={{ color: "var(--foreground)", fontWeight: "bold" }}
+              labelFormatter={(value) => {
+                const date = new Date(value);
+                return date.toLocaleDateString('en-US', { 
+                  weekday: 'short', 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric'
+                });
+              }}
             />
             <Area
               type="monotone"
