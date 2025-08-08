@@ -26,12 +26,12 @@ import jakarta.validation.Valid;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Admin", description = "Admin management operations")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
 
     @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Get admin dashboard overview", 
         description = "Returns system statistics including total users, matches, messages, user growth chart data, and matching success rates"
@@ -134,6 +134,7 @@ public class AdminController {
     }
     
     @PutMapping("/users/{userId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Update user status",
         description = "Update user account status (ACTIVE, INACTIVE, SUSPEND). For SUSPEND status, suspensionDays is required."
