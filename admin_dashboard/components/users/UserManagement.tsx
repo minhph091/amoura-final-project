@@ -304,7 +304,7 @@ export function UserManagement() {
           <p className="text-xs text-blue-600 mt-1">
             {currentUserRole === "ADMIN" 
               ? "You have full administrative privileges." 
-              : "You have moderation privileges. Some features may be limited."
+              : "You can view and search users, but cannot modify user status. Contact admin for status changes."
             }
           </p>
         </div>
@@ -458,7 +458,7 @@ export function UserManagement() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {user.status !== "SUSPEND" ? (
+                          {availableActions.canSuspendUsers && user.status !== "SUSPEND" ? (
                             <Button
                               variant="suspend"
                               size="icon"
@@ -466,7 +466,7 @@ export function UserManagement() {
                             >
                               <UserX className="h-4 w-4" />
                             </Button>
-                          ) : (
+                          ) : availableActions.canRestoreUsers && user.status === "SUSPEND" ? (
                             <Button
                               variant="restore"
                               size="icon"
@@ -474,7 +474,7 @@ export function UserManagement() {
                             >
                               <UserCheck className="h-4 w-4" />
                             </Button>
-                          )}
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -529,6 +529,13 @@ export function UserManagement() {
             <DialogDescription className="text-gray-600">
               {t.detailedInformationSelectedUser}
             </DialogDescription>
+            {currentUserRole === "MODERATOR" && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                <p className="text-xs text-blue-700">
+                  <strong>Moderator View:</strong> You can view user details but cannot modify user status.
+                </p>
+              </div>
+            )}
           </DialogHeader>
 
           {selectedUser && (
@@ -604,7 +611,7 @@ export function UserManagement() {
             >
               {t.close}
             </Button>
-            {selectedUser && selectedUser.status !== "SUSPEND" ? (
+            {availableActions.canSuspendUsers && selectedUser && selectedUser.status !== "SUSPEND" ? (
               <Button
                 variant="suspend"
                 onClick={() => {
@@ -616,7 +623,7 @@ export function UserManagement() {
                 {t.suspendUser}
               </Button>
             ) : (
-              selectedUser && (
+              availableActions.canRestoreUsers && selectedUser && selectedUser.status === "SUSPEND" && (
                 <Button
                   variant="restore"
                   onClick={() => {
@@ -633,15 +640,16 @@ export function UserManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Suspend User Dialog */}
-      <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>⚠️ {t.suspendUserTitle}</DialogTitle>
-            <DialogDescription>
-              {t.suspendUserDescription}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Suspend User Dialog - Only show for ADMIN */}
+      {availableActions.canSuspendUsers && (
+        <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>⚠️ {t.suspendUserTitle}</DialogTitle>
+              <DialogDescription>
+                {t.suspendUserDescription}
+              </DialogDescription>
+            </DialogHeader>
 
           {selectedUser && (
             <div className="space-y-4">
@@ -694,9 +702,11 @@ export function UserManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      )}
 
-      {/* Restore User Dialog */}
-      <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+      {/* Restore User Dialog - Only show for ADMIN */}
+      {availableActions.canRestoreUsers && (
+        <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.restoreUserAction}</DialogTitle>
@@ -730,6 +740,7 @@ export function UserManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      )}
     </div>
   );
 }

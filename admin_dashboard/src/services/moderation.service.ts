@@ -18,43 +18,21 @@ export class ModerationService {
     return user?.roleName || null;
   }
 
-  // Get users - for now, use admin endpoints but provide clear error messages for moderators
+  // Get users - Available for both ADMIN and MODERATOR
   async getUsers(params?: {
     cursor?: number;
     limit?: number;
     direction?: "NEXT" | "PREVIOUS";
   }): Promise<ApiResponse<CursorPaginationResponse<UserManagementData>>> {
-    if (!this.hasUserManagementPermission()) {
-      return {
-        success: false,
-        error: "Access denied. Admin or Moderator privileges required.",
-      };
-    }
-
     try {
       const queryParams = new URLSearchParams();
       if (params?.cursor) queryParams.append("cursor", params.cursor.toString());
       if (params?.limit) queryParams.append("limit", params.limit.toString());
       if (params?.direction) queryParams.append("direction", params.direction);
 
-      // Currently using admin endpoints for all users since moderation endpoints are not implemented in backend
       const url = `${API_ENDPOINTS.ADMIN.USERS}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
       return await apiClient.get<CursorPaginationResponse<UserManagementData>>(url);
     } catch (error) {
-      // Handle permission errors specifically for moderators
-      if (error instanceof Error && error.message.includes("403")) {
-        const userRole = this.getCurrentUserRole();
-        if (userRole === "MODERATOR") {
-          return {
-            success: false,
-            error: "Moderator access to user management is not yet available. The backend moderation endpoints are not implemented. Please contact your administrator.",
-          };
-        }
-        return {
-          success: false,
-          error: "Your account does not have permission to view user list. Please contact administrator.",
-        };
-      }
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to fetch users",
@@ -62,19 +40,12 @@ export class ModerationService {
     }
   }
 
-  // Search users - for now, use admin endpoints but provide clear error messages for moderators
+  // Search users - Available for both ADMIN and MODERATOR
   async searchUsers(searchTerm: string, params?: {
     cursor?: number;
     limit?: number;
     direction?: "NEXT" | "PREVIOUS";
   }): Promise<ApiResponse<CursorPaginationResponse<UserManagementData>>> {
-    if (!this.hasUserManagementPermission()) {
-      return {
-        success: false,
-        error: "Access denied. Admin or Moderator privileges required.",
-      };
-    }
-
     try {
       const queryParams = new URLSearchParams();
       queryParams.append("q", searchTerm);
@@ -82,23 +53,9 @@ export class ModerationService {
       if (params?.limit) queryParams.append("limit", params.limit.toString());
       if (params?.direction) queryParams.append("direction", params.direction);
 
-      // Currently using admin endpoints for all users since moderation endpoints are not implemented in backend
       const url = `${API_ENDPOINTS.ADMIN.USER_SEARCH}?${queryParams.toString()}`;
       return await apiClient.get<CursorPaginationResponse<UserManagementData>>(url);
     } catch (error) {
-      if (error instanceof Error && error.message.includes("403")) {
-        const userRole = this.getCurrentUserRole();
-        if (userRole === "MODERATOR") {
-          return {
-            success: false,
-            error: "Moderator access to user search is not yet available. The backend moderation endpoints are not implemented. Please contact your administrator.",
-          };
-        }
-        return {
-          success: false,
-          error: "Your account does not have permission to search users. Please contact administrator.",
-        };
-      }
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to search users",
@@ -106,33 +63,12 @@ export class ModerationService {
     }
   }
 
-  // Get user by ID - for now, use admin endpoints but provide clear error messages for moderators
+  // Get user by ID - Available for both ADMIN and MODERATOR
   async getUserById(userId: string): Promise<ApiResponse<UserManagementData>> {
-    if (!this.hasUserManagementPermission()) {
-      return {
-        success: false,
-        error: "Access denied. Admin or Moderator privileges required.",
-      };
-    }
-
     try {
-      // Currently using admin endpoints for all users since moderation endpoints are not implemented in backend
       const url = API_ENDPOINTS.ADMIN.USER_BY_ID(userId);
       return await apiClient.get<UserManagementData>(url);
     } catch (error) {
-      if (error instanceof Error && error.message.includes("403")) {
-        const userRole = this.getCurrentUserRole();
-        if (userRole === "MODERATOR") {
-          return {
-            success: false,
-            error: "Moderator access to user details is not yet available. The backend moderation endpoints are not implemented. Please contact your administrator.",
-          };
-        }
-        return {
-          success: false,
-          error: "Your account does not have permission to view user details. Please contact administrator.",
-        };
-      }
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to fetch user details",
@@ -140,50 +76,24 @@ export class ModerationService {
     }
   }
 
-  // Update user status - check if moderator has permission
+  // Update user status - Only ADMIN can update user status
   async updateUserStatus(
     userId: string,
     request: UserStatusUpdateRequest
   ): Promise<ApiResponse<any>> {
-    if (!this.hasUserManagementPermission()) {
+    const userRole = this.getCurrentUserRole();
+    
+    if (userRole !== "ADMIN") {
       return {
         success: false,
-        error: "Access denied. Admin or Moderator privileges required.",
+        error: "Only administrators can update user status.",
       };
     }
 
-    const userRole = this.getCurrentUserRole();
-    
-    // Moderators might have limited permissions compared to admin
-    if (userRole === "MODERATOR") {
-      // For now, allow moderators to suspend/restore users
-      // In the future, you might want to add more restrictions
-      if (request.status === "INACTIVE") {
-        return {
-          success: false,
-          error: "Moderators cannot set users to INACTIVE status. Only suspend or restore is allowed.",
-        };
-      }
-    }
-
     try {
-      // Currently using admin endpoints for all users since moderation endpoints are not implemented in backend
       const url = API_ENDPOINTS.ADMIN.UPDATE_USER_STATUS(userId);
       return await apiClient.put<any>(url, request);
     } catch (error) {
-      if (error instanceof Error && error.message.includes("403")) {
-        const userRole = this.getCurrentUserRole();
-        if (userRole === "MODERATOR") {
-          return {
-            success: false,
-            error: "Moderator access to user status updates is not yet available. The backend moderation endpoints are not implemented. Please contact your administrator.",
-          };
-        }
-        return {
-          success: false,
-          error: "Your account does not have permission to update user status. Please contact administrator.",
-        };
-      }
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to update user status",
@@ -213,11 +123,11 @@ export class ModerationService {
     
     if (userRole === "MODERATOR") {
       return {
-        canViewUsers: true, // May be limited by backend
-        canViewUserDetails: true, // May be limited by backend
-        canSuspendUsers: true, // May be limited by backend
-        canRestoreUsers: true, // May be limited by backend
-        canSetInactive: false, // Restricted for moderators
+        canViewUsers: true,
+        canViewUserDetails: true,
+        canSuspendUsers: false,
+        canRestoreUsers: false,
+        canSetInactive: false,
       };
     }
 
