@@ -82,6 +82,7 @@ public class AdminController {
     }
     
     @GetMapping("/users/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Search users by term",
         description = "Search users by username, email, or full name with pagination"
@@ -109,6 +110,7 @@ public class AdminController {
     }
     
     @GetMapping("/users/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
         summary = "Get user details by ID",
         description = "Get detailed information about a specific user for admin management"
