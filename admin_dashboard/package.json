@@ -7,6 +7,8 @@
     "build": "next build",
     "build:prod": "NODE_ENV=production next build",
     "start": "next start",
+    "start:prod": "NODE_ENV=production next start -p 3000",
+    "export": "next build && next export",
     "lint": "next lint"
   },
   "dependencies": {

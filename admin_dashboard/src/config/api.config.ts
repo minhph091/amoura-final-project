@@ -7,7 +7,7 @@ export const API_CONFIG = {
     (typeof window !== "undefined" && window.location.hostname === "localhost"
       ? "/api" // Use proxy to avoid CORS issues in development
       : "https://api.amoura.space/api"),
-  // WebSocket URL - use proxy endpoint in development
+  // WebSocket URL - direct connection to production
   WS_URL: 
     process?.env?.NEXT_PUBLIC_WS_URL || 
     (typeof window !== "undefined" && window.location.hostname === "localhost"

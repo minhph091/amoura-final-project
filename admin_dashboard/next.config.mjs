@@ -9,6 +9,7 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ['api.amoura.space', 'amoura.space'],
   },
   experimental: {
     webpackBuildWorker: false,
@@ -17,18 +18,22 @@ const nextConfig = {
     config.cache = false;
     return config;
   },
+  // Only use rewrites in development
   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:8080/api/:path*',
-      },
-      // WebSocket proxy
-      {
-        source: '/api/ws',
-        destination: 'http://localhost:8080/ws',
-      },
-    ];
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        {
+          source: '/api/:path*',
+          destination: 'http://localhost:8080/api/:path*',
+        },
+        // WebSocket proxy
+        {
+          source: '/api/ws',
+          destination: 'http://localhost:8080/ws',
+        },
+      ];
+    }
+    return [];
   },
   async headers() {
     return [
