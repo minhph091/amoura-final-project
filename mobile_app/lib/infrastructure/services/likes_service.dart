@@ -47,26 +47,38 @@ class LikesService with ChangeNotifier {
   // Fetch users who liked the current user
   Future<void> fetchLikedUsers() async {
     try {
+      debugPrint('LikesService: ==> Starting fetchLikedUsers...');
       _isLoading = true;
       _error = null;
+      // Clear old data before fetching new data
+      _likedUsers = [];
       notifyListeners();
 
       debugPrint('LikesService: Fetching users who liked current user...');
       
       // Sử dụng API thật thay vì mock data
       final matchService = getIt<MatchService>();
+      debugPrint('LikesService: Got MatchService instance, calling getReceivedLikes...');
+      
       final receivedLikes = await matchService.getReceivedLikes();
+      debugPrint('LikesService: Received ${receivedLikes.length} likes from API');
 
       // Chuyển đổi từ ReceivedLikeModel sang LikedUserModel
       _likedUsers = _convertReceivedLikesToLikedUsers(receivedLikes);
 
       debugPrint('LikesService: Successfully loaded ${_likedUsers.length} users who liked current user');
+      debugPrint('LikesService: Users: ${_likedUsers.map((u) => '${u.firstName} ${u.lastName}').join(', ')}');
+      debugPrint('LikesService: Avatar URLs: ${_likedUsers.map((u) => u.avatarUrl).join(', ')}');
+      
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _isLoading = false;
       _error = 'Failed to load users who liked you: ${e.toString()}';
-      debugPrint('LikesService: Error fetching liked users: $e');
+      debugPrint('LikesService: ERROR fetching liked users: $e');
+      debugPrint('LikesService: Error type: ${e.runtimeType}');
+      debugPrint('LikesService: Error details: ${e.toString()}');
+      
       notifyListeners();
     }
   }
@@ -77,6 +89,17 @@ class LikesService with ChangeNotifier {
   ) {
     try {
       return receivedLikes.map((receivedLike) {
+        // Process avatar URL to ensure it's a valid URL
+        String? avatarUrl = _validateAvatarUrl(receivedLike.primaryPhotoUrl);
+        
+        // Use placeholder if no avatar URL
+        if (avatarUrl == null) {
+          avatarUrl = 'https://api.amoura.space/api/files/users/1/avatar.jpg'; // Use production server URL
+          debugPrint('LikesService: Using fallback avatar for user ${receivedLike.firstName}');
+        }
+        
+        debugPrint('LikesService: Processing user ${receivedLike.firstName} with avatar: $avatarUrl');
+        
         return LikedUserModel(
           id: receivedLike.userId.toString(),
           firstName: receivedLike.firstName,
@@ -84,10 +107,12 @@ class LikesService with ChangeNotifier {
           username: receivedLike.username,
           age: receivedLike.age ?? 18, // Fallback age if null
           location: receivedLike.location ?? 'Unknown',
-          coverImageUrl: receivedLike.primaryPhotoUrl ?? '/placeholder.jpg',
-          avatarUrl: receivedLike.primaryPhotoUrl ?? '/placeholder-user.jpg',
+          coverImageUrl: avatarUrl,
+          avatarUrl: avatarUrl,
           bio: receivedLike.bio ?? 'No bio available',
-          photoUrls: receivedLike.photos.map((photo) => photo.url).toList(),
+          photoUrls: receivedLike.photos.map((photo) {
+            return _validateAvatarUrl(photo.url) ?? avatarUrl!;
+          }).toList(),
           isVip: false, // Tạm thời set false vì không cần VIP
           profileDetails: {
             'height': receivedLike.height?.toString() ?? 'Unknown',
@@ -102,5 +127,40 @@ class LikesService with ChangeNotifier {
       debugPrint('LikesService: Error converting received likes to liked users: $e');
       return [];
     }
+  }
+
+  // Clear all data (useful for app restart)
+  void clearData() {
+    _likedUsers = [];
+    _error = null;
+    _isLoading = false;
+    notifyListeners();
+    debugPrint('LikesService: Data cleared');
+  }
+
+  // Create mock data for testing UI (REMOVED - only use real API data)
+  List<LikedUserModel> _createMockLikedUsers() {
+    // Mock data removed - only use real API data
+    return [];
+  }
+
+  // Helper method to validate and fix avatar URLs
+  String? _validateAvatarUrl(String? url) {
+    if (url == null || url.isEmpty) {
+      return null;
+    }
+
+    // If it's already a valid HTTP URL, return it
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    // If it's a relative path starting with /, make it absolute with production server
+    if (url.startsWith('/')) {
+      return 'https://api.amoura.space/api$url';
+    }
+
+    // If it's a relative path not starting with /, add / and use production server
+    return 'https://api.amoura.space/api/files/$url';
   }
 }

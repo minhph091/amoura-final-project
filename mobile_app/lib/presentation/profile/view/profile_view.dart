@@ -116,7 +116,7 @@ class _ProfileViewState extends State<ProfileView> {
             if (viewModel.isLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (viewModel.error != null) {
-              return Center(child: Text('Error: ${viewModel.error}'));
+              return const Center(child: Text('Unable to load profile'));
             } else if (viewModel.profile != null) {
               final profile = viewModel.profile!;
               final displayName = [
@@ -265,52 +265,104 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                     ),
 
-                  // Other collapsible sections
-                  CollapsibleSection(
-                    title: localizations.translate('appearance'),
-                    icon: Icons.accessibility_new,
-                    initiallyExpanded: _expandedSection == 'appearance',
-                    onToggle: () => _toggleSection('appearance'),
-                    child: ProfileAppearance(
-                      bodyType:
-                          profile['bodyType'] != null
-                              ? (profile['bodyType']
-                                      as Map<String, dynamic>)['name']
-                                  as String?
-                              : null,
-                      height:
-                          profile['height'] != null
-                              ? int.tryParse(profile['height'].toString())
-                              : null,
+                  // Appearance section - always show
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Card(
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                localizations.translate('appearance'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: ProfileTheme.darkPurple,
+                                ),
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                            ProfileAppearance(
+                              bodyType:
+                                  profile['bodyType'] != null
+                                      ? (profile['bodyType']
+                                              as Map<String, dynamic>)['name']
+                                          as String?
+                                      : null,
+                              height:
+                                  profile['height'] != null
+                                      ? int.tryParse(profile['height'].toString())
+                                      : null,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
 
-                  // Location
-                  CollapsibleSection(
-                    title: localizations.translate('location'),
-                    icon: Icons.location_on,
-                    initiallyExpanded: _expandedSection == 'location',
-                    onToggle: () => _toggleSection('location'),
-                    child: ProfileLocation(
-                      city:
-                          profile['location'] != null
-                              ? (profile['location']
-                                      as Map<String, dynamic>)['city']
-                                  as String?
-                              : null,
-                      state:
-                          profile['location'] != null
-                              ? (profile['location']
-                                      as Map<String, dynamic>)['state']
-                                  as String?
-                              : null,
-                      country:
-                          profile['location'] != null
-                              ? (profile['location']
-                                      as Map<String, dynamic>)['country']
-                                  as String?
-                              : null,
-                      locationPreference: profile['locationPreference'] as int?,
+                  // Location section - always show
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Card(
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                localizations.translate('location'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: ProfileTheme.darkPurple,
+                                ),
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                            ProfileLocation(
+                              city:
+                                  profile['location'] != null
+                                      ? (profile['location']
+                                              as Map<String, dynamic>)['city']
+                                          as String?
+                                      : null,
+                              state:
+                                  profile['location'] != null
+                                      ? (profile['location']
+                                              as Map<String, dynamic>)['state']
+                                          as String?
+                                      : null,
+                              country:
+                                  profile['location'] != null
+                                      ? (profile['location']
+                                              as Map<String, dynamic>)['country']
+                                          as String?
+                                      : null,
+                              locationPreference: profile['locationPreference'] as int?,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
 

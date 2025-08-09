@@ -32,6 +32,7 @@ final Map<String, dynamic> vi = {
   'update_phone_number': 'Cập nhật số điện thoại',
   'phone_change_info': 'Thay đổi số điện thoại để bảo vệ tài khoản của bạn',
   // Password change keys
+  'current_password': 'Mật Khẩu Hiện Tại',
   'current_password_required': 'Vui lòng nhập mật khẩu hiện tại',
   'new_password': 'Mật khẩu mới',
   'confirm_new_password': 'Xác nhận mật khẩu mới',
@@ -262,6 +263,7 @@ final Map<String, dynamic> vi = {
 
   // Setup common
   'continue_setup': 'Tiếp tục',
+  'skip': 'Bỏ qua',
   'finish_setup': 'Hoàn thành thiết lập',
   'fields_required': 'Các trường có dấu * là bắt buộc',
 

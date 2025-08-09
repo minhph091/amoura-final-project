@@ -248,6 +248,7 @@ final Map<String, dynamic> en = {
 
   // Setup common
   'continue_setup': 'Continue',
+  'skip': 'Skip',
   'finish_setup': 'Finish Setup',
   'fields_required': 'Fields marked with * are required',
 
@@ -531,6 +532,7 @@ final Map<String, dynamic> en = {
   'video_message': 'Video message',
   'messages_marked_as_read': 'Messages marked as read',
   // Password change keys
+  'current_password': 'Current Password',
   'current_password_required': 'Current password is required',
   'new_password': 'New password',
   'confirm_new_password': 'Confirm new password',

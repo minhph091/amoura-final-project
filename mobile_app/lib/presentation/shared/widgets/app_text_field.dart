@@ -169,6 +169,10 @@ class AppTextField extends StatelessWidget {
           fillColor: effectiveFillColor,
           isDense: true,
           contentPadding: effectiveContentPadding,
+          errorStyle: const TextStyle(
+            fontSize: 13, // Increased from default 12
+            height: 1.2,
+          ),
         );
 
     return TextFormField(

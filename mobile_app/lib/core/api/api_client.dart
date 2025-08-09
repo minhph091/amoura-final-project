@@ -20,7 +20,11 @@ class ApiClient {
        _navigatorKey = navigatorKey,
        dio = Dio(
          BaseOptions(
-           baseUrl: EnvironmentConfig.baseUrl,
+           // Ensure baseUrl always ends with a trailing slash so relative paths append correctly
+           baseUrl: (() {
+             final String raw = EnvironmentConfig.baseUrl;
+             return raw.endsWith('/') ? raw : '$raw/';
+           })(),
            connectTimeout: const Duration(seconds: 10),
            receiveTimeout: const Duration(seconds: 10),
            headers: {'Content-Type': 'application/json'},
@@ -77,9 +81,17 @@ class ApiClient {
     );
   }
 
+  // Normalize request path to avoid losing the `/api` context-path when callers pass a leading slash.
+  // - If a full URL is provided (starts with http), return as-is.
+  // - Otherwise, strip a single leading '/' to make it a relative path.
+  String _resolvePath(String path) {
+    if (path.startsWith('http')) return path;
+    return path.startsWith('/') ? path.substring(1) : path;
+  }
+
   Future<Response> post(String path, {dynamic data}) async {
     try {
-      return await dio.post(path, data: data);
+      return await dio.post(_resolvePath(path), data: data);
     } on DioException {
       rethrow;
     }
@@ -90,7 +102,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
-      return await dio.get(path, queryParameters: queryParameters);
+      return await dio.get(_resolvePath(path), queryParameters: queryParameters);
     } on DioException {
       rethrow;
     }
@@ -98,7 +110,7 @@ class ApiClient {
 
   Future<Response> patch(String path, {dynamic data}) async {
     try {
-      return await dio.patch(path, data: data);
+      return await dio.patch(_resolvePath(path), data: data);
     } on DioException {
       rethrow;
     }
@@ -106,7 +118,7 @@ class ApiClient {
 
   Future<Response> put(String path, {dynamic data}) async {
     try {
-      return await dio.put(path, data: data);
+      return await dio.put(_resolvePath(path), data: data);
     } on DioException {
       rethrow;
     }
@@ -117,7 +129,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
-      return await dio.delete(path, queryParameters: queryParameters);
+      return await dio.delete(_resolvePath(path), queryParameters: queryParameters);
     } on DioException {
       rethrow;
     }
@@ -161,7 +173,7 @@ class ApiClient {
       final formData = FormData.fromMap(formDataMap);
 
       return await dio.post(
-        path,
+        _resolvePath(path),
         data: formData,
         options: Options(
           contentType: 'multipart/form-data',

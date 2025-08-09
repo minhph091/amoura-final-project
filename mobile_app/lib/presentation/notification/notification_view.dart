@@ -46,6 +46,11 @@ class _NotificationViewState extends State<NotificationView>
     _tabController.addListener(() {
       _viewModel.setCurrentTabIndex(_tabController.index);
     });
+    
+    // Load likes khi khởi tạo để test
+    debugPrint('NotificationView: Manually calling refreshLikes in initState...');
+    _viewModel.refreshLikes();
+    
     } catch (e) {
       debugPrint('NotificationView: Error in initState: $e');
     }
@@ -75,6 +80,14 @@ class _NotificationViewState extends State<NotificationView>
           title: Text(localizations.translate('notifications')),
           centerTitle: true,
           actions: [
+            // Test button để manually load likes  
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                debugPrint('NotificationView: Manual refresh likes button pressed');
+                _viewModel.refreshLikes();
+              },
+            ),
             // Moving the three-dots menu to the app bar
             IconButton(
               icon: const Icon(Icons.more_vert),
@@ -184,20 +197,13 @@ class _NotificationViewState extends State<NotificationView>
               controller: _tabController,
               children: [
                 // Likes tab
-                _buildGroupedNotificationList(
-                  _viewModel.getLikeNotifications(),
-                  localizations.translate('no_likes_yet'),
-                  localizations.translate('no_likes_description'),
-                  NotificationType.like,
-                ),
+                _buildLikesTab(localizations),
 
                 // Messages tab
                 _buildGroupedNotificationList(
                   _viewModel.getMessageNotifications(),
                   localizations.translate('no_message_notifications'),
-                  localizations.translate(
-                    'no_message_notifications_description',
-                  ),
+                  '', // Remove description
                   NotificationType.message,
                 ),
 
@@ -205,9 +211,7 @@ class _NotificationViewState extends State<NotificationView>
                 _buildGroupedNotificationList(
                   _viewModel.getSystemNotifications(),
                   localizations.translate('no_system_notifications'),
-                  localizations.translate(
-                    'no_system_notifications_description',
-                  ),
+                  '', // Remove description
                   NotificationType.system,
                 ),
               ],
@@ -224,12 +228,162 @@ class _NotificationViewState extends State<NotificationView>
         ),
         body: const Center(
           child: Text(
-            'Error loading notifications',
-            style: TextStyle(color: Colors.red),
+            'Unable to load notifications',
+            style: TextStyle(color: Colors.grey),
           ),
         ),
       );
     }
+  }
+  
+  Widget _buildLikesTab(AppLocalizations localizations) {
+    return Column(
+      children: [
+        // "Who Liked You" section
+        Container(
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Colors.pink, Colors.purple],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ListTile(
+            leading: const Icon(
+              Icons.favorite,
+              color: Colors.white,
+              size: 32,
+            ),
+            title: const Text(
+              'Who Liked You',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              _viewModel.likedUsersCount > 0
+                  ? '${_viewModel.likedUsersCount} people liked you'
+                  : 'No likes yet',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white,
+              size: 16,
+            ),
+            onTap: () {
+              _showWhoLikedYouDialog();
+            },
+          ),
+        ),
+        
+        // Regular like notifications
+        Expanded(
+          child: _buildGroupedNotificationList(
+            _viewModel.getLikeNotifications(),
+            localizations.translate('no_likes_yet'),
+            localizations.translate('no_likes_description'),
+            NotificationType.like,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  void _showWhoLikedYouDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Who Liked You'),
+        content: Container(
+          width: double.maxFinite,
+          height: 300,
+          child: _viewModel.likedUsers.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No one has liked you yet.\nKeep swiping!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _viewModel.likedUsers.length,
+                  itemBuilder: (context, index) {
+                    final user = _viewModel.likedUsers[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        radius: 25,
+                        backgroundColor: Colors.grey[300],
+                        child: ClipOval(
+                          child: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                              ? Image.network(
+                                  user.avatarUrl!,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    debugPrint('Error loading avatar for ${user.firstName}: $error');
+                                    return Container(
+                                      width: 50,
+                                      height: 50,
+                                      color: Colors.pink[200],
+                                      child: Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                        size: 30,
+                                      ),
+                                    );
+                                  },
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      width: 50,
+                                      height: 50,
+                                      color: Colors.grey[200],
+                                      child: CircularProgressIndicator(
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded /
+                                                loadingProgress.expectedTotalBytes!
+                                            : null,
+                                        strokeWidth: 2,
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.pink[200],
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      title: Text('${user.firstName} ${user.lastName}'),
+                      subtitle: Text('Age: ${user.age}'),
+                      trailing: const Icon(Icons.favorite, color: Colors.pink),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildGroupedNotificationList(
@@ -272,7 +426,7 @@ class _NotificationViewState extends State<NotificationView>
     );
     } catch (e) {
       debugPrint('NotificationView: Error building grouped notification list: $e');
-      return _buildEmptyState('Error', 'Failed to load notifications');
+      return _buildEmptyState('Unable to load', 'Please try again later');
     }
   }
 
@@ -344,11 +498,14 @@ class _NotificationViewState extends State<NotificationView>
             title,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(subtitle, textAlign: TextAlign.center),
-          ),
+          // Only show subtitle if it's not empty
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(subtitle, textAlign: TextAlign.center),
+            ),
+          ],
         ],
       ),
     );
@@ -356,8 +513,8 @@ class _NotificationViewState extends State<NotificationView>
       debugPrint('NotificationView: Error building empty state: $e');
       return const Center(
         child: Text(
-          'Error loading notifications',
-          style: TextStyle(color: Colors.red),
+          'Unable to load',
+          style: TextStyle(color: Colors.grey),
         ),
       );
     }

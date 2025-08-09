@@ -32,6 +32,8 @@ class _DiscoveryViewState extends State<DiscoveryView> with TickerProviderStateM
     
     // Initialize discovery data
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Set context for match dialog
+      _viewModel.setContext(context);
       _viewModel.initialize();
     });
   }
@@ -145,6 +147,13 @@ class _DiscoveryViewState extends State<DiscoveryView> with TickerProviderStateM
           onSwipeDirection: _onSwipeDirection, // Add callback for button highlighting
           onSwipeProgress: _onSwipeProgress, // Track swipe progress
           onSwipeReset: _onSwipeReset, // Reset when swipe is cancelled
+          onSwipeCompleted: (isLike) {
+            if (isLike) {
+              viewModel.likeCurrentProfile();
+            } else {
+              viewModel.passCurrentProfile();
+            }
+          },
         ),
       ),
     );
@@ -255,6 +264,8 @@ class _DiscoveryViewState extends State<DiscoveryView> with TickerProviderStateM
   }) {
     final highlightedSize = size * 1.7; // Scale 1.7 khi highlighted
     final currentSize = isHighlighted ? highlightedSize : size;
+    final Color baseBg = Colors.white; // white background as requested
+    final Color iconColor = backgroundColor; // keep icon color
     
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
@@ -274,11 +285,11 @@ class _DiscoveryViewState extends State<DiscoveryView> with TickerProviderStateM
           width: currentSize,
           height: currentSize,
           decoration: BoxDecoration(
-            color: backgroundColor,
+            color: isHighlighted ? iconColor : baseBg,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: backgroundColor.withOpacity(0.4),
+                color: (isHighlighted ? iconColor : baseBg).withOpacity(isHighlighted ? 0.35 : 0.12),
                 blurRadius: isHighlighted ? 20 : 12, // Blur lớn hơn khi highlighted
                 offset: const Offset(0, 4),
                 spreadRadius: isHighlighted ? 4 : 0, // Spread khi highlighted
@@ -292,7 +303,7 @@ class _DiscoveryViewState extends State<DiscoveryView> with TickerProviderStateM
           ),
           child: Icon(
             icon,
-            color: Colors.white,
+            color: isHighlighted ? Colors.white : iconColor,
             size: currentSize * 0.4, // Sử dụng currentSize để icon cũng scale theo
           ),
         ),

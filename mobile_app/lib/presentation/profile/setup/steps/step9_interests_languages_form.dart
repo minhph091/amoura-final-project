@@ -37,7 +37,7 @@ class _Step9InterestsLanguagesFormState
     SetupProfileViewModel vm,
     Step9ViewModel step9ViewModel,
   ) {
-    // Debug: Track UI rebuilds
+    // Track UI rebuilds in terminal only
     debugPrint(
       '🔄 Step9 UI rebuilding - interests: ${step9ViewModel.selectedInterestIds}, languages: ${step9ViewModel.selectedLanguageIds}',
     );
@@ -81,23 +81,58 @@ class _Step9InterestsLanguagesFormState
                     ),
           ),
 
-          // Next Button - Always visible at bottom
-          SetupProfileButton(
-            text: AppLocalizations.of(context).translate('continue_setup'),
-            onPressed: () {
-              final error =
-                  vm.validateCurrentStep() ?? step9ViewModel.validate();
-              if (error == null) {
-                vm.nextStep(context: context);
-              } else {
-                setState(() => _interestError = true);
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(error)));
-              }
-            },
-            width: double.infinity,
-            height: 52,
+          // Buttons row - Continue and Skip
+          Row(
+            children: [
+              // Skip button
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    // Skip validation and go to next step
+                    vm.nextStep(context: context);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 52),
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context).translate('skip'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Continue button
+              Expanded(
+                child: SetupProfileButton(
+                  text: AppLocalizations.of(context).translate('continue_setup'),
+                  onPressed: () {
+                    final error =
+                        vm.validateCurrentStep() ?? step9ViewModel.validate();
+                    if (error == null) {
+                      vm.nextStep(context: context);
+                    } else {
+                      setState(() => _interestError = true);
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error)));
+                    }
+                  },
+                  width: double.infinity,
+                  height: 52,
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -43,6 +43,10 @@ class NotificationService {
   Future<void> initialize(String userId) async {
     try {
       debugPrint('NotificationService: Initializing for user: $userId');
+      debugPrint('NotificationService: User ID type: ${userId.runtimeType}');
+      debugPrint('NotificationService: User ID is empty: ${userId.isEmpty}');
+      debugPrint('NotificationService: User ID equals current_user_id: ${userId == "current_user_id"}');
+      debugPrint('NotificationService: User ID length: ${userId.length}');
       
       // Validate user ID
       if (userId.isEmpty || userId == "current_user_id") {
@@ -52,8 +56,9 @@ class NotificationService {
       
       _currentUserId = userId;
       
-      // Load cached notifications trước
-      await _loadNotificationsFromStorage();
+      // Clear old cache when initializing
+      _cachedNotifications = [];
+      _cachedUnreadCount = 0;
       
       // Subscribe vào notification stream từ shared SocketClient
       await _setupWebSocketNotifications();

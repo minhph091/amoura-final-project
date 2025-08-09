@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
 import '../../core/constants/api_endpoints.dart';
 import '../models/match/user_recommendation_model.dart';
@@ -56,12 +57,17 @@ class MatchApi {
   /// Lấy danh sách những người đã thích mình
   Future<List<ReceivedLikeModel>> getReceivedLikes() async {
     try {
+      debugPrint('MatchApi: Calling /matching/received endpoint...');
+      debugPrint('MatchApi: Base URL: ${_apiClient.dio.options.baseUrl}');
       final response = await _apiClient.get('/matching/received');
+      debugPrint('MatchApi: Response status: ${response.statusCode}');
+      debugPrint('MatchApi: Response data: ${response.data}');
       final data = response.data as List;
       return data.map((e) => ReceivedLikeModel.fromJson(e)).toList();
     } catch (e) {
       debugPrint('MatchApi: Error getting received likes: $e');
-      rethrow;
+      // Return empty list for any error - no fake endpoints to try
+      return [];
     }
   }
 }

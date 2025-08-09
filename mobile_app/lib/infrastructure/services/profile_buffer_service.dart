@@ -1,6 +1,8 @@
 // lib/infrastructure/services/profile_buffer_service.dart
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../core/services/match_service.dart';
 import '../../data/models/match/user_recommendation_model.dart';
 import '../../data/models/profile/interest_model.dart';
@@ -20,6 +22,12 @@ class ProfileBufferService {
   final List<UserRecommendationModel> _removedProfiles = [];
   final Map<int, List<InterestModel>> _removedInterests = {};
   final Map<int, String?> _removedDistances = {};
+  
+  // Lưu trữ profiles đã swipe để không hiển thị lại
+  final Set<int> _swipedProfileIds = <int>{};
+  
+  // Lưu trữ profiles đã like để không cho phép rewind
+  final Set<int> _likedProfileIds = <int>{};
   
   // Profile hiện tại và profile tiếp theo
   int _currentIndex = 0;
@@ -75,6 +83,9 @@ class ProfileBufferService {
     _isLoading = true;
     
     try {
+      // Load swiped profiles từ storage
+      await _loadSwipedProfiles();
+      
       // Xóa buffer cũ
       clear();
       
@@ -82,10 +93,36 @@ class ProfileBufferService {
       await _loadMoreProfiles();
       
       print('ProfileBufferService: Khởi tạo hoàn tất với ${_profileBuffer.length} profiles');
+      print('ProfileBufferService: Đã swipe ${_swipedProfileIds.length} profiles trước đó');
     } catch (e) {
       print('ProfileBufferService: Lỗi khởi tạo - $e');
     } finally {
       _isLoading = false;
+    }
+  }
+  
+  /// Load danh sách profiles đã swipe từ SharedPreferences
+  Future<void> _loadSwipedProfiles() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final swipedIds = prefs.getStringList('swiped_profile_ids') ?? [];
+      _swipedProfileIds.clear();
+      _swipedProfileIds.addAll(swipedIds.map((id) => int.parse(id)));
+      print('ProfileBufferService: Loaded ${_swipedProfileIds.length} swiped profiles from storage');
+    } catch (e) {
+      print('ProfileBufferService: Error loading swiped profiles: $e');
+    }
+  }
+  
+  /// Lưu danh sách profiles đã swipe vào SharedPreferences
+  Future<void> _saveSwipedProfiles() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final swipedIds = _swipedProfileIds.map((id) => id.toString()).toList();
+      await prefs.setStringList('swiped_profile_ids', swipedIds);
+      print('ProfileBufferService: Saved ${_swipedProfileIds.length} swiped profiles to storage');
+    } catch (e) {
+      print('ProfileBufferService: Error saving swiped profiles: $e');
     }
   }
 
@@ -97,10 +134,26 @@ class ProfileBufferService {
       
       if (newProfiles.isEmpty) {
         print('ProfileBufferService: Không có profile mới từ API');
+        // Khi không còn profile mới, thử nạp lại các profile đã pass một lần nữa
+        if (_removedProfiles.isNotEmpty) {
+          final List<UserRecommendationModel> requeue = _removedProfiles
+              .where((p) => !_likedProfileIds.contains(p.userId))
+              .toList();
+          _removedProfiles.clear();
+          for (final p in requeue) {
+            // Chỉ thêm lại nếu chưa có trong buffer và chưa bị đánh dấu swiped (giữ behavior cũ)
+            if (!_profileBuffer.any((e) => e.userId == p.userId)) {
+              _profileBuffer.add(p);
+              _profileInterests[p.userId] = p.interests;
+              _profileDistances[p.userId] = _calculateDistance(p);
+            }
+          }
+          print('ProfileBufferService: Đã nạp lại ${requeue.length} profiles đã pass');
+        }
         return;
       }
       
-      // Filter profiles (loại bỏ current user và profiles đã có)
+      // Filter profiles (loại bỏ current user, profiles đã có, và profiles đã swipe)
       final filteredProfiles = newProfiles.where((profile) {
         // Loại bỏ current user
         if (_currentUserId != null && profile.userId == _currentUserId) {
@@ -108,7 +161,16 @@ class ProfileBufferService {
         }
         
         // Loại bỏ profiles đã có trong buffer
-        return !_profileBuffer.any((existing) => existing.userId == profile.userId);
+        if (_profileBuffer.any((existing) => existing.userId == profile.userId)) {
+          return false;
+        }
+        
+        // Loại bỏ profiles đã swipe (like/pass)
+        if (_swipedProfileIds.contains(profile.userId)) {
+          return false;
+        }
+        
+        return true;
       }).toList();
       
       // Thêm vào buffer
@@ -116,8 +178,6 @@ class ProfileBufferService {
         _profileBuffer.add(profile);
         _profileInterests[profile.userId] = profile.interests;
         _profileDistances[profile.userId] = _calculateDistance(profile);
-        
-        print('ProfileBufferService: Thêm profile ${profile.userId} - ${profile.firstName} ${profile.lastName}');
       }
       
       print('ProfileBufferService: Buffer hiện có ${_profileBuffer.length} profiles');
@@ -127,6 +187,18 @@ class ProfileBufferService {
     }
   }
 
+  /// Đánh dấu profile đã like
+  void markProfileAsLiked(int profileId) {
+    _likedProfileIds.add(profileId);
+    debugPrint('ProfileBufferService: Marked profile $profileId as liked');
+  }
+  
+  /// Đánh dấu profile đã pass (không like)
+  void markProfileAsPassed(int profileId) {
+    // Không thêm vào _likedProfileIds, chỉ vào _swipedProfileIds
+    debugPrint('ProfileBufferService: Marked profile $profileId as passed');
+  }
+
   /// Chuyển sang profile tiếp theo
   Future<void> moveToNextProfile() async {
     if (_profileBuffer.isEmpty) {
@@ -134,23 +206,32 @@ class ProfileBufferService {
       return;
     }
     
-    // Lưu profile hiện tại vào removed list để có thể rewind
+    // Lưu profile hiện tại vào removed list để có thể rewind (chỉ khi không like)
     if (_currentIndex < _profileBuffer.length) {
       final removedProfile = _profileBuffer.removeAt(_currentIndex);
       final interests = _profileInterests.remove(removedProfile.userId);
       final distance = _profileDistances.remove(removedProfile.userId);
       
-      // Lưu vào removed lists
-      _removedProfiles.add(removedProfile);
-      if (interests != null) _removedInterests[removedProfile.userId] = interests;
-      if (distance != null) _removedDistances[removedProfile.userId] = distance;
+      // Đánh dấu profile đã được swipe
+      _swipedProfileIds.add(removedProfile.userId);
+      
+      // Nếu profile này KHÔNG thuộc danh sách đã like, cho phép rewind
+      if (!_likedProfileIds.contains(removedProfile.userId)) {
+        _removedProfiles.add(removedProfile);
+        if (interests != null) _removedInterests[removedProfile.userId] = interests;
+        if (distance != null) _removedDistances[removedProfile.userId] = distance;
+      }
       
       // Giới hạn số lượng removed profiles (chỉ giữ 10 profile gần nhất)
       if (_removedProfiles.length > 10) {
         final oldProfile = _removedProfiles.removeAt(0);
         _removedInterests.remove(oldProfile.userId);
         _removedDistances.remove(oldProfile.userId);
+        // Không xóa khỏi _swipedProfileIds để tránh hiển thị lại
       }
+      
+      // Lưu swiped profiles vào storage
+      await _saveSwipedProfiles();
       
       print('ProfileBufferService: Xóa profile ${removedProfile.userId}');
     }
@@ -162,6 +243,7 @@ class ProfileBufferService {
     
     print('ProfileBufferService: Chuyển sang profile index $_currentIndex');
     print('ProfileBufferService: Buffer còn lại ${_profileBuffer.length} profiles');
+    print('ProfileBufferService: Đã swipe ${_swipedProfileIds.length} profiles');
     
     // Load thêm profiles nếu buffer thấp
     if (_profileBuffer.length < 3 && !_isLoading) {
@@ -170,28 +252,52 @@ class ProfileBufferService {
     }
   }
 
-  /// Rewind về profile trước đó
+  /// Rewind về profile trước đó (chỉ profiles đã pass, không phải liked)
   Future<bool> rewindToPrevious() async {
     if (_removedProfiles.isEmpty) {
-      print('ProfileBufferService: Không có profile nào để rewind');
+      debugPrint('ProfileBufferService: Không có profile nào để rewind');
       return false;
     }
     
-    // Lấy profile cuối cùng từ removed list
-    final previousProfile = _removedProfiles.removeLast();
-    final interests = _removedInterests.remove(previousProfile.userId);
-    final distance = _removedDistances.remove(previousProfile.userId);
+    // Tìm profile gần nhất mà chưa bị like
+    UserRecommendationModel? profileToRewind;
+    int indexToRemove = -1;
+    
+    for (int i = _removedProfiles.length - 1; i >= 0; i--) {
+      final profile = _removedProfiles[i];
+      if (!_likedProfileIds.contains(profile.userId)) {
+        profileToRewind = profile;
+        indexToRemove = i;
+        break;
+      }
+    }
+    
+    if (profileToRewind == null) {
+      debugPrint('ProfileBufferService: Không có profile nào có thể rewind (tất cả đã like)');
+      return false;
+    }
+    
+    // Xóa profile từ removed list
+    _removedProfiles.removeAt(indexToRemove);
+    final interests = _removedInterests.remove(profileToRewind.userId);
+    final distance = _removedDistances.remove(profileToRewind.userId);
+    
+    // Xóa khỏi danh sách đã swipe để có thể hiển thị lại
+    _swipedProfileIds.remove(profileToRewind.userId);
+    
+    // Lưu thay đổi vào storage
+    await _saveSwipedProfiles();
     
     // Thêm lại vào đầu buffer
-    _profileBuffer.insert(0, previousProfile);
-    if (interests != null) _profileInterests[previousProfile.userId] = interests;
-    if (distance != null) _profileDistances[previousProfile.userId] = distance;
+    _profileBuffer.insert(0, profileToRewind);
+    if (interests != null) _profileInterests[profileToRewind.userId] = interests;
+    if (distance != null) _profileDistances[profileToRewind.userId] = distance;
     
     // Đặt current index về 0
     _currentIndex = 0;
     
-    print('ProfileBufferService: Rewind thành công đến profile ${previousProfile.userId}');
-    print('ProfileBufferService: Buffer hiện tại ${_profileBuffer.length} profiles');
+    debugPrint('ProfileBufferService: Rewind thành công đến profile ${profileToRewind.userId}');
+    debugPrint('ProfileBufferService: Buffer hiện tại ${_profileBuffer.length} profiles');
     
     return true;
   }
@@ -221,22 +327,37 @@ class ProfileBufferService {
     _profileInterests.clear();
     _profileDistances.clear();
     _currentIndex = 0;
-    print('ProfileBufferService: Đã xóa buffer');
+    // Không xóa _swipedProfileIds để giữ trạng thái đã swipe
+    print('ProfileBufferService: Đã xóa buffer (giữ lại ${_swipedProfileIds.length} swiped profiles)');
+  }
+  
+  /// Reset toàn bộ (bao gồm swiped profiles) - chỉ dùng khi logout
+  Future<void> resetAll() async {
+    _profileBuffer.clear();
+    _profileInterests.clear();
+    _profileDistances.clear();
+    _swipedProfileIds.clear();
+    _likedProfileIds.clear();
+    _removedProfiles.clear();
+    _removedInterests.clear();
+    _removedDistances.clear();
+    _currentIndex = 0;
+    
+    // Xóa từ storage
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('swiped_profile_ids');
+    
+    debugPrint('ProfileBufferService: Reset toàn bộ dữ liệu');
   }
 
-  /// Debug info
+  /// Debug info (removed spam logs)
   void printDebugInfo() {
-    print('=== ProfileBufferService Debug Info ===');
-    print('Current User ID: $_currentUserId');
-    print('Current Index: $_currentIndex');
-    print('Buffer Size: ${_profileBuffer.length}');
-    print('Is Loading: $_isLoading');
-    
-    for (int i = 0; i < _profileBuffer.length; i++) {
-      final profile = _profileBuffer[i];
-      final marker = i == _currentIndex ? ' <- CURRENT' : '';
-      print('[$i] Profile ${profile.userId} - ${profile.firstName} ${profile.lastName}$marker');
-    }
-    print('=========================================');
+    debugPrint('=== ProfileBufferService Debug Info ===');
+    debugPrint('Current User ID: $_currentUserId');
+    debugPrint('Current Index: $_currentIndex');
+    debugPrint('Buffer Size: ${_profileBuffer.length}');
+    debugPrint('Is Loading: $_isLoading');
+    debugPrint('Swiped Profiles: ${_swipedProfileIds.length}');
+    debugPrint('=========================================');
   }
 }

@@ -6,7 +6,9 @@ import '../../core/services/match_service.dart';
 import '../../data/models/match/user_recommendation_model.dart';
 import '../../data/models/profile/interest_model.dart';
 import '../../data/models/match/swipe_request_model.dart';
+import '../../data/models/match/swipe_response_model.dart';
 import '../../core/services/profile_service.dart';
+import 'widgets/match_dialog.dart';
 
 class DiscoveryViewModel extends ChangeNotifier {
   final ProfileBufferService _bufferService = ProfileBufferService.instance;
@@ -15,6 +17,7 @@ class DiscoveryViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _error;
+  BuildContext? _context;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -28,6 +31,11 @@ class DiscoveryViewModel extends ChangeNotifier {
   List<InterestModel> getNextInterests() => _bufferService.getNextInterests();
   String? getCurrentDistance() => _bufferService.getCurrentDistance();
   String? getNextDistance() => _bufferService.getNextDistance();
+
+  /// Set context for showing dialogs
+  void setContext(BuildContext context) {
+    _context = context;
+  }
 
   /// Khởi tạo discovery
   Future<void> initialize() async {
@@ -75,9 +83,12 @@ class DiscoveryViewModel extends ChangeNotifier {
     final profile = currentProfile;
     if (profile == null) return;
     
-    print('DiscoveryViewModel: Like profile ${profile.userId}');
+    debugPrint('DiscoveryViewModel: Like profile ${profile.userId}');
     
     try {
+      // Đánh dấu profile đã like để không cho phép rewind
+      _bufferService.markProfileAsLiked(profile.userId);
+      
       // Gửi like request
       final request = SwipeRequestModel(
         targetUserId: profile.userId,
@@ -87,15 +98,20 @@ class DiscoveryViewModel extends ChangeNotifier {
       final response = await _matchService.swipeUser(request);
       
       if (response.isMatch) {
-        print('DiscoveryViewModel: Match với profile ${profile.userId}!');
-        // TODO: Show match dialog
+        debugPrint('DiscoveryViewModel: Match detected with profile ${profile.userId}!');
+        debugPrint('DiscoveryViewModel: Match response: ${response.toJson()}');
+        
+        // Show match dialog
+        await _showMatchDialog(profile, response);
+      } else {
+        debugPrint('DiscoveryViewModel: Like sent, no match');
       }
       
-      // Chuyển sang profile tiếp theo
+      // Đánh dấu profile đã swipe và chuyển sang profile tiếp theo
       await _moveToNextProfile();
       
     } catch (e) {
-      print('DiscoveryViewModel: Lỗi like profile - $e');
+      debugPrint('DiscoveryViewModel: Lỗi like profile - $e');
       _setError('Lỗi like profile: $e');
     }
   }
@@ -105,9 +121,12 @@ class DiscoveryViewModel extends ChangeNotifier {
     final profile = currentProfile;
     if (profile == null) return;
     
-    print('DiscoveryViewModel: Pass profile ${profile.userId}');
+    debugPrint('DiscoveryViewModel: Pass profile ${profile.userId}');
     
     try {
+      // Đánh dấu profile đã pass (cho phép rewind)
+      _bufferService.markProfileAsPassed(profile.userId);
+      
       // Gửi pass request
       final request = SwipeRequestModel(
         targetUserId: profile.userId,
@@ -116,11 +135,11 @@ class DiscoveryViewModel extends ChangeNotifier {
       
       await _matchService.swipeUser(request);
       
-      // Chuyển sang profile tiếp theo
+      // Đánh dấu profile đã swipe và chuyển sang profile tiếp theo
       await _moveToNextProfile();
       
     } catch (e) {
-      print('DiscoveryViewModel: Lỗi pass profile - $e');
+      debugPrint('DiscoveryViewModel: Lỗi pass profile - $e');
       _setError('Lỗi pass profile: $e');
     }
   }
@@ -138,6 +157,50 @@ class DiscoveryViewModel extends ChangeNotifier {
   Future<void> onSwipeComplete() async {
     print('DiscoveryViewModel: Swipe completed');
     await _moveToNextProfile();
+  }
+
+  /// Hiển thị dialog match
+  Future<void> _showMatchDialog(UserRecommendationModel profile, SwipeResponseModel response) async {
+    if (_context == null) {
+      print('DiscoveryViewModel: Context is null, cannot show match dialog');
+      return;
+    }
+
+    print('DiscoveryViewModel: ITS A MATCH! with ${profile.firstName} ${profile.lastName}');
+    
+    try {
+      // Get current user avatar URL (you can implement this if needed)
+      String? currentUserAvatarUrl;
+      
+      await showMatchDialog(
+        _context!,
+        response,
+        profile,
+        currentUserAvatarUrl,
+        onStartChat: () {
+          // Navigate to chat
+          print('DiscoveryViewModel: Navigate to chat with ${profile.firstName}');
+          _navigateToChat(response.chatRoomId, profile);
+        },
+      );
+    } catch (e) {
+      print('DiscoveryViewModel: Error showing match dialog - $e');
+    }
+  }
+
+  /// Navigate to chat room
+  void _navigateToChat(int? chatRoomId, UserRecommendationModel profile) {
+    if (chatRoomId == null) {
+      print('DiscoveryViewModel: Chat room ID is null');
+      return;
+    }
+    
+    // TODO: Implement navigation to chat screen
+    print('DiscoveryViewModel: Navigate to chat room $chatRoomId with ${profile.firstName}');
+    // Navigator.pushNamed(_context!, '/chat', arguments: {
+    //   'chatRoomId': chatRoomId,
+    //   'profile': profile,
+    // });
   }
 
   /// Rewind về profile trước đó

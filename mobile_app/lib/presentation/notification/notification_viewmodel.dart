@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/services/notification_service.dart';
 import '../../infrastructure/services/likes_service.dart';
 import '../../data/models/notification/notification_model.dart' as api;
+import '../../core/services/profile_service.dart';
 import '../../app/di/injection.dart';
 import 'dart:async';
 
@@ -56,6 +57,7 @@ enum NotificationType { match, message, like, system }
 class NotificationViewModel extends ChangeNotifier {
   final NotificationService _service = getIt<NotificationService>();
   final LikesService _likesService = getIt<LikesService>();
+  final ProfileService _profileService = getIt<ProfileService>();
   List<UINotificationModel> _notifications = [];
   bool _isLoading = true;
   String? _error;
@@ -90,6 +92,25 @@ class NotificationViewModel extends ChangeNotifier {
     }
   }
   
+  // Getters for liked users
+  List<dynamic> get likedUsers {
+    try {
+      return _likesService.likedUsers;
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting likedUsers: $e');
+      return [];
+    }
+  }
+  
+  int get likedUsersCount {
+    try {
+      return _likesService.likedUsers.length;
+    } catch (e) {
+      debugPrint('NotificationViewModel: Error getting likedUsersCount: $e');
+      return 0;
+    }
+  }
+  
   String? get error {
     try {
       return _error;
@@ -120,6 +141,13 @@ class NotificationViewModel extends ChangeNotifier {
   void setCurrentTabIndex(int index) {
     try {
       _currentTabIndex = index;
+      
+      // Refresh likes khi chuyển sang tab Likes (index 0)
+      if (index == 0) {
+        debugPrint('NotificationViewModel: Switched to Likes tab, refreshing likes...');
+        refreshLikes();
+      }
+      
       notifyListeners();
     } catch (e) {
       debugPrint('NotificationViewModel: Error setting current tab index: $e');
@@ -176,25 +204,66 @@ class NotificationViewModel extends ChangeNotifier {
   Future<void> loadNotifications() async {
     _isLoading = true;
     _error = null;
+    // Clear old notifications when loading
+    _notifications = [];
+    // Clear likes service data
+    _likesService.clearData();
     notifyListeners();
 
     try {
       debugPrint('NotificationViewModel: Loading notifications from API...');
       
-      // Initialize notification service với user ID (cần lấy từ auth service)
-      // TODO: Lấy user ID từ auth service hoặc từ JWT token
-      // Có thể decode JWT token để lấy user ID hoặc thêm method getUserId() vào AuthService
-      final userId = "current_user_id"; // Tạm thời hardcode
-      await _service.initialize(userId);
+      // Lấy user ID từ profile service
+      String? userId;
+      try {
+        debugPrint('NotificationViewModel: Getting profile data...');
+        final profileData = await _profileService.getProfile();
+        debugPrint('NotificationViewModel: Profile data keys: ${profileData.keys.toList()}');
+        debugPrint('NotificationViewModel: Profile data userId: ${profileData['userId']}');
+        debugPrint('NotificationViewModel: Profile data userId type: ${profileData['userId'].runtimeType}');
+        
+        final userIdInt = profileData['userId'] as int?;
+        userId = userIdInt?.toString();
+        debugPrint('NotificationViewModel: Got user ID from profile: $userId');
+        debugPrint('NotificationViewModel: User ID type: ${userId.runtimeType}');
+        debugPrint('NotificationViewModel: User ID is empty: ${userId?.isEmpty}');
+        debugPrint('NotificationViewModel: User ID equals current_user_id: ${userId == "current_user_id"}');
+      } catch (e) {
+        debugPrint('NotificationViewModel: Error getting user ID from profile: $e');
+        userId = null;
+      }
+      
+      if (userId != null && userId.isNotEmpty) {
+        debugPrint('NotificationViewModel: Calling notification service initialize with userId: $userId');
+        debugPrint('NotificationViewModel: User ID is not null: ${userId != null}');
+        debugPrint('NotificationViewModel: User ID is not empty: ${userId.isNotEmpty}');
+        await _service.initialize(userId);
+        debugPrint('NotificationViewModel: Notification service initialized successfully');
+      } else {
+        debugPrint('NotificationViewModel: Invalid user ID, skipping notification service initialization');
+        debugPrint('NotificationViewModel: User ID is null: ${userId == null}');
+        debugPrint('NotificationViewModel: User ID is empty: ${userId?.isEmpty}');
+      }
       
       // Load notifications từ API thật (sẽ trả về empty nếu chưa initialize)
       await _service.refreshNotifications();
       
       // Load liked users từ API thật
-      await _likesService.fetchLikedUsers();
-      
-      // Tạo notifications từ liked users
-      _createNotificationsFromLikedUsers();
+      try {
+        debugPrint('NotificationViewModel: About to call _likesService.fetchLikedUsers()...');
+        await _likesService.fetchLikedUsers();
+        debugPrint('NotificationViewModel: Successfully called _likesService.fetchLikedUsers()');
+        // Tạo notifications từ liked users
+        _createNotificationsFromLikedUsers();
+        debugPrint('NotificationViewModel: Created notifications from liked users');
+      } catch (e) {
+        debugPrint('NotificationViewModel: ERROR loading liked users: $e');
+        debugPrint('NotificationViewModel: Error type: ${e.runtimeType}');
+        debugPrint('NotificationViewModel: Error details: ${e.toString()}');
+        // Set error if likes service fails
+        _error = 'Failed to load likes: ${e.toString()}';
+        // Continue without liked users
+      }
       
       // Setup streams nếu chưa setup
       if (!_initialized) {
@@ -215,11 +284,15 @@ class NotificationViewModel extends ChangeNotifier {
 
   Future<void> refreshLikes() async {
     try {
+      debugPrint('NotificationViewModel: ==> refreshLikes called');
       await _likesService.fetchLikedUsers();
+      debugPrint('NotificationViewModel: refreshLikes - fetchLikedUsers completed');
       _createNotificationsFromLikedUsers();
+      debugPrint('NotificationViewModel: refreshLikes - createNotificationsFromLikedUsers completed');
       notifyListeners();
+      debugPrint('NotificationViewModel: refreshLikes - notifyListeners completed');
     } catch (e) {
-      debugPrint('NotificationViewModel: Error refreshing likes: $e');
+      debugPrint('NotificationViewModel: ERROR in refreshLikes: $e');
     }
   }
 
@@ -294,6 +367,8 @@ class NotificationViewModel extends ChangeNotifier {
       final likedUsers = _likesService.likedUsers;
       final now = DateTime.now();
       
+      debugPrint('NotificationViewModel: Creating notifications from ${likedUsers.length} liked users');
+      
       // Xóa các like notifications cũ (để tránh duplicate)
       _notifications.removeWhere((n) => n.type == NotificationType.like);
       
@@ -306,7 +381,7 @@ class NotificationViewModel extends ChangeNotifier {
         
         final notification = UINotificationModel(
           id: 'like_${likedUser.id}',
-          title: 'new_like',
+          title: 'New Like',
           body: '${likedUser.fullName} liked your profile',
           time: notificationTime,
           type: NotificationType.like,
@@ -316,10 +391,14 @@ class NotificationViewModel extends ChangeNotifier {
         );
         
         _notifications.add(notification);
+        debugPrint('NotificationViewModel: Added notification for user: ${likedUser.fullName}');
       }
       
       // Sort by time (newest first)
       _notifications.sort((a, b) => b.time.compareTo(a.time));
+      
+      debugPrint('NotificationViewModel: Created ${_notifications.where((n) => n.type == NotificationType.like).length} like notifications');
+      notifyListeners();
     } catch (e) {
       debugPrint('NotificationViewModel: Error creating notifications from liked users: $e');
     }

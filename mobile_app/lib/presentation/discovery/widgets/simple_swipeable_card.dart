@@ -15,6 +15,8 @@ class SimpleSwipeableCard extends StatefulWidget {
   final Function(bool isLike)? onSwipeDirection;
   final Function(double offset)? onSwipeProgress; // Track swipe progress
   final VoidCallback? onSwipeReset; // Reset when cancelled
+  // New: notify final swipe result to parent (true = like/right, false = pass/left)
+  final Function(bool isLike)? onSwipeCompleted;
 
   const SimpleSwipeableCard({
     super.key,
@@ -28,6 +30,7 @@ class SimpleSwipeableCard extends StatefulWidget {
     this.onSwipeDirection,
     this.onSwipeProgress,
     this.onSwipeReset,
+    this.onSwipeCompleted,
   });
 
   @override
@@ -266,6 +269,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
     final isFastSwipe = velocity > 400; // Giảm từ 500 xuống 400
     
     if (isSwipe || isFastSwipe) {
+      final bool isLike = _dragOffset > 0;
       // Complete the swipe animation
       _animationController.forward().then((_) {
         // Reset for next card
@@ -276,6 +280,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
         widget.onSwipeReset?.call();
         
         // Notify parent
+        widget.onSwipeCompleted?.call(isLike);
         widget.onSwiped?.call();
       });
     } else {

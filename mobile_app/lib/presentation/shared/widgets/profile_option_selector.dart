@@ -81,7 +81,7 @@ class ProfileOptionSelector extends StatelessWidget {
       );
     } catch (e, stack) {
       debugPrint('ERROR in ProfileOptionSelector: $e\n$stack');
-      return Center(child: Text('Widget error: $e'));
+      return const Center(child: Text('Unable to load options'));
     }
   }
 
