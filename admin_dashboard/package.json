@@ -5,14 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:static": "next build",
-    "build:prod": "NODE_ENV=production next build",
-    "build:force": "npm install --legacy-peer-deps && next build",
-    "install:force": "npm install --legacy-peer-deps",
-    "install:pnpm": "pnpm install",
     "start": "next start",
-    "start:prod": "NODE_ENV=production next start -p 3000",
-    "export": "next build && next export",
     "lint": "next lint"
   },
   "dependencies": {
@@ -54,11 +47,11 @@
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-themes": "latest",
-    "react": "^18.2.0 || ^19.0.0",
+    "react": "^19",
     "react-colorful": "latest",
     "react-country-flag": "^3.1.0",
     "react-day-picker": "^9.0.0",
-    "react-dom": "^18.2.0 || ^19.0.0",
+    "react-dom": "^19",
     "react-hook-form": "^7.54.1",
     "react-is": "^19.1.0",
     "react-resizable-panels": "^2.1.7",
@@ -66,22 +59,8 @@
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "vaul": "^0.9.6",
+    "vaul": "^1.0.0",
     "zod": "^3.24.1"
-  },
-  "overrides": {
-    "vaul": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    },
-    "@radix-ui/react-*": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    }
-  },
-  "peerDependencies": {
-    "react": "^18.2.0 || ^19.0.0",
-    "react-dom": "^18.2.0 || ^19.0.0"
   },
   "devDependencies": {
     "@types/d3-array": "^3.2.1",
