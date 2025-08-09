@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
+  // Skip middleware for static files and API routes
+  if (
+    request.nextUrl.pathname.startsWith('/_next') ||
+    request.nextUrl.pathname.startsWith('/api') ||
+    request.nextUrl.pathname.includes('.') ||
+    request.nextUrl.pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
+
   // Check if user is trying to access protected routes
   const protectedPaths = [
     "/dashboard",
@@ -10,7 +20,12 @@ export function middleware(request: NextRequest) {
     "/reports",
     "/messages",
     "/matches",
+    "/subscriptions",
+    "/settings",
+    "/help",
+    "/profile"
   ];
+  
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -18,9 +33,20 @@ export function middleware(request: NextRequest) {
   if (isProtectedPath) {
     // Check for auth token in cookies
     const token = request.cookies.get("auth_token")?.value;
+    
     if (!token) {
-      // Redirect to login if no token
-      return NextResponse.redirect(new URL("/login", request.url));
+      // For production static exports, we need to handle this differently
+      const isStaticExport = process.env.NEXT_EXPORT === 'true';
+      
+      if (isStaticExport) {
+        // In static export mode, redirect using client-side JavaScript
+        const response = NextResponse.next();
+        response.headers.set('x-middleware-rewrite', '/login');
+        return response;
+      } else {
+        // Normal redirect for server-side rendering
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
     }
   }
 

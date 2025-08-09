@@ -16,7 +16,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
 
     // Forward request to backend
-    const backendResponse = await fetch('http://localhost:8080/api/user', {
+    const backendResponse = await fetch('https://api.amoura.space/api/user', {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    const backendResponse = await fetch('http://localhost:8080/api/user', {
+    const backendResponse = await fetch('https://api.amoura.space/api/user', {
       method: 'PATCH', // Backend expects PATCH, not PUT
       headers: {
         'Content-Type': 'application/json',

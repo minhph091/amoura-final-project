@@ -55,7 +55,20 @@ export default function LoginPage() {
       if (res.success && res.data) {
         window.location.assign("/dashboard");
       } else {
-        setError(res.error || t.login.invalidCredentials || "Login failed");
+        // More detailed error handling
+        let errorMessage = res.error || t.login.invalidCredentials || "Login failed";
+        
+        // Check for specific error types
+        if (res.error && res.error.includes("Resource not found")) {
+          errorMessage = "❌ Lỗi kết nối API: Không tìm thấy endpoint đăng nhập. Vui lòng kiểm tra cấu hình server.";
+        } else if (res.error && res.error.includes("USER_NOT_FOUND")) {
+          errorMessage = "❌ Không tìm thấy tài khoản admin. Vui lòng liên hệ kỹ thuật để tạo tài khoản admin.";
+        } else if (res.error && res.error.includes("Network error")) {
+          errorMessage = "❌ Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.";
+        }
+        
+        console.error("Login failed:", res);
+        setError(errorMessage);
       }
     } catch (error) {
       setError("An unexpected error occurred");

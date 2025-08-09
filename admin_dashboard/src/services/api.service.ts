@@ -54,12 +54,18 @@ export class ApiClient {
     }
 
     try {
+      console.log(`🔗 API Request: ${options.method || 'GET'} ${url}`);
+      
       const response = await fetch(url, {
         ...options,
         headers,
-        // Remove credentials for proxy compatibility
-        // credentials: 'include',
+        // Enable credentials for CORS requests
+        credentials: 'include',
+        // Add more CORS-friendly options
+        mode: 'cors',
       });
+
+      console.log(`📡 API Response: ${response.status} ${response.statusText}`);
 
       let data: any = null;
       const contentType = response.headers.get("content-type");
@@ -70,6 +76,7 @@ export class ApiClient {
         try {
           data = await response.json();
         } catch (err) {
+          console.error('❌ JSON parsing error:', err);
           return {
             success: false,
             error: "Invalid JSON response from server.",
@@ -78,7 +85,9 @@ export class ApiClient {
       }
 
       if (!response.ok) {
-        // Handle 404 errors more gracefully
+        console.error(`❌ API Error ${response.status}:`, data);
+        
+        // Handle specific HTTP status codes
         if (response.status === 404) {
           return {
             success: false,
@@ -86,7 +95,6 @@ export class ApiClient {
           };
         }
         
-        // Handle 403 errors with more specific messages
         if (response.status === 403) {
           return {
             success: false,
@@ -94,11 +102,29 @@ export class ApiClient {
           };
         }
         
+        if (response.status === 401) {
+          // Clear auth data on unauthorized
+          this.clearToken();
+          return {
+            success: false,
+            error: data?.message || "Authentication required. Please login again.",
+          };
+        }
+
+        if (response.status === 0 || response.status >= 500) {
+          return {
+            success: false,
+            error: "Server connection failed. Please check your internet connection and try again.",
+          };
+        }
+        
         return {
           success: false,
-          error: (data && data.message) || `HTTP Error: ${response.status}`,
+          error: (data && (data.message || data.error)) || `HTTP Error: ${response.status}`,
         };
       }
+
+      console.log('✅ API Success:', data);
 
       // Backend trả về trực tiếp DTO object, không wrap trong data field
       // Trừ login response có accessToken và user
@@ -115,11 +141,20 @@ export class ApiClient {
         message: data && data.message,
       };
     } catch (error) {
+      console.error('❌ Network Error:', error);
+      
       // Network errors or connection issues
       if (error instanceof TypeError && error.message.includes('fetch')) {
         return {
           success: false,
           error: "Network connection failed. Please check your internet connection.",
+        };
+      }
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        return {
+          success: false,
+          error: "Request timeout. Please try again.",
         };
       }
       
