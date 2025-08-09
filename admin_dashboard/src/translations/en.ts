@@ -140,7 +140,7 @@ export const en = {
     subtitle: "Sign in to your admin dashboard",
     email: "Email",
     password: "Password",
-    emailPlaceholder: "admin@amoura.space",
+    emailPlaceholder: "Enter your email",
     passwordPlaceholder: "Enter your password",
     loginButton: "Sign In",
     rememberMe: "Remember me",

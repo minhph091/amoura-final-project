@@ -151,7 +151,7 @@ export const vi = {
     subtitle: "Đăng nhập vào bảng điều khiển quản trị",
     email: "Email",
     password: "Mật khẩu",
-    emailPlaceholder: "admin@amoura.space",
+    emailPlaceholder: "Nhập email của bạn",
     passwordPlaceholder: "Nhập mật khẩu",
     loginButton: "Đăng nhập",
     rememberMe: "Ghi nhớ đăng nhập",

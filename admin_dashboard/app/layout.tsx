@@ -4,8 +4,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "@/src/contexts/LanguageContext";
-import Footer from "@/components/footer";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
+import ConditionalFooter from "@/components/ConditionalFooter";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,7 +32,7 @@ export default function RootLayout({
           >
             <LanguageProvider>
               {children}
-              <Footer />
+              <ConditionalFooter />
             </LanguageProvider>
           </ThemeProvider>
         </ErrorBoundary>
