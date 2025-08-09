@@ -35,13 +35,8 @@ const nextConfig = {
         return [
           {
             source: '/api/:path*',
-            destination: 'http://localhost:8080/api/:path*',
-          },
-          // WebSocket proxy
-          {
-            source: '/api/ws',
-            destination: 'http://localhost:8080/ws',
-          },
+            destination: 'https://api.amoura.space/api/:path*',
+          }
         ];
       }
       return [];

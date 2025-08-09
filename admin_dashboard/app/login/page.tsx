@@ -67,7 +67,6 @@ export default function LoginPage() {
           errorMessage = "❌ Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.";
         }
         
-        console.error("Login failed:", res);
         setError(errorMessage);
       }
     } catch (error) {

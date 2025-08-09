@@ -97,7 +97,12 @@ export function DashboardStats() {
         const res = await (await import("@/src/services/stats.service")).statsService.getDashboard();
         setStats(res);
       } catch (err: any) {
-        setError(err.message || "Failed to load statistics");
+        if (err.message.includes('Backend service unavailable') || 
+            err.message.includes('Network connection failed')) {
+          setError("Backend service unavailable");
+        } else {
+          setError(err.message || "Failed to load statistics");
+        }
       } finally {
         setLoading(false);
       }
@@ -105,9 +110,9 @@ export function DashboardStats() {
     fetchStats();
   }, []);
 
-  if (loading) return <div>{t.loadingText}</div>;
-  if (error) return <div className="text-red-500">Error: {error}</div>;
-  if (!stats) return <div>No statistics available.</div>;
+  if (loading) return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"><div className="animate-pulse bg-gray-200 h-32 rounded"></div><div className="animate-pulse bg-gray-200 h-32 rounded"></div><div className="animate-pulse bg-gray-200 h-32 rounded"></div><div className="animate-pulse bg-gray-200 h-32 rounded"></div></div>;
+  if (error) return <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">⚠️ {error}</div>;
+  if (!stats) return <div className="bg-gray-50 border border-gray-200 text-gray-600 p-4 rounded-lg">📊 Đang chờ dữ liệu dashboard từ server...</div>;
 
   // Tính toán trend (tăng trưởng) dựa trên dữ liệu userGrowthChart và matchingSuccessChart
   let userGrowthPercent = 0;

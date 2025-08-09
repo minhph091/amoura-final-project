@@ -55,9 +55,13 @@ export function UserGrowthChart() {
         
         setData(chartData);
       } catch (err: any) {
-        console.error("Error fetching user growth data:", err);
         setData([]);
-        setError("Backend service unavailable");
+        if (err.message.includes('Backend service unavailable') || 
+            err.message.includes('Network connection failed')) {
+          setError("Backend service unavailable");
+        } else {
+          setError(err.message || "Failed to load data");
+        }
       } finally {
         setLoading(false);
       }
@@ -85,8 +89,12 @@ export function UserGrowthChart() {
         <CardHeader>
           <CardTitle>{t.userGrowth}</CardTitle>
         </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center text-red-500">
-          Error: {error}
+        <CardContent className="h-80 flex items-center justify-center">
+          <div className="text-center text-gray-600">
+            <span className="text-2xl">📈</span>
+            <p className="mt-2">Biểu đồ tăng trưởng đang được phát triển</p>
+            <p className="text-sm text-gray-500">Vui lòng chờ backend team deploy admin endpoints</p>
+          </div>
         </CardContent>
       </Card>
     );

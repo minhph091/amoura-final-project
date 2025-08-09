@@ -60,7 +60,12 @@ export default function RecentUsers() {
         setVisibleUsers(userActivities);
       } catch (err: any) {
         setVisibleUsers([]);
-        setError("Failed to load activities");
+        if (err.message.includes('Backend service unavailable') || 
+            err.message.includes('Network connection failed')) {
+          setError("Failed to load activities");
+        } else {
+          setError(err.message || "Failed to load activities");
+        }
       } finally {
         setLoading(false);
       }
@@ -68,8 +73,8 @@ export default function RecentUsers() {
     fetchRecentUsers();
   }, []);
 
-  if (loading) return <Card><CardContent>{t.loadingText}</CardContent></Card>;
-  if (error) return <Card><CardContent className="text-red-500">Error: {error}</CardContent></Card>;
+  if (loading) return <Card><CardContent className="flex items-center justify-center p-8"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3"></div>{t.loadingText}</CardContent></Card>;
+  if (error) return <Card><CardContent className="text-center p-8 text-gray-600"><span className="text-2xl">👥</span><p className="mt-2">Hoạt động gần đây đang được phát triển</p><p className="text-sm text-gray-500">Vui lòng chờ backend team deploy admin endpoints</p></CardContent></Card>;
 
   const getStatusColor = (status: string) => {
     return getStatusColorUtil(status);

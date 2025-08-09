@@ -21,20 +21,32 @@ export default function DashboardPage() {
   useEffect(() => {
     try {
       const user = authService.getCurrentUser();
-      if (!user) {
-        // Nếu chưa đăng nhập, chuyển về trang login
+      const token = localStorage.getItem("auth_token");
+      
+      if (!user || !token) {
+        localStorage.clear();
         router.replace("/login");
         setLoading(true);
         return;
       }
+      
       const roleName = user.roleName || null;
       setRole(roleName);
+      
+      if (roleName !== "ADMIN" && roleName !== "MODERATOR") {
+        setError("Bạn không có quyền truy cập trang quản trị");
+        return;
+      }
+      
       if (roleName === "MODERATOR") {
         router.replace("/");
+        return;
       }
+      
       setError(null);
     } catch (err) {
       setError("Authentication error occurred");
+      localStorage.clear();
       router.replace("/login");
     } finally {
       setLoading(false);
