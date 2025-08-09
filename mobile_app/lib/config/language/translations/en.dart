@@ -509,6 +509,24 @@ final Map<String, dynamic> en = {
   'view_details': 'View details',
   'widget_error_message': 'Widget error: {error}',
 
+  // Additional missing keys
+  'about_you': 'About You',
+  'current_password': 'Current Password',
+  'current_password_hint': 'Enter your current password',
+  'error_loading_chats': 'Error loading chats',
+  'job_education_info': 'Job & Education Information',
+  'language': 'Language',
+  'mock_message_1': 'Hey there! How are you doing today?',
+  'mock_message_2': 'I love your profile! We have so much in common.',
+  'mock_message_3': 'What are your favorite hobbies?',
+  'mock_message_4': 'Would you like to grab coffee sometime?',
+  'no_blocked_messages': 'No blocked messages',
+  'no_blocked_users': 'No blocked users',
+  'no_messages_yet': 'No messages yet',
+  'start_conversation': 'Start conversation',
+  'your_appearance': 'Your Appearance',
+  'your_lifestyle': 'Your Lifestyle',
+
   // Voice messages
   'voice_message': 'Voice message',
   'video_message': 'Video message',
@@ -547,4 +565,12 @@ final Map<String, dynamic> en = {
   'feature_special_events': 'Special Events',
   'feature_special_events_desc':
       'Get access to exclusive events and special gifts',
+
+  // Reset Password (Missing Keys)
+  'create_new_password': 'Create New Password',
+  'create_new_password_subtitle': 'Enter your new password to reset your account',
+  'verify_email': 'Verify Email',
+  'verify_email_subtitle': 'Check your email and click the verification link',
+  'enter_email_reset': 'Enter email to reset password',
+  'password_mismatch': 'Passwords do not match',
 };

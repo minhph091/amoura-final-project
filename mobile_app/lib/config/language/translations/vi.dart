@@ -45,13 +45,13 @@ final Map<String, dynamic> vi = {
   'delete_account_title': 'Xóa tài khoản',
   'delete_confirmation':
       'Tôi hiểu điều này sẽ xóa tài khoản và dữ liệu của tôi',
-  // 'delete_account': 'Xóa tài khoản',
+  'delete_account': 'Xóa tài khoản',
   'message_notifications': 'Thông báo tin nhắn',
   'subscription_plans': 'Gói đăng ký',
   'support_legal': 'Hỗ trợ & Pháp lý',
   'exclusive_gifts_and_privileges': 'Quà tặng và đặc quyền độc quyền',
   'proceed_to_payment': 'Tiến hành thanh toán',
-  // 'save_changes': 'Lưu thay đổi',
+  'save_changes': 'Lưu thay đổi',
   'users': 'Người dùng',
   'blocked_users': 'Người dùng bị chặn',
   'blocked_messages': 'Tin nhắn bị chặn',
@@ -298,10 +298,10 @@ final Map<String, dynamic> vi = {
   'system': 'Hệ thống',
 
   // VIP and Subscription
-  // 'amoura_vip': 'Amoura VIP',
+  'amoura_vip': 'Amoura VIP',
   'select_subscription_plan': 'Vui lòng chọn gói đăng ký',
   'subscription_selected': 'Đã chọn gói đăng ký',
-  // 'unlock_premium_features': 'Mở khóa tính năng Premium',
+  'unlock_premium_features': 'Mở khóa tính năng Premium',
   'get_premium_benefits': 'Nhận quyền lợi Premium',
   'premium_benefits_subtitle':
       'Tận hưởng quyền truy cập không giới hạn vào các tính năng premium',
@@ -485,12 +485,12 @@ final Map<String, dynamic> vi = {
   'reply': 'Trả lời',
   'edit': 'Chỉnh sửa',
   'copy': 'Sao chép',
-  // 'recall_message_question': 'Thu hồi tin nhắn?',
-  // 'delete_message_question': 'Xóa tin nhắn?',
+  'recall_message_question': 'Thu hồi tin nhắn?',
+  'delete_message_question': 'Xóa tin nhắn?',
   'message_deleted_for_you': 'Tin nhắn này sẽ chỉ bị xóa cho bạn.',
   'search': 'Tìm kiếm',
   'view_media_files_links': 'Xem file phương tiện, file và liên kết',
-  // 'delete_chat_question': 'Xóa cuộc trò chuyện?',
+  'delete_chat_question': 'Xóa cuộc trò chuyện?',
   'recording_voice_message': 'Đang ghi âm tin nhắn thoại...',
   'recording_video_message': 'Đang ghi hình tin nhắn video...',
   'unpin_this_message': 'Bỏ ghim tin nhắn này',
@@ -500,7 +500,7 @@ final Map<String, dynamic> vi = {
 
   // VIP & Subscription
   'vip_benefits': 'Quyền lợi VIP',
-  // 'choose_a_plan': 'Chọn gói',
+  'choose_a_plan': 'Chọn gói',
   'unlimited_rewind': 'Quay lại không giới hạn',
   'rewind_description':
       'Quay lại bất kỳ hồ sơ nào bạn đã bỏ qua bất cứ lúc nào',
@@ -623,4 +623,26 @@ final Map<String, dynamic> vi = {
       'Làm hồ sơ của bạn nổi bật với hiệu ứng đặc biệt',
   'feature_special_events': 'Sự kiện đặc biệt',
   'feature_special_events_desc': 'Tham gia sự kiện và nhận quà tặng độc quyền',
+
+  // Reset Password (Missing Keys)
+  'create_new_password': 'Tạo mật khẩu mới',
+  'create_new_password_subtitle': 'Nhập mật khẩu mới để đặt lại tài khoản của bạn',
+  'verify_email': 'Xác minh email',
+  'verify_email_subtitle': 'Kiểm tra email và nhấn vào liên kết xác minh',
+  'enter_email_reset': 'Nhập email để đặt lại mật khẩu',
+  'password_mismatch': 'Mật khẩu không khớp',
+
+  // Additional missing keys
+  'current_password': 'Mật khẩu hiện tại',
+  'current_password_hint': 'Nhập mật khẩu hiện tại của bạn',
+  'error_loading_chats': 'Lỗi khi tải cuộc trò chuyện',
+  'language': 'Ngôn ngữ',
+  'mock_message_1': 'Chào bạn! Hôm nay bạn thế nào?',
+  'mock_message_2': 'Mình thích hồ sơ của bạn! Chúng ta có nhiều điểm chung.',
+  'mock_message_3': 'Sở thích yêu thích của bạn là gì?',
+  'mock_message_4': 'Bạn có muốn đi uống cà phê không?',
+  'no_blocked_messages': 'Không có tin nhắn bị chặn',
+  'no_blocked_users': 'Không có người dùng bị chặn',
+  'no_messages_yet': 'Chưa có tin nhắn nào',
+  'start_conversation': 'Bắt đầu cuộc trò chuyện',
 };
