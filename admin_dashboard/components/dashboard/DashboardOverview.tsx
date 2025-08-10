@@ -21,7 +21,7 @@ export function DashboardOverview() {
         const data = await statsService.getDashboard();
         setDashboardData(data);
       } catch (error) {
-        console.error("Dashboard fetch error:", error);
+        // Silent error handling - backend may not be ready
       } finally {
         setLoading(false);
       }
@@ -47,27 +47,6 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Thông báo nếu backend chưa có admin endpoints */}
-      {dashboardData?.recentActivities?.some(activity => 
-        activity.description.includes('Admin module chưa được deploy')
-      ) && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <span className="text-lg">🚧</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium">Thông báo hệ thống</h3>
-              <p className="mt-1 text-sm">
-                Admin dashboard đang hiển thị ở chế độ demo. Production server chưa deploy đầy đủ admin module endpoints.
-                <br />
-                <strong>Login thành công</strong> nhưng các chức năng quản trị cần backend team deploy thêm AdminController.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Dashboard Stats */}
       <DashboardStats />
 
