@@ -180,26 +180,15 @@ Visit the API documentation:
 
 ### Match Endpoints
 
-#### Get Potential Matches
+#### Get Comprehensive Matches
 ```http
-GET /api/v1/users/{user_id}/potential-matches?limit=10
+GET /api/v1/users/{user_id}/matches?limit=20
 ```
 
-Returns potential matches for a user based on **Logistic Regression** predictions.
-
-#### Get Match Probability
-```http
- 
-```
-
-Returns match probability between two specific users using **Logistic Regression**.
-
-#### Get Backup Recommendations
-```http
-GET /api/v1/users/{user_id}/backup-recommendations?limit=10
-```
-
-Returns backup recommendations when AI predictions are exhausted.
+Returns a cascade of matches using:
+- ML predictions (primary)
+- Gender/orientation compatibility (secondary)
+- Random users as fallback
 
 ### Message Endpoints
 
@@ -216,7 +205,7 @@ Content-Type: application/json
 }
 ```
 
-Uses AI to improve messages based on conversation context.
+Uses AI to improve messages based on conversation and concise profile context.
 
 ## 🔧 Configuration
 
