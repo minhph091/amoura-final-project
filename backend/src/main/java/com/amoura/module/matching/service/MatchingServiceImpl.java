@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -48,6 +49,7 @@ public class MatchingServiceImpl implements MatchingService {
     private final UserPetRepository userPetRepository;
     private final NotificationService notificationService;
     private final ChatService chatService;
+    private final AIServiceClient aiServiceClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,6 +57,38 @@ public class MatchingServiceImpl implements MatchingService {
         User currentUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found", "USER_NOT_FOUND"));
 
+        // Try to get AI-powered recommendations first
+        List<Long> aiRecommendedUserIds = Collections.emptyList();
+        try {
+            if (aiServiceClient.isAIServiceAvailable()) {
+                log.info("Using AI service for recommendations for user: {}", currentUser.getId());
+                aiRecommendedUserIds = aiServiceClient.getPotentialMatches(currentUser.getId(), 20);
+            } else {
+                log.warn("AI service is not available, falling back to basic recommendations");
+            }
+        } catch (Exception e) {
+            log.error("Error calling AI service, falling back to basic recommendations: {}", e.getMessage());
+        }
+
+        List<User> recommendedUsers;
+        
+        if (!aiRecommendedUserIds.isEmpty()) {
+            // Use AI recommendations
+            log.info("Found {} AI recommendations for user {}", aiRecommendedUserIds.size(), currentUser.getId());
+            recommendedUsers = userRepository.findAllById(aiRecommendedUserIds);
+        } else {
+            // Fallback to basic recommendation logic
+            log.info("Using fallback recommendation logic for user {}", currentUser.getId());
+            recommendedUsers = getBasicRecommendations(currentUser);
+        }
+
+        // Convert to DTO and return
+        return recommendedUsers.stream()
+                .map(this::convertToUserRecommendationDTO)
+                .collect(Collectors.toList());
+    }
+
+    private List<User> getBasicRecommendations(User currentUser) {
         // Lấy danh sách tất cả người dùng khác (trừ người dùng hiện tại)
         List<User> allUsers = userRepository.findAll().stream()
                 .filter(user -> !user.getId().equals(currentUser.getId()))
@@ -66,13 +100,8 @@ public class MatchingServiceImpl implements MatchingService {
                 .map(swipe -> swipe.getTargetUser().getId())
                 .collect(Collectors.toList());
 
-        List<User> availableUsers = allUsers.stream()
+        return allUsers.stream()
                 .filter(user -> !swipedUserIds.contains(user.getId()))
-                .collect(Collectors.toList());
-
-        // Chuyển đổi thành DTO
-        return availableUsers.stream()
-                .map(this::convertToUserRecommendationDTO)
                 .collect(Collectors.toList());
     }
 

@@ -3,6 +3,7 @@ package com.amoura.module.chat.api;
 import com.amoura.infrastructure.security.JwtTokenProvider.CustomUserDetails;
 import com.amoura.module.chat.dto.*;
 import com.amoura.module.chat.service.ChatService;
+import com.amoura.module.matching.service.AIServiceClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,6 +47,7 @@ public class ChatController {
     private final ChatService chatService;
     private final MessageRepository messageRepository;
     private final UserMessageVisibilityRepository userMessageVisibilityRepository;
+    private final AIServiceClient aiServiceClient;
     private static final Logger log = LoggerFactory.getLogger(ChatController.class);
 
     @Value("${file.storage.local.upload-dir}")
@@ -185,6 +187,35 @@ public class ChatController {
             return ResponseEntity.ok().build();
         } catch (ApiException e) {
             return ResponseEntity.status(e.getStatus()).build();
+        }
+    }
+
+    @PostMapping("/ai-edit")
+    @Operation(summary = "Edit a message using AI")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<AIEditMessageResponse> editMessageWithAI(
+            @Valid @RequestBody AIEditMessageRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            Long senderId = getUserId(userDetails);
+            log.info("AI edit message request from user {} for receiver {}", senderId, request.getReceiverId());
+            
+            AIEditMessageResponse response = aiServiceClient.editMessage(request, senderId);
+            
+            log.info("AI edit message completed for user {}", senderId);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error editing message with AI for user {}: {}", getUserId(userDetails), e.getMessage());
+            
+            // Fallback: return original message
+            AIEditMessageResponse fallbackResponse = AIEditMessageResponse.builder()
+                    .editedMessage(request.getOriginalMessage())
+                    .originalMessage(request.getOriginalMessage())
+                    .build();
+            
+            return ResponseEntity.ok(fallbackResponse);
         }
     }
 
