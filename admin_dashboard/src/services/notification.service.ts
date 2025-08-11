@@ -112,63 +112,72 @@ export class NotificationService {
 
   // Get unread notifications
   async getUnreadNotifications(): Promise<ApiResponse<Notification[]>> {
-    return apiClient.get<Notification[]>(API_ENDPOINTS.NOTIFICATIONS.UNREAD);
-  }
-
-  // Get unread count
-  async getUnreadCount(): Promise<ApiResponse<number>> {
-    return apiClient.get<number>(API_ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT);
-  }
-
-  // Mark notification as read
-  async markAsRead(notificationId: string): Promise<ApiResponse<void>> {
-    return apiClient.put<void>(
-      API_ENDPOINTS.NOTIFICATIONS.MARK_READ(notificationId)
-    );
-  }
-
-  // Mark all notifications as read
-  async markAllAsRead(): Promise<ApiResponse<void>> {
-    return apiClient.put<void>(API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ);
-  }
-
-  // Get notification statistics (mock data since backend may not have this)
-  async getNotificationStats(): Promise<ApiResponse<NotificationStats>> {
     try {
-      // Try to get real data first
-      const unreadResponse = await this.getUnreadCount();
-      const unreadCount = unreadResponse.success ? unreadResponse.data || 0 : 0;
-
-      // Mock data for other stats since backend doesn't have statistics endpoint
-      const stats: NotificationStats = {
-        totalNotifications: 5420,
-        unreadNotifications: unreadCount,
-        readNotifications: 5420 - unreadCount,
-        todayNotifications: 89,
-        byType: {
-          MATCH: 1200,
-          MESSAGE: 2300,
-          LIKE: 1500,
-          VIEW: 300,
-          SYSTEM: 100,
-          MODERATION: 20,
-        },
-      };
-
-      return {
-        success: true,
-        data: stats,
-      };
+      return await apiClient.get<Notification[]>(
+        API_ENDPOINTS.NOTIFICATIONS.UNREAD
+      );
     } catch (error) {
       return {
         success: false,
         error:
           error instanceof Error
             ? error.message
-            : "Failed to fetch notification stats",
+            : "Failed to get unread notifications",
+        data: [],
       };
     }
   }
+
+  // Get unread count
+  async getUnreadCount(): Promise<ApiResponse<number>> {
+    try {
+      return await apiClient.get<number>(
+        API_ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to get unread count",
+        data: 0,
+      };
+    }
+  }
+
+  // Mark notification as read
+  async markAsRead(notificationId: string): Promise<ApiResponse<void>> {
+    try {
+      return await apiClient.put<void>(
+        API_ENDPOINTS.NOTIFICATIONS.MARK_READ(notificationId)
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to mark notification as read",
+      };
+    }
+  }
+
+  // Mark all notifications as read
+  async markAllAsRead(): Promise<ApiResponse<void>> {
+    try {
+      return await apiClient.put<void>(
+        API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to mark all notifications as read",
+      };
+    }
+  }
+
 }
 
 export const notificationService = new NotificationService();

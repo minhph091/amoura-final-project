@@ -4,10 +4,27 @@ import type {
   LoginRequest,
   LoginResponse,
   ChangePasswordRequest,
+  ForgotPasswordRequest,
+  VerifyOtpRequest,
+  ResetPasswordRequest,
+  ForgotPasswordResponse,
+  VerifyOtpResponse,
+  ResetPasswordResponse,
 } from "../types/auth.types";
 import type { ApiResponse } from "../types/common.types";
 
 export class AuthService {
+
+  async registerInitiate(data: any): Promise<ApiResponse<any>> {
+    try {
+      return await apiClient.post(API_ENDPOINTS.AUTH.REGISTER_INITIATE, data);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to register",
+      };
+    }
+  }
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     try {
       const response = await apiClient.post<LoginResponse>(
@@ -16,34 +33,49 @@ export class AuthService {
       );
 
       if (response.success && response.data) {
-        // Store tokens
+        // Store tokens (always store accessToken as 'auth_token')
         apiClient.setToken(response.data.accessToken);
+        localStorage.setItem("auth_token", response.data.accessToken);
         localStorage.setItem("refresh_token", response.data.refreshToken);
         localStorage.setItem("user_data", JSON.stringify(response.data.user));
+        document.cookie = `auth_token=${response.data.accessToken}; path=/; max-age=86400`;
 
         // Check if user is admin or moderator
         if (
           response.data.user.roleName === "ADMIN" ||
           response.data.user.roleName === "MODERATOR"
         ) {
+          localStorage.setItem("isLoggedIn", "true");
           return response;
         } else {
           // Clear tokens if not admin/moderator
-          this.logout();
+          await this.logout();
           return {
             success: false,
-            error: "Access denied. Admin or Moderator role required.",
+            error: "Bạn không có quyền truy cập trang quản trị. Chỉ ADMIN hoặc MODERATOR mới được phép đăng nhập.",
           };
         }
       }
 
+      // Nếu login thất bại, xóa sạch token, refresh_token, user_data
+      this.clearAllAuthData();
       return response;
     } catch (error) {
+      this.clearAllAuthData();
       return {
         success: false,
         error: error instanceof Error ? error.message : "Login failed",
       };
     }
+  }
+
+  clearAllAuthData() {
+    apiClient.clearToken();
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user_data");
+    localStorage.removeItem("isLoggedIn");
+    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
   }
 
   async refreshToken(): Promise<ApiResponse<LoginResponse>> {
@@ -76,25 +108,46 @@ export class AuthService {
 
   async logout(): Promise<void> {
     const refreshToken = localStorage.getItem("refresh_token");
-
     if (refreshToken) {
       try {
         await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, refreshToken);
       } catch (error) {
-        console.warn("Logout API call failed:", error);
+        // Silent fail on logout API error
       }
     }
-
-    // Clear stored data
-    apiClient.clearToken();
-    localStorage.removeItem("user_data");
-    localStorage.removeItem("isLoggedIn");
+    this.clearAllAuthData();
+    
+    // Trigger storage event để notify các tabs khác
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'auth_token',
+        newValue: null,
+        oldValue: localStorage.getItem('auth_token')
+      }));
+    }
   }
 
   async changePassword(
     request: ChangePasswordRequest
   ): Promise<ApiResponse<void>> {
     return apiClient.post<void>(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, request);
+  }
+
+  // Forgot password methods
+  async requestPasswordReset(request: ForgotPasswordRequest): Promise<ApiResponse<ForgotPasswordResponse>> {
+    return apiClient.post<ForgotPasswordResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET_REQUEST, request);
+  }
+
+  async verifyPasswordResetOtp(request: VerifyOtpRequest): Promise<ApiResponse<VerifyOtpResponse>> {
+    return apiClient.post<VerifyOtpResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET_VERIFY_OTP, request);
+  }
+
+  async resetPassword(request: ResetPasswordRequest): Promise<ApiResponse<ResetPasswordResponse>> {
+    return apiClient.post<ResetPasswordResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET, request);
+  }
+
+  async resendPasswordResetOtp(sessionToken: string): Promise<ApiResponse<any>> {
+    return apiClient.post<any>(API_ENDPOINTS.AUTH.PASSWORD_RESET_RESEND_OTP, { sessionToken });
   }
 
   getCurrentUser() {
@@ -105,12 +158,12 @@ export class AuthService {
   isAuthenticated(): boolean {
     const token = localStorage.getItem("auth_token");
     const userData = localStorage.getItem("user_data");
-    return !!(token && userData);
+    return Boolean(token && userData);
   }
 
   isAdminOrModerator(): boolean {
     const user = this.getCurrentUser();
-    return user && (user.roleName === "ADMIN" || user.roleName === "MODERATOR");
+    return !!(user && (user.roleName === "ADMIN" || user.roleName === "MODERATOR"));
   }
 }
 

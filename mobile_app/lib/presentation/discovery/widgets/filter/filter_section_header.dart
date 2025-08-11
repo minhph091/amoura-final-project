@@ -24,14 +24,21 @@ class FilterSectionHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: AppTextStyles.heading2.copyWith(color: colorScheme.onSurface),
+            style: AppTextStyles.heading2.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+              fontFamily: 'Roboto',
+            ),
           ),
           if (valueDisplay != null)
             Text(
               valueDisplay!,
               style: AppTextStyles.body.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.7),
-                fontSize: 14, // Explicitly smaller font size
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Roboto',
               ),
             ),
         ],

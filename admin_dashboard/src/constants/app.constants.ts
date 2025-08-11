@@ -1,6 +1,4 @@
 import type {
-  UserStatus,
-  Gender,
   ModeratorStatus,
   ModeratorRole,
   ReportType,
@@ -30,19 +28,9 @@ export const VALIDATION_RULES = {
   },
 } as const;
 
-export const USER_STATUSES: Record<UserStatus, string> = {
-  active: "Active",
-  suspended: "Suspended",
-  pending: "Pending",
-  blocked: "Blocked",
-} as const;
 
-export const GENDERS: Record<Gender, string> = {
-  male: "Male",
-  female: "Female",
-  other: "Other",
-  prefer_not_to_say: "Prefer not to say",
-} as const;
+
+
 
 export const MODERATOR_STATUSES: Record<ModeratorStatus, string> = {
   active: "Active",
@@ -52,7 +40,6 @@ export const MODERATOR_STATUSES: Record<ModeratorStatus, string> = {
 
 export const MODERATOR_ROLES: Record<ModeratorRole, string> = {
   moderator: "Moderator",
-  senior_moderator: "Senior Moderator",
   admin: "Admin",
 } as const;
 

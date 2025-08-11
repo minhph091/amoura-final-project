@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../notification_viewmodel.dart';
+import '../../../config/language/app_localizations.dart';
 import '../../shared/utils/time_formatter.dart';
 
 class NotificationItem extends StatelessWidget {
@@ -17,127 +18,108 @@ class NotificationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    try {
-      return Dismissible(
-        key: Key(notification.id),
-        direction: DismissDirection.endToStart,
-        background: Container(
-          alignment: Alignment.centerRight,
-          color: Colors.red,
-          padding: const EdgeInsets.only(right: 20),
-          child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
-        ),
-        onDismissed: (_) {
-          if (onDismiss != null) {
-            onDismiss!();
-          }
-        },
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color:
-                  notification.isRead
-                      ? Colors.transparent
-                      : (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.blue.withValues(alpha: 0.1)
-                          : Colors.blue.withValues(alpha: 0.05)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildLeadingIcon(context),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              notification.title,
-                              style: TextStyle(
-                                fontWeight:
-                                    notification.isRead
-                                        ? FontWeight.normal
-                                        : FontWeight.bold,
-                                fontSize: 16,
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black87,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            TimeFormatter.formatChatTime(notification.time),
+    return Dismissible(
+      key: Key(notification.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        color: Colors.red,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
+      ),
+      onDismissed: (_) {
+        if (onDismiss != null) {
+          onDismiss!();
+        }
+      },
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color:
+                notification.isRead
+                    ? Colors.transparent
+                    : (Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue.withValues(alpha: 0.1)
+                        : Colors.blue.withValues(alpha: 0.05)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildLeadingIcon(context),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            notification.title,
                             style: TextStyle(
+                              fontWeight:
+                                  notification.isRead
+                                      ? FontWeight.normal
+                                      : FontWeight.bold,
+                              fontSize: 16,
                               color:
-                                  Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                              fontSize: 12,
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black87,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        notification.body,
-                        style: TextStyle(
-                          color:
-                              notification.isRead
-                                  ? (Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600])
-                                  : (Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white70
-                                      : Colors.black87),
-                          height: 1.3,
                         ),
-                      ),
-                      // Show unread indicator
-                      if (!notification.isRead)
-                        Container(
-                          margin: const EdgeInsets.only(top: 8),
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            shape: BoxShape.circle,
+                        Text(
+                          TimeFormatter.formatChatTime(notification.time),
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                            fontSize: 12,
                           ),
                         ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      notification.body,
+                      style: TextStyle(
+                        color:
+                            notification.isRead
+                                ? (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600])
+                                : (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black87),
+                        height: 1.3,
+                      ),
+                    ),
+                    // Show unread indicator
+                    if (!notification.isRead)
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      );
-    } catch (e) {
-      debugPrint('NotificationItem: Error building widget: $e');
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        child: const Row(
-          children: [
-            Icon(Icons.error, color: Colors.red),
-            SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                'Error loading notification',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+      ),
+    );
   }
 
   Widget _buildLeadingIcon(BuildContext context) {

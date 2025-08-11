@@ -166,47 +166,52 @@ class _WelcomeViewState extends State<WelcomeView>
             left: 0,
             right: 0,
             child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      AssetPath.logo,
-                      height: 50,
-                      color: AppColors.primary,
-                      fit: BoxFit.contain,
-                    ).animate().rotate(
-                      delay: 700.ms,
-                      duration: 800.ms,
-                      curve: Curves.easeOutBack,
-                      begin: -0.1,
-                      end: 0.0,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset(
+                  AssetPath.logo,
+                  height: 38, // nhỏ lại cho cân đối với text
+                  width: 38,
+                  color: AppColors.primary,
+                  fit: BoxFit.contain,
+                ).animate().rotate(
+                  delay: 700.ms,
+                  duration: 800.ms,
+                  curve: Curves.easeOutBack,
+                  begin: -0.1,
+                  end: 0.0,
+                ),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2.0), // căn chỉnh dọc cho chữ
+                  child: Text(
+                    'Amoura',
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 8,
+                          color: Colors.black.withOpacity(0.5),
+                          offset: const Offset(1, 2),
+                        ),
+                        Shadow(
+                          blurRadius: 2,
+                          color: AppColors.primary.withOpacity(0.4),
+                          offset: const Offset(-0.5, -0.5),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Amoura',
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 8,
-                            color: Colors.black.withValues(alpha: 0.5),
-                            offset: const Offset(1, 2),
-                          ),
-                          Shadow(
-                            blurRadius: 2,
-                            color: AppColors.primary.withValues(alpha: 0.4),
-                            offset: const Offset(-0.5, -0.5),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-                .animate()
-                .fadeIn(duration: 900.ms)
-                .slideY(begin: -0.6, end: 0, curve: Curves.elasticOut.flipped),
+                  ),
+                ),
+              ],
+            )
+            .animate()
+            .fadeIn(duration: 900.ms)
+            .slideY(begin: -0.6, end: 0, curve: Curves.elasticOut.flipped),
           ),
           // Language selector in top-right corner
           Positioned(

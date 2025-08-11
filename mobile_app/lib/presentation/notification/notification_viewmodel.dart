@@ -403,7 +403,6 @@ class NotificationViewModel extends ChangeNotifier {
       debugPrint('NotificationViewModel: Error creating notifications from liked users: $e');
     }
   }
-
   void markAsRead(String notificationId) {
     try {
       _service.markAsRead(notificationId);

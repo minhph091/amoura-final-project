@@ -7,7 +7,6 @@ const config = {
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
   ],
   prefix: "",
   theme: {
@@ -19,12 +18,6 @@ const config = {
       },
     },
     extend: {
-      fontFamily: {
-        primary: ["var(--font-primary)"],
-        heading: ["var(--font-heading)"],
-        inter: ["Inter", "system-ui", "sans-serif"],
-        playfair: ["Playfair Display", "serif"],
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

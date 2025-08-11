@@ -226,9 +226,9 @@ class ChatListViewModel extends ChangeNotifier {
       // Sort by last message time
       _sortChatList();
 
-      // Generate mock active and recent users for now
-      _activeUsers = _generateMockActiveUsers();
-      _recentUsers = _generateMockRecentUsers();
+      // Remove mock active and recent users; only use real matched users
+      _activeUsers = [];
+      _recentUsers = [];
 
       // Subscribe vào tất cả chat rooms sau khi đã có danh sách
       if (_chatList.isNotEmpty) {
@@ -611,73 +611,6 @@ class ChatListViewModel extends ChangeNotifier {
       // Then sort by last message time
       return b.lastMessageTime.compareTo(a.lastMessageTime);
     });
-  }
-
-  // Mock data generation for active and recent users
-  List<UserModel> _generateMockActiveUsers() {
-    return [
-      UserModel(
-        userId: "1",
-        name: "Emma",
-        avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-        isOnline: true,
-      ),
-      UserModel(
-        userId: "3",
-        name: "Sofia",
-        avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-        isOnline: true,
-      ),
-      UserModel(
-        userId: "5",
-        name: "Jennifer",
-        avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-        isOnline: true,
-      ),
-      UserModel(
-        userId: "7",
-        name: "Alex",
-        avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-        isOnline: true,
-      ),
-      UserModel(
-        userId: "8",
-        name: "Olivia",
-        avatar: "https://randomuser.me/api/portraits/women/4.jpg",
-        isOnline: true,
-      ),
-      UserModel(
-        userId: "9",
-        name: "Daniel",
-        avatar: "https://randomuser.me/api/portraits/men/5.jpg",
-        isOnline: true,
-      ),
-    ];
-  }
-
-  List<UserModel> _generateMockRecentUsers() {
-    return [
-      UserModel(
-        userId: "1",
-        name: "Emma",
-        avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-      ),
-      UserModel(
-        userId: "2",
-        name: "Chris",
-        avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-      ),
-      UserModel(
-        userId: "3",
-        name: "Sofia",
-        avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-      ),
-      UserModel(
-        userId: "4",
-        name: "Keanu",
-        avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-      ),
-    ];
   }
 
   @override

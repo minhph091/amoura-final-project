@@ -5,6 +5,7 @@ final Map<String, dynamic> en = {
   'away_by': 'away by',
   'common_interests': 'Common interests',
   'unlock': 'Unlock',
+  'create_account': 'Create Account',
   'mark_all_read': 'Mark all read',
   'delete_all': 'Delete all',
   'delete_notification_message':
@@ -29,9 +30,6 @@ final Map<String, dynamic> en = {
   'update_your_email': 'Update your email',
   'enter_new_email_address_description':
       'Enter your new email address. We\'ll send a verification code to confirm the change.',
-  // Mock messages for chat
-  'mock_message_1': 'Hi there! How are you?',
-  'mock_message_2': 'I\'m good, thanks! Just working on a new project.',
   'update_your_password': 'Update your password',
   'system_notifications': 'System notifications',
   'unblock_all': 'Unblock all',
@@ -51,9 +49,6 @@ final Map<String, dynamic> en = {
   'proceed_to_payment': 'Proceed to Payment',
   'save_changes': 'Save changes',
   'users': 'Users',
-  'mock_message_3': 'That sounds interesting! What\'s it about?',
-  'mock_message_4':
-      'It\'s a mobile app for connecting people with similar interests. I\'m calling it Amoura.',
   // Common
   'app_name': 'Amoura',
   'ok': 'OK',
@@ -65,19 +60,6 @@ final Map<String, dynamic> en = {
   'next': 'Next',
   'continue': 'Continue',
   'done': 'Done',
-  // Notification mock keys
-  'new_like': 'New Like',
-  'like_body': 'Someone liked your profile',
-  'new_match': 'It\'s a Match!',
-  'match_body_sarah': 'You and Sarah matched!',
-  'match_body_emma': 'You and Emma matched!',
-  'new_message': 'New Message',
-  'message_body_sarah': 'Sarah sent you a message: "Hey there! 😊"',
-  'message_body_emma': 'Emma sent you a message: "How are you?"',
-  'message_body_michael': 'Michael sent you a message: "Want to grab coffee?"',
-  'welcome': 'Welcome to Amoura!',
-  'welcome_body':
-      'Complete your profile to get better matches and increase your visibility.',
   'app_update_available': 'App Update Available',
   'app_update_body':
       'Version 2.1.0 is now available with improved matching algorithm and new features.',
@@ -316,6 +298,7 @@ final Map<String, dynamic> en = {
 
   // Filter and Discovery
   'reset': 'Reset',
+  'filters_reset': 'Filters have been reset.',
 
   // Settings - Authentication
   'new_phone_number': 'New Phone Number',
@@ -527,6 +510,24 @@ final Map<String, dynamic> en = {
   'view_details': 'View details',
   'widget_error_message': 'Widget error: {error}',
 
+  // Additional missing keys
+  'about_you': 'About You',
+  'current_password': 'Current Password',
+  'current_password_hint': 'Enter your current password',
+  'error_loading_chats': 'Error loading chats',
+  'job_education_info': 'Job & Education Information',
+  'language': 'Language',
+  'mock_message_1': 'Hey there! How are you doing today?',
+  'mock_message_2': 'I love your profile! We have so much in common.',
+  'mock_message_3': 'What are your favorite hobbies?',
+  'mock_message_4': 'Would you like to grab coffee sometime?',
+  'no_blocked_messages': 'No blocked messages',
+  'no_blocked_users': 'No blocked users',
+  'no_messages_yet': 'No messages yet',
+  'start_conversation': 'Start conversation',
+  'your_appearance': 'Your Appearance',
+  'your_lifestyle': 'Your Lifestyle',
+
   // Voice messages
   'voice_message': 'Voice message',
   'video_message': 'Video message',
@@ -539,4 +540,39 @@ final Map<String, dynamic> en = {
   // Phone change keys
   'update_phone_number': 'Update phone number',
   'phone_change_info': 'Change your phone number to keep your account secure',
+
+  'plan_monthly': 'Monthly',
+  'plan_monthly_desc': 'Monthly subscription with all VIP benefits',
+  'plan_6_months': '6 Months',
+  'plan_6_months_desc': '6-month subscription with all VIP benefits',
+  'plan_annual': 'Annual',
+  'plan_annual_desc': 'Annual subscription with all VIP benefits',
+
+  'benefit_unlimited_swipes': 'Unlimited swipes',
+  'benefit_see_who_likes_you': 'See who likes you',
+  'benefit_enhanced_profile_visibility': 'Enhanced profile visibility',
+  'benefit_priority_matching': 'Priority matching',
+  'benefit_special_event_access': 'Special event access',
+  'benefit_exclusive_seasonal_gifts': 'Exclusive seasonal gifts',
+
+  'feature_unlimited_rewind': 'Unlimited Rewind',
+  'feature_unlimited_rewind_desc':
+      'Get back to profiles you accidentally swiped left on',
+  'feature_see_who_likes_you': 'See Who Likes You',
+  'feature_see_who_likes_you_desc':
+      'See all the people who have already liked your profile',
+  'feature_enhanced_profile': 'Enhanced Profile',
+  'feature_enhanced_profile_desc':
+      'Make your profile stand out with special highlights',
+  'feature_special_events': 'Special Events',
+  'feature_special_events_desc':
+      'Get access to exclusive events and special gifts',
+
+  // Reset Password (Missing Keys)
+  'create_new_password': 'Create New Password',
+  'create_new_password_subtitle': 'Enter your new password to reset your account',
+  'verify_email': 'Verify Email',
+  'verify_email_subtitle': 'Check your email and click the verification link',
+  'enter_email_reset': 'Enter email to reset password',
+  'password_mismatch': 'Passwords do not match',
 };

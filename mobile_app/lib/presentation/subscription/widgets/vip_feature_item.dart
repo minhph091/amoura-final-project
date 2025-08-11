@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../config/language/app_localizations.dart';
 
 class VipFeatureItem extends StatelessWidget {
   final String title;
@@ -50,7 +51,7 @@ class VipFeatureItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  AppLocalizations.of(context).translate(title),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -59,7 +60,7 @@ class VipFeatureItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  description,
+                  AppLocalizations.of(context).translate(description),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
@@ -70,11 +71,7 @@ class VipFeatureItem extends StatelessWidget {
           ),
 
           // Arrow icon
-          Icon(
-            Icons.check_circle,
-            color: const Color(0xFFF06292),
-            size: 20,
-          ),
+          Icon(Icons.check_circle, color: const Color(0xFFF06292), size: 20),
         ],
       ),
     );

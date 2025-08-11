@@ -2,34 +2,62 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  // DISABLED FOR TESTING - Allow all requests to pass through
-  return NextResponse.next();
+  // Skip middleware for static files and API routes
+  if (
+    request.nextUrl.pathname.startsWith('/_next') ||
+    request.nextUrl.pathname.startsWith('/api') ||
+    request.nextUrl.pathname.includes('.') ||
+    request.nextUrl.pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
 
   // Check if user is trying to access protected routes
-  // const protectedPaths = [
-  //   "/dashboard",
-  //   "/users",
-  //   "/moderators",
-  //   "/reports",
-  //   "/messages",
-  //   "/matches",
-  // ];
-  // const isProtectedPath = protectedPaths.some((path) =>
-  //   request.nextUrl.pathname.startsWith(path)
-  // );
+  const protectedPaths = [
+    "/dashboard",
+    "/users",
+    "/moderators",
+    "/reports",
+    "/messages",
+    "/matches",
+    "/subscriptions",
+    "/settings",
+    "/help",
+    "/profile"
+  ];
+  
+  const isProtectedPath = protectedPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  );
 
-  // if (isProtectedPath) {
-  //   // Check for auth token in cookies or headers
-  //   const token = request.cookies.get("auth_token")?.value;
+  if (isProtectedPath) {
+    // Check for auth token in cookies
+    const token = request.cookies.get("auth_token")?.value;
+    
+    // Also check authorization header if cookie is not present
+    const authHeader = request.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
+    
+    const finalToken = token || bearerToken;
+    
+    if (!finalToken) {
+      // For production static exports, we need to handle this differently
+      const isStaticExport = process.env.NEXT_EXPORT === 'true';
+      
+      if (isStaticExport) {
+        // In static export mode, redirect using client-side JavaScript
+        const response = NextResponse.next();
+        response.headers.set('x-middleware-rewrite', '/login');
+        return response;
+      } else {
+        // Normal redirect for server-side rendering
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+    }
+  }
 
-  //   if (!token) {
-  //     // Redirect to login if no token
-  //     return NextResponse.redirect(new URL("/login", request.url));
-  //   }
-  // }
-
-  // // Allow access to login page and public routes
-  // return NextResponse.next();
+  // Allow access to login page and public routes
+  return NextResponse.next();
 }
 
 export const config = {
@@ -42,6 +70,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|public).*)",
   ],
 };

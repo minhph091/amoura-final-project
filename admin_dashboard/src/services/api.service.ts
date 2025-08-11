@@ -5,9 +5,7 @@ export class ApiClient {
   private baseURL: string;
   private token: string | null = null;
 
-  constructor(
-    baseURL = API_CONFIG.BASE_URL // Backend server URL
-  ) {
+  constructor(baseURL = API_CONFIG.BASE_URL) {
     this.baseURL = baseURL;
     this.token = this.getStoredToken();
   }
@@ -43,7 +41,9 @@ export class ApiClient {
       ...options.headers,
     } as Record<string, string>;
 
-    if (this.token) {
+    const currentToken = this.getStoredToken();
+    if (currentToken) {
+      this.token = currentToken;
       headers.Authorization = `Bearer ${this.token}`;
     }
 
@@ -51,23 +51,88 @@ export class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include',
+        mode: 'cors',
       });
 
-      const data = await response.json();
+      let data: any = null;
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType && contentType.includes("application/json");
+      const isNoContent = response.status === 204;
+      
+      if (!isNoContent && isJson) {
+        try {
+          data = await response.json();
+        } catch (err) {
+          return {
+            success: false,
+            error: "Invalid JSON response from server.",
+          };
+        }
+      }
 
       if (!response.ok) {
+        if (response.status === 404) {
+          return {
+            success: false,
+            error: `Resource not found: ${endpoint}`,
+          };
+        }
+        
+        if (response.status === 403) {
+          return {
+            success: false,
+            error: data?.message || "Access forbidden. Please check your permissions.",
+          };
+        }
+        
+        if (response.status === 401) {
+          this.clearToken();
+          // Nếu là lỗi 401, có thể token đã hết hạn
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("isLoggedIn");
+            // Trigger logout event for other components to listen
+            window.dispatchEvent(new CustomEvent('token-expired'));
+          }
+          return {
+            success: false,
+            error: data?.message || "Authentication required. Please login again.",
+          };
+        }
+
+        if (response.status === 0 || response.status >= 500) {
+          return {
+            success: false,
+            error: "Backend service unavailable",
+          };
+        }
+        
         return {
           success: false,
-          error: data.message || `HTTP Error: ${response.status}`,
+          error: (data && (data.message || data.error)) || `HTTP Error: ${response.status}`,
+        };
+      }
+
+      if (data && data.accessToken && data.user) {
+        return {
+          success: true,
+          data: data,
         };
       }
 
       return {
         success: true,
-        data: data.data || data,
-        message: data.message,
+        data: data,
+        message: data && data.message,
       };
     } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        return {
+          success: false,
+          error: "Network connection failed",
+        };
+      }
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : "Network error",
@@ -113,7 +178,6 @@ export class ApiClient {
     });
   }
 
-  // Helper for paginated requests
   async getPaginated<T>(
     endpoint: string,
     params?: Record<string, unknown>

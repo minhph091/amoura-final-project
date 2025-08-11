@@ -132,6 +132,9 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
                         localizations.translate('filters'),
                         style: AppTextStyles.heading1.copyWith(
                           color: colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 22,
+                          fontFamily: 'Roboto',
                         ),
                         textAlign: TextAlign.center,
                       ),

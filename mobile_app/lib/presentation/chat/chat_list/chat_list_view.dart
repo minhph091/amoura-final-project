@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:flutter/material.dart';
 import '../../../config/language/app_localizations.dart';
 import 'chat_list_viewmodel.dart';
@@ -87,20 +89,19 @@ class _ChatListViewState extends State<ChatListView> {
   Widget _buildMainContent() {
     return Column(
       children: [
-        // Active users horizontal scrolling list
+        // Matched users horizontal scrolling list (real API data)
         Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: ActiveUsersList(
-            users: _viewModel.activeUsers,
+            users: _viewModel.matches,
             onUserTap: (userId) {
-              // Tìm chat tương ứng với active user này (nếu có)
+              // Tìm chat tương ứng với matched user này (nếu có)
               try {
                 final userChat = _viewModel.chatList.firstWhere(
                   (c) => c.userId == userId,
                 );
                 _navigateToChat(context, userChat.chatRoomId, userChat);
               } catch (e) {
-                // Nếu không tìm thấy chat, không làm gì cả
                 debugPrint('No chat found for user $userId');
               }
             },

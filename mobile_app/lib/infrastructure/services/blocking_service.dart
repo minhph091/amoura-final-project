@@ -9,7 +9,8 @@ class BlockingService extends ChangeNotifier {
   bool get isLoadingMessages => _isLoadingMessages;
 
   final List<BlockedMessage> _blockedMessages = [];
-  List<BlockedMessage> get blockedMessages => List.unmodifiable(_blockedMessages);
+  List<BlockedMessage> get blockedMessages =>
+      List.unmodifiable(_blockedMessages);
 
   // Users-related properties and methods
   bool _isLoadingUsers = false;
@@ -19,15 +20,7 @@ class BlockingService extends ChangeNotifier {
   List<BlockedUser> get blockedUsers => List.unmodifiable(_blockedUsers);
 
   // Constructor
-  BlockingService() {
-    // Initialize with some data for demo purposes
-    _initMockData();
-  }
-
-  void _initMockData() {
-    _blockedMessages.addAll(_mockBlockedMessages);
-    _blockedUsers.addAll(_mockBlockedUsers);
-  }
+  BlockingService();
 
   // MESSAGES RELATED METHODS
 
@@ -37,8 +30,6 @@ class BlockingService extends ChangeNotifier {
     try {
       // TODO: Replace with actual API call
       await Future.delayed(const Duration(seconds: 1));
-
-      // Mock data already loaded in constructor
     } catch (e) {
       debugPrint('Error fetching blocked messages: $e');
     } finally {
@@ -75,8 +66,6 @@ class BlockingService extends ChangeNotifier {
     try {
       // TODO: Replace with actual API call
       await Future.delayed(const Duration(seconds: 1));
-
-      // Mock data already loaded in constructor
     } catch (e) {
       debugPrint('Error fetching blocked users: $e');
     } finally {
@@ -122,83 +111,4 @@ class BlockingService extends ChangeNotifier {
     _isLoadingUsers = isLoading;
     notifyListeners();
   }
-
-  // MOCK DATA
-
-  // Mock data for messages
-  final List<BlockedMessage> _mockBlockedMessages = [
-    BlockedMessage(
-      id: '1',
-      userName: 'Alex Johnson',
-      age: 28,
-      location: 'New York',
-      userPhotoUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
-      messageContent: 'Hey, how are you doing? Would you like to meet for coffee sometime?',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      userId: 'user123',
-    ),
-    BlockedMessage(
-      id: '2',
-      userName: 'Emily Chen',
-      age: 25,
-      location: 'San Francisco',
-      userPhotoUrl: 'https://randomuser.me/api/portraits/women/2.jpg',
-      messageContent: 'I saw your profile and thought we might have a lot in common.',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      userId: 'user456',
-    ),
-    BlockedMessage(
-      id: '3',
-      userName: 'Michael Smith',
-      age: 31,
-      location: 'Chicago',
-      userPhotoUrl: 'https://randomuser.me/api/portraits/men/3.jpg',
-      messageContent: 'Hi there! Your profile caught my attention. Would love to chat more.',
-      timestamp: DateTime.now().subtract(const Duration(days: 3)),
-      userId: 'user789',
-    ),
-  ];
-
-  // Mock data for users
-  final List<BlockedUser> _mockBlockedUsers = [
-    BlockedUser(
-      id: 'user1',
-      name: 'Sophia Williams',
-      age: 24,
-      location: 'Los Angeles',
-      photoUrl: 'https://randomuser.me/api/portraits/women/11.jpg',
-      blockedAt: DateTime.now().subtract(const Duration(days: 5)),
-      distance: 8.5,
-    ),
-    BlockedUser(
-      id: 'user2',
-      name: 'Daniel Brown',
-      age: 29,
-      location: 'Miami',
-      photoUrl: 'https://randomuser.me/api/portraits/men/22.jpg',
-      blockedAt: DateTime.now().subtract(const Duration(days: 12)),
-      blockReason: 'Inappropriate behavior',
-      distance: 15.2,
-    ),
-    BlockedUser(
-      id: 'user3',
-      name: 'Olivia Garcia',
-      age: 26,
-      location: 'Seattle',
-      photoUrl: 'https://randomuser.me/api/portraits/women/33.jpg',
-      blockedAt: DateTime.now().subtract(const Duration(days: 3)),
-      distance: 5.4,
-    ),
-    BlockedUser(
-      id: 'user4',
-      name: 'Noah Martinez',
-      age: 32,
-      location: 'Austin',
-      photoUrl: 'https://randomuser.me/api/portraits/men/44.jpg',
-      blockedAt: DateTime.now().subtract(const Duration(hours: 8)),
-      blockReason: 'Spam messages',
-      distance: 12.8,
-    ),
-  ];
 }
-

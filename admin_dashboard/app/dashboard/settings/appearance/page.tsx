@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { ThemeCustomizer } from "@/components/settings/theme-customizer"
+import { ThemeCustomizer } from "@/components/settings/ThemeCustomizer"
 
 export const metadata: Metadata = {
   title: "Theme Customization | Amoura Admin",
