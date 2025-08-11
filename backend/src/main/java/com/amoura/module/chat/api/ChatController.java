@@ -56,18 +56,7 @@ public class ChatController {
     @Value("${file.storage.local.base-url}")
     private String baseUrl;
 
-    // // Chat Room endpoints
-    // @PostMapping("/rooms")
-    // @Operation(summary = "Create or get chat room between two users")
-    // @SecurityRequirement(name = "bearerAuth")
-    // public ResponseEntity<ChatRoomDTO> createOrGetChatRoom(
-    //         @RequestParam Long userId2,
-    //         @AuthenticationPrincipal UserDetails userDetails) {
-        
-    //     Long userId1 = getUserId(userDetails);
-    //     ChatRoomDTO chatRoom = chatService.createOrGetChatRoom(userId1, userId2);
-    //     return ResponseEntity.ok(chatRoom);
-    // }
+
 
     @GetMapping("/rooms")
     @Operation(summary = "Get user's chat rooms with cursor-based pagination")
@@ -276,7 +265,6 @@ public class ChatController {
             Files.copy(file.getInputStream(), filePath);
             String relativePath = "chat/" + chatRoomId + "/" + filename;
             String imageUrl = baseUrl + "/" + relativePath;
-            // Trả về URL đầy đủ cho client, nhưng client sẽ gửi relativePath khi gửi message
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body("Failed to upload image");
