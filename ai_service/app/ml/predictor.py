@@ -13,7 +13,7 @@ from typing import Dict, Any, Tuple, List
 from pathlib import Path
 
 from app.core.exceptions import ModelLoadError, PredictionError
-from app.core.logging import LoggerMixin, get_logger
+from app.core.logging import LoggerMixin
 from app.ml.preprocessing import (
     create_user_feature_vector,
     create_pairwise_features_vector,

@@ -5,33 +5,12 @@ This module provides endpoints for AI-powered message editing functionality,
 allowing users to improve their messages using artificial intelligence.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
 from app import schemas
-from app.services.message_service import MessageService
-from app.db.session import get_db
+from app.dependencies import MessageServiceDep
 
 router = APIRouter()
-
-
-def get_message_service(
-        db: Annotated[Session, Depends(get_db)]
-) -> MessageService:
-    """
-    Dependency injection for MessageService.
-    
-    Creates and returns a MessageService instance with the provided
-    database session for message editing operations.
-    
-    Args:
-        db: Database session from dependency injection
-        
-    Returns:
-        MessageService instance configured with the database session
-    """
-    return MessageService(db=db)
 
 
 @router.post(
@@ -54,8 +33,8 @@ def get_message_service(
     """
 )
 async def edit_message(
-        request: schemas.message.MessageEditRequest,
-        message_service: Annotated[MessageService, Depends(get_message_service)]
+    request: schemas.message.MessageEditRequest,
+    message_service: MessageServiceDep,
 ):
     """
     Endpoint to edit a message using AI.

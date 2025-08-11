@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 import time
 
 from app.core.config import get_settings
-from app.core.logging import setup_logging, get_logger
+from app.core.logging import get_logger
 from app.core.exceptions import AmouraAIException, handle_exception
 from app.api.v1.api import api_router_v1
 

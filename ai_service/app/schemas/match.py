@@ -47,39 +47,4 @@ class PotentialMatchResponse(BaseModel):
         }
 
 
-class BackupRecommendationsResponse(BaseModel):
-    """
-    Response model for backup recommendations endpoint.
-    
-    This schema defines the structure of the response returned by the
-    backup recommendations API endpoint, which provides additional user
-    recommendations when AI predictions are exhausted.
-    
-    Attributes:
-        user_ids: List of user IDs recommended based on basic compatibility
-        total_count: Total number of recommendations returned
-        
-    Example:
-        {
-            "user_ids": [3, 5, 8, 12, 15],
-            "total_count": 5
-        }
-    """
-    user_ids: List[int] = Field(
-        ..., 
-        description="List of compatible user IDs based on gender and orientation"
-    )
-    total_count: int = Field(
-        ..., 
-        description="Total number of recommendations returned",
-        ge=0
-    )
-
-    class Config:
-        """Pydantic configuration for the schema."""
-        json_schema_extra = {
-            "example": {
-                "user_ids": [3, 5, 8, 12, 15],
-                "total_count": 5
-            }
-        } 
+ 
