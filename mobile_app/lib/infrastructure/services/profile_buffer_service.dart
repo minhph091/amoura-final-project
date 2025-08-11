@@ -17,6 +17,8 @@ class ProfileBufferService {
   final List<UserRecommendationModel> _profileBuffer = [];
   final Map<int, List<InterestModel>> _profileInterests = {};
   final Map<int, String?> _profileDistances = {};
+  // Precomputed common interests with current user (lowercase strings)
+  final Map<int, List<String>> _profileCommonInterests = {};
   
   // Lưu trữ profiles đã xóa để có thể rewind
   final List<UserRecommendationModel> _removedProfiles = [];
@@ -33,6 +35,7 @@ class ProfileBufferService {
   int _currentIndex = 0;
   bool _isLoading = false;
   int? _currentUserId;
+  List<String> _currentUserInterestsLower = <String>[];
   
   // Getters
   List<UserRecommendationModel> get profiles => List.unmodifiable(_profileBuffer);
@@ -61,6 +64,19 @@ class ProfileBufferService {
     if (profile == null) return [];
     return _profileInterests[profile.userId] ?? profile.interests;
   }
+
+  // Common interests getters
+  List<String> getCurrentCommonInterests() {
+    final profile = currentProfile;
+    if (profile == null) return const [];
+    return _profileCommonInterests[profile.userId] ?? const [];
+  }
+
+  List<String> getNextCommonInterests() {
+    final profile = nextProfile;
+    if (profile == null) return const [];
+    return _profileCommonInterests[profile.userId] ?? const [];
+  }
   
   // Profile distances
   String? getCurrentDistance() {
@@ -78,6 +94,11 @@ class ProfileBufferService {
   /// Khởi tạo buffer với profiles ban đầu
   Future<void> initialize() async {
     if (_isLoading) return;
+    // Nếu đã có buffer sẵn thì không làm lại để giữ trải nghiệm hiển thị tức thì
+    if (_profileBuffer.isNotEmpty) {
+      print('ProfileBufferService: Buffer đã có sẵn ${_profileBuffer.length} profiles, bỏ qua khởi tạo lại');
+      return;
+    }
     
     print('ProfileBufferService: Bắt đầu khởi tạo buffer...');
     _isLoading = true;
@@ -178,6 +199,7 @@ class ProfileBufferService {
         _profileBuffer.add(profile);
         _profileInterests[profile.userId] = profile.interests;
         _profileDistances[profile.userId] = _calculateDistance(profile);
+        _profileCommonInterests[profile.userId] = _computeCommonInterests(profile);
       }
       
       print('ProfileBufferService: Buffer hiện có ${_profileBuffer.length} profiles');
@@ -292,6 +314,9 @@ class ProfileBufferService {
     _profileBuffer.insert(0, profileToRewind);
     if (interests != null) _profileInterests[profileToRewind.userId] = interests;
     if (distance != null) _profileDistances[profileToRewind.userId] = distance;
+    // Recompute common interests if missing
+    _profileCommonInterests[profileToRewind.userId] =
+        _profileCommonInterests[profileToRewind.userId] ?? _computeCommonInterests(profileToRewind);
     
     // Đặt current index về 0
     _currentIndex = 0;
@@ -314,6 +339,12 @@ class ProfileBufferService {
     print('ProfileBufferService: Set current user ID = $_currentUserId');
   }
 
+  /// Set current user's interests (lowercased names) to compute common interests
+  void setCurrentUserInterestsLower(List<String> interestsLower) {
+    _currentUserInterestsLower = interestsLower;
+    print('ProfileBufferService: Set current user interests = ${_currentUserInterestsLower.length} items');
+  }
+
   /// Refresh toàn bộ buffer
   Future<void> refresh() async {
     print('ProfileBufferService: Refresh buffer...');
@@ -326,6 +357,7 @@ class ProfileBufferService {
     _profileBuffer.clear();
     _profileInterests.clear();
     _profileDistances.clear();
+    _profileCommonInterests.clear();
     _currentIndex = 0;
     // Không xóa _swipedProfileIds để giữ trạng thái đã swipe
     print('ProfileBufferService: Đã xóa buffer (giữ lại ${_swipedProfileIds.length} swiped profiles)');
@@ -359,5 +391,20 @@ class ProfileBufferService {
     debugPrint('Is Loading: $_isLoading');
     debugPrint('Swiped Profiles: ${_swipedProfileIds.length}');
     debugPrint('=========================================');
+  }
+
+  // Compute up to 3 common interests between current user and given profile
+  List<String> _computeCommonInterests(UserRecommendationModel profile) {
+    if (_currentUserInterestsLower.isEmpty) return const [];
+    try {
+      final recLower = profile.interests.map((i) => i.name.toLowerCase()).toList();
+      final common = _currentUserInterestsLower
+          .where((name) => recLower.contains(name))
+          .take(3)
+          .toList();
+      return common;
+    } catch (_) {
+      return const [];
+    }
   }
 }

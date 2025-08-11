@@ -17,6 +17,8 @@ class ImageCarousel extends StatefulWidget {
   final bool showStoryProgress;
   final ImageCarouselController? controller;
   final String? uniqueKey;
+  // Notify parent when image index changes to update info sections accordingly
+  final ValueChanged<int>? onImageIndexChanged;
 
   const ImageCarousel({
     super.key,
@@ -24,6 +26,7 @@ class ImageCarousel extends StatefulWidget {
     this.showStoryProgress = false,
     this.controller,
     this.uniqueKey,
+    this.onImageIndexChanged,
   });
 
   @override
@@ -31,7 +34,7 @@ class ImageCarousel extends StatefulWidget {
 }
 
 class _ImageCarouselState extends State<ImageCarousel> {
-  PageController _pageController = PageController();
+  PageController _pageController = PageController(keepPage: false);
   int _currentIndex = 0;
 
   @override
@@ -57,8 +60,10 @@ class _ImageCarouselState extends State<ImageCarousel> {
   }
 
   void _preloadImages() {
-    // Preload đơn giản các ảnh tiếp theo
-    for (int i = 1; i < widget.photos.length && i <= 3; i++) {
+    // Preload tất cả ảnh của profile trong giới hạn hợp lý để đảm bảo chuyển ảnh mượt
+    // Giới hạn tối đa 5 ảnh để tránh tốn bộ nhớ trên máy yếu
+    final int maxPreload = widget.photos.length < 5 ? widget.photos.length : 5;
+    for (int i = 0; i < maxPreload; i++) {
       final photo = widget.photos[i];
       if (photo.displayUrl.isNotEmpty && mounted) {
         try {
@@ -71,15 +76,12 @@ class _ImageCarouselState extends State<ImageCarousel> {
   }
 
   void _resetToFirstImage() {
-    if (mounted && _currentIndex != 0) {
+    if (mounted) {
       setState(() {
         _currentIndex = 0;
       });
-      _pageController.animateToPage(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      // Dùng jump để tránh nhấp nháy trước khi set profile mới
+      _pageController.jumpToPage(0);
     }
   }
 
@@ -113,6 +115,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
             setState(() {
               _currentIndex = index;
             });
+            // Thông báo cho parent để cập nhật phần thông tin theo ảnh hiện tại
+            widget.onImageIndexChanged?.call(index);
           },
           itemCount: widget.photos.length,
           itemBuilder: (context, index) {

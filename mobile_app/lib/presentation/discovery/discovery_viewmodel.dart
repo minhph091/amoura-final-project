@@ -1,5 +1,6 @@
 // lib/presentation/discovery/discovery_viewmodel.dart
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:get_it/get_it.dart';
 import '../../infrastructure/services/profile_buffer_service.dart';
 import '../../core/services/match_service.dart';
@@ -31,6 +32,8 @@ class DiscoveryViewModel extends ChangeNotifier {
   List<InterestModel> getNextInterests() => _bufferService.getNextInterests();
   String? getCurrentDistance() => _bufferService.getCurrentDistance();
   String? getNextDistance() => _bufferService.getNextDistance();
+  List<String> getCurrentCommonInterests() => _bufferService.getCurrentCommonInterests();
+  List<String> getNextCommonInterests() => _bufferService.getNextCommonInterests();
 
   /// Set context for showing dialogs
   void setContext(BuildContext context) {
@@ -42,8 +45,17 @@ class DiscoveryViewModel extends ChangeNotifier {
     if (_isLoading) return;
     
     print('DiscoveryViewModel: Bắt đầu khởi tạo...');
-    _setLoading(true);
     _clearError();
+    // Nếu buffer đã có sẵn profiles (được chuẩn bị từ Splash/AppStartup),
+    // thì bỏ qua việc re-initialize để tránh nháy/loading không cần thiết
+    if (_bufferService.hasProfiles) {
+      print('DiscoveryViewModel: Buffer đã sẵn sàng, bỏ qua khởi tạo lại');
+      _setLoading(false);
+      notifyListeners();
+      return;
+    }
+
+    _setLoading(true);
     
     try {
       // Load current user để set user ID
@@ -88,27 +100,27 @@ class DiscoveryViewModel extends ChangeNotifier {
     try {
       // Đánh dấu profile đã like để không cho phép rewind
       _bufferService.markProfileAsLiked(profile.userId);
-      
-      // Gửi like request
-      final request = SwipeRequestModel(
-        targetUserId: profile.userId,
-        isLike: true,
-      );
-      
-      final response = await _matchService.swipeUser(request);
-      
-      if (response.isMatch) {
-        debugPrint('DiscoveryViewModel: Match detected with profile ${profile.userId}!');
-        debugPrint('DiscoveryViewModel: Match response: ${response.toJson()}');
-        
-        // Show match dialog
-        await _showMatchDialog(profile, response);
-      } else {
-        debugPrint('DiscoveryViewModel: Like sent, no match');
-      }
-      
-      // Đánh dấu profile đã swipe và chuyển sang profile tiếp theo
-      await _moveToNextProfile();
+      // Chuyển UI sang profile tiếp theo ngay lập tức để tránh giật
+      // Thực hiện API ở nền
+      unawaited(_moveToNextProfile());
+
+      // Gửi like request ở nền
+      unawaited(() async {
+        try {
+          final request = SwipeRequestModel(
+            targetUserId: profile.userId,
+            isLike: true,
+          );
+          final response = await _matchService.swipeUser(request);
+          if (response.isMatch) {
+            debugPrint('DiscoveryViewModel: Match detected with profile ${profile.userId}!');
+            debugPrint('DiscoveryViewModel: Match response: ${response.toJson()}');
+            await _showMatchDialog(profile, response);
+          }
+        } catch (e) {
+          debugPrint('DiscoveryViewModel: Lỗi like profile (nền) - $e');
+        }
+      }());
       
     } catch (e) {
       debugPrint('DiscoveryViewModel: Lỗi like profile - $e');
@@ -126,17 +138,22 @@ class DiscoveryViewModel extends ChangeNotifier {
     try {
       // Đánh dấu profile đã pass (cho phép rewind)
       _bufferService.markProfileAsPassed(profile.userId);
-      
-      // Gửi pass request
-      final request = SwipeRequestModel(
-        targetUserId: profile.userId,
-        isLike: false,
-      );
-      
-      await _matchService.swipeUser(request);
-      
-      // Đánh dấu profile đã swipe và chuyển sang profile tiếp theo
-      await _moveToNextProfile();
+
+      // Chuyển UI sang profile tiếp theo ngay lập tức
+      unawaited(_moveToNextProfile());
+
+      // Gửi pass request ở nền (không block UI)
+      unawaited(() async {
+        try {
+          final request = SwipeRequestModel(
+            targetUserId: profile.userId,
+            isLike: false,
+          );
+          await _matchService.swipeUser(request);
+        } catch (e) {
+          debugPrint('DiscoveryViewModel: Lỗi pass profile (nền) - $e');
+        }
+      }());
       
     } catch (e) {
       debugPrint('DiscoveryViewModel: Lỗi pass profile - $e');

@@ -8,9 +8,11 @@ class SimpleSwipeableCard extends StatefulWidget {
   final UserRecommendationModel currentProfile;
   final List<InterestModel> currentInterests;
   final String? currentDistance;
+  final List<String> currentCommonInterests;
   final UserRecommendationModel? nextProfile;
   final List<InterestModel>? nextInterests;
   final String? nextDistance;
+  final List<String>? nextCommonInterests;
   final VoidCallback? onSwiped;
   final Function(bool isLike)? onSwipeDirection;
   final Function(double offset)? onSwipeProgress; // Track swipe progress
@@ -23,9 +25,11 @@ class SimpleSwipeableCard extends StatefulWidget {
     required this.currentProfile,
     required this.currentInterests,
     this.currentDistance,
+    this.currentCommonInterests = const [],
     this.nextProfile,
     this.nextInterests,
     this.nextDistance,
+    this.nextCommonInterests,
     this.onSwiped,
     this.onSwipeDirection,
     this.onSwipeProgress,
@@ -50,7 +54,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
   double _dragOffset = 0.0;
   bool _isDragging = false;
   static const double _swipeThreshold = 100.0;
-  static const double _maxRotation = 0.15; // ~8.6 degrees
+  static const double _maxRotation = 0.12; // nhẹ hơn để mượt
 
   @override
   void initState() {
@@ -58,7 +62,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
     
     // Sửa animation cho mượt mà hơn
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 250), // Giảm từ 300 xuống 250 cho nhanh hơn
+      duration: const Duration(milliseconds: 220), // nhanh hơn chút
       vsync: this,
     );
 
@@ -67,7 +71,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
       end: const Offset(2.0, 0.0), // Slide off screen
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeOutQuart, // Curve mượt mà hơn
+      curve: Curves.easeOutCubic, // Curve mượt mà
     ));
 
     _scaleAnimation = Tween<double>(
@@ -75,7 +79,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
       end: 0.9,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeOutQuart, // Curve mượt mà hơn
+      curve: Curves.easeOutCubic, // Curve mượt mà
     ));
 
     _rotationAnimation = Tween<double>(
@@ -83,7 +87,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
       end: _maxRotation,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeOutQuart, // Curve mượt mà hơn
+      curve: Curves.easeOutCubic, // Curve mượt mà
     ));
   }
 
@@ -95,7 +99,8 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return RepaintBoundary(
+      child: GestureDetector(
       onPanStart: _onPanStart,
       onPanUpdate: _onPanUpdate,
       onPanEnd: _onPanEnd,
@@ -113,6 +118,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
                     profile: widget.nextProfile!,
                     interests: widget.nextInterests ?? [],
                     distance: widget.nextDistance,
+                    commonInterests: widget.nextCommonInterests ?? const [],
                   ),
                 ),
               ),
@@ -137,6 +143,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
                       profile: widget.currentProfile,
                       interests: widget.currentInterests,
                       distance: widget.currentDistance,
+                      commonInterests: widget.currentCommonInterests,
                     ),
                   ),
                 ),
@@ -150,6 +157,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
               child: _buildSwipeIndicators(),
             ),
         ],
+      ),
       ),
     );
   }
@@ -264,9 +272,9 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
     _isDragging = false;
     
     // Check if swipe threshold reached - threshold nhỏ hơn cho dễ vuốt
-    final isSwipe = _dragOffset.abs() > 80; // Giảm từ 100 xuống 80
+    final isSwipe = _dragOffset.abs() > 75; // hạ ngưỡng nhẹ
     final velocity = details.velocity.pixelsPerSecond.dx.abs();
-    final isFastSwipe = velocity > 400; // Giảm từ 500 xuống 400
+    final isFastSwipe = velocity > 350; // hạ ngưỡng nhẹ
     
     if (isSwipe || isFastSwipe) {
       final bool isLike = _dragOffset > 0;

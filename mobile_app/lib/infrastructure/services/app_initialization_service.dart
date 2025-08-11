@@ -8,6 +8,7 @@ import '../../infrastructure/socket/socket_client.dart';
 import 'profile_buffer_service.dart';
 import '../../data/models/match/user_recommendation_model.dart';
 import 'image_precache_service.dart';
+import '../../data/models/profile/photo_model.dart';
 
 /// Service để chuẩn bị dữ liệu ngay từ đầu khi vào app
 /// Đảm bảo khi user vào discovery thì dữ liệu đã sẵn sàng
@@ -46,6 +47,28 @@ class AppInitializationService {
       // Kiểm tra xem context còn valid không
       if (context.mounted) {
         await ProfileBufferService.instance.initialize();
+        // Sau khi buffer có dữ liệu, precache ảnh của 1-3 profile đầu tiên
+        try {
+          final buffer = ProfileBufferService.instance.profiles;
+          final int maxProfiles = buffer.length < 3 ? buffer.length : 3;
+          for (int i = 0; i < maxProfiles; i++) {
+            final photos = buffer[i].photos;
+            // Lọc cover trước, sau đó đến highlights tương tự UI
+            final coverList = photos.where((p) => p.type == 'profile_cover').toList();
+            final cover = coverList.isNotEmpty ? coverList.first : null;
+            final highlights = photos
+                .where((p) => p.type == 'highlight')
+                .toList()
+              ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+            final displayPhotos = [if (cover != null) cover, ...highlights.take(4)];
+            final int maxImages = displayPhotos.length.clamp(0, 5);
+            for (int j = 0; j < maxImages; j++) {
+              await ImagePrecacheService.instance.precacheImageUrl(displayPhotos[j].displayUrl, context);
+            }
+          }
+        } catch (e) {
+          print('AppInitializationService: Lỗi precache ảnh ban đầu - $e');
+        }
       }
       
       _isInitialized = true;
@@ -69,6 +92,18 @@ class AppInitializationService {
         _currentUserId = profileData['userId'] as int;
         ProfileBufferService.instance.setCurrentUserId(_currentUserId);
         print('AppInitializationService: Set current user ID = $_currentUserId');
+      }
+
+      // Extract current user's interests (lowercased names) for common-interests precompute
+      try {
+        final List<String> currentUserInterestsLower =
+            (profileData['interests'] as List<dynamic>? ?? [])
+                .map((e) => (e['name'] as String?)?.toLowerCase() ?? '')
+                .where((e) => e.isNotEmpty)
+                .toList();
+        ProfileBufferService.instance.setCurrentUserInterestsLower(currentUserInterestsLower);
+      } catch (e) {
+        print('AppInitializationService: Lỗi parse interests current user - $e');
       }
     } catch (e) {
       print('AppInitializationService: Lỗi load current user - $e');

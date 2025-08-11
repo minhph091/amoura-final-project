@@ -137,13 +137,15 @@ class _DiscoveryViewState extends State<DiscoveryView> with TickerProviderStateM
       child: Padding(
         padding: const EdgeInsets.fromLTRB(0, 0, 0, 45), // Giảm từ 90 xuống 45 để chiếm 1/2 buttons
         child: SimpleSwipeableCard(
+          key: ValueKey('swipe_${viewModel.currentProfile!.userId}_${viewModel.nextProfile?.userId ?? 'none'}'),
           currentProfile: viewModel.currentProfile!,
           currentInterests: viewModel.getCurrentInterests(),
           currentDistance: viewModel.getCurrentDistance(),
+          currentCommonInterests: viewModel.getCurrentCommonInterests(),
           nextProfile: viewModel.nextProfile,
           nextInterests: viewModel.getNextInterests(),
           nextDistance: viewModel.getNextDistance(),
-          onSwiped: viewModel.onSwipeComplete,
+          nextCommonInterests: viewModel.getNextCommonInterests(),
           onSwipeDirection: _onSwipeDirection, // Add callback for button highlighting
           onSwipeProgress: _onSwipeProgress, // Track swipe progress
           onSwipeReset: _onSwipeReset, // Reset when swipe is cancelled
