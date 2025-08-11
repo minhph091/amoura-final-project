@@ -38,7 +38,7 @@ public class AIServiceClient {
         try {
             log.info("Calling AI service for user {} with limit {}", userId, limit);
             
-            String url = String.format("%s/api/v1/users/%d/potential-matches?limit=%d", 
+            String url = String.format("%s/api/v1/users/%d/matches?limit=%d", 
                     aiServiceBaseUrl, userId, limit);
             
             AIPotentialMatchResponse response = restTemplate.getForObject(url, AIPotentialMatchResponse.class);
