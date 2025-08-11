@@ -1,0 +1,82 @@
+{
+  "training_info": {
+    "models_trained": [
+      "LightGBM",
+      "Logistic Regression",
+      "Random Forest"
+    ],
+    "best_model": "Logistic Regression",
+    "best_roc_auc": 0.8789655205625105,
+    "total_features": 19,
+    "feature_columns": [
+      "age_diff",
+      "height_diff",
+      "geo_distance_km",
+      "user1_within_user2_loc_pref",
+      "user2_within_user1_loc_pref",
+      "orientation_compatible_user1_to_user2",
+      "orientation_compatible_user2_to_user1",
+      "orientation_compatible_final",
+      "drink_match",
+      "smoke_match",
+      "education_match",
+      "interests_jaccard",
+      "languages_jaccard",
+      "user1_wants_learn_lang",
+      "user2_wants_learn_lang",
+      "language_interest_match",
+      "pets_jaccard",
+      "user_features_cosine_sim",
+      "user_features_mae_diff"
+    ],
+    "training_date": "2025-08-02 00:32:07"
+  },
+  "model_performance": {
+    "LightGBM": {
+      "roc_auc": 0.8778617395218488,
+      "accuracy": 0.8613413715146948,
+      "precision": 0.7834003310475289,
+      "recall": 0.998794091046126,
+      "f1_score": 0.8780811025708984
+    },
+    "Logistic Regression": {
+      "roc_auc": 0.8789655205625105,
+      "accuracy": 0.8614920874152223,
+      "precision": 0.7833175803402647,
+      "recall": 0.999397045523063,
+      "f1_score": 0.878262021459796
+    },
+    "Random Forest": {
+      "roc_auc": 0.8707909716017164,
+      "accuracy": 0.8614920874152223,
+      "precision": 0.7833175803402647,
+      "recall": 0.999397045523063,
+      "f1_score": 0.878262021459796
+    }
+  },
+  "model_parameters": {
+    "LightGBM": {
+      "boosting_type": "gbdt",
+      "num_leaves": 63,
+      "learning_rate": 0.03,
+      "n_estimators": 200,
+      "class_weight": "balanced",
+      "feature_fraction": 0.9,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 5,
+      "early_stopping_rounds": 50,
+      "random_state": 42
+    },
+    "Logistic Regression": {
+      "max_iter": 1000,
+      "random_state": 42,
+      "class_weight": "balanced"
+    },
+    "Random Forest": {
+      "n_estimators": 100,
+      "max_depth": 10,
+      "random_state": 42,
+      "class_weight": "balanced"
+    }
+  }
+}
