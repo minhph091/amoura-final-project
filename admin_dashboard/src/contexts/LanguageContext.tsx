@@ -23,55 +23,43 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 );
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language | undefined>(undefined);
-  const [isClient, setIsClient] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0); // Add force update trigger
+  const [language, setLanguage] = useState<Language>("en"); // Default to English
+  const [mounted, setMounted] = useState(false);
 
-  // Ensure we're on client side
+  // Handle client-side mounting
   useEffect(() => {
-    setIsClient(true);
+    setMounted(true);
+    
+    try {
+      const savedLanguage = localStorage.getItem("adminLanguage") as Language;
+      if (savedLanguage && (savedLanguage === "vi" || savedLanguage === "en")) {
+        setLanguage(savedLanguage);
+      } else {
+        localStorage.setItem("adminLanguage", "en");
+      }
+    } catch (error) {
+      // Silent fail on localStorage error
+    }
   }, []);
 
-  // Load language from localStorage on mount
-  useEffect(() => {
-    if (!isClient) return;
-    
-    const savedLanguage = localStorage.getItem("adminLanguage") as Language;
-    
-    if (savedLanguage && (savedLanguage === "vi" || savedLanguage === "en")) {
-      setLanguage(savedLanguage);
-    } else {
-      setLanguage("en"); // fallback default to English
-      // Also set in localStorage immediately
-      localStorage.setItem("adminLanguage", "en");
-    }
-  }, [isClient]);
-
-  // Save language to localStorage when changed
-  useEffect(() => {
-    if (language && isClient) {
-      localStorage.setItem("adminLanguage", language);
-    }
-  }, [language, isClient]);
-
   const handleSetLanguage = (lang: Language) => {
-    // Force localStorage update immediately and synchronously
-    if (isClient) {
-      localStorage.setItem("adminLanguage", lang);
+    if (lang !== "en" && lang !== "vi") {
+      return;
     }
     
-    // Update state even if same language to force refresh
-    setLanguage(lang);
+    try {
+      localStorage.setItem("adminLanguage", lang);
+    } catch (error) {
+      // Silent fail on localStorage error
+    }
     
-    // Force re-render
-    setForceUpdate(prev => prev + 1);
+    setLanguage(lang);
   };
 
   // Use useMemo to ensure translation object updates when language changes
   const t = useMemo(() => {
-    // Always return a valid translation object, prioritize English
-    const currentLang = language || "en"; // Default to English
-    let translation = translations[currentLang];
+    // Always return a valid translation object
+    let translation = translations[language];
     
     // Fallback to English if current language not available
     if (!translation || typeof translation !== 'object') {
@@ -84,7 +72,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
     
     return translation as TranslationKeys;
-  }, [language, forceUpdate, isClient]);
+  }, [language]);
 
   // Helper function to create comprehensive fallback translation
   function createFallbackTranslation(): TranslationKeys {
@@ -625,22 +613,28 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     } as TranslationKeys;
   }
   const value: LanguageContextType = {
-    language: language || "en", // Default to English
+    language: language,
     setLanguage: handleSetLanguage,
-    t: t || translations.en as TranslationKeys, // Ensure t is never undefined
+    t: t,
   };
 
-  if (!isClient) {
-    // Show loading or default content on server side
+  if (!mounted) {
+    // Return stable provider with default English translations during hydration
+    const defaultValue: LanguageContextType = {
+      language: "en",
+      setLanguage: () => {},
+      t: translations.en as TranslationKeys,
+    };
+    
     return (
-      <LanguageContext.Provider value={value}>
+      <LanguageContext.Provider value={defaultValue}>
         {children}
       </LanguageContext.Provider>
     );
   }
 
   return (
-    <LanguageContext.Provider value={value} key={`${language}-${forceUpdate}`}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

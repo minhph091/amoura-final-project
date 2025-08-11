@@ -22,18 +22,32 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { t } = useLanguage();
 
-  // Check if already logged in
+  // Handle mounting and auth check
   useEffect(() => {
-    if (authService.isAuthenticated() && authService.isAdminOrModerator()) {
-      if (window.location.pathname === "/login") {
-        window.location.assign("/dashboard");
+    setMounted(true);
+    
+    // Only check auth after component is mounted to avoid SSR issues
+    const timeoutId = setTimeout(() => {
+      if (authService.isAuthenticated() && authService.isAdminOrModerator()) {
+        router.push("/dashboard");
       }
-    }
-    // eslint-disable-next-line
-  }, []);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [router]);
+
+  // Don't render anything until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-purple-600">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

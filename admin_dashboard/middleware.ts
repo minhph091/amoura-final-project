@@ -34,7 +34,13 @@ export function middleware(request: NextRequest) {
     // Check for auth token in cookies
     const token = request.cookies.get("auth_token")?.value;
     
-    if (!token) {
+    // Also check authorization header if cookie is not present
+    const authHeader = request.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
+    
+    const finalToken = token || bearerToken;
+    
+    if (!finalToken) {
       // For production static exports, we need to handle this differently
       const isStaticExport = process.env.NEXT_EXPORT === 'true';
       

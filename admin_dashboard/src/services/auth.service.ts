@@ -116,6 +116,15 @@ export class AuthService {
       }
     }
     this.clearAllAuthData();
+    
+    // Trigger storage event để notify các tabs khác
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'auth_token',
+        newValue: null,
+        oldValue: localStorage.getItem('auth_token')
+      }));
+    }
   }
 
   async changePassword(

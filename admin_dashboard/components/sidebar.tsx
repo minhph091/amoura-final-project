@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Crown,
+  LogOut,
 } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { HeaderSearchContext } from "./header";
@@ -64,6 +65,11 @@ export function Sidebar() {
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  const handleLogout = async () => {
+    await authService.logout();
+    router.push("/login");
   };
 
   const user = authService.getCurrentUser();
@@ -206,6 +212,33 @@ export function Sidebar() {
               })}
             </nav>
           </ScrollArea>
+
+          {/* Logout Button */}
+          <div className="px-3 pb-2">
+            <button
+              onClick={handleLogout}
+              className={cn(
+                "sidebar-item group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium font-primary transition-all duration-200 relative overflow-hidden w-full text-left",
+                "hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400",
+                "text-slate-600 dark:text-slate-400",
+                isCollapsed ? "justify-center px-2" : ""
+              )}
+            >
+              <div
+                className={cn(
+                  "flex items-center justify-center transition-transform group-hover:scale-110",
+                  "group-hover:text-red-600 dark:group-hover:text-red-400"
+                )}
+              >
+                <LogOut className="h-5 w-5" />
+              </div>
+              {!isCollapsed && (
+                <span className="sidebar-text transition-all duration-200 group-hover:translate-x-1">
+                  {t.header.logout}
+                </span>
+              )}
+            </button>
+          </div>
 
           <div className="p-4 flex justify-center border-t border-border">
             <Button

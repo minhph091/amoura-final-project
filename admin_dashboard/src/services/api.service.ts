@@ -88,6 +88,12 @@ export class ApiClient {
         
         if (response.status === 401) {
           this.clearToken();
+          // Nếu là lỗi 401, có thể token đã hết hạn
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("isLoggedIn");
+            // Trigger logout event for other components to listen
+            window.dispatchEvent(new CustomEvent('token-expired'));
+          }
           return {
             success: false,
             error: data?.message || "Authentication required. Please login again.",

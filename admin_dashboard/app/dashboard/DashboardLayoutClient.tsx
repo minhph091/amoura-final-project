@@ -9,6 +9,8 @@ import { Header } from "@/components/header";
 // Removed DashboardFooter import
 import { ClientOnly } from "@/components/ClientOnly";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { AuthGuard } from "@/components/AuthGuard";
+import { GlobalAuthInterceptor } from "@/components/GlobalAuthInterceptor";
 import { authService } from "@/src/services/auth.service";
 
 export default function DashboardLayoutClient({
@@ -97,31 +99,34 @@ export default function DashboardLayoutClient({
 
   return (
     <ErrorBoundary>
-      <ClientOnly
-        fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            Loading...
-          </div>
-        }
-      >
-        <div
-          className="flex min-h-screen flex-col bg-gradient-soft relative overflow-hidden"
-          suppressHydrationWarning
-        >
-          {/* Subtle background elements for dashboard */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-100/30 to-purple-100/30 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-rose-100/30 to-pink-100/30 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="flex flex-1 relative z-10" suppressHydrationWarning>
-            <Sidebar />
-            <div className="flex-1 main-content flex flex-col transition-all duration-300 ease-in-out">
-              <Header />
-              <main className="flex-1 p-6 pt-20 overflow-y-auto">{children}</main>
+      <AuthGuard>
+        <GlobalAuthInterceptor />
+        <ClientOnly
+          fallback={
+            <div className="min-h-screen flex items-center justify-center">
+              Loading...
             </div>
+          }
+        >
+          <div
+            className="flex min-h-screen flex-col bg-gradient-soft relative overflow-hidden"
+            suppressHydrationWarning
+          >
+            {/* Subtle background elements for dashboard */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-100/30 to-purple-100/30 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-rose-100/30 to-pink-100/30 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="flex flex-1 relative z-10" suppressHydrationWarning>
+              <Sidebar />
+              <div className="flex-1 main-content flex flex-col transition-all duration-300 ease-in-out">
+                <Header />
+                <main className="flex-1 p-6 pt-20 overflow-y-auto">{children}</main>
+              </div>
+            </div>
+            {/* Footer is now handled globally in app/layout.tsx */}
           </div>
-          {/* Footer is now handled globally in app/layout.tsx */}
-        </div>
-      </ClientOnly>
+        </ClientOnly>
+      </AuthGuard>
     </ErrorBoundary>
   );
 }
