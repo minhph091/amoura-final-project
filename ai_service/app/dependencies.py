@@ -5,12 +5,12 @@ This module provides FastAPI dependencies for database sessions,
 services, and other shared resources with proper error handling.
 """
 
-from typing import Annotated, Generator
+from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import ModelLoadError, ConfigurationError
+from app.core.exceptions import ModelLoadError
 from app.core.logging import get_logger
 from app.db.session import get_db
 from app.services.match_service import MatchService

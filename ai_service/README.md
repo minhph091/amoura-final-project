@@ -189,7 +189,7 @@ Returns potential matches for a user based on **Logistic Regression** prediction
 
 #### Get Match Probability
 ```http
-GET /api/v1/users/{user1_id}/match-probability/{user2_id}
+ 
 ```
 
 Returns match probability between two specific users using **Logistic Regression**.

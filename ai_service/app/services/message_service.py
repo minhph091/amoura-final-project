@@ -12,7 +12,7 @@ from fastapi import HTTPException, status
 
 from app.core.config import get_settings
 from app.core.exceptions import ExternalAPIError
-from app.core.logging import LoggerMixin, get_logger
+from app.core.logging import LoggerMixin
 from app.db import crud
 
 

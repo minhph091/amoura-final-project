@@ -1,21 +1,26 @@
 # app/db/crud.py
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select
-from typing import List, Optional, Tuple, Any, Dict
+from sqlalchemy import select, func
+from typing import List, Optional, Tuple
 
 from . import models
 
 
 # --- User CRUD ---
 def get_user_by_id(db: Session, user_id: int) -> Optional[models.User]:
+    """Return user by ID or None if not found."""
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
 def get_user_role_name(db: Session, user_id: int) -> Optional[str]:
-    user = db.query(models.User).options(joinedload(models.User.role)).filter(models.User.id == user_id).first()
-    if user and user.role:
-        return user.role.name
-    return None
+    """Return the role name for a user, or None if not available."""
+    user = (
+        db.query(models.User)
+        .options(joinedload(models.User.role))
+        .filter(models.User.id == user_id)
+        .first()
+    )
+    return user.role.name if user and user.role else None
 
 
 # --- Profile & Related CRUD ---
@@ -34,9 +39,13 @@ def get_user_profile_raw_data(db: Session, user_id: int) -> Optional[Tuple[
     Optional[str]  # education_level_name
 ]]:
     """
-    Lấy toàn bộ thông tin thô của user cần thiết cho ML model,
-    bao gồm cả việc join và tổng hợp từ các bảng liên quan.
-    Trả về một tuple chứa các đối tượng model hoặc list of strings.
+    Fetch raw user-related data required by the ML pipeline.
+
+    This aggregates profile, location, and many-to-many attributes
+    (pets, interests, languages) and flattens reference names for
+    categorical fields used by preprocessing.
+
+    Returns a tuple of ORM objects and primitive lists/strings.
     """
     user = get_user_by_id(db, user_id)
     if not user:
@@ -64,7 +73,7 @@ def get_user_profile_raw_data(db: Session, user_id: int) -> Optional[Tuple[
         models.UserLanguage.user_id == user_id).all()
     language_names = [l[0] for l in languages_q]
 
-    # Thêm error handling cho relationship access
+    # Defensive access for optional relationships
     try:
         body_type_name = profile.body_type.name if profile and profile.body_type else None
         orientation_name = profile.orientation.name if profile and profile.orientation else None
@@ -73,6 +82,7 @@ def get_user_profile_raw_data(db: Session, user_id: int) -> Optional[Tuple[
         smoke_status_name = profile.smoke_status.name if profile and profile.smoke_status else None
         education_level_name = profile.education_level.name if profile and profile.education_level else None
     except Exception as e:
+        # Log to stdout as a fallback to avoid breaking the request context
         print(f"Error accessing profile relationships for user {user_id}: {e}")
         # Fallback values
         body_type_name = None
@@ -98,20 +108,13 @@ def get_user_profile_raw_data(db: Session, user_id: int) -> Optional[Tuple[
 
 
 # --- Swipe CRUD ---
-def get_non_swiped_user_ids_with_role(db: Session, current_user_id: int, role_name: str = "USER", limit: int = 100) -> \
-List[int]:
-    """
-    Get IDs of users with a specific role that the current user hasn't swiped on yet.
-
-    Args:
-        db: Database session
-        current_user_id: ID of the current user
-        role_name: Role name to filter users by
-        limit: Maximum number of user IDs to return
-
-    Returns:
-        List of user IDs
-    """
+def get_non_swiped_user_ids_with_role(
+    db: Session,
+    current_user_id: int,
+    role_name: str = "USER",
+    limit: int = 100,
+) -> List[int]:
+    """Return user IDs (with role) that the current user hasn't swiped yet."""
     # Subquery to get all user IDs that the current user has swiped on
     swiped_users_query = db.query(models.Swipe.target_user).filter(
         models.Swipe.initiator == current_user_id
@@ -133,18 +136,7 @@ List[int]:
 
 # --- Message CRUD ---
 def get_message_history(db: Session, user_id: int, other_user_id: int, limit: int = 50) -> List[models.Message]:
-    """
-    Get the message history between two users via chat_rooms, ordered by creation time.
-
-    Args:
-        db: Database session
-        user_id: ID of the first user
-        other_user_id: ID of the second user
-        limit: Maximum number of messages to return
-
-    Returns:
-        List of Message objects representing the conversation history
-    """
+    """Return chronological message history between two users (via chat room)."""
     # First, find the chat room between the two users
     chat_room = db.query(models.ChatRoom).filter(
         (
@@ -170,17 +162,8 @@ def get_message_history(db: Session, user_id: int, other_user_id: int, limit: in
     return list(reversed(messages))
 
 
-def format_messages_for_ai(messages: List[models.Message], current_user_id: int) -> List[Dict]:
-    """
-    Format a list of Message objects into a format suitable for AI processing.
-
-    Args:
-        messages: List of Message objects
-        current_user_id: ID of the current user to determine message roles
-
-    Returns:
-        List of dictionaries with 'role' and 'content' keys
-    """
+def format_messages_for_ai(messages: List[models.Message], current_user_id: int) -> List[dict]:
+    """Format messages for AI: [{'role': 'user'|'assistant', 'content': str}, ...]."""
     formatted_messages = []
 
     for message in messages:
@@ -201,17 +184,7 @@ def get_backup_recommendations(
     current_user_id: int, 
     limit: int = 10
 ) -> List[int]:
-    """
-    Lấy danh sách ID người dùng backup dựa trên giới tính và orientation.
-    
-    Args:
-        db: Database session
-        current_user_id: ID của người dùng hiện tại
-        limit: Số lượng recommendations tối đa
-        
-    Returns:
-        List of user IDs
-    """
+    """Return backup user IDs based on gender and orientation compatibility."""
     # Lấy thông tin người dùng hiện tại
     current_user_data = get_user_profile_raw_data(db, current_user_id)
     if not current_user_data:
@@ -263,18 +236,18 @@ def get_backup_recommendations(
         compatible_sex = None
         compatible_orientation = None
     
-    # Query cơ bản
+    # Base query (exclude current user and already-swiped users)
     query = db.query(models.User.id).join(models.Profile).join(models.Orientation).filter(
         models.User.id != current_user_id,
         models.User.status == "active",
         ~models.User.id.in_(swiped_user_ids)
     )
     
-    # Thêm filter theo giới tính nếu có
+    # Optional sex filter
     if compatible_sex:
         query = query.filter(models.Profile.sex == compatible_sex)
     
-    # Thêm filter theo orientation nếu có
+    # Optional orientation filter
     if compatible_orientation:
         query = query.filter(models.Orientation.name == compatible_orientation)
     elif orientation_lower == "prefer not to say":
@@ -283,7 +256,31 @@ def get_backup_recommendations(
             models.Orientation.name.in_(["bisexual", "prefer not to say"])
         )
     
-    # Lấy kết quả
+    # Execute query and collect IDs
+    user_ids = query.limit(limit).all()
+    
+    return [uid[0] for uid in user_ids]
+
+
+def get_random_users(
+    db: Session, 
+    current_user_id: int, 
+    limit: int = 10
+) -> List[int]:
+    """Return random user IDs (final fallback) excluding swiped/current users."""
+    # Lấy danh sách user đã swipe
+    swiped_user_ids = select(models.Swipe.target_user).where(
+        models.Swipe.initiator == current_user_id
+    )
+    
+    # Query random users (không bao gồm chính mình và users đã swipe)
+    query = db.query(models.User.id).join(models.Role).filter(
+        models.User.id != current_user_id,
+        models.User.status == "active",
+        models.Role.name == "USER",
+        ~models.User.id.in_(swiped_user_ids)
+    ).order_by(func.random())  # Random ordering
+    
     user_ids = query.limit(limit).all()
     
     return [uid[0] for uid in user_ids]
