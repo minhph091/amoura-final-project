@@ -3,6 +3,7 @@ package com.amoura.module.chat.api;
 import com.amoura.infrastructure.security.JwtTokenProvider.CustomUserDetails;
 import com.amoura.module.chat.dto.*;
 import com.amoura.module.chat.service.ChatService;
+import com.amoura.module.matching.service.AIServiceClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,6 +47,7 @@ public class ChatController {
     private final ChatService chatService;
     private final MessageRepository messageRepository;
     private final UserMessageVisibilityRepository userMessageVisibilityRepository;
+    private final AIServiceClient aiServiceClient;
     private static final Logger log = LoggerFactory.getLogger(ChatController.class);
 
     @Value("${file.storage.local.upload-dir}")
@@ -54,18 +56,7 @@ public class ChatController {
     @Value("${file.storage.local.base-url}")
     private String baseUrl;
 
-    // // Chat Room endpoints
-    // @PostMapping("/rooms")
-    // @Operation(summary = "Create or get chat room between two users")
-    // @SecurityRequirement(name = "bearerAuth")
-    // public ResponseEntity<ChatRoomDTO> createOrGetChatRoom(
-    //         @RequestParam Long userId2,
-    //         @AuthenticationPrincipal UserDetails userDetails) {
-        
-    //     Long userId1 = getUserId(userDetails);
-    //     ChatRoomDTO chatRoom = chatService.createOrGetChatRoom(userId1, userId2);
-    //     return ResponseEntity.ok(chatRoom);
-    // }
+
 
     @GetMapping("/rooms")
     @Operation(summary = "Get user's chat rooms with cursor-based pagination")
@@ -188,6 +179,35 @@ public class ChatController {
         }
     }
 
+    @PostMapping("/ai-edit")
+    @Operation(summary = "Edit a message using AI")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<AIEditMessageResponse> editMessageWithAI(
+            @Valid @RequestBody AIEditMessageRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        try {
+            Long senderId = getUserId(userDetails);
+            log.info("AI edit message request from user {} for receiver {}", senderId, request.getReceiverId());
+            
+            AIEditMessageResponse response = aiServiceClient.editMessage(request, senderId);
+            
+            log.info("AI edit message completed for user {}", senderId);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error editing message with AI for user {}: {}", getUserId(userDetails), e.getMessage());
+            
+            // Fallback: return original message
+            AIEditMessageResponse fallbackResponse = AIEditMessageResponse.builder()
+                    .editedMessage(request.getOriginalMessage())
+                    .originalMessage(request.getOriginalMessage())
+                    .build();
+            
+            return ResponseEntity.ok(fallbackResponse);
+        }
+    }
+
     // WebSocket message handlers
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload SendMessageRequest request, SimpMessageHeaderAccessor headerAccessor) {
@@ -245,7 +265,6 @@ public class ChatController {
             Files.copy(file.getInputStream(), filePath);
             String relativePath = "chat/" + chatRoomId + "/" + filename;
             String imageUrl = baseUrl + "/" + relativePath;
-            // Trả về URL đầy đủ cho client, nhưng client sẽ gửi relativePath khi gửi message
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body("Failed to upload image");
