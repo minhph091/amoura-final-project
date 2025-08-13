@@ -54,6 +54,21 @@ public class AdminControllerTests {
                 .log().all()
                 .statusCode(403);
     }
+
+    @Test
+    @DisplayName("Lấy admin dashboard - Token không hợp leej ")
+    void getAdminDashboard_WithInvalidToken() {
+        String invalidToken = "invalidToken";
+        RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .when()
+                .get("/admin/dashboard")
+                .then()
+                .log().all()
+                .statusCode(403);
+    }
+
     @Test
     @DisplayName("Lấy admin dashboard - Token moderator")
     void getModeratorDashboard_WithValidModeratorToken() {
@@ -100,6 +115,21 @@ public class AdminControllerTests {
     }
 
     @Test
+    @DisplayName("Lấy thông tin user theo ID - Token không hợp lệ ")
+    void getUserById_WithInvalidToken_UserExists() {
+        String invalidToken = "invalidToken";
+        int userId = 1;
+        RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .when()
+                .get("/admin/users/" + userId)
+                .then()
+                .log().all()
+                .statusCode(403);
+    }
+
+    @Test
     @DisplayName("Lấy thông tin user theo ID không tồn tại")
     void getUserById_WithAdminToken_UserNotFound() {
         int userId = 999999;
@@ -122,6 +152,19 @@ public class AdminControllerTests {
         RestAssured
                 .given()
                 .header("Authorization", "Bearer " + userToken)
+                .when()
+                .get("/admin/users/" + userId)
+                .then()
+                .log().all()
+                .statusCode(403);
+    }
+    @DisplayName("Lấy thông tin user theo ID - Token không hợp lệ")
+    void getUserById_WithInvalidToken() {
+        String invalidToken = "iinvalidToken";
+        int userId = 1;
+        RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
                 .when()
                 .get("/admin/users/" + userId)
                 .then()
