@@ -10,7 +10,7 @@ public class ModeratorLoginAndGetToken {
 
         String requestBody = """
         {
-          "email": "admin@gmail.com",
+          "email": "moderator@gmail.com",
           "password": "Amoura123@",
           "loginType": "EMAIL_PASSWORD"
         }
