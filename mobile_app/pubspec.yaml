@@ -42,6 +42,7 @@ dependencies:
   permission_handler: ^12.0.0+1
   carousel_slider: ^4.2.1
   stomp_dart_client: ^0.4.4
+  soundpool: ^2.3.0
 
   flutter_localizations:
     sdk: flutter
@@ -59,6 +60,7 @@ flutter:
     - assets/images/avatars/
     - assets/images/onboarding/
     - assets/logos/
+    - assets/sounds/
 
 flutter_icons:
   android: true

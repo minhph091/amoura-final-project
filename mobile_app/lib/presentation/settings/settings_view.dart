@@ -114,6 +114,7 @@ class SettingsView extends StatelessWidget {
                       ),
                     ),
               ),
+
               const SettingsDivider(),
               SettingsSectionTitle(
                 title: localizations.translate('app_experience'),

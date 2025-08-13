@@ -2,6 +2,7 @@ import '../../core/api/api_client.dart';
 import '../../core/constants/api_endpoints.dart';
 import '../../domain/models/chat.dart';
 import '../../domain/models/message.dart';
+import '../../domain/models/ai_edit_message_result.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 
@@ -391,5 +392,29 @@ class ChatApi {
     // TODO: Implement WebSocket notification subscription
     // Đây sẽ được implement khi có WebSocket client
     debugPrint('Subscribing to notifications');
+  }
+
+  // AI edit message via backend gateway
+  Future<AiEditMessageResult> editMessageWithAI({
+    required String originalMessage,
+    required String editPrompt,
+    required String receiverId,
+  }) async {
+    try {
+      final data = {
+        'originalMessage': originalMessage.trim(),
+        'editPrompt': editPrompt.trim(),
+        'receiverId': int.parse(receiverId),
+      };
+      final response = await _apiClient.post(ApiEndpoints.chatAiEdit, data: data);
+      final respData = response.data as Map<String, dynamic>;
+      final edited = (respData['editedMessage'] ?? '').toString();
+      final original = (respData['originalMessage'] ?? originalMessage).toString();
+      return AiEditMessageResult(editedMessage: edited, originalMessage: original);
+    } catch (e) {
+      debugPrint('ChatApi: AI edit failed: $e');
+      // Fallback to original
+      return AiEditMessageResult(editedMessage: originalMessage, originalMessage: originalMessage);
+    }
   }
 }

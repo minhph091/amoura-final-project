@@ -7,6 +7,7 @@ class SettingsTile extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? iconColor;
   final Color? titleColor;
+  final bool isLoading;
 
   const SettingsTile({
     super.key,
@@ -16,6 +17,7 @@ class SettingsTile extends StatelessWidget {
     this.onTap,
     this.iconColor,
     this.titleColor,
+    this.isLoading = false,
   });
 
   @override
@@ -44,11 +46,22 @@ class SettingsTile extends StatelessWidget {
             )
         )
             : null,
-        trailing: Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 16,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
-        ),
+        trailing: isLoading
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    colorScheme.primary,
+                  ),
+                ),
+              )
+            : Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
+            ),
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
         dense: true,

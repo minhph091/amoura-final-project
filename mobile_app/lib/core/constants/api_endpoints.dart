@@ -47,6 +47,7 @@ class ApiEndpoints {
   static const String chatMessages = '/chat/messages';
   static const String chatUploadImage = '/chat/upload-image';
   static const String chatDeleteImage = '/chat/delete-image';
+  static const String chatAiEdit = '/chat/ai-edit';
   
   // Helper methods for chat endpoints with parameters
   static String chatRoomById(String chatRoomId) => '$chatRooms/$chatRoomId';

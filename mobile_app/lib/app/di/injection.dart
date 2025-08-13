@@ -38,11 +38,13 @@ import '../../domain/usecases/chat/delete_message_usecase.dart';
 import '../../domain/usecases/chat/recall_message_usecase.dart';
 import '../../domain/usecases/chat/mark_messages_read_usecase.dart';
 import '../../domain/usecases/chat/upload_chat_image_usecase.dart';
+import '../../domain/usecases/chat/ai_edit_message_usecase.dart';
 import '../../domain/usecases/chat/check_user_online_usecase.dart';
 import '../../domain/usecases/chat/get_chat_room_usecase.dart';
 import '../../infrastructure/services/subscription_service.dart';
 import '../../infrastructure/services/rewind_service.dart';
 import '../../infrastructure/services/likes_service.dart';
+import '../../infrastructure/services/sound_service.dart';
 import 'package:flutter/material.dart';
 import '../../data/remote/user_api.dart';
 import '../../data/repositories/user_repository.dart';
@@ -109,6 +111,7 @@ Future<void> configureDependencies(
   getIt.registerLazySingleton<SubscriptionService>(() => SubscriptionService());
   getIt.registerLazySingleton<RewindService>(() => RewindService());
   getIt.registerLazySingleton<LikesService>(() => LikesService());
+  getIt.registerLazySingleton<SoundService>(() => SoundService());
 
   // Use Cases
   getIt.registerLazySingleton<RefreshTokenUseCase>(
@@ -159,9 +162,8 @@ Future<void> configureDependencies(
   getIt.registerLazySingleton<MarkMessagesReadUseCase>(
     () => MarkMessagesReadUseCase(),
   );
-  getIt.registerLazySingleton<UploadChatImageUseCase>(
-    () => UploadChatImageUseCase(),
-  );
+  getIt.registerLazySingleton<UploadChatImageUseCase>(() => UploadChatImageUseCase());
+  getIt.registerLazySingleton<AiEditMessageUseCase>(() => AiEditMessageUseCase(getIt<ChatApi>()));
   getIt.registerLazySingleton<CheckUserOnlineUseCase>(
     () => CheckUserOnlineUseCase(),
   );
@@ -181,4 +183,9 @@ Future<void> configureDependencies(
     () => NotificationApi(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<NotificationService>(() => NotificationService());
+
+  // Initialize low-latency sound effects
+  try {
+    await getIt<SoundService>().initialize();
+  } catch (_) {}
 }

@@ -126,10 +126,28 @@ class ProfileBufferService {
   Future<void> _loadSwipedProfiles() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final swipedIds = prefs.getStringList('swiped_profile_ids') ?? [];
+      
+      // Use user-specific key for swiped profiles
+      final String key = _currentUserId != null 
+          ? 'swiped_profile_ids_${_currentUserId}' 
+          : 'swiped_profile_ids';
+      
+      // Migrate old data if exists (one-time migration)
+      if (_currentUserId != null) {
+        final oldKey = 'swiped_profile_ids';
+        final oldSwipedIds = prefs.getStringList(oldKey);
+        if (oldSwipedIds != null && oldSwipedIds.isNotEmpty) {
+          // Migrate old data to new user-specific key
+          await prefs.setStringList(key, oldSwipedIds);
+          await prefs.remove(oldKey);
+          print('ProfileBufferService: Migrated ${oldSwipedIds.length} swiped profiles from old key to user-specific key');
+        }
+      }
+      
+      final swipedIds = prefs.getStringList(key) ?? [];
       _swipedProfileIds.clear();
       _swipedProfileIds.addAll(swipedIds.map((id) => int.parse(id)));
-      print('ProfileBufferService: Loaded ${_swipedProfileIds.length} swiped profiles from storage');
+      print('ProfileBufferService: Loaded ${_swipedProfileIds.length} swiped profiles from storage for user $_currentUserId');
     } catch (e) {
       print('ProfileBufferService: Error loading swiped profiles: $e');
     }
@@ -140,8 +158,14 @@ class ProfileBufferService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final swipedIds = _swipedProfileIds.map((id) => id.toString()).toList();
-      await prefs.setStringList('swiped_profile_ids', swipedIds);
-      print('ProfileBufferService: Saved ${_swipedProfileIds.length} swiped profiles to storage');
+      
+      // Use user-specific key for swiped profiles
+      final String key = _currentUserId != null 
+          ? 'swiped_profile_ids_${_currentUserId}' 
+          : 'swiped_profile_ids';
+      
+      await prefs.setStringList(key, swipedIds);
+      print('ProfileBufferService: Saved ${_swipedProfileIds.length} swiped profiles to storage for user $_currentUserId');
     } catch (e) {
       print('ProfileBufferService: Error saving swiped profiles: $e');
     }
@@ -335,8 +359,15 @@ class ProfileBufferService {
 
   /// Set current user ID
   void setCurrentUserId(int? userId) {
-    _currentUserId = userId;
-    print('ProfileBufferService: Set current user ID = $_currentUserId');
+    if (_currentUserId != userId) {
+      _currentUserId = userId;
+      print('ProfileBufferService: Set current user ID = $_currentUserId');
+      
+      // Reload swiped profiles for new user
+      if (userId != null) {
+        _loadSwipedProfiles();
+      }
+    }
   }
 
   /// Set current user's interests (lowercased names) to compute common interests
@@ -375,11 +406,14 @@ class ProfileBufferService {
     _removedDistances.clear();
     _currentIndex = 0;
     
-    // Xóa từ storage
+    // Xóa từ storage - use user-specific key
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('swiped_profile_ids');
+    final String key = _currentUserId != null 
+        ? 'swiped_profile_ids_${_currentUserId}' 
+        : 'swiped_profile_ids';
+    await prefs.remove(key);
     
-    debugPrint('ProfileBufferService: Reset toàn bộ dữ liệu');
+    debugPrint('ProfileBufferService: Reset toàn bộ dữ liệu cho user $_currentUserId');
   }
 
   /// Debug info (removed spam logs)

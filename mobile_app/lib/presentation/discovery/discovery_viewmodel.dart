@@ -10,11 +10,13 @@ import '../../data/models/match/swipe_request_model.dart';
 import '../../data/models/match/swipe_response_model.dart';
 import '../../core/services/profile_service.dart';
 import 'widgets/match_dialog.dart';
+import '../../infrastructure/services/sound_service.dart';
 
 class DiscoveryViewModel extends ChangeNotifier {
   final ProfileBufferService _bufferService = ProfileBufferService.instance;
   final MatchService _matchService = GetIt.I<MatchService>();
   final ProfileService _profileService = GetIt.I<ProfileService>();
+  final SoundService _soundService = GetIt.I<SoundService>();
 
   bool _isLoading = false;
   String? _error;
@@ -98,6 +100,8 @@ class DiscoveryViewModel extends ChangeNotifier {
     debugPrint('DiscoveryViewModel: Like profile ${profile.userId}');
     
     try {
+      // Play SFX for like
+      unawaited(_soundService.playSwipeLike());
       // Đánh dấu profile đã like để không cho phép rewind
       _bufferService.markProfileAsLiked(profile.userId);
       // Chuyển UI sang profile tiếp theo ngay lập tức để tránh giật
@@ -113,6 +117,8 @@ class DiscoveryViewModel extends ChangeNotifier {
           );
           final response = await _matchService.swipeUser(request);
           if (response.isMatch) {
+            // Celebrate match
+            unawaited(_soundService.playMatchSuccess());
             debugPrint('DiscoveryViewModel: Match detected with profile ${profile.userId}!');
             debugPrint('DiscoveryViewModel: Match response: ${response.toJson()}');
             await _showMatchDialog(profile, response);
@@ -136,6 +142,8 @@ class DiscoveryViewModel extends ChangeNotifier {
     debugPrint('DiscoveryViewModel: Pass profile ${profile.userId}');
     
     try {
+      // Play SFX for pass
+      unawaited(_soundService.playSwipePass());
       // Đánh dấu profile đã pass (cho phép rewind)
       _bufferService.markProfileAsPassed(profile.userId);
 

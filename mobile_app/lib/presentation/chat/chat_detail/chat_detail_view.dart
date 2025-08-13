@@ -56,6 +56,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   bool _hasMarkedAsRead =
       false; // Flag để tránh mark messages as read nhiều lần
 
+  // Lưu lại prompt/tone AI gần nhất để có thể "Sửa lại" nhanh
+  String? _lastAiPrompt;
+  int _aiRetryCount = 0; // Tăng dần để yêu cầu AI tạo biến thể khác
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +74,225 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       _loadChatRoomInfo();
       _viewModel.loadMessages(widget.chatId);
     });
+  }
+
+  Future<String?> _aiEditFlow(String original) async {
+    // Unified composer: nhập tin nhắn + chọn phong cách + xem kết quả/Retry/Accept trong một sheet
+    return showModalBottomSheet<String?>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final theme = Theme.of(context);
+        final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+        final presets = <String>[
+          'Lịch sự và ấm áp',
+          'Ngắn gọn, súc tích',
+          'Tự tin và duyên dáng',
+          'Hài hước nhẹ nhàng',
+          'Trang trọng',
+          'Thả thính tinh tế',
+        ];
+
+        final messageController = TextEditingController(text: original);
+        final promptController = TextEditingController(text: _lastAiPrompt ?? '');
+
+        String? selectedPreset = _lastAiPrompt != null && presets.contains(_lastAiPrompt!) ? _lastAiPrompt : null;
+        String? resultText;
+        bool isLoading = false;
+        int localRetry = 0;
+
+        Future<void> runAi(Function(void Function()) setModalState) async {
+          final input = messageController.text.trim();
+          if (input.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Nhập nội dung để AI đề xuất')),
+            );
+            return;
+          }
+          final basePrompt = (promptController.text.trim().isNotEmpty
+                  ? promptController.text.trim()
+                  : (selectedPreset ?? 'Tự nhiên, lịch sự'))
+              .trim();
+          setModalState(() { isLoading = true; });
+          try {
+            final effectivePrompt = localRetry == 0
+                ? basePrompt
+                : '$basePrompt. Biến thể #${localRetry + 1} - tạo phiên bản khác, tự nhiên, không lặp lại.';
+            final edited = await _viewModel.requestAiEdit(
+              input,
+              effectivePrompt,
+              variant: localRetry,
+              bypassCache: true,
+            );
+            setModalState(() {
+              resultText = (edited ?? '').trim().isNotEmpty ? edited!.trim() : null;
+              isLoading = false;
+            });
+            _lastAiPrompt = basePrompt;
+            _aiRetryCount = localRetry;
+          } catch (e) {
+            setModalState(() { isLoading = false; });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('AI đang bận, thử lại sau')),
+            );
+          }
+        }
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: bottomInset + 16),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        const Icon(Icons.auto_fix_high, color: Color(0xFFFF6B9D)),
+                        const SizedBox(width: 8),
+                        const Text('Trợ lý AI gợi ý tin nhắn', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Message input to edit/suggest
+                    const Text('Nội dung tin nhắn'),
+                    const SizedBox(height: 6),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: TextField(
+                        controller: messageController,
+                        maxLines: 4,
+                        minLines: 1,
+                        decoration: const InputDecoration(
+                          hintText: 'Nhập tin nhắn bạn muốn gửi hoặc mô tả tình huống...',
+                          border: InputBorder.none,
+                        ),
+                        textInputAction: TextInputAction.newline,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Style presets
+                    const Text('Chọn phong cách'),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: presets.map((p) {
+                        final isSelected = selectedPreset == p;
+                        return ChoiceChip(
+                          label: Text(p),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            setModalState(() {
+                              selectedPreset = p;
+                              if (promptController.text.isEmpty) {
+                                // hiển thị nhanh vào ô prompt để user tinh chỉnh
+                                promptController.text = p;
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Custom prompt
+                    const Text('Hoặc nhập yêu cầu cụ thể'),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: promptController,
+                      decoration: const InputDecoration(
+                        hintText: 'Ví dụ: Lịch sự, mở đầu thân thiện và rủ đi cà phê cuối tuần',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
+                      minLines: 1,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Generate button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: isLoading ? null : () => runAi(setModalState),
+                        icon: isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.auto_fix_high),
+                        label: Text(isLoading ? 'Đang tạo gợi ý...' : 'Tạo gợi ý'),
+                      ),
+                    ),
+
+                    // Result section
+                    if (resultText != null) ...[
+                      const SizedBox(height: 16),
+                      const Text('Gợi ý của AI'),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.shade200),
+                        ),
+                        child: Text(resultText!, style: const TextStyle(fontSize: 14)),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+                                      setModalState(() { localRetry += 1; });
+                                      runAi(setModalState);
+                                    },
+                              child: const Text('Sửa lại'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.pop(context, resultText),
+                              child: const Text('Dùng tin nhắn này'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -945,6 +1168,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                               // Gửi typing indicator qua ViewModel
                               viewModel.setUserTyping(isTyping);
                             },
+                            aiEditFlow: _aiEditFlow,
                           ),
                         ],
                       ),

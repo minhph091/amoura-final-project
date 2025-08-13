@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "com.example.amoura"
     compileSdk = flutter.compileSdkVersion
+    buildToolsVersion = "35.0.0"
     ndkVersion = "27.0.12077973" // Cập nhật NDK version để tránh warning
 
     compileOptions {
