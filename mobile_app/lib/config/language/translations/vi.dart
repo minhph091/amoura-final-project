@@ -127,7 +127,7 @@ final Map<String, dynamic> vi = {
   'privacy_policy_link': 'Chính sách Bảo mật',
 
   // Login Options
-  'email_phone_option': 'Email hoặc Số điện thoại',
+  'email_phone_option': 'Email hoặc SĐT',
   'otp_verification_option': 'Xác minh OTP',
 
   // Bottom Navigation
@@ -321,7 +321,7 @@ final Map<String, dynamic> vi = {
   'back_to_sign_in': 'Quay lại đăng nhập',
   'or_sign_in_with': 'Hoặc đăng nhập bằng',
   'email_phone': 'Email hoặc Số điện thoại',
-  'email_phone_hint': 'Nhập email hoặc số điện thoại của bạn',
+  'email_phone_hint': 'Nhập email hoặc SĐT của bạn',
   'login_error': 'Đăng nhập thất bại. Vui lòng thử lại.',
 
   // Filter and Discovery
