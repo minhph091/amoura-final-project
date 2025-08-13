@@ -4,6 +4,7 @@ import com.amoura.common.LoginAndGetToken;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import jakarta.validation.constraints.AssertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,25 @@ public class ChatControllerTests {
     }
 
     @Test
+    @DisplayName("Lấy danh sách chat room với token không hợp lệ")
+    public void getChatRooms_WithInValidToken_ShouldReturnChatRooms() {
+        String invalidToken = "invalidToken";
+        Response response = RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/chat/rooms")
+                .then()
+                .log().all()
+                .statusCode(403)
+                .extract()
+                .response();
+        assertTrue(response.getBody().asString().isEmpty(), "body phải rỗng khi 403");
+    }
+
+
+    @Test
     @DisplayName("Lấy chat room theo ID với token hợp lệ")
     public void getChatRoomById_WithValidToken() {
         Response response = RestAssured
@@ -59,6 +79,24 @@ public class ChatControllerTests {
                 .extract()
                 .response();
     }
+
+    @DisplayName("Lấy chat room theo ID với token không hợp lệ")
+    public void getChatRoomById_WithInValidToken() {
+        String invalidToken = "invalidTokennnn";
+        Response response = RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/chat/rooms/524")
+                .then()
+                .log().all()
+                .statusCode(403)
+                .extract()
+                .response();
+        assertTrue(response.getBody().asString().isEmpty(), "body phải rỗngg khi 403");
+    }
+
 
     @Test
     @DisplayName("Lấy chat room theo ID không tồn tại")
@@ -123,6 +161,34 @@ public class ChatControllerTests {
     }
 
     @Test
+    @DisplayName("Gửi tin nhắn bằng token không hợp lệ")
+    public void sendTextMessageWithInvalidToken() {
+        String invalidToken = "invalidTokennnn";
+        String requestBody = """
+                    {
+                        "chatRoomId": 524,
+                        "content": "gud morninggg",
+                        "messageType": "TEXT"
+                    }
+                """;
+
+        Response response = RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .contentType(ContentType.JSON)
+                .body(requestBody)
+                .when()
+                .post("/chat/messages")
+                .then()
+                .log().all()
+                .statusCode(403)
+                .extract()
+                .response();
+        assertTrue(response.getBody().asString().isEmpty(), "Body phải rỗng khi 403");
+
+    }
+
+    @Test
     @DisplayName("Chỉnh sửa tin nhắn bằng AI khi truy cập với token và đối tượng hợp lệ")
     public void editMessageWithAI() {
         String originalMessage = "I love you";
@@ -132,7 +198,7 @@ public class ChatControllerTests {
                   "editPrompt": "Make it better",
                   "receiverId": 1656
                 }
-                """.replace("%s",originalMessage);
+                """.replace("%s", originalMessage);
         Response response = RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
@@ -142,7 +208,33 @@ public class ChatControllerTests {
                 .post("/chat/ai-edit")
                 .then()
                 .log().all()
-                .statusCode(200).body("editedMessage",equalTo(originalMessage))
+                .statusCode(200).body("editedMessage", equalTo(originalMessage))
+                .extract()
+                .response();
+    }
+
+    @Test
+    @DisplayName("Truy cập endpoint ai-edit với token không hợp lệ")
+    public void testAiEditWithInvalidToken() {
+        String invalidToken = "invalidTokennnnnn";
+        String originalMessage = "I love you";
+        String requestBody = """
+                {
+                  "originalMessage": "%s",
+                  "editPrompt": "Make it better",
+                  "receiverId": 1656
+                }
+                """.replace("%s", originalMessage);
+        Response response = RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .contentType(ContentType.JSON)
+                .body(requestBody)
+                .when()
+                .post("/chat/ai-edit")
+                .then()
+                .log().all()
+                .statusCode(403)
                 .extract()
                 .response();
     }
