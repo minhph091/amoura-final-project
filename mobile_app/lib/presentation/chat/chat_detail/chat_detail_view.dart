@@ -119,9 +119,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               .trim();
           setModalState(() { isLoading = true; });
           try {
+            final seed = DateTime.now().microsecondsSinceEpoch.remainder(1000000);
             final effectivePrompt = localRetry == 0
-                ? basePrompt
-                : '$basePrompt. Biến thể #${localRetry + 1} - tạo phiên bản khác, tự nhiên, không lặp lại.';
+                ? '$basePrompt [seed:$seed]'
+                : '$basePrompt. Biến thể #${localRetry + 1} - tạo phiên bản khác, tự nhiên, không lặp lại. [seed:$seed]';
             final edited = await _viewModel.requestAiEdit(
               input,
               effectivePrompt,
@@ -205,11 +206,15 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                           onSelected: (_) {
                             setModalState(() {
                               selectedPreset = p;
-                              if (promptController.text.isEmpty) {
-                                // hiển thị nhanh vào ô prompt để user tinh chỉnh
-                                promptController.text = p;
-                              }
+                              // Áp dụng preset trực tiếp vào prompt để đảm bảo đổi phong cách
+                              promptController.text = p;
+                              // Reset vòng lặp biến thể khi đổi phong cách
+                              localRetry = 0;
+                              // Xoá kết quả cũ để tránh hiểu nhầm và chạy lại để cập nhật theo phong cách mới
+                              resultText = null;
                             });
+                            // Tự động tạo gợi ý mới theo phong cách vừa chọn
+                            runAi(setModalState);
                           },
                         );
                       }).toList(),

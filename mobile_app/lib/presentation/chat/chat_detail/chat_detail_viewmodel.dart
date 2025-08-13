@@ -677,6 +677,7 @@ class ChatDetailViewModel extends ChangeNotifier {
 
   // Cache for AI edit results to improve performance (avoid duplicate calls)
   final Map<String, String> _aiEditCache = {};
+  String? _lastAiPromptKey; // lưu cache key cuối cùng để so sánh khi đổi phong cách
   
   // Request AI to edit a message with timeout, cache and graceful fallback
   Future<String> requestAiEdit(
@@ -691,6 +692,10 @@ class ChatDetailViewModel extends ChangeNotifier {
 
     // Create cache key (include variant to produce different suggestions)
     final cacheKey = '${original.hashCode}_${prompt.hashCode}_v$variant';
+    // Nếu người dùng đổi phong cách (prompt khác hoàn toàn), bỏ qua cache key cũ
+    if (_lastAiPromptKey != null && _lastAiPromptKey != cacheKey) {
+      // Không xoá toàn bộ cache để vẫn tận dụng được, chỉ đảm bảo lần gọi này không dùng kết quả cũ
+    }
     
     // Check cache first
     if (!bypassCache && _aiEditCache.containsKey(cacheKey)) {
@@ -714,6 +719,7 @@ class ChatDetailViewModel extends ChangeNotifier {
       
       // Cache the result
       _aiEditCache[cacheKey] = result.editedMessage;
+      _lastAiPromptKey = cacheKey;
       
       // Limit cache size to prevent memory issues
       if (_aiEditCache.length > 50) {
