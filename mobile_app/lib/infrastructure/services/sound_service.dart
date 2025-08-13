@@ -1,58 +1,54 @@
-import 'dart:typed_data';
-import 'package:flutter/services.dart' show rootBundle; 
-import 'package:soundpool/soundpool.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
-/// Low-latency SFX player for swipe/match sounds
+/// Low-latency SFX player for swipe/match sounds using audioplayers
 class SoundService {
-	Soundpool? _pool;
-	int? _swipeLikeId;
-	int? _swipePassId;
-	int? _matchSuccessId;
+	AudioPlayer? _likePlayer;
+	AudioPlayer? _passPlayer;
+	AudioPlayer? _matchPlayer;
 	bool _initialized = false;
 
 	bool get isInitialized => _initialized;
 
 	Future<void> initialize() async {
 		try {
-			_pool ??= Soundpool.fromOptions(options: const SoundpoolOptions(streamType: StreamType.music));
-			// Preload assets (ignore errors if files not present yet)
-			_swipeLikeId = await _tryLoad('assets/sounds/swipe_like.mp3');
-			_swipePassId = await _tryLoad('assets/sounds/swipe_pass.mp3');
-			_matchSuccessId = await _tryLoad('assets/sounds/match_success.mp3');
+			_likePlayer = AudioPlayer(playerId: 'sfx_like');
+			_passPlayer = AudioPlayer(playerId: 'sfx_pass');
+			_matchPlayer = AudioPlayer(playerId: 'sfx_match');
+
+			await _likePlayer!.setReleaseMode(ReleaseMode.stop);
+			await _passPlayer!.setReleaseMode(ReleaseMode.stop);
+			await _matchPlayer!.setReleaseMode(ReleaseMode.stop);
+
+			// Preload sources (best-effort)
+			await _likePlayer!.setSource(AssetSource('sounds/swipe_like.mp3')).catchError((_) {});
+			await _passPlayer!.setSource(AssetSource('sounds/swipe_pass.mp3')).catchError((_) {});
+			await _matchPlayer!.setSource(AssetSource('sounds/match_success.mp3')).catchError((_) {});
+
 			_initialized = true;
 		} catch (e) {
 			debugPrint('SoundService: initialize error: $e');
 		}
 	}
 
-	Future<int?> _tryLoad(String assetPath) async {
-		try {
-			final ByteData data = await rootBundle.load(assetPath);
-			return _pool?.load(data);
-		} catch (e) {
-			debugPrint('SoundService: missing or failed to load $assetPath - $e');
-			return null;
-		}
-	}
-
 	Future<void> playSwipeLike() async {
-		await _play(_swipeLikeId);
+		await _play(_likePlayer, 'sounds/swipe_like.mp3', volume: 0.8);
 	}
 
 	Future<void> playSwipePass() async {
-		await _play(_swipePassId);
+		await _play(_passPlayer, 'sounds/swipe_pass.mp3', volume: 0.7);
 	}
 
 	Future<void> playMatchSuccess() async {
-		await _play(_matchSuccessId, volume: 1.0);
+		await _play(_matchPlayer, 'sounds/match_success.mp3', volume: 1.0);
 	}
 
-	Future<void> _play(int? soundId, {double volume = 0.8}) async {
-		final pool = _pool;
-		if (pool == null || soundId == null) return;
+	Future<void> _play(AudioPlayer? player, String assetPath, {double volume = 1.0}) async {
+		if (player == null) return;
 		try {
-			await pool.play(soundId, volume: volume);
+			await player.stop();
+			await player.setVolume(volume);
+			await player.play(AssetSource(assetPath));
 		} catch (e) {
 			debugPrint('SoundService: play error: $e');
 		}
