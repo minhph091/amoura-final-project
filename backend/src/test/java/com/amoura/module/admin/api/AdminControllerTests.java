@@ -2,6 +2,7 @@ package com.amoura.module.admin.api;
 
 import com.amoura.common.AdminLoginAndGetToken;
 import com.amoura.common.LoginAndGetToken;
+import com.amoura.common.ModeratorLoginAndGetToken;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,7 @@ public class AdminControllerTests {
 
     static String adminToken;
     static String userToken;
+    static String moderatorToken;
 
     @BeforeAll
     static void setup() {
@@ -24,6 +26,7 @@ public class AdminControllerTests {
 
         adminToken = AdminLoginAndGetToken.execute();
         userToken = LoginAndGetToken.execute();
+        moderatorToken = ModeratorLoginAndGetToken.execute();
     }
 
     @Test
@@ -51,15 +54,42 @@ public class AdminControllerTests {
                 .log().all()
                 .statusCode(403);
     }
+    @Test
+    @DisplayName("Lấy admin dashboard - Token moderator")
+    void getModeratorDashboard_WithValidModeratorToken() {
+        RestAssured
+                .given()
+                .header("Authorization", "Bearer " + moderatorToken)
+                .when()
+                .get("/admin/dashboard")
+                .then()
+                .log().all()
+                .statusCode(403);
+    }
 
     @Test
-    @DisplayName("Lấy thông tin user theo ID ")
+    @DisplayName("Lấy thông tin user theo ID - Admin ")
     void getUserById_WithAdminToken_UserExists() {
         int userId = 1;
 
         RestAssured
                 .given()
                 .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .get("/admin/users/" + userId)
+                .then()
+                .log().all()
+                .statusCode(200)
+                .body("id", equalTo(userId))
+                .body("username", notNullValue());
+    }
+    @Test
+    @DisplayName("Lấy thông tin user theo ID - Moderator")
+    void getUserById_WithModeratorToken_UserExists() {
+        int userId = 1;
+        RestAssured
+                .given()
+                .header("Authorization", "Bearer " + moderatorToken)
                 .when()
                 .get("/admin/users/" + userId)
                 .then()
