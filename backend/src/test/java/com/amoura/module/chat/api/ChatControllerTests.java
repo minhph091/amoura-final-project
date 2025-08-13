@@ -13,6 +13,7 @@ import com.amoura.common.LoginAndGetToken;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ChatControllerTests {
@@ -95,6 +96,7 @@ public class ChatControllerTests {
         String message = response.jsonPath().getString("message");
         assertEquals("Access denied to this chat room", message);
     }
+
     @Test
     @DisplayName("Gửi tin nhắn văn bản thành công vào ChatRoom")
     public void sendTextMessage() {
@@ -119,16 +121,42 @@ public class ChatControllerTests {
                 .extract()
                 .response();
     }
+
+    @Test
+    @DisplayName("Chỉnh sửa tin nhắn bằng AI khi truy cập với token và đối tượng hợp lệ")
+    public void editMessageWithAI() {
+        String originalMessage = "I love you";
+        String requestBody = """
+                {
+                  "originalMessage": "%s",
+                  "editPrompt": "Make it better",
+                  "receiverId": 1656
+                }
+                """.replace("%s",originalMessage);
+        Response response = RestAssured
+                .given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .contentType(ContentType.JSON)
+                .body(requestBody)
+                .when()
+                .post("/chat/ai-edit")
+                .then()
+                .log().all()
+                .statusCode(200).body("editedMessage",equalTo(originalMessage))
+                .extract()
+                .response();
+    }
+
     @Test
     @DisplayName("Gửi tin nhắn với nội dung trống ")
     public void sendEmptyMessage() {
         String requestBody = """
-        {
-            "chatRoomId": 2682,
-            "content": "",
-            "messageType": "TEXT"
-        }
-    """;
+                    {
+                        "chatRoomId": 2682,
+                        "content": "",
+                        "messageType": "TEXT"
+                    }
+                """;
         Response response = RestAssured
                 .given()
                 .header("Authorization", "Bearer " + jwtToken)
@@ -151,12 +179,12 @@ public class ChatControllerTests {
     @DisplayName("Gửi tin nhắn vào chat room không tồn tại ")
     public void sendMessageToNonExistentChatRoom() {
         String requestBody = """
-        {
-            "chatRoomId": 989899,
-            "content": "hello",
-            "messageType": "TEXT"
-        }
-    """;
+                    {
+                        "chatRoomId": 989899,
+                        "content": "hello",
+                        "messageType": "TEXT"
+                    }
+                """;
 
         Response response = RestAssured
                 .given()
@@ -179,13 +207,13 @@ public class ChatControllerTests {
     @DisplayName("Gửi tin nhắn thiếu messageType")
     public void sendMessage_MissingMessageType() {
         String requestBody = """
-        {
-            "chatRoomId": 524,
-            "content": "test missing type",
-             "messageType": "string"
+                    {
+                        "chatRoomId": 524,
+                        "content": "test missing type",
+                         "messageType": "string"
                 
-        }
-    """;
+                    }
+                """;
 
         Response response = RestAssured
                 .given()
