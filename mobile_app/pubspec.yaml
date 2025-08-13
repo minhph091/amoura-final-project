@@ -1,0 +1,70 @@
+name: amoura
+description: "A new Flutter project."
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ^5.7.0
+  geolocator: ^10.0.0
+  geocoding: ^2.1.0
+  image_cropper:
+  http: ^1.1.0
+  http_parser: ^4.0.2
+  get_it: ^7.2.0
+  shared_preferences: ^2.0.15
+  provider: ^6.1.2
+  cupertino_icons: ^1.0.8
+  flutter_animate: ^4.5.2
+  google_fonts: ^6.2.1
+  font_awesome_flutter: ^10.8.0
+  shimmer: ^3.0.0
+  photo_view: ^0.15.0
+  flutter_svg: ^2.1.0
+  dotted_border: ^3.0.1
+  flutter_iconly: ^1.0.2
+  country_icons: ^3.0.0
+  material_symbols_icons: ^4.2815.0
+  cached_network_image: ^3.3.1
+  flutter_spinkit: ^5.2.1
+  phosphor_flutter: ^2.1.0
+  particle_field: ^1.0.0
+  image_picker: ^1.1.2
+  # Using image_picker instead of file_picker for file selection
+  intl: ^0.19.0
+  flutter_image_compress: ^2.4.0
+  permission_handler: ^12.0.0+1
+  carousel_slider: ^4.2.1
+  stomp_dart_client: ^0.4.4
+  audioplayers: ^6.1.0
+
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.14.3
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/images/avatars/
+    - assets/images/onboarding/
+    - assets/logos/
+    - assets/sounds/
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/avatars/dark_amoura.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/images/avatars/dark_amoura.png"
