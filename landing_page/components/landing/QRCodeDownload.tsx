@@ -13,14 +13,16 @@ export function QRCodeDownload({ t }: QRCodeDownloadProps) {
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState("");
 
-  // QR code trỏ đến chính website landing page này
-  const WEBSITE_URL = "https://amoura.space";
+  // GitHub Release URL trực tiếp đến file APK
+  const GITHUB_APK_URL = "https://github.com/minhph091/amoura-final-project/releases/download/v1.0.0/Amoura_v1.0.0.apk";
+  // QR code cũng trỏ đến GitHub Release để tải trực tiếp
+  const QR_CODE_URL = GITHUB_APK_URL;
 
   useEffect(() => {
-    // Tạo QR code trỏ đến website landing page
+    // Tạo QR code trỏ đến GitHub Release để tải trực tiếp
     const generateQRCode = async () => {
       try {
-        const qrString = await QRCode.toDataURL(WEBSITE_URL, {
+        const qrString = await QRCode.toDataURL(QR_CODE_URL, {
           width: 256,
           margin: 2,
           color: {
@@ -52,17 +54,9 @@ export function QRCodeDownload({ t }: QRCodeDownloadProps) {
   }, [showQRModal]);
 
   const handleDirectDownload = () => {
-    // Tải trực tiếp file APK từ website hiện tại
-    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-    const apkUrl = `${currentOrigin}/Amoura_v1.0.0.apk`;
-    
-    const link = document.createElement("a");
-    link.href = apkUrl;
-    link.download = "Amoura_v1.0.0.apk";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setShowQRModal(false); // Đóng modal sau khi tải
+    // Tải trực tiếp file APK từ GitHub Release
+    window.open(GITHUB_APK_URL, '_blank');
+    setShowQRModal(false); // Đóng modal sau khi mở link tải
   };
 
   const modalContent = showQRModal ? (
@@ -109,10 +103,10 @@ export function QRCodeDownload({ t }: QRCodeDownloadProps) {
             </div>
           )}
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            Quét mã QR để vào website tải app
+            Quét mã QR để tải app trực tiếp
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-            Website: {WEBSITE_URL}
+            GitHub Release: v1.0.0
           </p>
         </div>
 
