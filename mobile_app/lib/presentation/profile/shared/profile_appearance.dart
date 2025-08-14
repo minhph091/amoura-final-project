@@ -23,6 +23,14 @@ class ProfileAppearance extends StatelessWidget {
     debugPrint('Body Type: $bodyType');
     debugPrint('Height: $height');
 
+    // Normalize height for display / slider: convert inches (<100) to cm and clamp to 100-250
+    int? displayHeight;
+    if (height != null) {
+      final h = height!;
+      final cm = h < 100 ? (h * 2.54).round() : h;
+      displayHeight = cm.clamp(100, 250);
+    }
+
     return Column(
       children: [
         ProfileFieldDisplay(
@@ -35,16 +43,16 @@ class ProfileAppearance extends StatelessWidget {
         ),
         ProfileFieldDisplay(
           label: 'Height',
-          value: height != null ? '$height cm' : null,
+          value: displayHeight != null ? '$displayHeight cm' : null,
           icon: Icons.height,
           editable: editable,
           onEdit: onEdit != null ? () => onEdit!("height") : null,
           iconColor: ProfileTheme.darkPink,
           showDivider: false,
-          customValueWidget: height != null ? Column(
+          customValueWidget: displayHeight != null ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('$height cm', style: Theme.of(context).textTheme.titleSmall),
+              Text('$displayHeight cm', style: Theme.of(context).textTheme.titleSmall),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: ProfileTheme.darkPink,
@@ -55,7 +63,7 @@ class ProfileAppearance extends StatelessWidget {
                   trackHeight: 4,
                 ),
                 child: Slider(
-                  value: height!.toDouble(),
+                  value: displayHeight!.toDouble(),
                   min: 100,
                   max: 250,
                   divisions: 150,

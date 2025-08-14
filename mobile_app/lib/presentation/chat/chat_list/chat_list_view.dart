@@ -89,23 +89,28 @@ class _ChatListViewState extends State<ChatListView> {
   Widget _buildMainContent() {
     return Column(
       children: [
-        // Matched users horizontal scrolling list (real API data)
-        Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: ActiveUsersList(
-            users: _viewModel.matches,
-            onUserTap: (userId) {
-              // Tìm chat tương ứng với matched user này (nếu có)
-              try {
-                final userChat = _viewModel.chatList.firstWhere(
-                  (c) => c.userId == userId,
-                );
-                _navigateToChat(context, userChat.chatRoomId, userChat);
-              } catch (e) {
-                debugPrint('No chat found for user $userId');
-              }
-            },
-          ),
+        // Matched users horizontal scrolling list (listens to ViewModel updates)
+        ListenableBuilder(
+          listenable: _viewModel,
+          builder: (context, _) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: ActiveUsersList(
+                users: _viewModel.matches,
+                onUserTap: (userId) {
+                  // Tìm chat tương ứng với matched user này (nếu có)
+                  try {
+                    final userChat = _viewModel.chatList.firstWhere(
+                      (c) => c.userId == userId,
+                    );
+                    _navigateToChat(context, userChat.chatRoomId, userChat);
+                  } catch (e) {
+                    debugPrint('No chat found for user $userId');
+                  }
+                },
+              ),
+            );
+          },
         ),
 
         const Padding(

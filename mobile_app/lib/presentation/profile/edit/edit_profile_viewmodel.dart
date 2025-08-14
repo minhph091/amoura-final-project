@@ -86,7 +86,8 @@ class EditProfileViewModel extends ChangeNotifier {
         profile?['bodyType'] != null
             ? (profile!['bodyType'] as Map<String, dynamic>)['id']?.toString()
             : null;
-    height = profile?['height'] as int? ?? 170;
+    // Chuẩn hoá chiều cao: API đang trả về inch (ví dụ 66), UI dùng cm (100-250)
+    height = _normalizeHeightCm(profile?['height']);
 
     // Lưu id cho jobIndustry
     jobIndustry =
@@ -402,6 +403,18 @@ class EditProfileViewModel extends ChangeNotifier {
       }
 
       // Prepare the data map for the API
+      // Gửi chiều cao theo cm như backend đang validate (>= 100cm)
+      final int? heightCm = height != null
+          ? (height! < 100
+              ? 100
+              : (height! > 250
+                  ? 250
+                  : height!))
+          : null;
+      // Chuẩn hoá bio theo backend (< 1000 ký tự)
+      final String? bioToSend =
+          bio == null ? null : (bio!.length > 1000 ? bio!.substring(0, 1000) : bio);
+
       final Map<String, dynamic> data = {
         'dateOfBirth': dateOfBirth?.toIso8601String(),
         'sex': sex,
@@ -417,7 +430,7 @@ class EditProfileViewModel extends ChangeNotifier {
         },
         'locationPreference': locationPreference,
         'bodyTypeId': bodyType != null ? int.tryParse(bodyType!) : null,
-        'height': height,
+        'height': heightCm,
         'jobIndustryId':
             jobIndustry != null ? int.tryParse(jobIndustry!) : null,
         'educationLevelId':
@@ -443,7 +456,7 @@ class EditProfileViewModel extends ChangeNotifier {
                 .whereType<int>()
                 .toList(),
         'interestedInNewLanguage': interestedInNewLanguage,
-        'bio': bio,
+        'bio': bioToSend,
       };
 
       // Remove null values to avoid sending empty fields
@@ -536,6 +549,24 @@ class EditProfileViewModel extends ChangeNotifier {
       isSaving = false;
       notifyListeners();
     }
+  }
+
+  // ===== Helper: Height unit conversion =====
+  int _normalizeHeightCm(dynamic apiHeight) {
+    if (apiHeight == null) return 170;
+    num? h;
+    if (apiHeight is num) {
+      h = apiHeight;
+    } else {
+      h = num.tryParse(apiHeight.toString());
+    }
+    if (h == null) return 170;
+    // Backend luôn lưu height theo inch, nên luôn convert sang cm cho UI
+    return (h * 2.54).round().clamp(100, 250);
+  }
+
+  int _toInches(int cm) {
+    return (cm / 2.54).round();
   }
 
   // Hàm deep copy cho Map<String, dynamic>
