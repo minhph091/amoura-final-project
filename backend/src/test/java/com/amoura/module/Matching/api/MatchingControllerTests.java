@@ -51,6 +51,32 @@ public class MatchingControllerTests {
     }
 
     @Test
+    @DisplayName("Swipe user thất bại do token không hợp lệ")
+    public void swipeUserWithInvalidToken() {
+        String invalidToken = "invalidToken";
+        String requestBody = """
+            {
+                "targetUserId": 5,
+                "isLike": true
+            }
+        """;
+
+        Response response = RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .contentType(ContentType.JSON)
+                .body(requestBody)
+                .when()
+                .post("/matching/swipe")
+                .then()
+                .log().all().statusCode(403)
+                .extract().response();
+
+
+    }
+
+
+    @Test
     @DisplayName("Swipe user không tồn tại")
     public void swipeNonExistentUser() {
         String requestBody = """
@@ -92,6 +118,22 @@ public class MatchingControllerTests {
                 .extract().response();
 
         UserRecommendationDTO[] users = response.as(UserRecommendationDTO[].class);
+    }
+    @Test
+    @DisplayName("Lấy danh sách người dùng gợi ý - Token không hợp lệ")
+    void getRecommendationsWithInvalidToken() {
+        String invalidToken = "invalidToken";
+        Response response = RestAssured .
+                given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/matching/recommendations")
+                .then()
+                .log().all()
+                .statusCode(403)
+                .extract().response();
+
     }
 
 }
