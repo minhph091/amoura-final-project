@@ -11,6 +11,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 
+import java.util.List;
+
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -135,5 +137,41 @@ public class MatchingControllerTests {
                 .extract().response();
 
     }
+
+    @Test
+    @DisplayName("Lấy danh sách người dùng với token hợp lệ")
+    public void testReceivedWithValidToken() {
+
+        Response response = RestAssured
+                .given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/matching/received")
+                .then()
+                .statusCode(200)
+                .extract()
+                .response();
+
+        List<?> users = response.jsonPath().getList("$");
+        assertFalse(users.isEmpty(), "Response rỗng!");
+    }
+
+
+    @Test
+    @DisplayName("Lấy danh sách người dùng đã like với token không hợp lệ")
+    public void testReceivedWithInvalidToken() {
+        String invalidToken = "invalidToken";
+
+        RestAssured
+                .given()
+                .header("Authorization", "Bearer " + invalidToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/matching/received")
+                .then()
+                .statusCode(403);
+    }
+
 
 }
