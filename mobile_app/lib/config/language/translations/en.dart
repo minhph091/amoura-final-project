@@ -455,7 +455,11 @@ final Map<String, dynamic> en = {
   'reply': 'Reply',
   'edit': 'Edit',
   'copy': 'Copy',
+  'copied_to_clipboard': 'Copied to clipboard',
   'recall_message_question': 'Recall Message?',
+  'recall': 'Recall',
+  'recall_message': 'Recall Message',
+  'recall_message_warning': 'This message will be recalled for everyone.',
   'delete_message_question': 'Delete Message?',
   'message_deleted_for_you': 'This message will be deleted for you only.',
   'search': 'Search',
@@ -503,6 +507,7 @@ final Map<String, dynamic> en = {
   'failed_update_profile_step': 'Failed to update profile step',
   'profile_setup_complete': 'Profile setup complete!',
   'failed_update_profile': 'Failed to update profile',
+  'failed_to_update_profile': 'Failed to update profile',
   'logout_failed': 'Logout failed',
   'failed_load_image_editing': 'Failed to load image for editing',
 
@@ -554,6 +559,12 @@ final Map<String, dynamic> en = {
   'benefit_priority_matching': 'Priority matching',
   'benefit_special_event_access': 'Special event access',
   'benefit_exclusive_seasonal_gifts': 'Exclusive seasonal gifts',
+
+  // Edit Profile
+  'discard_changes': 'Discard Changes',
+  'discard': 'Discard',
+  'keep_editing': 'Keep Editing',
+  'unsaved_changes_discard_confirm': 'Do you want to discard all unsaved changes?',
 
   'feature_unlimited_rewind': 'Unlimited Rewind',
   'feature_unlimited_rewind_desc':

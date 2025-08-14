@@ -41,23 +41,27 @@ class LikedUserCard extends StatelessWidget {
         child: Stack(
           children: [
             // Cover image - tappable to view profile
-            GestureDetector(
-              onTap: onTap,
-              child: Positioned.fill(child: _buildCoverImage()),
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: onTap,
+                child: _buildCoverImage(),
+              ),
             ),
 
-            // Gradient overlay for text readability
+            // Gradient overlay cho readability nhưng không chặn sự kiện chạm
             Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.7),
-                    ],
-                    stops: const [0.6, 1.0],
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.7),
+                      ],
+                      stops: const [0.6, 1.0],
+                    ),
                   ),
                 ),
               ),

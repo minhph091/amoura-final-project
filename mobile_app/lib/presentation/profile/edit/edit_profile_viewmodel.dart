@@ -561,8 +561,11 @@ class EditProfileViewModel extends ChangeNotifier {
       h = num.tryParse(apiHeight.toString());
     }
     if (h == null) return 170;
-    // Backend luôn lưu height theo inch, nên luôn convert sang cm cho UI
-    return (h * 2.54).round().clamp(100, 250);
+    // Nếu nhỏ hơn 100, giả định là inch -> đổi sang cm
+    if (h < 100) {
+      return (h * 2.54).round();
+    }
+    return h.round();
   }
 
   int _toInches(int cm) {
