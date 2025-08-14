@@ -173,6 +173,19 @@ class ChatListViewModel extends ChangeNotifier {
       statusUpdate,
     ) {
       _updateUserOnlineStatus(statusUpdate);
+      // Cập nhật danh sách matches khi trạng thái thay đổi để UI hiển thị đúng chấm xanh/xám
+      for (int i = 0; i < _matches.length; i++) {
+        final uid = _matches[i].userId;
+        if (statusUpdate.containsKey(uid)) {
+          _matches[i] = UserModel(
+            userId: _matches[i].userId,
+            name: _matches[i].name,
+            avatar: _matches[i].avatar,
+            isOnline: statusUpdate[uid]!,
+          );
+        }
+      }
+      notifyListeners();
     });
   }
 
@@ -210,18 +223,21 @@ class ChatListViewModel extends ChangeNotifier {
         );
       }
 
-      // Tạo danh sách matches từ chat rooms
-      _matches =
-          _chatList
-              .map(
-                (chat) => UserModel(
-                  userId: chat.userId,
-                  name: chat.name,
-                  avatar: chat.avatar,
-                  isOnline: chat.isOnline,
-                ),
-              )
-              .toList();
+      // Tạo danh sách matches từ chat rooms (dedupe theo userId)
+      final seen = <String>{};
+      _matches = [];
+      for (final chat in _chatList) {
+        if (seen.add(chat.userId)) {
+          _matches.add(
+            UserModel(
+              userId: chat.userId,
+              name: chat.name,
+              avatar: chat.avatar,
+              isOnline: chat.isOnline,
+            ),
+          );
+        }
+      }
 
       // Sort by last message time
       _sortChatList();

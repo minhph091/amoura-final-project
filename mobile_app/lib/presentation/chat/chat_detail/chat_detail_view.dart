@@ -82,6 +82,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      enableDrag: false,
+      isDismissible: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -148,6 +150,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             return Padding(
               padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: bottomInset + 16),
               child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,7 +241,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     // Generate button
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton.icon(
+a                      child: ElevatedButton.icon(
                         onPressed: isLoading ? null : () => runAi(setModalState),
                         icon: isLoading
                             ? const SizedBox(
@@ -1033,7 +1036,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                                   _buildTypingIndicator(),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '${viewModel.typingUserName ?? 'Someone'} đang nhập tin nhắn...',
+                                    '${viewModel.typingUserName ?? 'Someone'} is typing...',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Theme.of(context).colorScheme.onSurface.withAlpha(150),

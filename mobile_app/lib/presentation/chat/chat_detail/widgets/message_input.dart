@@ -161,6 +161,8 @@ class _MessageInputState extends State<MessageInput> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      enableDrag: false,
+      isDismissible: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -494,6 +496,10 @@ class _MessageInputState extends State<MessageInput> {
                               ),
                             ),
                             textCapitalization: TextCapitalization.sentences,
+                            keyboardType: TextInputType.multiline,
+                            enableSuggestions: true,
+                            // Quan trọng: cho phép Unicode/IME gõ tiếng Việt đầy đủ
+                            // Flutter TextField mặc định hỗ trợ IME; không đặt inputFormatters hạn chế ASCII
                             maxLines: 4,
                             minLines: 1,
                             onSubmitted: (_) => _handleSend(),

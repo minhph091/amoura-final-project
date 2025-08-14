@@ -17,6 +17,19 @@ class EditProfileAppearanceSection extends StatefulWidget {
 class _EditProfileAppearanceSectionState
     extends State<EditProfileAppearanceSection> {
   @override
+  void initState() {
+    super.initState();
+    // Normalize height once on mount to prevent Slider assertion in case data is in inches or < 100
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final h = widget.viewModel.height;
+      if (h != null && h < 100) {
+        final normalized = (h * 2.54).round();
+        widget.viewModel.updateHeight(normalized.clamp(100, 250));
+        setState(() {});
+      }
+    });
+  }
+  @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -59,11 +72,11 @@ class _EditProfileAppearanceSectionState
             Text('Height (cm)', style: ProfileTheme.getLabelStyle(context)),
 
             Slider(
-              value: (widget.viewModel.height ?? 170).toDouble(),
+              value: ((widget.viewModel.height ?? 170).toDouble()).clamp(100.0, 250.0),
               min: 100,
               max: 250,
               divisions: 150,
-              label: '${widget.viewModel.height ?? 170} cm',
+              label: '${(widget.viewModel.height ?? 170).clamp(100, 250)} cm',
               activeColor: ProfileTheme.darkPink,
               inactiveColor: ProfileTheme.darkPurple.withAlpha(77),
               onChanged:
