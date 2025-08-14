@@ -41,7 +41,11 @@ class _ImageCarouselState extends State<ImageCarousel> {
   void initState() {
     super.initState();
     _setupController();
-    _preloadImages();
+    // Tránh lỗi MediaQuery trong initState: preload sau frame đầu tiên
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _preloadImages();
+    });
   }
 
   @override
@@ -51,7 +55,10 @@ class _ImageCarouselState extends State<ImageCarousel> {
     // Reset về ảnh đầu tiên khi profile thay đổi
     if (oldWidget.uniqueKey != widget.uniqueKey) {
       _resetToFirstImage();
-      _preloadImages();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _preloadImages();
+      });
     }
   }
 

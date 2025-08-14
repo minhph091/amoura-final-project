@@ -10,6 +10,8 @@ import '../../data/models/match/swipe_request_model.dart';
 import '../../data/models/match/swipe_response_model.dart';
 import '../../core/services/profile_service.dart';
 import 'widgets/match_dialog.dart';
+import '../../core/services/chat_service.dart';
+import '../../app/routes/app_routes.dart';
 import '../../infrastructure/services/sound_service.dart';
 
 class DiscoveryViewModel extends ChangeNotifier {
@@ -17,6 +19,7 @@ class DiscoveryViewModel extends ChangeNotifier {
   final MatchService _matchService = GetIt.I<MatchService>();
   final ProfileService _profileService = GetIt.I<ProfileService>();
   final SoundService _soundService = GetIt.I<SoundService>();
+  final ChatService _chatService = GetIt.I<ChatService>();
 
   bool _isLoading = false;
   String? _error;
@@ -220,12 +223,26 @@ class DiscoveryViewModel extends ChangeNotifier {
       return;
     }
     
-    // TODO: Implement navigation to chat screen
+    // Seed chat để Chat List xuất hiện ngay lập tức
+    _chatService.seedChatFromMatch(
+      chatRoomId.toString(),
+      profile.userId.toString(),
+      '${profile.firstName} ${profile.lastName}'.trim(),
+    );
+
     print('DiscoveryViewModel: Navigate to chat room $chatRoomId with ${profile.firstName}');
-    // Navigator.pushNamed(_context!, '/chat', arguments: {
-    //   'chatRoomId': chatRoomId,
-    //   'profile': profile,
-    // });
+    if (_context != null) {
+      Navigator.pushNamed(
+        _context!,
+        AppRoutes.chatConversation,
+        arguments: {
+          'chatId': chatRoomId.toString(),
+          'recipientName': '${profile.firstName} ${profile.lastName}'.trim(),
+          'recipientAvatar': null,
+          'isOnline': false,
+        },
+      );
+    }
   }
 
   /// Rewind về profile trước đó

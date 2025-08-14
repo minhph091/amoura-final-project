@@ -20,16 +20,16 @@ class DiscoveryHeader extends StatelessWidget {
 
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-        margin: const EdgeInsets.fromLTRB(0, 8, 0, 8), // Thêm margin để tạo khoảng cách
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+        margin: const EdgeInsets.fromLTRB(0, 4, 0, 4), // giảm margin để tránh lộ nền khi vuốt
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
+          color: Colors.white.withOpacity(0.98),
           borderRadius: BorderRadius.circular(12), // Bo góc đẹp hơn
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
             ),
           ],
         ),

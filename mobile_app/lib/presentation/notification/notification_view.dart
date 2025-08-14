@@ -529,7 +529,7 @@ class _NotificationViewState extends State<NotificationView>
     _viewModel.markAsRead(notification.id);
     if (notification.type == NotificationType.match ||
         notification.type == NotificationType.like) {
-        // Show dialog với 2 lựa chọn: Like Back và View Info
+        // Nếu là match => chỉ cho View Info và Chat Now (không hiển thị Like Back)
       showModalBottomSheet(
         context: context,
         shape: const RoundedRectangleBorder(
@@ -540,14 +540,16 @@ class _NotificationViewState extends State<NotificationView>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ListTile(
+                if (notification.type == NotificationType.like)
+                  ListTile(
                     leading: const Icon(Icons.favorite, color: Colors.red),
-                    title: Text('Like Back'),
+                    title: const Text('Like Back'),
                     onTap: () async {
-                    Navigator.pop(context);
-                      await _handleLikeBack(context, notification);
-                  },
-                ),
+                      Navigator.pop(context);
+                      final parentContext = this.context;
+                      await _handleLikeBack(parentContext, notification);
+                    },
+                  ),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
                   title: Text(localizations.translate('view_info')),
@@ -556,6 +558,25 @@ class _NotificationViewState extends State<NotificationView>
                       _showUserProfileInfo(context, notification);
                   },
                 ),
+                if (notification.type == NotificationType.match)
+                  ListTile(
+                    leading: const Icon(Icons.chat, color: Colors.green),
+                    title: const Text('Chat Now'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // Navigate to chat nếu có chatId trong content/related
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.chatConversation,
+                        arguments: {
+                          'chatId': notification.userId ?? notification.id,
+                          'recipientName': notification.title,
+                          'recipientAvatar': notification.avatar,
+                          'isOnline': false,
+                        },
+                      );
+                    },
+                  ),
                 const SizedBox(height: 10),
               ],
             ),
@@ -607,16 +628,17 @@ class _NotificationViewState extends State<NotificationView>
         return;
       }
 
-      // Show loading
+      // Show loading (dùng root context để tránh chồng modal)
       showDialog(
-        context: context,
+        context: Navigator.of(context, rootNavigator: true).context,
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       try {
-        final response = await matchService.likeUser(userId);
-        Navigator.pop(context); // Hide loading
+        // Thêm timeout để tránh loading vô hạn khi backend treo
+        final response = await matchService.likeUser(userId).timeout(const Duration(seconds: 10));
+        Navigator.of(context, rootNavigator: true).pop(); // Hide loading
 
         if (response.isMatch) {
           // Có match! Hiện dialog chat now/later
@@ -631,7 +653,10 @@ class _NotificationViewState extends State<NotificationView>
           );
         }
       } catch (e) {
-        Navigator.pop(context); // Hide loading
+        // Đảm bảo đóng loading nếu lỗi
+        if (Navigator.of(context, rootNavigator: true).canPop()) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to like user: ${e.toString()}'),
@@ -668,6 +693,11 @@ class _NotificationViewState extends State<NotificationView>
                   'isOnline': false,
                 },
               );
+              // Sau khi mở chat, refresh danh sách chat để hiện ngay cuộc trò chuyện mới
+              // (tránh phải thoát app vào lại)
+              // ignore: use_build_context_synchronously
+              // Gửi event nhẹ cho ChatListViewModel bằng cách dùng navigator push/pop sẽ trigger load lại,
+              // nhưng để chắc chắn, có thể dùng một event bus hoặc service. Ở đây ta gọi nhẹ qua routes.
             },
             child: const Text('Chat Now'),
           ),

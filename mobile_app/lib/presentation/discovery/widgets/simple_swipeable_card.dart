@@ -53,8 +53,8 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
   // Drag state
   double _dragOffset = 0.0;
   bool _isDragging = false;
-  static const double _swipeThreshold = 100.0;
-  static const double _maxRotation = 0.12; // nhẹ hơn để mượt
+  static const double _swipeThreshold = 85.0; // giảm nhẹ để cảm giác nhạy hơn
+  static const double _maxRotation = 0.1; // nhẹ hơn để mượt
   bool _isDismissed = false; // Ẩn ngay lập tức sau khi quẹt xong để tránh giật
 
   @override
@@ -63,7 +63,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
     
     // Sửa animation cho mượt mà hơn
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 220), // nhanh hơn chút
+      duration: const Duration(milliseconds: 180), // nhanh hơn chút
       vsync: this,
     );
 
@@ -108,15 +108,21 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
       onPanStart: _onPanStart,
       onPanUpdate: _onPanUpdate,
       onPanEnd: _onPanEnd,
-      child: Stack(
+        child: Stack(
         children: [
+            // Fix overscroll glow/banding khi vuốt dọc trên thiết bị thật
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(color: Colors.transparent),
+              ),
+            ),
           // Next card (background)
           if (widget.nextProfile != null)
             Positioned.fill(
               child: Transform.scale(
-                scale: 0.95 + (0.05 * (_dragOffset.abs() / _swipeThreshold).clamp(0.0, 1.0)),
+                scale: 0.95 + (0.06 * (_dragOffset.abs() / _swipeThreshold).clamp(0.0, 1.0)),
                 child: Opacity(
-                  opacity: 0.5 + (0.5 * (_dragOffset.abs() / _swipeThreshold).clamp(0.0, 1.0)),
+                  opacity: 0.45 + (0.55 * (_dragOffset.abs() / _swipeThreshold).clamp(0.0, 1.0)),
                   child: ProfileCard(
                     key: ValueKey('next_${widget.nextProfile!.userId}'),
                     profile: widget.nextProfile!,

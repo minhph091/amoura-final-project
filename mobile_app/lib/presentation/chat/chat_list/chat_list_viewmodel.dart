@@ -166,6 +166,25 @@ class ChatListViewModel extends ChangeNotifier {
       newMessage,
     ) {
       _updateChatWithNewMessage(newMessage);
+      // Nếu chat mới chưa có trong danh sách (vd: mới tạo sau Like Back), thêm vào đầu danh sách
+      final exists = _chatList.any((c) => c.chatRoomId == newMessage.chatId);
+      if (!exists) {
+        // Tạo placeholder ChatModel tối thiểu để hiển thị ngay
+        final placeholder = ChatModel(
+          chatRoomId: newMessage.chatId,
+          userId: newMessage.senderId == _currentUserId ? '' : newMessage.senderId,
+          name: newMessage.senderName.isNotEmpty ? newMessage.senderName : 'New Match',
+          avatar: newMessage.senderAvatar ?? '',
+          lastMessage: newMessage.content,
+          lastMessageTime: newMessage.timestamp,
+          unreadCount: newMessage.senderId == _currentUserId ? 0 : 1,
+          isUnread: newMessage.senderId != _currentUserId,
+        );
+        _chatList.insert(0, placeholder);
+        notifyListeners();
+        // Yêu cầu load lại danh sách từ server để thay thế placeholder
+        refreshChatList();
+      }
     });
 
     // Lắng nghe user status changes để cập nhật online indicators

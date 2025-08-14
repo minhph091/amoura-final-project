@@ -50,6 +50,15 @@ class _DiscoveryViewState extends State<DiscoveryView> with TickerProviderStateM
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppGradientBackground(
+        // Sử dụng gradient nhẹ để tránh banding/"3 vạch hồng" trên thiết bị thật
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFDFDFE),
+            Color(0xFFF8FAFB),
+          ],
+        ),
         child: ChangeNotifierProvider<DiscoveryViewModel>.value(
           value: _viewModel,
           child: Consumer<DiscoveryViewModel>(

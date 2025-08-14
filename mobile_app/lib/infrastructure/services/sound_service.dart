@@ -21,9 +21,9 @@ class SoundService {
 			await _matchPlayer!.setReleaseMode(ReleaseMode.stop);
 
 			// Preload sources (best-effort)
-			await _likePlayer!.setSource(AssetSource('sounds/swipe_like.mp3')).catchError((_) {});
-			await _passPlayer!.setSource(AssetSource('sounds/swipe_pass.mp3')).catchError((_) {});
-			await _matchPlayer!.setSource(AssetSource('sounds/match_success.mp3')).catchError((_) {});
+            await _likePlayer!.setSource(AssetSource('assets/sounds/swipe_like.mp3')).catchError((_) {});
+            await _passPlayer!.setSource(AssetSource('assets/sounds/swipe_pass.mp3')).catchError((_) {});
+            await _matchPlayer!.setSource(AssetSource('assets/sounds/match_success.mp3')).catchError((_) {});
 
 			_initialized = true;
 		} catch (e) {
@@ -32,15 +32,15 @@ class SoundService {
 	}
 
 	Future<void> playSwipeLike() async {
-		await _play(_likePlayer, 'sounds/swipe_like.mp3', volume: 0.8);
+        await _play(_likePlayer, 'assets/sounds/swipe_like.mp3', volume: 0.8);
 	}
 
 	Future<void> playSwipePass() async {
-		await _play(_passPlayer, 'sounds/swipe_pass.mp3', volume: 0.7);
+        await _play(_passPlayer, 'assets/sounds/swipe_pass.mp3', volume: 0.7);
 	}
 
 	Future<void> playMatchSuccess() async {
-		await _play(_matchPlayer, 'sounds/match_success.mp3', volume: 1.0);
+        await _play(_matchPlayer, 'assets/sounds/match_success.mp3', volume: 1.0);
 	}
 
 	Future<void> _play(AudioPlayer? player, String assetPath, {double volume = 1.0}) async {
@@ -48,7 +48,11 @@ class SoundService {
 		try {
 			await player.stop();
 			await player.setVolume(volume);
-			await player.play(AssetSource(assetPath));
+			// Fallback: nếu asset không tồn tại, bỏ qua để tránh log lỗi spam
+			await player.play(AssetSource(assetPath)).catchError((_) async {
+				// Thử một asset mặc định ngắn im lặng (nếu có). Nếu không, bỏ qua
+				return;
+			});
 		} catch (e) {
 			debugPrint('SoundService: play error: $e');
 		}

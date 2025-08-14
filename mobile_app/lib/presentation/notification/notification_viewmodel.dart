@@ -405,6 +405,15 @@ class NotificationViewModel extends ChangeNotifier {
   }
   void markAsRead(String notificationId) {
     try {
+      // Bỏ qua các thông báo local (id giả) như like_*
+      if (notificationId.startsWith('like_')) {
+        final idx = _notifications.indexWhere((n) => n.id == notificationId);
+        if (idx != -1) {
+          _notifications[idx] = _notifications[idx].copyWith(isRead: true);
+          notifyListeners();
+        }
+        return;
+      }
       _service.markAsRead(notificationId);
       // UI sẽ tự động cập nhật qua stream
     } catch (e) {
@@ -414,8 +423,14 @@ class NotificationViewModel extends ChangeNotifier {
 
   void markAllAsRead() {
     try {
+      // Đánh dấu tất cả local và server
+      for (int i = 0; i < _notifications.length; i++) {
+        _notifications[i] = _notifications[i].copyWith(isRead: true);
+      }
+      notifyListeners();
       _service.markAllAsRead();
-      // UI sẽ tự động cập nhật qua stream
+      // Cập nhật badge tổng từ server
+      _service.refreshUnreadCount();
     } catch (e) {
       debugPrint('NotificationViewModel: Error marking all notifications as read: $e');
     }
@@ -424,14 +439,21 @@ class NotificationViewModel extends ChangeNotifier {
   void markAllAsReadByType(NotificationType type) {
     try {
       // Lọc các id chưa đọc theo type rồi gọi markAsRead cho từng cái
-      final ids =
-          _notifications
-              .where((n) => n.type == type && !n.isRead)
-              .map((n) => n.id)
-              .toList();
-      for (final id in ids) {
-        _service.markAsRead(id);
+      final target = _notifications.where((n) => n.type == type && !n.isRead);
+      for (final n in target) {
+        // Bỏ qua markAsRead API cho thông báo local (like_*) để tránh 400
+        if (n.id.startsWith('like_')) {
+          final idx = _notifications.indexWhere((x) => x.id == n.id);
+          if (idx != -1) {
+            _notifications[idx] = _notifications[idx].copyWith(isRead: true);
+          }
+        } else {
+          _service.markAsRead(n.id);
+        }
       }
+      notifyListeners();
+      // Đồng bộ badge tổng từ server
+      _service.refreshUnreadCount();
     } catch (e) {
       debugPrint('NotificationViewModel: Error marking all notifications as read by type: $e');
     }
@@ -457,15 +479,19 @@ class NotificationViewModel extends ChangeNotifier {
 
   void markAllAsReadInGroup(List<UINotificationModel> groupNotifications) {
     try {
-      for (final notification in groupNotifications) {
-        if (!notification.isRead) {
-          final index = _notifications.indexWhere((n) => n.id == notification.id);
-          if (index != -1) {
-            _notifications[index] = notification.copyWith(isRead: true);
+      for (final n in groupNotifications) {
+        if (!n.isRead) {
+          final idx = _notifications.indexWhere((x) => x.id == n.id);
+          if (idx != -1) {
+            _notifications[idx] = _notifications[idx].copyWith(isRead: true);
+          }
+          if (!n.id.startsWith('like_')) {
+            _service.markAsRead(n.id);
           }
         }
       }
       notifyListeners();
+      _service.refreshUnreadCount();
     } catch (e) {
       debugPrint('NotificationViewModel: Error marking all as read in group: $e');
     }

@@ -27,6 +27,10 @@ class ChatService {
       StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<Map<String, bool>> _onlineStatusController = 
       StreamController<Map<String, bool>>.broadcast();
+  // Tổng số tin nhắn chưa đọc theo từng chat để hiển thị badge tổng
+  final Map<String, int> _chatUnreadCounts = <String, int>{};
+  final StreamController<int> _totalUnreadCountController =
+      StreamController<int>.broadcast();
   
   // Cache để lưu trữ local
   List<Chat> _cachedChats = [];
@@ -44,6 +48,34 @@ class ChatService {
   Stream<Message> get newMessageStream => _newMessageController.stream;
   Stream<Map<String, dynamic>> get typingStream => _typingController.stream;
   Stream<Map<String, bool>> get onlineStatusStream => _onlineStatusController.stream;
+  Stream<int> get totalUnreadCountStream => _totalUnreadCountController.stream;
+
+  /// Emit một sự kiện seed chat để ChatList hiển thị placeholder ngay sau khi match
+  void seedChatFromMatch(
+    String chatRoomId,
+    String otherUserId,
+    String otherUserName, {
+    String? otherUserAvatar,
+  }) {
+    try {
+      final message = Message(
+        id: 'seed_${DateTime.now().millisecondsSinceEpoch}',
+        chatId: chatRoomId,
+        senderId: otherUserId, // giả lập tin của đối phương để tạo cuộc trò chuyện
+        senderName: otherUserName,
+        content: 'seed',
+        timestamp: DateTime.now(),
+        status: MessageStatus.read,
+        type: MessageType.text,
+        senderAvatar: otherUserAvatar,
+      );
+      _newMessageController.add(message);
+      // Đặt unread = 0 để không hiện badge sau khi vừa mở
+      _emitUnreadCountUpdate(chatRoomId, 0);
+    } catch (e) {
+      debugPrint('ChatService: Error seeding chat from match: $e');
+    }
+  }
   
   // WebSocket connection status
   bool get isConnected => _socketClient.isConnected;
@@ -696,6 +728,11 @@ class ChatService {
     
     // Emit vào newMessageStream để chat list nhận được
     _newMessageController.add(unreadUpdateMessage);
+
+    // Cập nhật tổng unread để hiển thị badge ở bottom bar
+    _chatUnreadCounts[chatRoomId] = unreadCount;
+    final total = _chatUnreadCounts.values.fold<int>(0, (sum, v) => sum + (v > 0 ? v : 0));
+    _totalUnreadCountController.add(total);
   }
   
   /// Xử lý read receipt
@@ -705,6 +742,10 @@ class ChatService {
       // Cập nhật trạng thái read cho messages
       // TODO: Implement read receipt logic
       debugPrint('ChatService: Handling read receipt for chat: $chatRoomId');
+      // Reset unread của chat này về 0 và phát tổng unread mới
+      _chatUnreadCounts[chatRoomId] = 0;
+      final total = _chatUnreadCounts.values.fold<int>(0, (sum, v) => sum + (v > 0 ? v : 0));
+      _totalUnreadCountController.add(total);
     }
   }
   
@@ -814,6 +855,8 @@ class ChatService {
       _socketClient.disconnect();
       
       _currentUserId = null;
+      _chatUnreadCounts.clear();
+      _totalUnreadCountController.add(0);
     } catch (e) {
       debugPrint('Error disconnecting WebSocket: $e');
     }
@@ -826,6 +869,7 @@ class ChatService {
     _newMessageController.close();
     _typingController.close();
     _onlineStatusController.close();
+    _totalUnreadCountController.close();
     disconnectWebSocket();
     _socketClient.dispose();
   }
@@ -847,6 +891,11 @@ class ChatService {
       
       // Emit vào stream để chat list có thể nhận được
       _newMessageController.add(readReceiptMessage);
+
+      // Đồng bộ tổng unread badge: set chat này = 0 và phát tổng mới
+      _chatUnreadCounts[chatRoomId] = 0;
+      final total = _chatUnreadCounts.values.fold<int>(0, (sum, v) => sum + (v > 0 ? v : 0));
+      _totalUnreadCountController.add(total);
       
       debugPrint('ChatService: Notified read receipt for chat $chatRoomId');
     } catch (e) {

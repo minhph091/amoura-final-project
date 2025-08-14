@@ -232,6 +232,10 @@ class _ChatListViewState extends State<ChatListView> {
     String chatRoomId,
     ChatModel chat,
   ) {
+    // Reset search khi rời màn hình để không giữ trạng thái search khi quay lại
+    _searchController.clear();
+    _viewModel.searchChats('');
+    _searchFocusNode.unfocus();
     Navigator.pushNamed(
       context,
       AppRoutes.chatConversation,

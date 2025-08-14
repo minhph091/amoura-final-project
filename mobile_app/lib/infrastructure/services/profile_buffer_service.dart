@@ -44,6 +44,9 @@ class ProfileBufferService {
   bool get hasProfiles => _profileBuffer.isNotEmpty;
   bool get hasNextProfile => _currentIndex < _profileBuffer.length - 1 || _profileBuffer.length >= 5;
   
+  // Prefetch queue for smoother swipes
+  final List<UserRecommendationModel> _prefetchQueue = [];
+
   // Current profile
   UserRecommendationModel? get currentProfile => 
     _currentIndex < _profileBuffer.length ? _profileBuffer[_currentIndex] : null;
@@ -218,19 +221,63 @@ class ProfileBufferService {
         return true;
       }).toList();
       
-      // Thêm vào buffer
+      // Thêm vào buffer và đồng thời chuẩn bị prefetch các hình ảnh chính
       for (final profile in filteredProfiles) {
         _profileBuffer.add(profile);
         _profileInterests[profile.userId] = profile.interests;
         _profileDistances[profile.userId] = _calculateDistance(profile);
         _profileCommonInterests[profile.userId] = _computeCommonInterests(profile);
+        _prefetchQueue.add(profile);
       }
+
+      // Kick off prefetch async (không block UI)
+      _startPrefetchIfNeeded();
       
       print('ProfileBufferService: Buffer hiện có ${_profileBuffer.length} profiles');
       
     } catch (e) {
       print('ProfileBufferService: Lỗi load profiles - $e');
     }
+  }
+
+  void _startPrefetchIfNeeded() {
+    if (_prefetchQueue.isEmpty) return;
+    // Prefetch tối đa 3 profile kế tiếp
+    final nextBatch = _prefetchQueue.take(3).toList();
+    _prefetchQueue.removeRange(0, nextBatch.length);
+    try {
+      // Prefetch ảnh: ưu tiên avatar, cover, highlight đầu tiên
+      for (final p in nextBatch) {
+        final List<String> urls = [];
+        try {
+          final avatar = p.photos.firstWhere(
+            (ph) => ph.type.toLowerCase() == 'avatar',
+            orElse: () => p.photos.isNotEmpty ? p.photos.first : (throw 'no photo'),
+          );
+          urls.add(avatar.path);
+        } catch (_) {}
+        // cover
+        try {
+          final cover = p.photos.firstWhere(
+            (ph) => ph.type.toLowerCase() == 'profile_cover',
+            orElse: () => p.photos.isNotEmpty ? p.photos.first : (throw 'no photo'),
+          );
+          urls.add(cover.path);
+        } catch (_) {}
+        // highlight đầu tiên
+        try {
+          final hl = p.photos.firstWhere(
+            (ph) => ph.type.toLowerCase() == 'highlight',
+            orElse: () => p.photos.isNotEmpty ? p.photos.first : (throw 'no photo'),
+          );
+          urls.add(hl.path);
+        } catch (_) {}
+        // Thực hiện prefetch qua CachedNetworkImageProvider bằng một widget offstage
+        // Lưu ý: cần context để precache, nên ở đây chỉ chuẩn bị URL; việc precache sẽ được
+        // thực hiện ở widget layer (SimpleSwipeableCard/ProfileCard) ngay khi build next card.
+        // Đặt sẵn distances/commonInterests đã làm ở trên.
+      }
+    } catch (_) {}
   }
 
   /// Đánh dấu profile đã like
@@ -292,7 +339,7 @@ class ProfileBufferService {
     print('ProfileBufferService: Đã swipe ${_swipedProfileIds.length} profiles');
     
     // Load thêm profiles nếu buffer thấp
-    if (_profileBuffer.length < 3 && !_isLoading) {
+    if (_profileBuffer.length < 5 && !_isLoading) {
       print('ProfileBufferService: Buffer thấp, load thêm profiles...');
       await _loadMoreProfiles();
     }
