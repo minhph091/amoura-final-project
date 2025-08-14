@@ -19,6 +19,11 @@ class UserRecommendationModel {
   final List<InterestModel> interests;
   final List<PetModel> pets;
   final List<PhotoModel> photos;
+  // Optional display-only fields for discovery details (page 2)
+  final String? jobIndustryName;
+  final String? educationLevelName;
+  final String? drinkStatusName;
+  final String? smokeStatusName;
 
   UserRecommendationModel({
     required this.userId,
@@ -36,6 +41,10 @@ class UserRecommendationModel {
     required this.interests,
     required this.pets,
     required this.photos,
+    this.jobIndustryName,
+    this.educationLevelName,
+    this.drinkStatusName,
+    this.smokeStatusName,
   });
 
   factory UserRecommendationModel.fromJson(Map<String, dynamic> json) {
@@ -79,6 +88,19 @@ class UserRecommendationModel {
         photos: (json['photos'] as List<dynamic>?)
             ?.map((e) => PhotoModel.fromJson(e as Map<String, dynamic>))
             .toList() ?? [],
+        // Some backends return nested objects with 'name' for these attributes
+        jobIndustryName: (json['jobIndustry'] is Map<String, dynamic>)
+            ? (json['jobIndustry']['name'] as String?)
+            : json['jobIndustryName'] as String?,
+        educationLevelName: (json['educationLevel'] is Map<String, dynamic>)
+            ? (json['educationLevel']['name'] as String?)
+            : json['educationLevelName'] as String?,
+        drinkStatusName: (json['drinkStatus'] is Map<String, dynamic>)
+            ? (json['drinkStatus']['name'] as String?)
+            : json['drinkStatusName'] as String?,
+        smokeStatusName: (json['smokeStatus'] is Map<String, dynamic>)
+            ? (json['smokeStatus']['name'] as String?)
+            : json['smokeStatusName'] as String?,
       );
     } catch (e) {
       debugPrint('UserRecommendationModel: Error parsing from JSON: $e');
@@ -104,6 +126,10 @@ class UserRecommendationModel {
         'interests': interests.map((e) => e.toJson()).toList(),
         'pets': pets.map((e) => e.toJson()).toList(),
         'photos': photos.map((e) => e.toJson()).toList(),
+        'jobIndustryName': jobIndustryName,
+        'educationLevelName': educationLevelName,
+        'drinkStatusName': drinkStatusName,
+        'smokeStatusName': smokeStatusName,
       };
     } catch (e) {
       debugPrint('UserRecommendationModel: Error converting to JSON: $e');

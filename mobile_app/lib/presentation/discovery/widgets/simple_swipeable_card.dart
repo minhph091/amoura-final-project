@@ -55,6 +55,7 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
   bool _isDragging = false;
   static const double _swipeThreshold = 100.0;
   static const double _maxRotation = 0.12; // nhẹ hơn để mượt
+  bool _isDismissed = false; // Ẩn ngay lập tức sau khi quẹt xong để tránh giật
 
   @override
   void initState() {
@@ -99,6 +100,9 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
 
   @override
   Widget build(BuildContext context) {
+    if (_isDismissed) {
+      return const SizedBox.shrink();
+    }
     return RepaintBoundary(
       child: GestureDetector(
       onPanStart: _onPanStart,
@@ -280,9 +284,10 @@ class _SimpleSwipeableCardState extends State<SimpleSwipeableCard>
       final bool isLike = _dragOffset > 0;
       // Complete the swipe animation
       _animationController.forward().then((_) {
-        // Reset for next card
-        _dragOffset = 0.0;
-        _animationController.reset();
+        if (!mounted) return;
+        setState(() {
+          _isDismissed = true; // Ẩn card ngay lập tức, tránh "quay ngược" trước khi đóng
+        });
         
         // Reset button highlights via callback
         widget.onSwipeReset?.call();

@@ -13,6 +13,8 @@ import 'package:flutter/gestures.dart';
 import '../../profile/view/profile_viewmodel.dart';
 import '../../../config/language/app_localizations.dart';
 import 'profile_detail_page.dart';
+import '../../../core/services/profile_service.dart';
+import '../../../app/di/injection.dart';
 
 // Đổi từ StatelessWidget sang StatefulWidget để tối ưu performance
 class ProfileCard extends StatefulWidget {
@@ -37,6 +39,12 @@ class _ProfileCardState extends State<ProfileCard> {
   List<String> _commonInterests = const [];
   int _currentPhotoIndex = 0; // Theo dõi ảnh hiện tại để thay đổi info hiển thị
   bool _isBioExpanded = false; // Trạng thái mở rộng bio
+  // Lazy-loaded details for photo index 1
+  String? _educationLevelName;
+  String? _drinkStatusName;
+  String? _smokeStatusName;
+  bool _isDetailsLoading = false;
+  bool _detailsLoaded = false;
 
   @override
   void initState() {
@@ -101,6 +109,9 @@ class _ProfileCardState extends State<ProfileCard> {
               setState(() {
                 _currentPhotoIndex = idx;
               });
+              if (idx == 1 && !_detailsLoaded && !_isDetailsLoading) {
+                _loadExtraDetails();
+              }
             },
           ),
           // Overlay user info - thêm lại blur nhẹ để tránh loading khi click ảnh
@@ -221,6 +232,37 @@ class _ProfileCardState extends State<ProfileCard> {
     );
   }
 
+  Future<void> _loadExtraDetails() async {
+    try {
+      _isDetailsLoading = true;
+      final profileService = getIt<ProfileService>();
+      final data = await profileService.getProfileByUserId(widget.profile.userId);
+      if (!mounted) return;
+      setState(() {
+        _educationLevelName =
+            (data['educationLevel'] is Map<String, dynamic>)
+                ? (data['educationLevel']['name'] as String?)
+                : data['educationLevelName'] as String?;
+        _drinkStatusName =
+            (data['drinkStatus'] is Map<String, dynamic>)
+                ? (data['drinkStatus']['name'] as String?)
+                : data['drinkStatusName'] as String?;
+        _smokeStatusName =
+            (data['smokeStatus'] is Map<String, dynamic>)
+                ? (data['smokeStatus']['name'] as String?)
+                : data['smokeStatusName'] as String?;
+        _detailsLoaded = true;
+        _isDetailsLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isDetailsLoading = false;
+        _detailsLoaded = true; // Avoid retry loop; still fallback to '-'
+      });
+    }
+  }
+
   List<Widget> _buildInfoByPhotoIndex(BuildContext context, int index, String bio) {
     final List<Widget> widgets = [];
     // Common interests prepared earlier
@@ -252,7 +294,7 @@ class _ProfileCardState extends State<ProfileCard> {
   }
 
   List<Widget> _buildCommonInterestsSection(BuildContext context) {
-    if (_commonInterests == null || _commonInterests!.isEmpty) return [];
+    if (_commonInterests.isEmpty) return [];
     return [
       const SizedBox(height: 4),
       Text(
@@ -266,7 +308,7 @@ class _ProfileCardState extends State<ProfileCard> {
       Wrap(
         spacing: 6,
         runSpacing: 4,
-        children: _commonInterests!.map((interest) {
+        children: _commonInterests.map((interest) {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -307,56 +349,116 @@ class _ProfileCardState extends State<ProfileCard> {
 
   List<Widget> _buildEducationAndLifestyleSection(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    // Hiện tại hồ sơ đề xuất không có trực tiếp education/drink/smoke trong model,
-    // nên hiển thị placeholder từ ngôn ngữ hoặc dấu '-'
+    // Lấy dữ liệu thực từ model nếu có, fallback '-'
+    final education = widget.profile.educationLevelName ?? _educationLevelName;
+    final drink = widget.profile.drinkStatusName ?? _drinkStatusName;
+    final smoke = widget.profile.smokeStatusName ?? _smokeStatusName;
     return [
       Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Icon(Icons.school, color: Colors.white70, size: 16),
           const SizedBox(width: 6),
-          Text(
-            localizations.translate('job_education'),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
-                  fontWeight: FontWeight.w600,
-                ),
+          Flexible(
+            flex: 0,
+            child: Text(
+              localizations.translate('job_education'),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withOpacity(0.9),
+                    fontWeight: FontWeight.w600,
+                  ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           const SizedBox(width: 8),
-          Text(
-            '-',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
-                ),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildInfoChip(
+                (education != null && education.isNotEmpty) ? education : '-',
+                context,
+              ),
+            ),
           ),
         ],
       ),
       const SizedBox(height: 8),
       Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Icon(Icons.local_bar, color: Colors.white70, size: 16),
           const SizedBox(width: 6),
-          Text(
-            localizations.translate('do_you_drink'),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
-                ),
+          Flexible(
+            flex: 0,
+            child: Text(
+              localizations.translate('do_you_drink'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white70,
+                  ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           const SizedBox(width: 8),
-          Text('-', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.9))),
-          const SizedBox(width: 16),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildInfoChip(
+                (drink != null && drink.isNotEmpty) ? drink : '-',
+                context,
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
           const Icon(Icons.smoking_rooms, color: Colors.white70, size: 16),
           const SizedBox(width: 6),
-          Text(
-            localizations.translate('do_you_smoke'),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
-                ),
+          Flexible(
+            flex: 0,
+            child: Text(
+              localizations.translate('do_you_smoke'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white70,
+                  ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           const SizedBox(width: 8),
-          Text('-', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.9))),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildInfoChip(
+                (smoke != null && smoke.isNotEmpty) ? smoke : '-',
+                context,
+              ),
+            ),
+          ),
         ],
       ),
     ];
+  }
+
+  Widget _buildInfoChip(String text, BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white24, width: 1),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white.withOpacity(0.95),
+              fontWeight: FontWeight.w500,
+            ),
+      ),
+    );
   }
 
   List<Widget> _buildPetsSection(BuildContext context) {
