@@ -21,7 +21,7 @@
 **/lerna-debug.log*
 
 # Dependency directories
-**/node_modules/
+# **/node_modules/ (intentionally allowing node_modules to be tracked)
 **/.pnp
 **/.pnp.js
 
@@ -48,7 +48,7 @@
 # ==========================================
 landing-page/.next/
 # landing-page/out/
-landing-page/node_modules/
+# landing-page/node_modules/ (intentionally allowing node_modules to be tracked)
 landing-page/.env*
 landing-page/dist/
 
@@ -57,7 +57,7 @@ landing-page/dist/
 # ==========================================
 admin_dashboard/.next/
 # admin_dashboard/out/
-admin_dashboard/node_modules/
+# admin_dashboard/node_modules/ (intentionally allowing node_modules to be tracked)
 admin_dashboard/.env*
 admin_dashboard/dist/
 
