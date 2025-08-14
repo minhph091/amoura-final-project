@@ -1,0 +1,46 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f43f5e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f43f5e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f43f5e;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="rgba(0,0,0,0.2)"/>
+    </filter>
+  </defs>
+  
+  <!-- Heart Icon -->
+  <g transform="translate(100, 80)">
+    <path d="M0,20 C-15,-10 -40,-10 -40,10 C-40,30 0,60 0,60 C0,60 40,30 40,10 C40,-10 15,-10 0,20 Z" 
+          fill="url(#heartGradient)" 
+          filter="url(#shadow)"/>
+    <!-- Small sparkle -->
+    <circle cx="25" cy="-5" r="3" fill="#fbbf24" opacity="0.8"/>
+    <circle cx="-30" cy="5" r="2" fill="#fbbf24" opacity="0.6"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="100" y="140" 
+        font-family="system-ui, -apple-system, sans-serif" 
+        font-size="32" 
+        font-weight="bold" 
+        text-anchor="middle" 
+        fill="url(#textGradient)"
+        filter="url(#shadow)">
+    Amoura
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="100" y="165" 
+        font-family="system-ui, -apple-system, sans-serif" 
+        font-size="12" 
+        text-anchor="middle" 
+        fill="#6b7280">
+    Admin Dashboard
+  </text>
+</svg>
