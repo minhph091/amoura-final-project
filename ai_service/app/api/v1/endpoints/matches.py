@@ -2,8 +2,7 @@
 """
 Match-related API endpoints for Amoura AI Service.
 
-Provides endpoints for comprehensive matching (ML + rules + fallback)
-and for computing pairwise match probability.
+Provides a single comprehensive matching endpoint (ML + rules + fallback).
 """
 
 from fastapi import APIRouter, HTTPException, status, Query, Path

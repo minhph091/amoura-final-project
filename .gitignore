@@ -1,8 +1,83 @@
+# Project Root .gitignore for Amoura
+
+# ==========================================
+# GLOBAL IGNORES (affects all subprojects)
+# ==========================================
+
+# Environment variables
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Logs
+**/logs
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+**/lerna-debug.log*
+
+# Dependency directories
+**/node_modules/ 
+**/.pnp
+**/.pnp.js
+
+# Build outputs
+**/dist/
+**/build/
+**/.next/
+# **/out/
+
+# IDE and Editor files
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/*~
+
+# OS generated files
+**/.DS_Store
+**/Thumbs.db
+**/desktop.ini
+
+# ==========================================
+# LANDING PAGE SPECIFIC
+# ==========================================
+landing-page/.next/
+landing-page/out/
+landing-page/node_modules/
+landing-page/.env*
+landing-page/dist/
+
+# ==========================================
+# ADMIN DASHBOARD SPECIFIC  
+# ==========================================
+admin_dashboard/.next/
+admin_dashboard/out/
+admin_dashboard/node_modules/
+admin_dashboard/.env*
+admin_dashboard/dist/
+
+# ==========================================
+# BACKEND SPECIFIC (Java/Spring Boot)
+# ==========================================
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/**/*.jar
+backend/**/*.war
+backend/**/*.nar
+backend/**/*.ear
+backend/**/*.zip
+backend/**/*.tar.gz
+backend/**/*.rar
+
 # Compiled class file
 *.class
-
-# Log file
-*.log
 
 # BlueJ files
 *.ctxt
@@ -10,14 +85,70 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+# ==========================================
+# MOBILE APP SPECIFIC (Flutter)
+# ==========================================
+mobile-app/.dart_tool/
+mobile-app/build/
+mobile-app/.flutter-plugins
+mobile-app/.flutter-plugins-dependencies
+mobile-app/.packages
+mobile-app/.pub-cache/
+mobile-app/.pub/
+mobile-app/ios/Flutter/.last_build_id
+mobile-app/android/.gradle/
+mobile-app/android/app/build/
+mobile-app/ios/Pods/
+mobile-app/ios/.symlinks/
+
+# APK files (release builds)
+**/*.apk
+**/*.aab
+
+# ==========================================
+# TESTING AND COVERAGE
+# ==========================================
+**/coverage/
+**/.nyc_output/
+**/test-results/
+**/.coverage/
+
+# ==========================================
+# TEMPORARY AND CACHE FILES
+# ==========================================
+**/tmp/
+**/temp/
+**/.cache/
+**/.parcel-cache/
+**/storybook-static/
+
+# ==========================================
+# PACKAGE MANAGER FILES
+# ==========================================
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+
+# But keep the main package files
+!package.json
+!*/package.json
+
+# ==========================================
+# SECURITY AND SECRETS
+# ==========================================
+**/*.pem
+**/*.key
+**/*.cert
+**/secrets/
+**/.secrets/
+
+# ==========================================
+# DEPLOYMENT AND CI/CD
+# ==========================================
+**/.vercel/
+**/.netlify/
+**/deployment/
+**/.github/workflows/secrets.yml
 
 .idea/
 
