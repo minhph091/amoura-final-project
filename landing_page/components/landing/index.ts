@@ -10,4 +10,5 @@ export { FAQSection } from "./FAQSection";
 export { Footer } from "./Footer";
 export { LanguageDropdown } from "./LanguageDropdown";
 export { ThemeToggle } from "./ThemeToggle";
+export { QRCodeDownload } from "./QRCodeDownload";
 export { translations } from "./translations";
