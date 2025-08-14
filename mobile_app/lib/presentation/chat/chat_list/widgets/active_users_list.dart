@@ -25,7 +25,7 @@ class ActiveUsersList extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Active Now',
+            'Matches',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 17,
@@ -120,7 +120,7 @@ class ActiveUsersList extends StatelessWidget {
                               width: 16,
                               height: 16,
                               decoration: BoxDecoration(
-                                color: Colors.green,
+                                color: user.isOnline ? Colors.green : Colors.grey,
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: isDark ? Colors.black : Colors.white,
@@ -128,7 +128,7 @@ class ActiveUsersList extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.green.withValues(alpha: 0.5),
+                                    color: (user.isOnline ? Colors.green : Colors.black).withValues(alpha: 0.25),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),

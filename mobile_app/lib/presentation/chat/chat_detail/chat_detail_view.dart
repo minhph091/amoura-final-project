@@ -82,6 +82,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      enableDrag: false,
+      isDismissible: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -119,10 +121,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               .trim();
           setModalState(() { isLoading = true; });
           try {
-            final seed = DateTime.now().microsecondsSinceEpoch.remainder(1000000);
-            final effectivePrompt = localRetry == 0
-                ? '$basePrompt [seed:$seed]'
-                : '$basePrompt. Biến thể #${localRetry + 1} - tạo phiên bản khác, tự nhiên, không lặp lại. [seed:$seed]';
+            // Dùng đúng prompt người dùng, không thêm seed hay biến thể để tránh lệch kết quả
+            final effectivePrompt = basePrompt;
             final edited = await _viewModel.requestAiEdit(
               input,
               effectivePrompt,
@@ -148,6 +148,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             return Padding(
               padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: bottomInset + 16),
               child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1033,7 +1034,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                                   _buildTypingIndicator(),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '${viewModel.typingUserName ?? 'Someone'} đang nhập tin nhắn...',
+                                    '${viewModel.typingUserName ?? 'Someone'} is typing...',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
