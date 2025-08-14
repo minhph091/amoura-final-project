@@ -101,6 +101,10 @@ mobile-app/android/app/build/
 mobile-app/ios/Pods/
 mobile-app/ios/.symlinks/
 
+# APK files (release builds)
+**/*.apk
+**/*.aab
+
 # ==========================================
 # TESTING AND COVERAGE
 # ==========================================
