@@ -1,5 +1,5 @@
 # Dependencies
-# node_modules/ (intentionally allowing node_modules to be tracked)
+node_modules/
 .pnp
 .pnp.js
 
