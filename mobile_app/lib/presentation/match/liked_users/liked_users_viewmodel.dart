@@ -3,6 +3,10 @@
 import 'package:flutter/material.dart';
 import '../../../domain/models/match/liked_user_model.dart';
 import '../../profile/view/profile_view.dart';
+import '../../../data/models/match/user_recommendation_model.dart';
+import '../../../data/models/profile/photo_model.dart';
+import '../../../infrastructure/services/profile_buffer_service.dart';
+import '../../discovery/discovery_view.dart';
 
 class LikedUsersViewModel extends ChangeNotifier {
   bool _isLoading = false;
@@ -32,7 +36,24 @@ class LikedUsersViewModel extends ChangeNotifier {
 
   // Navigate to user profile - renamed method to match what's called in the view
   void navigateToUserProfile(BuildContext context, LikedUserModel user) {
-    onUserSelected(context, user);
+    // Chuyển sang màn hình Discovery và hiển thị đúng profile vừa chọn
+    try {
+      final selectedProfile = _toUserRecommendation(user);
+      // Prime buffer để đảm bảo profile hiển thị ngay
+      // Không cần chờ đợi để UI điều hướng mượt mà
+      // ignore: discarded_futures
+      ProfileBufferService.instance.showProfileAsCurrent(selectedProfile);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const DiscoveryView(),
+        ),
+      );
+    } catch (e) {
+      // Fallback: vẫn mở ProfileView nếu có lỗi chuyển đổi
+      onUserSelected(context, user);
+    }
   }
 
   // Handle when a user likes back someone who already liked them
@@ -60,5 +81,31 @@ class LikedUsersViewModel extends ChangeNotifier {
     } finally {
       setLoading(false);
     }
+  }
+
+  // Helper: chuyển đổi từ LikedUserModel sang UserRecommendationModel
+  UserRecommendationModel _toUserRecommendation(LikedUserModel user) {
+    return UserRecommendationModel(
+      userId: int.tryParse(user.id) ?? 0,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      age: user.age,
+      bio: user.bio,
+      location: user.location,
+      interests: const [],
+      pets: const [],
+      photos: user.photoUrls
+          .map(
+            (url) => PhotoModel(
+              id: 0,
+              userId: int.tryParse(user.id) ?? 0,
+              path: url,
+              type: 'highlight',
+              createdAt: DateTime.now(),
+            ),
+          )
+          .toList(),
+    );
   }
 }

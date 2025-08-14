@@ -36,25 +36,31 @@ class DiscoveryHeader extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Amoura logo
+            // Amoura logo - làm nổi bật hơn
             ShaderMask(
               shaderCallback: (bounds) => LinearGradient(
                 colors: [
                   AppColors.primary,
-                  AppColors.primary.withOpacity(0.8),
+                  Colors.purple.shade400,
+                  AppColors.primary.withOpacity(0.9),
                 ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ).createShader(bounds),
               child: Text(
                 'Amoura',
                 style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 38,
+                  fontWeight: FontWeight.w900,
                   color: Colors.white, // Màu này sẽ bị thay thế bởi gradient
                   fontFamily: 'Cursive',
                   letterSpacing: 0.5,
                   shadows: [
+                    Shadow(
+                      color: Colors.purple.withOpacity(0.6),
+                      offset: const Offset(1.5, 1.5),
+                      blurRadius: 5,
+                    ),
                     Shadow(
                       color: AppColors.primary.withOpacity(0.4),
                       offset: const Offset(0, 2),

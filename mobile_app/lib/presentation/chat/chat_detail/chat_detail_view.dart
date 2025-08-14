@@ -121,8 +121,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               .trim();
           setModalState(() { isLoading = true; });
           try {
-            // Dùng đúng prompt người dùng, không thêm seed hay biến thể để tránh lệch kết quả
-            final effectivePrompt = basePrompt;
+            final seed = DateTime.now().microsecondsSinceEpoch.remainder(1000000);
+            final effectivePrompt = localRetry == 0
+                ? '$basePrompt [seed:$seed]'
+                : '$basePrompt. Biến thể #${localRetry + 1} - tạo phiên bản khác, tự nhiên, không lặp lại. [seed:$seed]';
             final edited = await _viewModel.requestAiEdit(
               input,
               effectivePrompt,

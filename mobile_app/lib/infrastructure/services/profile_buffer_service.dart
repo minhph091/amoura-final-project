@@ -383,6 +383,35 @@ class ProfileBufferService {
     await initialize();
   }
 
+  /// Hiển thị một profile cụ thể làm current và nạp thêm các profile khác ở nền
+  /// Dùng khi chuyển từ danh sách "Who Liked You" sang màn hình discovery và
+  /// muốn đảm bảo profile được chọn hiển thị ngay.
+  Future<void> showProfileAsCurrent(UserRecommendationModel profile) async {
+    try {
+      // Xóa buffer hiện tại nhưng giữ lại trạng thái swiped
+      clear();
+
+      // Đặt profile được chọn làm current
+      _profileBuffer.add(profile);
+      _profileInterests[profile.userId] = profile.interests;
+      _profileDistances[profile.userId] = _calculateDistance(profile);
+      _profileCommonInterests[profile.userId] =
+          _computeCommonInterests(profile);
+      _currentIndex = 0;
+
+      // Nạp thêm hồ sơ ở nền để trải nghiệm mượt mà
+      // Không await để không chặn UI
+      // Bảo vệ tránh chạy song song nếu đã loading
+      if (!_isLoading) {
+        _isLoading = true;
+        // ignore: unawaited_futures
+        _loadMoreProfiles().whenComplete(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('ProfileBufferService: Lỗi showProfileAsCurrent - $e');
+    }
+  }
+
   /// Xóa toàn bộ buffer
   void clear() {
     _profileBuffer.clear();
